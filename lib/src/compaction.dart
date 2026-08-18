@@ -348,26 +348,21 @@ int _estimateSingleEntryTokens(SessionTreeEntry entry) {
 String? _extractText(AgentMessage msg) {
   switch (msg) {
     case AssistantMessage():
-      final buf = StringBuffer();
-      for (var i = 0; i < msg.content.length; i++) {
-        final block = msg.content[i];
-        if (block is TextBlock) {
-          if (buf.isNotEmpty) buf.write('\n');
-          buf.write(block.text);
-        }
-      }
-      return buf.isEmpty ? null : buf.toString();
+      return _extractTextFromBlocks(msg.content);
     case UserMessage():
-      final buf = StringBuffer();
-      for (var i = 0; i < msg.content.length; i++) {
-        final block = msg.content[i];
-        if (block is TextBlock) {
-          if (buf.isNotEmpty) buf.write('\n');
-          buf.write(block.text);
-        }
-      }
-      return buf.isEmpty ? null : buf.toString();
+      return _extractTextFromBlocks(msg.content);
     default:
       return null;
   }
+}
+
+String? _extractTextFromBlocks(List<ContentBlock> blocks) {
+  final buf = StringBuffer();
+  for (final block in blocks) {
+    if (block is TextBlock) {
+      if (buf.isNotEmpty) buf.write('\n');
+      buf.write(block.text);
+    }
+  }
+  return buf.isEmpty ? null : buf.toString();
 }

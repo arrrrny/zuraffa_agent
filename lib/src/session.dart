@@ -275,9 +275,5 @@ class AgentSession {
     }
   }
 
-  String _generateId() {
-    final nowMicros = DateTime.now().microsecondsSinceEpoch;
-    final base36 = nowMicros.toRadixString(36);
-    return 'e_${base36}_0';
-  }
+  String _generateId() => generateEntryId();
 }

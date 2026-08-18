@@ -31,17 +31,17 @@ class Skill {
 /// to have a YAML frontmatter block (between `---` delimiters) containing
 /// at least `name` and `description` fields, followed by the skill
 /// instructions in markdown.
-List<Skill> loadSkills(String directoryPath) {
+Future<List<Skill>> loadSkills(String directoryPath) async {
   final dir = Directory(directoryPath);
-  if (!dir.existsSync()) return const [];
+  if (!await dir.exists()) return const [];
 
   final skills = <Skill>[];
 
-  for (final entity in dir.listSync()) {
+  await for (final entity in dir.list()) {
     if (entity is! File) continue;
     final name = entity.path.split(Platform.pathSeparator).last;
     if (name == 'SKILL.md' || name.endsWith('.skill.md')) {
-      final skill = _parseSkillFile(entity);
+      final skill = await _parseSkillFile(entity);
       if (skill != null) skills.add(skill);
     }
   }
@@ -74,9 +74,9 @@ String formatSkillsForSystemPrompt(List<Skill> skills) {
   return buf.toString();
 }
 
-Skill? _parseSkillFile(File file) {
+Future<Skill?> _parseSkillFile(File file) async {
   try {
-    final content = file.readAsStringSync();
+    final content = await file.readAsString();
     final lines = content.split('\n');
 
     // Parse YAML frontmatter between --- delimiters.

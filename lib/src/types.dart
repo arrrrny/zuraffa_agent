@@ -1,5 +1,7 @@
 // Types and Entities for zuraffa_agent
 
+import 'dart:convert';
+
 import 'domain/entities/artifact_ref/artifact_ref.dart';
 import 'domain/entities/branch_summary_entry/branch_summary_entry.dart';
 import 'domain/entities/compaction_entry/compaction_entry.dart';
@@ -232,7 +234,8 @@ class ToolCallBlock extends ContentBlock {
       other is ToolCallBlock &&
           runtimeType == other.runtimeType &&
           id == other.id &&
-          name == other.name;
+          name == other.name &&
+          jsonEncode(arguments) == jsonEncode(other.arguments);
 
   @override
   int get hashCode => Object.hash(id, name);
