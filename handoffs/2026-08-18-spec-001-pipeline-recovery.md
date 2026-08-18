@@ -78,3 +78,14 @@ Two phases, same session: **(A)** Design/issue orchestration of "ZikZak AI" — 
 - **Branch naming** is confusing post-renumber (the implement lineage branch is literally called `002-state-and-sessions`). Consider renaming that rescue branch to something like `rescue/implement-lineage-orphaned` to avoid future accidental checkouts over the PR branch.
 - **Re-review loop driver semantics** (item 5.14): decide whether to make the pipeline force re-run the review stage after a successful patch (auto REQUEST_CHANGES loop) or keep the operator-driven `--from review` approach. Recommend operator-driven for now (constitution V).
 - **Spec 001's constitution-IX tension** resolved as a scoped ported-code exception; confirm this stands when R2/R3 specs run (they may trigger it again).
+
+## UPDATE (same session, post-handoff — READ THIS)
+
+Recovery is EXECUTED and the tree is REPAIRED:
+- Restored `lib/src/compaction.dart` + `lib/src/hive_adapters.dart` from the green baseline **`4425b57`** (the patch commit `a26e44f` had stripped the estimator entry points `estimateEntriesTokens`/`estimateContextTokens`/`shouldCompact` that `test/compaction_test.dart` calls → 29 analyzer errors; only the test file was broken).
+- Fixed 2 unused-local warnings in `test/session_test.dart` (lines 78/115).
+- **`dart analyze` = `No issues found!`** · full tests green (compaction+storage+session suites: 101 + 59 pass).
+- Hardened the PATCH prompt in `scripts/pipeline.sh` (test-before-commit + analyze-clean before committing; never break API tests).
+- Commit **`d731209`** pushed to `origin/001-state-and-sessions` → **PR #9 now carries the complete, analyze-clean tree** (was missing/broken → CI `verify` was failing).
+- **No driver is running** (the `--from patch` relaunch was interrupted — verify before assuming anything). Goal is PAUSED; resume via `/goal resume`.
+- CodeRabbit review (3 Major / 3 Minor) was already POSTED on PR #9 as a comment (12,792 chars, clean markdown). The 3 Majors still need the patch stage to fix them on this now-green baseline ⇒ relaunch `./scripts/pipeline.sh 001-state-and-sessions --from patch` under nohup (untracked), then test → re-review → merge → post-merge `dart analyze` + `dart test` on main.
