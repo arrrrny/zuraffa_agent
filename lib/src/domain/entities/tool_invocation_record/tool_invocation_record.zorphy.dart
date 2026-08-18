@@ -91,74 +91,88 @@ class ToolInvocationRecord {
     final _patchMap = _patcher.patchMap;
     return ToolInvocationRecord(
       id: _patchMap.containsKey(ToolInvocationRecord$.id)
-          ? (_patchMap[ToolInvocationRecord$.id] is Function)
-                ? _patchMap[ToolInvocationRecord$.id](this.id)
-                : (_patchMap[ToolInvocationRecord$.id] is Patch)
-                ? _patchMap[ToolInvocationRecord$.id].applyTo(this.id)
-                : _patchMap[ToolInvocationRecord$.id]
+          ? ((_patchMap[ToolInvocationRecord$.id] is Function)
+                    ? _patchMap[ToolInvocationRecord$.id](this.id)
+                    : (_patchMap[ToolInvocationRecord$.id] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.id].applyTo(this.id)
+                    : _patchMap[ToolInvocationRecord$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(ToolInvocationRecord$.parentId)
-          ? (_patchMap[ToolInvocationRecord$.parentId] is Function)
-                ? _patchMap[ToolInvocationRecord$.parentId](this.parentId)
-                : (_patchMap[ToolInvocationRecord$.parentId] is Patch)
-                ? _patchMap[ToolInvocationRecord$.parentId].applyTo(
-                    this.parentId,
-                  )
-                : _patchMap[ToolInvocationRecord$.parentId]
+          ? ((_patchMap[ToolInvocationRecord$.parentId] is Function)
+                    ? _patchMap[ToolInvocationRecord$.parentId](this.parentId)
+                    : (_patchMap[ToolInvocationRecord$.parentId] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[ToolInvocationRecord$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(ToolInvocationRecord$.timestamp)
-          ? (_patchMap[ToolInvocationRecord$.timestamp] is Function)
-                ? _patchMap[ToolInvocationRecord$.timestamp](this.timestamp)
-                : (_patchMap[ToolInvocationRecord$.timestamp] is Patch)
-                ? _patchMap[ToolInvocationRecord$.timestamp].applyTo(
-                    this.timestamp,
-                  )
-                : _patchMap[ToolInvocationRecord$.timestamp]
+          ? ((_patchMap[ToolInvocationRecord$.timestamp] is Function)
+                    ? _patchMap[ToolInvocationRecord$.timestamp](this.timestamp)
+                    : (_patchMap[ToolInvocationRecord$.timestamp] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[ToolInvocationRecord$.timestamp])
+                as DateTime
           : this.timestamp,
       toolCallId: _patchMap.containsKey(ToolInvocationRecord$.toolCallId)
-          ? (_patchMap[ToolInvocationRecord$.toolCallId] is Function)
-                ? _patchMap[ToolInvocationRecord$.toolCallId](this.toolCallId)
-                : (_patchMap[ToolInvocationRecord$.toolCallId] is Patch)
-                ? _patchMap[ToolInvocationRecord$.toolCallId].applyTo(
-                    this.toolCallId,
-                  )
-                : _patchMap[ToolInvocationRecord$.toolCallId]
+          ? ((_patchMap[ToolInvocationRecord$.toolCallId] is Function)
+                    ? _patchMap[ToolInvocationRecord$.toolCallId](
+                        this.toolCallId,
+                      )
+                    : (_patchMap[ToolInvocationRecord$.toolCallId] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.toolCallId].applyTo(
+                        this.toolCallId,
+                      )
+                    : _patchMap[ToolInvocationRecord$.toolCallId])
+                as String
           : this.toolCallId,
       toolName: _patchMap.containsKey(ToolInvocationRecord$.toolName)
-          ? (_patchMap[ToolInvocationRecord$.toolName] is Function)
-                ? _patchMap[ToolInvocationRecord$.toolName](this.toolName)
-                : (_patchMap[ToolInvocationRecord$.toolName] is Patch)
-                ? _patchMap[ToolInvocationRecord$.toolName].applyTo(
-                    this.toolName,
-                  )
-                : _patchMap[ToolInvocationRecord$.toolName]
+          ? ((_patchMap[ToolInvocationRecord$.toolName] is Function)
+                    ? _patchMap[ToolInvocationRecord$.toolName](this.toolName)
+                    : (_patchMap[ToolInvocationRecord$.toolName] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.toolName].applyTo(
+                        this.toolName,
+                      )
+                    : _patchMap[ToolInvocationRecord$.toolName])
+                as String
           : this.toolName,
       resultEntryId: _patchMap.containsKey(ToolInvocationRecord$.resultEntryId)
-          ? (_patchMap[ToolInvocationRecord$.resultEntryId] is Function)
-                ? _patchMap[ToolInvocationRecord$.resultEntryId](
-                    this.resultEntryId,
-                  )
-                : (_patchMap[ToolInvocationRecord$.resultEntryId] is Patch)
-                ? _patchMap[ToolInvocationRecord$.resultEntryId].applyTo(
-                    this.resultEntryId,
-                  )
-                : _patchMap[ToolInvocationRecord$.resultEntryId]
+          ? ((_patchMap[ToolInvocationRecord$.resultEntryId] is Function)
+                    ? _patchMap[ToolInvocationRecord$.resultEntryId](
+                        this.resultEntryId,
+                      )
+                    : (_patchMap[ToolInvocationRecord$.resultEntryId] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.resultEntryId].applyTo(
+                        this.resultEntryId,
+                      )
+                    : _patchMap[ToolInvocationRecord$.resultEntryId])
+                as String?
           : this.resultEntryId,
       isError: _patchMap.containsKey(ToolInvocationRecord$.isError)
-          ? (_patchMap[ToolInvocationRecord$.isError] is Function)
-                ? _patchMap[ToolInvocationRecord$.isError](this.isError)
-                : (_patchMap[ToolInvocationRecord$.isError] is Patch)
-                ? _patchMap[ToolInvocationRecord$.isError].applyTo(this.isError)
-                : _patchMap[ToolInvocationRecord$.isError]
+          ? ((_patchMap[ToolInvocationRecord$.isError] is Function)
+                    ? _patchMap[ToolInvocationRecord$.isError](this.isError)
+                    : (_patchMap[ToolInvocationRecord$.isError] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.isError].applyTo(
+                        this.isError,
+                      )
+                    : _patchMap[ToolInvocationRecord$.isError])
+                as bool
           : this.isError,
       durationMs: _patchMap.containsKey(ToolInvocationRecord$.durationMs)
-          ? (_patchMap[ToolInvocationRecord$.durationMs] is Function)
-                ? _patchMap[ToolInvocationRecord$.durationMs](this.durationMs)
-                : (_patchMap[ToolInvocationRecord$.durationMs] is Patch)
-                ? _patchMap[ToolInvocationRecord$.durationMs].applyTo(
-                    this.durationMs,
-                  )
-                : _patchMap[ToolInvocationRecord$.durationMs]
+          ? ((_patchMap[ToolInvocationRecord$.durationMs] is Function)
+                    ? _patchMap[ToolInvocationRecord$.durationMs](
+                        this.durationMs,
+                      )
+                    : (_patchMap[ToolInvocationRecord$.durationMs] is Patch)
+                    ? _patchMap[ToolInvocationRecord$.durationMs].applyTo(
+                        this.durationMs,
+                      )
+                    : _patchMap[ToolInvocationRecord$.durationMs])
+                as int
           : this.durationMs,
     );
   }
@@ -213,7 +227,8 @@ class ToolInvocationRecord {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$ToolInvocationRecordToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

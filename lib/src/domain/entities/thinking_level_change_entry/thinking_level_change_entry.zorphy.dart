@@ -63,41 +63,49 @@ class ThinkingLevelChangeEntry {
     final _patchMap = _patcher.patchMap;
     return ThinkingLevelChangeEntry(
       id: _patchMap.containsKey(ThinkingLevelChangeEntry$.id)
-          ? (_patchMap[ThinkingLevelChangeEntry$.id] is Function)
-                ? _patchMap[ThinkingLevelChangeEntry$.id](this.id)
-                : (_patchMap[ThinkingLevelChangeEntry$.id] is Patch)
-                ? _patchMap[ThinkingLevelChangeEntry$.id].applyTo(this.id)
-                : _patchMap[ThinkingLevelChangeEntry$.id]
+          ? ((_patchMap[ThinkingLevelChangeEntry$.id] is Function)
+                    ? _patchMap[ThinkingLevelChangeEntry$.id](this.id)
+                    : (_patchMap[ThinkingLevelChangeEntry$.id] is Patch)
+                    ? _patchMap[ThinkingLevelChangeEntry$.id].applyTo(this.id)
+                    : _patchMap[ThinkingLevelChangeEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(ThinkingLevelChangeEntry$.parentId)
-          ? (_patchMap[ThinkingLevelChangeEntry$.parentId] is Function)
-                ? _patchMap[ThinkingLevelChangeEntry$.parentId](this.parentId)
-                : (_patchMap[ThinkingLevelChangeEntry$.parentId] is Patch)
-                ? _patchMap[ThinkingLevelChangeEntry$.parentId].applyTo(
-                    this.parentId,
-                  )
-                : _patchMap[ThinkingLevelChangeEntry$.parentId]
+          ? ((_patchMap[ThinkingLevelChangeEntry$.parentId] is Function)
+                    ? _patchMap[ThinkingLevelChangeEntry$.parentId](
+                        this.parentId,
+                      )
+                    : (_patchMap[ThinkingLevelChangeEntry$.parentId] is Patch)
+                    ? _patchMap[ThinkingLevelChangeEntry$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[ThinkingLevelChangeEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(ThinkingLevelChangeEntry$.timestamp)
-          ? (_patchMap[ThinkingLevelChangeEntry$.timestamp] is Function)
-                ? _patchMap[ThinkingLevelChangeEntry$.timestamp](this.timestamp)
-                : (_patchMap[ThinkingLevelChangeEntry$.timestamp] is Patch)
-                ? _patchMap[ThinkingLevelChangeEntry$.timestamp].applyTo(
-                    this.timestamp,
-                  )
-                : _patchMap[ThinkingLevelChangeEntry$.timestamp]
+          ? ((_patchMap[ThinkingLevelChangeEntry$.timestamp] is Function)
+                    ? _patchMap[ThinkingLevelChangeEntry$.timestamp](
+                        this.timestamp,
+                      )
+                    : (_patchMap[ThinkingLevelChangeEntry$.timestamp] is Patch)
+                    ? _patchMap[ThinkingLevelChangeEntry$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[ThinkingLevelChangeEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       thinkingLevel:
           _patchMap.containsKey(ThinkingLevelChangeEntry$.thinkingLevel)
-          ? (_patchMap[ThinkingLevelChangeEntry$.thinkingLevel] is Function)
-                ? _patchMap[ThinkingLevelChangeEntry$.thinkingLevel](
-                    this.thinkingLevel,
-                  )
-                : (_patchMap[ThinkingLevelChangeEntry$.thinkingLevel] is Patch)
-                ? _patchMap[ThinkingLevelChangeEntry$.thinkingLevel].applyTo(
-                    this.thinkingLevel,
-                  )
-                : _patchMap[ThinkingLevelChangeEntry$.thinkingLevel]
+          ? ((_patchMap[ThinkingLevelChangeEntry$.thinkingLevel] is Function)
+                    ? _patchMap[ThinkingLevelChangeEntry$.thinkingLevel](
+                        this.thinkingLevel,
+                      )
+                    : (_patchMap[ThinkingLevelChangeEntry$.thinkingLevel]
+                          is Patch)
+                    ? _patchMap[ThinkingLevelChangeEntry$.thinkingLevel]
+                          .applyTo(this.thinkingLevel)
+                    : _patchMap[ThinkingLevelChangeEntry$.thinkingLevel])
+                as String
           : this.thinkingLevel,
     );
   }
@@ -136,7 +144,8 @@ class ThinkingLevelChangeEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$ThinkingLevelChangeEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

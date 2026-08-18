@@ -42,25 +42,28 @@ class ArtifactRef {
     final _patchMap = _patcher.patchMap;
     return ArtifactRef(
       kind: _patchMap.containsKey(ArtifactRef$.kind)
-          ? (_patchMap[ArtifactRef$.kind] is Function)
-                ? _patchMap[ArtifactRef$.kind](this.kind)
-                : (_patchMap[ArtifactRef$.kind] is Patch)
-                ? _patchMap[ArtifactRef$.kind].applyTo(this.kind)
-                : _patchMap[ArtifactRef$.kind]
+          ? ((_patchMap[ArtifactRef$.kind] is Function)
+                    ? _patchMap[ArtifactRef$.kind](this.kind)
+                    : (_patchMap[ArtifactRef$.kind] is Patch)
+                    ? _patchMap[ArtifactRef$.kind].applyTo(this.kind)
+                    : _patchMap[ArtifactRef$.kind])
+                as String
           : this.kind,
       id: _patchMap.containsKey(ArtifactRef$.id)
-          ? (_patchMap[ArtifactRef$.id] is Function)
-                ? _patchMap[ArtifactRef$.id](this.id)
-                : (_patchMap[ArtifactRef$.id] is Patch)
-                ? _patchMap[ArtifactRef$.id].applyTo(this.id)
-                : _patchMap[ArtifactRef$.id]
+          ? ((_patchMap[ArtifactRef$.id] is Function)
+                    ? _patchMap[ArtifactRef$.id](this.id)
+                    : (_patchMap[ArtifactRef$.id] is Patch)
+                    ? _patchMap[ArtifactRef$.id].applyTo(this.id)
+                    : _patchMap[ArtifactRef$.id])
+                as String
           : this.id,
       uri: _patchMap.containsKey(ArtifactRef$.uri)
-          ? (_patchMap[ArtifactRef$.uri] is Function)
-                ? _patchMap[ArtifactRef$.uri](this.uri)
-                : (_patchMap[ArtifactRef$.uri] is Patch)
-                ? _patchMap[ArtifactRef$.uri].applyTo(this.uri)
-                : _patchMap[ArtifactRef$.uri]
+          ? ((_patchMap[ArtifactRef$.uri] is Function)
+                    ? _patchMap[ArtifactRef$.uri](this.uri)
+                    : (_patchMap[ArtifactRef$.uri] is Patch)
+                    ? _patchMap[ArtifactRef$.uri].applyTo(this.uri)
+                    : _patchMap[ArtifactRef$.uri])
+                as String?
           : this.uri,
     );
   }
@@ -91,7 +94,8 @@ class ArtifactRef {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$ArtifactRefToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

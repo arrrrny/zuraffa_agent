@@ -63,34 +63,42 @@ class BranchSummaryEntry {
     final _patchMap = _patcher.patchMap;
     return BranchSummaryEntry(
       id: _patchMap.containsKey(BranchSummaryEntry$.id)
-          ? (_patchMap[BranchSummaryEntry$.id] is Function)
-                ? _patchMap[BranchSummaryEntry$.id](this.id)
-                : (_patchMap[BranchSummaryEntry$.id] is Patch)
-                ? _patchMap[BranchSummaryEntry$.id].applyTo(this.id)
-                : _patchMap[BranchSummaryEntry$.id]
+          ? ((_patchMap[BranchSummaryEntry$.id] is Function)
+                    ? _patchMap[BranchSummaryEntry$.id](this.id)
+                    : (_patchMap[BranchSummaryEntry$.id] is Patch)
+                    ? _patchMap[BranchSummaryEntry$.id].applyTo(this.id)
+                    : _patchMap[BranchSummaryEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(BranchSummaryEntry$.parentId)
-          ? (_patchMap[BranchSummaryEntry$.parentId] is Function)
-                ? _patchMap[BranchSummaryEntry$.parentId](this.parentId)
-                : (_patchMap[BranchSummaryEntry$.parentId] is Patch)
-                ? _patchMap[BranchSummaryEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[BranchSummaryEntry$.parentId]
+          ? ((_patchMap[BranchSummaryEntry$.parentId] is Function)
+                    ? _patchMap[BranchSummaryEntry$.parentId](this.parentId)
+                    : (_patchMap[BranchSummaryEntry$.parentId] is Patch)
+                    ? _patchMap[BranchSummaryEntry$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[BranchSummaryEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(BranchSummaryEntry$.timestamp)
-          ? (_patchMap[BranchSummaryEntry$.timestamp] is Function)
-                ? _patchMap[BranchSummaryEntry$.timestamp](this.timestamp)
-                : (_patchMap[BranchSummaryEntry$.timestamp] is Patch)
-                ? _patchMap[BranchSummaryEntry$.timestamp].applyTo(
-                    this.timestamp,
-                  )
-                : _patchMap[BranchSummaryEntry$.timestamp]
+          ? ((_patchMap[BranchSummaryEntry$.timestamp] is Function)
+                    ? _patchMap[BranchSummaryEntry$.timestamp](this.timestamp)
+                    : (_patchMap[BranchSummaryEntry$.timestamp] is Patch)
+                    ? _patchMap[BranchSummaryEntry$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[BranchSummaryEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       summary: _patchMap.containsKey(BranchSummaryEntry$.summary)
-          ? (_patchMap[BranchSummaryEntry$.summary] is Function)
-                ? _patchMap[BranchSummaryEntry$.summary](this.summary)
-                : (_patchMap[BranchSummaryEntry$.summary] is Patch)
-                ? _patchMap[BranchSummaryEntry$.summary].applyTo(this.summary)
-                : _patchMap[BranchSummaryEntry$.summary]
+          ? ((_patchMap[BranchSummaryEntry$.summary] is Function)
+                    ? _patchMap[BranchSummaryEntry$.summary](this.summary)
+                    : (_patchMap[BranchSummaryEntry$.summary] is Patch)
+                    ? _patchMap[BranchSummaryEntry$.summary].applyTo(
+                        this.summary,
+                      )
+                    : _patchMap[BranchSummaryEntry$.summary])
+                as String
           : this.summary,
     );
   }
@@ -124,7 +132,8 @@ class BranchSummaryEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$BranchSummaryEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

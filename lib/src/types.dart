@@ -295,14 +295,12 @@ sealed class AgentMessage {
   }
 }
 
+/// Sentinel type for default/unset timestamps. Checked via
+/// `is _DefaultDateTime`; never accessed as a real DateTime.
 class _DefaultDateTime implements DateTime {
   const _DefaultDateTime();
-
-  DateTime get _now => DateTime.now().toUtc();
-
   @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      Function.apply(invocation.memberName, invocation.positionalArguments, invocation.namedArguments);
+  dynamic noSuchMethod(Invocation invocation) => null;
 }
 
 class UserMessage extends AgentMessage {

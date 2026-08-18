@@ -70,39 +70,50 @@ class ModelChangeEntry {
     final _patchMap = _patcher.patchMap;
     return ModelChangeEntry(
       id: _patchMap.containsKey(ModelChangeEntry$.id)
-          ? (_patchMap[ModelChangeEntry$.id] is Function)
-                ? _patchMap[ModelChangeEntry$.id](this.id)
-                : (_patchMap[ModelChangeEntry$.id] is Patch)
-                ? _patchMap[ModelChangeEntry$.id].applyTo(this.id)
-                : _patchMap[ModelChangeEntry$.id]
+          ? ((_patchMap[ModelChangeEntry$.id] is Function)
+                    ? _patchMap[ModelChangeEntry$.id](this.id)
+                    : (_patchMap[ModelChangeEntry$.id] is Patch)
+                    ? _patchMap[ModelChangeEntry$.id].applyTo(this.id)
+                    : _patchMap[ModelChangeEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(ModelChangeEntry$.parentId)
-          ? (_patchMap[ModelChangeEntry$.parentId] is Function)
-                ? _patchMap[ModelChangeEntry$.parentId](this.parentId)
-                : (_patchMap[ModelChangeEntry$.parentId] is Patch)
-                ? _patchMap[ModelChangeEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[ModelChangeEntry$.parentId]
+          ? ((_patchMap[ModelChangeEntry$.parentId] is Function)
+                    ? _patchMap[ModelChangeEntry$.parentId](this.parentId)
+                    : (_patchMap[ModelChangeEntry$.parentId] is Patch)
+                    ? _patchMap[ModelChangeEntry$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[ModelChangeEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(ModelChangeEntry$.timestamp)
-          ? (_patchMap[ModelChangeEntry$.timestamp] is Function)
-                ? _patchMap[ModelChangeEntry$.timestamp](this.timestamp)
-                : (_patchMap[ModelChangeEntry$.timestamp] is Patch)
-                ? _patchMap[ModelChangeEntry$.timestamp].applyTo(this.timestamp)
-                : _patchMap[ModelChangeEntry$.timestamp]
+          ? ((_patchMap[ModelChangeEntry$.timestamp] is Function)
+                    ? _patchMap[ModelChangeEntry$.timestamp](this.timestamp)
+                    : (_patchMap[ModelChangeEntry$.timestamp] is Patch)
+                    ? _patchMap[ModelChangeEntry$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[ModelChangeEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       modelId: _patchMap.containsKey(ModelChangeEntry$.modelId)
-          ? (_patchMap[ModelChangeEntry$.modelId] is Function)
-                ? _patchMap[ModelChangeEntry$.modelId](this.modelId)
-                : (_patchMap[ModelChangeEntry$.modelId] is Patch)
-                ? _patchMap[ModelChangeEntry$.modelId].applyTo(this.modelId)
-                : _patchMap[ModelChangeEntry$.modelId]
+          ? ((_patchMap[ModelChangeEntry$.modelId] is Function)
+                    ? _patchMap[ModelChangeEntry$.modelId](this.modelId)
+                    : (_patchMap[ModelChangeEntry$.modelId] is Patch)
+                    ? _patchMap[ModelChangeEntry$.modelId].applyTo(this.modelId)
+                    : _patchMap[ModelChangeEntry$.modelId])
+                as String
           : this.modelId,
       provider: _patchMap.containsKey(ModelChangeEntry$.provider)
-          ? (_patchMap[ModelChangeEntry$.provider] is Function)
-                ? _patchMap[ModelChangeEntry$.provider](this.provider)
-                : (_patchMap[ModelChangeEntry$.provider] is Patch)
-                ? _patchMap[ModelChangeEntry$.provider].applyTo(this.provider)
-                : _patchMap[ModelChangeEntry$.provider]
+          ? ((_patchMap[ModelChangeEntry$.provider] is Function)
+                    ? _patchMap[ModelChangeEntry$.provider](this.provider)
+                    : (_patchMap[ModelChangeEntry$.provider] is Patch)
+                    ? _patchMap[ModelChangeEntry$.provider].applyTo(
+                        this.provider,
+                      )
+                    : _patchMap[ModelChangeEntry$.provider])
+                as String
           : this.provider,
     );
   }
@@ -145,7 +156,8 @@ class ModelChangeEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$ModelChangeEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

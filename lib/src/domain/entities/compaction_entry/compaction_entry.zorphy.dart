@@ -75,54 +75,66 @@ class CompactionEntry {
     final _patchMap = _patcher.patchMap;
     return CompactionEntry(
       id: _patchMap.containsKey(CompactionEntry$.id)
-          ? (_patchMap[CompactionEntry$.id] is Function)
-                ? _patchMap[CompactionEntry$.id](this.id)
-                : (_patchMap[CompactionEntry$.id] is Patch)
-                ? _patchMap[CompactionEntry$.id].applyTo(this.id)
-                : _patchMap[CompactionEntry$.id]
+          ? ((_patchMap[CompactionEntry$.id] is Function)
+                    ? _patchMap[CompactionEntry$.id](this.id)
+                    : (_patchMap[CompactionEntry$.id] is Patch)
+                    ? _patchMap[CompactionEntry$.id].applyTo(this.id)
+                    : _patchMap[CompactionEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(CompactionEntry$.parentId)
-          ? (_patchMap[CompactionEntry$.parentId] is Function)
-                ? _patchMap[CompactionEntry$.parentId](this.parentId)
-                : (_patchMap[CompactionEntry$.parentId] is Patch)
-                ? _patchMap[CompactionEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[CompactionEntry$.parentId]
+          ? ((_patchMap[CompactionEntry$.parentId] is Function)
+                    ? _patchMap[CompactionEntry$.parentId](this.parentId)
+                    : (_patchMap[CompactionEntry$.parentId] is Patch)
+                    ? _patchMap[CompactionEntry$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[CompactionEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(CompactionEntry$.timestamp)
-          ? (_patchMap[CompactionEntry$.timestamp] is Function)
-                ? _patchMap[CompactionEntry$.timestamp](this.timestamp)
-                : (_patchMap[CompactionEntry$.timestamp] is Patch)
-                ? _patchMap[CompactionEntry$.timestamp].applyTo(this.timestamp)
-                : _patchMap[CompactionEntry$.timestamp]
+          ? ((_patchMap[CompactionEntry$.timestamp] is Function)
+                    ? _patchMap[CompactionEntry$.timestamp](this.timestamp)
+                    : (_patchMap[CompactionEntry$.timestamp] is Patch)
+                    ? _patchMap[CompactionEntry$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[CompactionEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       firstKeptEntryId: _patchMap.containsKey(CompactionEntry$.firstKeptEntryId)
-          ? (_patchMap[CompactionEntry$.firstKeptEntryId] is Function)
-                ? _patchMap[CompactionEntry$.firstKeptEntryId](
-                    this.firstKeptEntryId,
-                  )
-                : (_patchMap[CompactionEntry$.firstKeptEntryId] is Patch)
-                ? _patchMap[CompactionEntry$.firstKeptEntryId].applyTo(
-                    this.firstKeptEntryId,
-                  )
-                : _patchMap[CompactionEntry$.firstKeptEntryId]
+          ? ((_patchMap[CompactionEntry$.firstKeptEntryId] is Function)
+                    ? _patchMap[CompactionEntry$.firstKeptEntryId](
+                        this.firstKeptEntryId,
+                      )
+                    : (_patchMap[CompactionEntry$.firstKeptEntryId] is Patch)
+                    ? _patchMap[CompactionEntry$.firstKeptEntryId].applyTo(
+                        this.firstKeptEntryId,
+                      )
+                    : _patchMap[CompactionEntry$.firstKeptEntryId])
+                as String
           : this.firstKeptEntryId,
       tokensBefore: _patchMap.containsKey(CompactionEntry$.tokensBefore)
-          ? (_patchMap[CompactionEntry$.tokensBefore] is Function)
-                ? _patchMap[CompactionEntry$.tokensBefore](this.tokensBefore)
-                : (_patchMap[CompactionEntry$.tokensBefore] is Patch)
-                ? _patchMap[CompactionEntry$.tokensBefore].applyTo(
-                    this.tokensBefore,
-                  )
-                : _patchMap[CompactionEntry$.tokensBefore]
+          ? ((_patchMap[CompactionEntry$.tokensBefore] is Function)
+                    ? _patchMap[CompactionEntry$.tokensBefore](
+                        this.tokensBefore,
+                      )
+                    : (_patchMap[CompactionEntry$.tokensBefore] is Patch)
+                    ? _patchMap[CompactionEntry$.tokensBefore].applyTo(
+                        this.tokensBefore,
+                      )
+                    : _patchMap[CompactionEntry$.tokensBefore])
+                as int
           : this.tokensBefore,
       tokensAfter: _patchMap.containsKey(CompactionEntry$.tokensAfter)
-          ? (_patchMap[CompactionEntry$.tokensAfter] is Function)
-                ? _patchMap[CompactionEntry$.tokensAfter](this.tokensAfter)
-                : (_patchMap[CompactionEntry$.tokensAfter] is Patch)
-                ? _patchMap[CompactionEntry$.tokensAfter].applyTo(
-                    this.tokensAfter,
-                  )
-                : _patchMap[CompactionEntry$.tokensAfter]
+          ? ((_patchMap[CompactionEntry$.tokensAfter] is Function)
+                    ? _patchMap[CompactionEntry$.tokensAfter](this.tokensAfter)
+                    : (_patchMap[CompactionEntry$.tokensAfter] is Patch)
+                    ? _patchMap[CompactionEntry$.tokensAfter].applyTo(
+                        this.tokensAfter,
+                      )
+                    : _patchMap[CompactionEntry$.tokensAfter])
+                as int
           : this.tokensAfter,
     );
   }
@@ -169,7 +181,8 @@ class CompactionEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$CompactionEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

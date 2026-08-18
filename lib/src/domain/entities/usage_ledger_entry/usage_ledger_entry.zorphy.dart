@@ -98,82 +98,97 @@ class UsageLedgerEntry {
     final _patchMap = _patcher.patchMap;
     return UsageLedgerEntry(
       id: _patchMap.containsKey(UsageLedgerEntry$.id)
-          ? (_patchMap[UsageLedgerEntry$.id] is Function)
-                ? _patchMap[UsageLedgerEntry$.id](this.id)
-                : (_patchMap[UsageLedgerEntry$.id] is Patch)
-                ? _patchMap[UsageLedgerEntry$.id].applyTo(this.id)
-                : _patchMap[UsageLedgerEntry$.id]
+          ? ((_patchMap[UsageLedgerEntry$.id] is Function)
+                    ? _patchMap[UsageLedgerEntry$.id](this.id)
+                    : (_patchMap[UsageLedgerEntry$.id] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.id].applyTo(this.id)
+                    : _patchMap[UsageLedgerEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(UsageLedgerEntry$.parentId)
-          ? (_patchMap[UsageLedgerEntry$.parentId] is Function)
-                ? _patchMap[UsageLedgerEntry$.parentId](this.parentId)
-                : (_patchMap[UsageLedgerEntry$.parentId] is Patch)
-                ? _patchMap[UsageLedgerEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[UsageLedgerEntry$.parentId]
+          ? ((_patchMap[UsageLedgerEntry$.parentId] is Function)
+                    ? _patchMap[UsageLedgerEntry$.parentId](this.parentId)
+                    : (_patchMap[UsageLedgerEntry$.parentId] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.parentId].applyTo(
+                        this.parentId,
+                      )
+                    : _patchMap[UsageLedgerEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(UsageLedgerEntry$.timestamp)
-          ? (_patchMap[UsageLedgerEntry$.timestamp] is Function)
-                ? _patchMap[UsageLedgerEntry$.timestamp](this.timestamp)
-                : (_patchMap[UsageLedgerEntry$.timestamp] is Patch)
-                ? _patchMap[UsageLedgerEntry$.timestamp].applyTo(this.timestamp)
-                : _patchMap[UsageLedgerEntry$.timestamp]
+          ? ((_patchMap[UsageLedgerEntry$.timestamp] is Function)
+                    ? _patchMap[UsageLedgerEntry$.timestamp](this.timestamp)
+                    : (_patchMap[UsageLedgerEntry$.timestamp] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.timestamp].applyTo(
+                        this.timestamp,
+                      )
+                    : _patchMap[UsageLedgerEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       callId: _patchMap.containsKey(UsageLedgerEntry$.callId)
-          ? (_patchMap[UsageLedgerEntry$.callId] is Function)
-                ? _patchMap[UsageLedgerEntry$.callId](this.callId)
-                : (_patchMap[UsageLedgerEntry$.callId] is Patch)
-                ? _patchMap[UsageLedgerEntry$.callId].applyTo(this.callId)
-                : _patchMap[UsageLedgerEntry$.callId]
+          ? ((_patchMap[UsageLedgerEntry$.callId] is Function)
+                    ? _patchMap[UsageLedgerEntry$.callId](this.callId)
+                    : (_patchMap[UsageLedgerEntry$.callId] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.callId].applyTo(this.callId)
+                    : _patchMap[UsageLedgerEntry$.callId])
+                as String
           : this.callId,
       turnNumber: _patchMap.containsKey(UsageLedgerEntry$.turnNumber)
-          ? (_patchMap[UsageLedgerEntry$.turnNumber] is Function)
-                ? _patchMap[UsageLedgerEntry$.turnNumber](this.turnNumber)
-                : (_patchMap[UsageLedgerEntry$.turnNumber] is Patch)
-                ? _patchMap[UsageLedgerEntry$.turnNumber].applyTo(
-                    this.turnNumber,
-                  )
-                : _patchMap[UsageLedgerEntry$.turnNumber]
+          ? ((_patchMap[UsageLedgerEntry$.turnNumber] is Function)
+                    ? _patchMap[UsageLedgerEntry$.turnNumber](this.turnNumber)
+                    : (_patchMap[UsageLedgerEntry$.turnNumber] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.turnNumber].applyTo(
+                        this.turnNumber,
+                      )
+                    : _patchMap[UsageLedgerEntry$.turnNumber])
+                as int
           : this.turnNumber,
       inputTokens: _patchMap.containsKey(UsageLedgerEntry$.inputTokens)
-          ? (_patchMap[UsageLedgerEntry$.inputTokens] is Function)
-                ? _patchMap[UsageLedgerEntry$.inputTokens](this.inputTokens)
-                : (_patchMap[UsageLedgerEntry$.inputTokens] is Patch)
-                ? _patchMap[UsageLedgerEntry$.inputTokens].applyTo(
-                    this.inputTokens,
-                  )
-                : _patchMap[UsageLedgerEntry$.inputTokens]
+          ? ((_patchMap[UsageLedgerEntry$.inputTokens] is Function)
+                    ? _patchMap[UsageLedgerEntry$.inputTokens](this.inputTokens)
+                    : (_patchMap[UsageLedgerEntry$.inputTokens] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.inputTokens].applyTo(
+                        this.inputTokens,
+                      )
+                    : _patchMap[UsageLedgerEntry$.inputTokens])
+                as int
           : this.inputTokens,
       outputTokens: _patchMap.containsKey(UsageLedgerEntry$.outputTokens)
-          ? (_patchMap[UsageLedgerEntry$.outputTokens] is Function)
-                ? _patchMap[UsageLedgerEntry$.outputTokens](this.outputTokens)
-                : (_patchMap[UsageLedgerEntry$.outputTokens] is Patch)
-                ? _patchMap[UsageLedgerEntry$.outputTokens].applyTo(
-                    this.outputTokens,
-                  )
-                : _patchMap[UsageLedgerEntry$.outputTokens]
+          ? ((_patchMap[UsageLedgerEntry$.outputTokens] is Function)
+                    ? _patchMap[UsageLedgerEntry$.outputTokens](
+                        this.outputTokens,
+                      )
+                    : (_patchMap[UsageLedgerEntry$.outputTokens] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.outputTokens].applyTo(
+                        this.outputTokens,
+                      )
+                    : _patchMap[UsageLedgerEntry$.outputTokens])
+                as int
           : this.outputTokens,
       cacheReadTokens: _patchMap.containsKey(UsageLedgerEntry$.cacheReadTokens)
-          ? (_patchMap[UsageLedgerEntry$.cacheReadTokens] is Function)
-                ? _patchMap[UsageLedgerEntry$.cacheReadTokens](
-                    this.cacheReadTokens,
-                  )
-                : (_patchMap[UsageLedgerEntry$.cacheReadTokens] is Patch)
-                ? _patchMap[UsageLedgerEntry$.cacheReadTokens].applyTo(
-                    this.cacheReadTokens,
-                  )
-                : _patchMap[UsageLedgerEntry$.cacheReadTokens]
+          ? ((_patchMap[UsageLedgerEntry$.cacheReadTokens] is Function)
+                    ? _patchMap[UsageLedgerEntry$.cacheReadTokens](
+                        this.cacheReadTokens,
+                      )
+                    : (_patchMap[UsageLedgerEntry$.cacheReadTokens] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.cacheReadTokens].applyTo(
+                        this.cacheReadTokens,
+                      )
+                    : _patchMap[UsageLedgerEntry$.cacheReadTokens])
+                as int
           : this.cacheReadTokens,
       cacheWriteTokens:
           _patchMap.containsKey(UsageLedgerEntry$.cacheWriteTokens)
-          ? (_patchMap[UsageLedgerEntry$.cacheWriteTokens] is Function)
-                ? _patchMap[UsageLedgerEntry$.cacheWriteTokens](
-                    this.cacheWriteTokens,
-                  )
-                : (_patchMap[UsageLedgerEntry$.cacheWriteTokens] is Patch)
-                ? _patchMap[UsageLedgerEntry$.cacheWriteTokens].applyTo(
-                    this.cacheWriteTokens,
-                  )
-                : _patchMap[UsageLedgerEntry$.cacheWriteTokens]
+          ? ((_patchMap[UsageLedgerEntry$.cacheWriteTokens] is Function)
+                    ? _patchMap[UsageLedgerEntry$.cacheWriteTokens](
+                        this.cacheWriteTokens,
+                      )
+                    : (_patchMap[UsageLedgerEntry$.cacheWriteTokens] is Patch)
+                    ? _patchMap[UsageLedgerEntry$.cacheWriteTokens].applyTo(
+                        this.cacheWriteTokens,
+                      )
+                    : _patchMap[UsageLedgerEntry$.cacheWriteTokens])
+                as int
           : this.cacheWriteTokens,
     );
   }
@@ -232,7 +247,8 @@ class UsageLedgerEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$UsageLedgerEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

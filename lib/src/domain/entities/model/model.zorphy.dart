@@ -45,25 +45,30 @@ class Model {
     final _patchMap = _patcher.patchMap;
     return Model(
       provider: _patchMap.containsKey(Model$.provider)
-          ? (_patchMap[Model$.provider] is Function)
-                ? _patchMap[Model$.provider](this.provider)
-                : (_patchMap[Model$.provider] is Patch)
-                ? _patchMap[Model$.provider].applyTo(this.provider)
-                : _patchMap[Model$.provider]
+          ? ((_patchMap[Model$.provider] is Function)
+                    ? _patchMap[Model$.provider](this.provider)
+                    : (_patchMap[Model$.provider] is Patch)
+                    ? _patchMap[Model$.provider].applyTo(this.provider)
+                    : _patchMap[Model$.provider])
+                as String
           : this.provider,
       modelId: _patchMap.containsKey(Model$.modelId)
-          ? (_patchMap[Model$.modelId] is Function)
-                ? _patchMap[Model$.modelId](this.modelId)
-                : (_patchMap[Model$.modelId] is Patch)
-                ? _patchMap[Model$.modelId].applyTo(this.modelId)
-                : _patchMap[Model$.modelId]
+          ? ((_patchMap[Model$.modelId] is Function)
+                    ? _patchMap[Model$.modelId](this.modelId)
+                    : (_patchMap[Model$.modelId] is Patch)
+                    ? _patchMap[Model$.modelId].applyTo(this.modelId)
+                    : _patchMap[Model$.modelId])
+                as String
           : this.modelId,
       contextWindow: _patchMap.containsKey(Model$.contextWindow)
-          ? (_patchMap[Model$.contextWindow] is Function)
-                ? _patchMap[Model$.contextWindow](this.contextWindow)
-                : (_patchMap[Model$.contextWindow] is Patch)
-                ? _patchMap[Model$.contextWindow].applyTo(this.contextWindow)
-                : _patchMap[Model$.contextWindow]
+          ? ((_patchMap[Model$.contextWindow] is Function)
+                    ? _patchMap[Model$.contextWindow](this.contextWindow)
+                    : (_patchMap[Model$.contextWindow] is Patch)
+                    ? _patchMap[Model$.contextWindow].applyTo(
+                        this.contextWindow,
+                      )
+                    : _patchMap[Model$.contextWindow])
+                as int
           : this.contextWindow,
     );
   }
@@ -94,7 +99,8 @@ class Model {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$ModelToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

@@ -61,32 +61,36 @@ class LabelEntry {
     final _patchMap = _patcher.patchMap;
     return LabelEntry(
       id: _patchMap.containsKey(LabelEntry$.id)
-          ? (_patchMap[LabelEntry$.id] is Function)
-                ? _patchMap[LabelEntry$.id](this.id)
-                : (_patchMap[LabelEntry$.id] is Patch)
-                ? _patchMap[LabelEntry$.id].applyTo(this.id)
-                : _patchMap[LabelEntry$.id]
+          ? ((_patchMap[LabelEntry$.id] is Function)
+                    ? _patchMap[LabelEntry$.id](this.id)
+                    : (_patchMap[LabelEntry$.id] is Patch)
+                    ? _patchMap[LabelEntry$.id].applyTo(this.id)
+                    : _patchMap[LabelEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(LabelEntry$.parentId)
-          ? (_patchMap[LabelEntry$.parentId] is Function)
-                ? _patchMap[LabelEntry$.parentId](this.parentId)
-                : (_patchMap[LabelEntry$.parentId] is Patch)
-                ? _patchMap[LabelEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[LabelEntry$.parentId]
+          ? ((_patchMap[LabelEntry$.parentId] is Function)
+                    ? _patchMap[LabelEntry$.parentId](this.parentId)
+                    : (_patchMap[LabelEntry$.parentId] is Patch)
+                    ? _patchMap[LabelEntry$.parentId].applyTo(this.parentId)
+                    : _patchMap[LabelEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(LabelEntry$.timestamp)
-          ? (_patchMap[LabelEntry$.timestamp] is Function)
-                ? _patchMap[LabelEntry$.timestamp](this.timestamp)
-                : (_patchMap[LabelEntry$.timestamp] is Patch)
-                ? _patchMap[LabelEntry$.timestamp].applyTo(this.timestamp)
-                : _patchMap[LabelEntry$.timestamp]
+          ? ((_patchMap[LabelEntry$.timestamp] is Function)
+                    ? _patchMap[LabelEntry$.timestamp](this.timestamp)
+                    : (_patchMap[LabelEntry$.timestamp] is Patch)
+                    ? _patchMap[LabelEntry$.timestamp].applyTo(this.timestamp)
+                    : _patchMap[LabelEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       label: _patchMap.containsKey(LabelEntry$.label)
-          ? (_patchMap[LabelEntry$.label] is Function)
-                ? _patchMap[LabelEntry$.label](this.label)
-                : (_patchMap[LabelEntry$.label] is Patch)
-                ? _patchMap[LabelEntry$.label].applyTo(this.label)
-                : _patchMap[LabelEntry$.label]
+          ? ((_patchMap[LabelEntry$.label] is Function)
+                    ? _patchMap[LabelEntry$.label](this.label)
+                    : (_patchMap[LabelEntry$.label] is Patch)
+                    ? _patchMap[LabelEntry$.label].applyTo(this.label)
+                    : _patchMap[LabelEntry$.label])
+                as String
           : this.label,
     );
   }
@@ -120,7 +124,8 @@ class LabelEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$LabelEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

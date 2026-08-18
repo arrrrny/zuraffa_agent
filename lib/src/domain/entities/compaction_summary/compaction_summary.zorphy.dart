@@ -63,40 +63,44 @@ class CompactionSummary {
     final _patchMap = _patcher.patchMap;
     return CompactionSummary(
       decisions: _patchMap.containsKey(CompactionSummary$.decisions)
-          ? (_patchMap[CompactionSummary$.decisions] is Function)
-                ? _patchMap[CompactionSummary$.decisions](this.decisions)
-                : (_patchMap[CompactionSummary$.decisions] is Patch)
-                ? _patchMap[CompactionSummary$.decisions].applyTo(
-                    this.decisions,
-                  )
-                : _patchMap[CompactionSummary$.decisions]
+          ? ((_patchMap[CompactionSummary$.decisions] is Function)
+                    ? _patchMap[CompactionSummary$.decisions](this.decisions)
+                    : (_patchMap[CompactionSummary$.decisions] is Patch)
+                    ? _patchMap[CompactionSummary$.decisions].applyTo(
+                        this.decisions,
+                      )
+                    : _patchMap[CompactionSummary$.decisions])
+                as List<String>
           : this.decisions,
       toolNames: _patchMap.containsKey(CompactionSummary$.toolNames)
-          ? (_patchMap[CompactionSummary$.toolNames] is Function)
-                ? _patchMap[CompactionSummary$.toolNames](this.toolNames)
-                : (_patchMap[CompactionSummary$.toolNames] is Patch)
-                ? _patchMap[CompactionSummary$.toolNames].applyTo(
-                    this.toolNames,
-                  )
-                : _patchMap[CompactionSummary$.toolNames]
+          ? ((_patchMap[CompactionSummary$.toolNames] is Function)
+                    ? _patchMap[CompactionSummary$.toolNames](this.toolNames)
+                    : (_patchMap[CompactionSummary$.toolNames] is Patch)
+                    ? _patchMap[CompactionSummary$.toolNames].applyTo(
+                        this.toolNames,
+                      )
+                    : _patchMap[CompactionSummary$.toolNames])
+                as List<String>
           : this.toolNames,
       keyResults: _patchMap.containsKey(CompactionSummary$.keyResults)
-          ? (_patchMap[CompactionSummary$.keyResults] is Function)
-                ? _patchMap[CompactionSummary$.keyResults](this.keyResults)
-                : (_patchMap[CompactionSummary$.keyResults] is Patch)
-                ? _patchMap[CompactionSummary$.keyResults].applyTo(
-                    this.keyResults,
-                  )
-                : _patchMap[CompactionSummary$.keyResults]
+          ? ((_patchMap[CompactionSummary$.keyResults] is Function)
+                    ? _patchMap[CompactionSummary$.keyResults](this.keyResults)
+                    : (_patchMap[CompactionSummary$.keyResults] is Patch)
+                    ? _patchMap[CompactionSummary$.keyResults].applyTo(
+                        this.keyResults,
+                      )
+                    : _patchMap[CompactionSummary$.keyResults])
+                as List<String>
           : this.keyResults,
       planState: _patchMap.containsKey(CompactionSummary$.planState)
-          ? (_patchMap[CompactionSummary$.planState] is Function)
-                ? _patchMap[CompactionSummary$.planState](this.planState)
-                : (_patchMap[CompactionSummary$.planState] is Patch)
-                ? _patchMap[CompactionSummary$.planState].applyTo(
-                    this.planState,
-                  )
-                : _patchMap[CompactionSummary$.planState]
+          ? ((_patchMap[CompactionSummary$.planState] is Function)
+                    ? _patchMap[CompactionSummary$.planState](this.planState)
+                    : (_patchMap[CompactionSummary$.planState] is Patch)
+                    ? _patchMap[CompactionSummary$.planState].applyTo(
+                        this.planState,
+                      )
+                    : _patchMap[CompactionSummary$.planState])
+                as String?
           : this.planState,
     );
   }
@@ -135,7 +139,8 @@ class CompactionSummary {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$CompactionSummaryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

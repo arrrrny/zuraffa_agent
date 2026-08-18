@@ -104,81 +104,93 @@ class TurnRecord {
     final _patchMap = _patcher.patchMap;
     return TurnRecord(
       id: _patchMap.containsKey(TurnRecord$.id)
-          ? (_patchMap[TurnRecord$.id] is Function)
-                ? _patchMap[TurnRecord$.id](this.id)
-                : (_patchMap[TurnRecord$.id] is Patch)
-                ? _patchMap[TurnRecord$.id].applyTo(this.id)
-                : _patchMap[TurnRecord$.id]
+          ? ((_patchMap[TurnRecord$.id] is Function)
+                    ? _patchMap[TurnRecord$.id](this.id)
+                    : (_patchMap[TurnRecord$.id] is Patch)
+                    ? _patchMap[TurnRecord$.id].applyTo(this.id)
+                    : _patchMap[TurnRecord$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(TurnRecord$.parentId)
-          ? (_patchMap[TurnRecord$.parentId] is Function)
-                ? _patchMap[TurnRecord$.parentId](this.parentId)
-                : (_patchMap[TurnRecord$.parentId] is Patch)
-                ? _patchMap[TurnRecord$.parentId].applyTo(this.parentId)
-                : _patchMap[TurnRecord$.parentId]
+          ? ((_patchMap[TurnRecord$.parentId] is Function)
+                    ? _patchMap[TurnRecord$.parentId](this.parentId)
+                    : (_patchMap[TurnRecord$.parentId] is Patch)
+                    ? _patchMap[TurnRecord$.parentId].applyTo(this.parentId)
+                    : _patchMap[TurnRecord$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(TurnRecord$.timestamp)
-          ? (_patchMap[TurnRecord$.timestamp] is Function)
-                ? _patchMap[TurnRecord$.timestamp](this.timestamp)
-                : (_patchMap[TurnRecord$.timestamp] is Patch)
-                ? _patchMap[TurnRecord$.timestamp].applyTo(this.timestamp)
-                : _patchMap[TurnRecord$.timestamp]
+          ? ((_patchMap[TurnRecord$.timestamp] is Function)
+                    ? _patchMap[TurnRecord$.timestamp](this.timestamp)
+                    : (_patchMap[TurnRecord$.timestamp] is Patch)
+                    ? _patchMap[TurnRecord$.timestamp].applyTo(this.timestamp)
+                    : _patchMap[TurnRecord$.timestamp])
+                as DateTime
           : this.timestamp,
       turnNumber: _patchMap.containsKey(TurnRecord$.turnNumber)
-          ? (_patchMap[TurnRecord$.turnNumber] is Function)
-                ? _patchMap[TurnRecord$.turnNumber](this.turnNumber)
-                : (_patchMap[TurnRecord$.turnNumber] is Patch)
-                ? _patchMap[TurnRecord$.turnNumber].applyTo(this.turnNumber)
-                : _patchMap[TurnRecord$.turnNumber]
+          ? ((_patchMap[TurnRecord$.turnNumber] is Function)
+                    ? _patchMap[TurnRecord$.turnNumber](this.turnNumber)
+                    : (_patchMap[TurnRecord$.turnNumber] is Patch)
+                    ? _patchMap[TurnRecord$.turnNumber].applyTo(this.turnNumber)
+                    : _patchMap[TurnRecord$.turnNumber])
+                as int
           : this.turnNumber,
       messageEntryIds: _patchMap.containsKey(TurnRecord$.messageEntryIds)
-          ? (_patchMap[TurnRecord$.messageEntryIds] is Function)
-                ? _patchMap[TurnRecord$.messageEntryIds](this.messageEntryIds)
-                : (_patchMap[TurnRecord$.messageEntryIds] is Patch)
-                ? _patchMap[TurnRecord$.messageEntryIds].applyTo(
-                    this.messageEntryIds,
-                  )
-                : _patchMap[TurnRecord$.messageEntryIds]
+          ? ((_patchMap[TurnRecord$.messageEntryIds] is Function)
+                    ? _patchMap[TurnRecord$.messageEntryIds](
+                        this.messageEntryIds,
+                      )
+                    : (_patchMap[TurnRecord$.messageEntryIds] is Patch)
+                    ? _patchMap[TurnRecord$.messageEntryIds].applyTo(
+                        this.messageEntryIds,
+                      )
+                    : _patchMap[TurnRecord$.messageEntryIds])
+                as List<String>
           : this.messageEntryIds,
       toolInvocationEntryIds:
           _patchMap.containsKey(TurnRecord$.toolInvocationEntryIds)
-          ? (_patchMap[TurnRecord$.toolInvocationEntryIds] is Function)
-                ? _patchMap[TurnRecord$.toolInvocationEntryIds](
-                    this.toolInvocationEntryIds,
-                  )
-                : (_patchMap[TurnRecord$.toolInvocationEntryIds] is Patch)
-                ? _patchMap[TurnRecord$.toolInvocationEntryIds].applyTo(
-                    this.toolInvocationEntryIds,
-                  )
-                : _patchMap[TurnRecord$.toolInvocationEntryIds]
+          ? ((_patchMap[TurnRecord$.toolInvocationEntryIds] is Function)
+                    ? _patchMap[TurnRecord$.toolInvocationEntryIds](
+                        this.toolInvocationEntryIds,
+                      )
+                    : (_patchMap[TurnRecord$.toolInvocationEntryIds] is Patch)
+                    ? _patchMap[TurnRecord$.toolInvocationEntryIds].applyTo(
+                        this.toolInvocationEntryIds,
+                      )
+                    : _patchMap[TurnRecord$.toolInvocationEntryIds])
+                as List<String>
           : this.toolInvocationEntryIds,
       stopReason: _patchMap.containsKey(TurnRecord$.stopReason)
-          ? (_patchMap[TurnRecord$.stopReason] is Function)
-                ? _patchMap[TurnRecord$.stopReason](this.stopReason)
-                : (_patchMap[TurnRecord$.stopReason] is Patch)
-                ? _patchMap[TurnRecord$.stopReason].applyTo(this.stopReason)
-                : _patchMap[TurnRecord$.stopReason]
+          ? ((_patchMap[TurnRecord$.stopReason] is Function)
+                    ? _patchMap[TurnRecord$.stopReason](this.stopReason)
+                    : (_patchMap[TurnRecord$.stopReason] is Patch)
+                    ? _patchMap[TurnRecord$.stopReason].applyTo(this.stopReason)
+                    : _patchMap[TurnRecord$.stopReason])
+                as String
           : this.stopReason,
       startedAt: _patchMap.containsKey(TurnRecord$.startedAt)
-          ? (_patchMap[TurnRecord$.startedAt] is Function)
-                ? _patchMap[TurnRecord$.startedAt](this.startedAt)
-                : (_patchMap[TurnRecord$.startedAt] is Patch)
-                ? _patchMap[TurnRecord$.startedAt].applyTo(this.startedAt)
-                : _patchMap[TurnRecord$.startedAt]
+          ? ((_patchMap[TurnRecord$.startedAt] is Function)
+                    ? _patchMap[TurnRecord$.startedAt](this.startedAt)
+                    : (_patchMap[TurnRecord$.startedAt] is Patch)
+                    ? _patchMap[TurnRecord$.startedAt].applyTo(this.startedAt)
+                    : _patchMap[TurnRecord$.startedAt])
+                as DateTime
           : this.startedAt,
       endedAt: _patchMap.containsKey(TurnRecord$.endedAt)
-          ? (_patchMap[TurnRecord$.endedAt] is Function)
-                ? _patchMap[TurnRecord$.endedAt](this.endedAt)
-                : (_patchMap[TurnRecord$.endedAt] is Patch)
-                ? _patchMap[TurnRecord$.endedAt].applyTo(this.endedAt)
-                : _patchMap[TurnRecord$.endedAt]
+          ? ((_patchMap[TurnRecord$.endedAt] is Function)
+                    ? _patchMap[TurnRecord$.endedAt](this.endedAt)
+                    : (_patchMap[TurnRecord$.endedAt] is Patch)
+                    ? _patchMap[TurnRecord$.endedAt].applyTo(this.endedAt)
+                    : _patchMap[TurnRecord$.endedAt])
+                as DateTime
           : this.endedAt,
       durationMs: _patchMap.containsKey(TurnRecord$.durationMs)
-          ? (_patchMap[TurnRecord$.durationMs] is Function)
-                ? _patchMap[TurnRecord$.durationMs](this.durationMs)
-                : (_patchMap[TurnRecord$.durationMs] is Patch)
-                ? _patchMap[TurnRecord$.durationMs].applyTo(this.durationMs)
-                : _patchMap[TurnRecord$.durationMs]
+          ? ((_patchMap[TurnRecord$.durationMs] is Function)
+                    ? _patchMap[TurnRecord$.durationMs](this.durationMs)
+                    : (_patchMap[TurnRecord$.durationMs] is Patch)
+                    ? _patchMap[TurnRecord$.durationMs].applyTo(this.durationMs)
+                    : _patchMap[TurnRecord$.durationMs])
+                as int
           : this.durationMs,
     );
   }
@@ -241,7 +253,8 @@ class TurnRecord {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$TurnRecordToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {

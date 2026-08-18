@@ -68,39 +68,46 @@ class CustomEntry {
     final _patchMap = _patcher.patchMap;
     return CustomEntry(
       id: _patchMap.containsKey(CustomEntry$.id)
-          ? (_patchMap[CustomEntry$.id] is Function)
-                ? _patchMap[CustomEntry$.id](this.id)
-                : (_patchMap[CustomEntry$.id] is Patch)
-                ? _patchMap[CustomEntry$.id].applyTo(this.id)
-                : _patchMap[CustomEntry$.id]
+          ? ((_patchMap[CustomEntry$.id] is Function)
+                    ? _patchMap[CustomEntry$.id](this.id)
+                    : (_patchMap[CustomEntry$.id] is Patch)
+                    ? _patchMap[CustomEntry$.id].applyTo(this.id)
+                    : _patchMap[CustomEntry$.id])
+                as String
           : this.id,
       parentId: _patchMap.containsKey(CustomEntry$.parentId)
-          ? (_patchMap[CustomEntry$.parentId] is Function)
-                ? _patchMap[CustomEntry$.parentId](this.parentId)
-                : (_patchMap[CustomEntry$.parentId] is Patch)
-                ? _patchMap[CustomEntry$.parentId].applyTo(this.parentId)
-                : _patchMap[CustomEntry$.parentId]
+          ? ((_patchMap[CustomEntry$.parentId] is Function)
+                    ? _patchMap[CustomEntry$.parentId](this.parentId)
+                    : (_patchMap[CustomEntry$.parentId] is Patch)
+                    ? _patchMap[CustomEntry$.parentId].applyTo(this.parentId)
+                    : _patchMap[CustomEntry$.parentId])
+                as String?
           : this.parentId,
       timestamp: _patchMap.containsKey(CustomEntry$.timestamp)
-          ? (_patchMap[CustomEntry$.timestamp] is Function)
-                ? _patchMap[CustomEntry$.timestamp](this.timestamp)
-                : (_patchMap[CustomEntry$.timestamp] is Patch)
-                ? _patchMap[CustomEntry$.timestamp].applyTo(this.timestamp)
-                : _patchMap[CustomEntry$.timestamp]
+          ? ((_patchMap[CustomEntry$.timestamp] is Function)
+                    ? _patchMap[CustomEntry$.timestamp](this.timestamp)
+                    : (_patchMap[CustomEntry$.timestamp] is Patch)
+                    ? _patchMap[CustomEntry$.timestamp].applyTo(this.timestamp)
+                    : _patchMap[CustomEntry$.timestamp])
+                as DateTime
           : this.timestamp,
       customType: _patchMap.containsKey(CustomEntry$.customType)
-          ? (_patchMap[CustomEntry$.customType] is Function)
-                ? _patchMap[CustomEntry$.customType](this.customType)
-                : (_patchMap[CustomEntry$.customType] is Patch)
-                ? _patchMap[CustomEntry$.customType].applyTo(this.customType)
-                : _patchMap[CustomEntry$.customType]
+          ? ((_patchMap[CustomEntry$.customType] is Function)
+                    ? _patchMap[CustomEntry$.customType](this.customType)
+                    : (_patchMap[CustomEntry$.customType] is Patch)
+                    ? _patchMap[CustomEntry$.customType].applyTo(
+                        this.customType,
+                      )
+                    : _patchMap[CustomEntry$.customType])
+                as String
           : this.customType,
       payload: _patchMap.containsKey(CustomEntry$.payload)
-          ? (_patchMap[CustomEntry$.payload] is Function)
-                ? _patchMap[CustomEntry$.payload](this.payload)
-                : (_patchMap[CustomEntry$.payload] is Patch)
-                ? _patchMap[CustomEntry$.payload].applyTo(this.payload)
-                : _patchMap[CustomEntry$.payload]
+          ? ((_patchMap[CustomEntry$.payload] is Function)
+                    ? _patchMap[CustomEntry$.payload](this.payload)
+                    : (_patchMap[CustomEntry$.payload] is Patch)
+                    ? _patchMap[CustomEntry$.payload].applyTo(this.payload)
+                    : _patchMap[CustomEntry$.payload])
+                as String
           : this.payload,
     );
   }
@@ -143,7 +150,8 @@ class CustomEntry {
 
   Map<String, dynamic> toJsonLean() {
     final Map<String, dynamic> data = _$CustomEntryToJson(this);
-    return _sanitizeJson(data);
+    _sanitizeJson(data);
+    return data;
   }
 
   dynamic _sanitizeJson(dynamic json) {
