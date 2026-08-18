@@ -1,8 +1,12 @@
 .dart_tool/
 .build/
+build/
 pubspec.lock
 .workflow/state/
 *.log
+*.tmp
+.DS_Store
+.env*
 .memsearch/
 .kimi-code/
 .specify/*

@@ -1,0 +1,33 @@
+zuraffa_agent
+Copyright 2026 ZikZak AI
+
+This product includes software ported from pi_agent
+(https://github.com/arrrrny/pi-mono; local path ~/Developer/pi/pi_agent,
+branch 001-dart-agent-package, commit 9b1c4224), Copyright (c) 2026 ZikZak AI.
+
+LICENSE CORRECTION vs design docs: the pi_agent source tree carries a
+BSD 3-Clause License, not MIT as specs/002-state-and-sessions assumed
+(research.md R11, contracts/support-assets.md header template). Because the
+same copyright holder (ZikZak AI) owns both codebases, the ported portions
+are relicensed MIT under zuraffa_agent; this NOTICE retains the upstream
+provenance record, and every ported file carries an attribution header
+stating the actual upstream license.
+
+Ported modules under lib/src/ (pi_agent module -> zuraffa_agent module):
+- types.dart           <- lib/src/types.dart (entity subset; the dynamic
+                          `typedef AgentTool<T, D> = dynamic` is dropped)
+- tools.dart           <- lib/src/tools.dart (real AgentTool class)
+- session.dart         <- lib/src/session.dart (Session renamed AgentSession)
+- session_storage.dart <- lib/src/session_storage.dart (+ JsonlTear reporting)
+- compaction.dart      <- lib/src/compaction.dart (reworked: injectable
+                          structured summarizer replaces the placeholder)
+- skills.dart          <- lib/src/skills.dart
+- prompt_templates.dart<- lib/src/prompt_templates.dart
+- execution_env.dart   <- lib/src/execution_env.dart
+- sse_parser.dart      <- lib/src/sse_parser.dart
+
+New modules written for zuraffa_agent (no upstream counterpart):
+hive_adapters.dart, hive_session_store.dart, usage_ledger.dart.
+
+NOT ported — owned by other specs (001/004): agent_loop.dart, agent.dart,
+llm_client.dart, conversion.dart.

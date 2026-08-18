@@ -20,7 +20,7 @@ As the engine, I persist agent state as granular typed entities — `AgentSessio
 
 **Acceptance Scenarios**:
 
-1. **Given** a completed mission, **When** inspected, **Then** every turn, message, tool invocation, and usage record is a distinct typed entity retrievable independently.
+1. **Given** a completed mission persisted through a store round-trip, **When** the state is reloaded and inspected, **Then** every turn, message, tool invocation, and usage record is retrievable as a distinct typed entity by its own identity — with no `Map<String, dynamic>` escape anywhere in the round-trip.
 
 ### User Story 2 - Branching session tree with fork/resume (Priority: P1)
 
@@ -32,9 +32,9 @@ As a user, I branch a session (explore an alternative strategy), later resume ei
 
 **Acceptance Scenarios**:
 
-1. **Given** session at entry N, **When** forked, **Then** a new branch shares ancestry and diverges cleanly.
-2. **Given** two branches, **When** switching, **Then** `buildContext()` reconstructs each branch's conversation without cross-contamination.
-3. **Given** a persisted session, **When** the engine restarts, **Then** the session resumes from its latest leaf.
+1. **Given** a session at entry N, **When** forked, **Then** a new branch shares ancestry up to N and diverges cleanly from entry N+1.
+2. **Given** two diverged branches of one session, **When** switching between them, **Then** context reconstruction (`buildContext`) returns exactly the active branch's conversation — no entries leak from the sibling branch.
+3. **Given** a session persisted and the engine restarted, **When** the session is reopened, **Then** it resumes from its latest leaf and the reconstructed context is identical to the pre-restart context.
 
 ### User Story 3 - Selective compaction (Priority: P1)
 
@@ -46,8 +46,8 @@ As the engine, when context approaches the budget, I compact selectively — ret
 
 **Acceptance Scenarios**:
 
-1. **Given** context usage crossing the threshold, **When** compaction runs, **Then** retained categories survive (decisions/tool names/key results/plan) and discarded material is replaced by structured summaries.
-2. **Given** a fixture mission suite, **When** compacted runs are compared to baseline, **Then** outcome equality holds.
+1. **Given** context usage crossing the threshold, **When** compaction runs, **Then** retained categories survive (decisions/tool names/key results/plan) and discarded material is replaced by structured summaries plus resolvable artifact references.
+2. **Given** the fixture mission suite with recorded uncompacted baselines, **When** the same missions run compacted, **Then** mission outcomes match the baselines (outcome equality, not transcript equality).
 
 ### User Story 4 - pi_agent seed merge (Priority: P1)
 
@@ -59,12 +59,13 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 
 **Acceptance Scenarios**:
 
-1. **Given** the pi_agent source (branch `001-dart-agent-package`), **When** merged, **Then** types/tools/session-tree/SSE/skills/templates carry attribution headers and pass the engine's test suite.
+1. **Given** the pi_agent source (branch `001-dart-agent-package`), **When** merged, **Then** types/tools/session-tree/SSE/skills/templates carry attribution headers, pass the engine's test suite, and zero stub code remains in the shipped package.
 
 ### Edge Cases
 
 - Compaction triggered mid-tool-batch → runs only at turn boundaries (never inside a batch).
 - Branch deleted while another references its ancestry → ancestry entries are retained (refcounted), leaf-only entries pruned.
+- Compaction on one branch → writes a compaction entry on that branch only; sibling branches keep their own uncompacted ancestry.
 - Corrupt JSONL tail → store loads to the last valid entry and reports the tear.
 
 ## Requirements *(mandatory)*
