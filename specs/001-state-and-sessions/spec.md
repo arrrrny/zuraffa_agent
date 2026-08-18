@@ -20,7 +20,10 @@ As the engine, I persist agent state as granular typed entities — `AgentSessio
 
 **Acceptance Scenarios**:
 
-1. **Given** a completed mission, **When** inspected, **Then** every turn, message, tool invocation, and usage record is a distinct typed entity retrievable independently.
+1. **Given** a completed mission, **When** inspected, **Then** every turn, message, tool invocation, and usage record is a distinct typed entity retrievable independently by identity.
+2. **Given** a mission's state persisted and reloaded, **When** entities are deserialized, **Then** each equals its pre-persistence value as a typed object — no untyped map escapes anywhere in the entity API.
+
+---
 
 ### User Story 2 - Branching session tree with fork/resume (Priority: P1)
 
@@ -32,9 +35,12 @@ As a user, I branch a session (explore an alternative strategy), later resume ei
 
 **Acceptance Scenarios**:
 
-1. **Given** session at entry N, **When** forked, **Then** a new branch shares ancestry and diverges cleanly.
-2. **Given** two branches, **When** switching, **Then** `buildContext()` reconstructs each branch's conversation without cross-contamination.
+1. **Given** a session at entry N, **When** forked, **Then** the new branch shares ancestry entries 1..N with the original and diverges cleanly after N; both branches remain resumable.
+2. **Given** two diverged branches, **When** switching between them, **Then** `buildContext()` reconstructs each branch's conversation exactly — the original branch matches its pre-fork history, with no cross-contamination.
 3. **Given** a persisted session, **When** the engine restarts, **Then** the session resumes from its latest leaf.
+4. **Given** the same session tree persisted to both the Hive and JSONL stores, **When** each store is reloaded, **Then** both yield the identical branch structure and entries (round-trip equivalence).
+
+---
 
 ### User Story 3 - Selective compaction (Priority: P1)
 
@@ -46,8 +52,10 @@ As the engine, when context approaches the budget, I compact selectively — ret
 
 **Acceptance Scenarios**:
 
-1. **Given** context usage crossing the threshold, **When** compaction runs, **Then** retained categories survive (decisions/tool names/key results/plan) and discarded material is replaced by structured summaries.
-2. **Given** a fixture mission suite, **When** compacted runs are compared to baseline, **Then** outcome equality holds.
+1. **Given** context usage crossing the compaction threshold, **When** compaction runs, **Then** decisions, tool names, key results, and plan state survive verbatim, and discarded verbose material is replaced by structured summaries that reference retrievable artifacts.
+2. **Given** the fixture mission suite, **When** compacted runs are compared to uncompacted baselines, **Then** mission outcomes are equal and context usage stays under the configured budget across the full 50+ tool calls.
+
+---
 
 ### User Story 4 - pi_agent seed merge (Priority: P1)
 
@@ -60,43 +68,50 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 **Acceptance Scenarios**:
 
 1. **Given** the pi_agent source (branch `001-dart-agent-package`), **When** merged, **Then** types/tools/session-tree/SSE/skills/templates carry attribution headers and pass the engine's test suite.
+2. **Given** pi_agent's unwired loop stub, **When** the merge completes, **Then** no stub code ships — the live loop is delivered by spec 002 (engine core), not ported as a stub.
+
+---
 
 ### Edge Cases
 
-- Compaction triggered mid-tool-batch → runs only at turn boundaries (never inside a batch).
+- Compaction triggered mid-tool-batch → compaction runs only at turn boundaries, never inside a batch.
 - Branch deleted while another references its ancestry → ancestry entries are retained (refcounted), leaf-only entries pruned.
-- Corrupt JSONL tail → store loads to the last valid entry and reports the tear.
+- Corrupt JSONL tail → the store loads to the last valid entry and reports the tear.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: State MUST be granular typed entities (session/message/turn/invocation/usage) — no monolithic blob.
+- **FR-001**: State MUST be granular typed entities (session/message/turn/invocation/usage), defined through Zorphy per constitution IX — no monolithic blob, no untyped map escapes.
 - **FR-002**: Sessions MUST form a tree with first-class branch, fork, switch, and resume.
 - **FR-003**: Persistence MUST ship Hive (device) and JSONL (debug/CI) datasources behind one storage interface.
 - **FR-004**: Compaction MUST be selective and structured (retain/summarize/artifact-ref), never naive truncation.
-- **FR-005**: pi_agent assets MUST be merged with attribution; stubs replaced.
+- **FR-005**: pi_agent assets MUST be merged with attribution; stubs replaced, not shipped.
 
 ### Key Entities
 
 - **AgentSession / SessionTreeEntry**: branching conversation container (entry types: message, thinking-level change, model change, compaction, label, custom).
 - **AgentMessage**: multimodal parts (text, image, audio, document).
+- **TurnRecord**: one engine turn — its messages and tool invocations in order.
+- **ToolInvocation**: a single tool call with typed parameters and typed result.
 - **UsageLedger**: per-call token accounting consumed by budgets (plugin policy shell).
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Branch/fork/resume round-trip on Hive and JSONL stores (issue #3 AC).
-- **SC-002**: 50+ tool-call fixture mission under context budget with no outcome regression (AC).
-- **SC-003**: Entities granular + typed; no state-blob escapes (AC).
+- **SC-001**: Branch/fork/resume round-trips identically on both the Hive and JSONL stores (issue #3 AC).
+- **SC-002**: A 50+ tool-call fixture mission stays under its configured context budget with no outcome regression vs the uncompacted baseline (AC).
+- **SC-003**: Entities granular + typed; no state-blob or untyped-map escapes (AC).
 - **SC-004**: pi_agent seed merged with attribution; zero stub code (AC).
 
 ## Assumptions
 
+- Entities are Zorphy-generated (constitution IX) and the runtime stays Flutter-free (constitution VII).
+- Out of scope: the engine loop (spec 002), tool registry & MCP client (spec 003), LLM providers (spec 004) — this feature ships the state/session layer and seed assets only.
 - Compaction summaries may reference artifacts stored by tool-result discipline (spec 003).
 - Usage ledger format feeds the plugin's MissionBudgetHook (arrrrny/zuraffa#387).
 
 ## Dependencies
 
-- Issue: arrrrny/zuraffa_agent#3 · Epic: #1 · Shares types with: spec 001 · Feeds: specs 003/005/006, policy shell (arrrrny/zuraffa#387)
+- Issue: arrrrny/zuraffa_agent#3 · Epic: #1 · Shares types with: spec 002 (engine core loop, issue #2) · Feeds: specs 003/005/006, policy shell (arrrrny/zuraffa#387)
