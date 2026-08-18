@@ -275,6 +275,49 @@ void main() {
       expect(ctx.messages.first, isA<UserMessage>());
       expect(ctx.messages.last, isA<AssistantMessage>());
     });
+
+    test('buildContext tracks active model from usage entries', () async {
+      await session.appendMessage(UserMessage.text('hello'));
+      await session.appendUsage(
+        UsageLedgerEntry(
+          id: 'ul_1',
+          timestamp: fixedTime,
+          callId: 'c_1',
+          turnNumber: 1,
+          inputTokens: 100,
+          outputTokens: 50,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+        ),
+        model: Model(provider: 'openai', modelId: 'gpt-4', contextWindow: 8192),
+      );
+      final ctx = await session.buildContext();
+      expect(ctx.activeModel, isNotNull);
+      expect(ctx.activeModel!.modelId, 'gpt-4');
+    });
+
+    test('buildContext tracks active compaction from CompactionTreeEntry',
+        () async {
+      await session.appendMessage(UserMessage.text('hello'));
+      await session.appendCompaction(
+        CompactionEntry(
+          id: 'ce_1',
+          parentId: null,
+          timestamp: fixedTime,
+          firstKeptEntryId: '',
+          tokensBefore: 5000,
+          tokensAfter: 1000,
+        ),
+        summary: CompactionSummary(
+          decisions: ['decided X'],
+          toolNames: ['tool_a'],
+          keyResults: ['result_a'],
+        ),
+      );
+      final ctx = await session.buildContext();
+      expect(ctx.activeCompaction, isNotNull);
+      expect(ctx.activeCompaction!.decisions, ['decided X']);
+    });
   });
 
   group('Mission fixture loading', () {

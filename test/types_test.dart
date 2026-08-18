@@ -162,6 +162,16 @@ void main() {
       expect(ContentBlock.fromJson(original.toJson()), equals(original));
     });
 
+    test('ToolCallBlock preserves arguments through round-trip', () {
+      final original = ToolCallBlock(
+        id: 'tc_1',
+        name: 'search',
+        arguments: {'query': 'test', 'limit': 10},
+      );
+      final restored = ContentBlock.fromJson(original.toJson()) as ToolCallBlock;
+      expect(restored.arguments, equals({'query': 'test', 'limit': 10}));
+    });
+
     test('ThinkingBlock', () {
       const original = ThinkingBlock(thinking: 'r', signature: 's');
       expect(ContentBlock.fromJson(original.toJson()), equals(original));
@@ -769,9 +779,15 @@ void main() {
       expect(a, isNot(equals(c)));
     });
 
-    test('ToolCallBlock equality compares id and name', () {
+    test('ToolCallBlock equality compares id, name, and arguments', () {
       final a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
       final b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 2});
+      expect(a, isNot(equals(b)));
+    });
+
+    test('ToolCallBlock equality considers same arguments equal', () {
+      final a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
+      final b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
       expect(a, equals(b));
     });
   });
