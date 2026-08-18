@@ -136,7 +136,7 @@ void _writeContentBlocks(BinaryWriter w, List<ContentBlock> blocks) =>
     w.writeList(blocks);
 
 List<ContentBlock> _readContentBlocks(BinaryReader r) =>
-    r.readList().cast<ContentBlock>();
+    r.readList().whereType<ContentBlock>().toList();
 
 Map<String, dynamic> _readStringMap(BinaryReader r) =>
     Map<String, dynamic>.from(r.readMap());
@@ -169,7 +169,7 @@ class AssistantMessageAdapter extends TypeAdapter<AssistantMessage> {
         id: _readNullableString(reader),
         content: _readContentBlocks(reader),
         stopReason: _readNullableEnum(reader, StopReason.values),
-        usage: reader.readBool() ? UsageAdapter().read(reader) : null,
+        usage: reader.readBool() ? reader.read() as Usage : null,
       );
 
   @override
@@ -180,7 +180,7 @@ class AssistantMessageAdapter extends TypeAdapter<AssistantMessage> {
     final usage = obj.usage;
     writer.writeBool(usage != null);
     if (usage != null) {
-      UsageAdapter().write(writer, usage);
+      writer.write(usage);
     }
   }
 }
@@ -569,7 +569,7 @@ class ToolInvocationRecordAdapter extends TypeAdapter<ToolInvocationRecord> {
       resultEntryId: _readNullableString(reader),
       isError: reader.readBool(),
       durationMs: reader.readInt(),
-      artifactRefs: reader.readList().cast<ArtifactRef>(),
+      artifactRefs: reader.readList().whereType<ArtifactRef>().toList(),
     );
   }
 
@@ -690,7 +690,7 @@ class CompactionSummaryAdapter extends TypeAdapter<CompactionSummary> {
         toolNames: reader.readStringList(),
         keyResults: reader.readStringList(),
         planState: _readNullableString(reader),
-        artifacts: reader.readList().cast<ArtifactRef>(),
+        artifacts: reader.readList().whereType<ArtifactRef>().toList(),
         prose: _readNullableString(reader),
       );
 

@@ -165,9 +165,10 @@ class HeuristicSummarizer implements CompactionSummarizer {
     final keyResults = <String>[];
     final artifacts = <ArtifactRef>[];
     String? planState;
+    final toolNamesSeen = <String>{};
 
     void addToolName(String name) {
-      if (!toolNames.contains(name)) toolNames.add(name);
+      if (toolNamesSeen.add(name)) toolNames.add(name);
     }
 
     for (final entry in cutEntries) {
@@ -298,6 +299,10 @@ bool shouldCompact(
 /// Walks entries from the leaf backward, accumulating message tokens, and
 /// returns the index of the first entry to KEEP (older entries are cut).
 /// Returns null when the whole history fits within [keepTokens].
+// TODO(minor, .workflow/state/001-state-and-sessions/review.md:197): only
+// [MessageEntry] tokens are counted; TurnRecord/ToolInvocationRecord/
+// UsageLedgerEntry contribute context size without a per-entry overhead
+// estimate yet. Conservative (cuts sooner); refine later if needed.
 int? findCutPoint(
   List<SessionTreeEntry> entries,
   int keepTokens, {
@@ -330,9 +335,6 @@ class CompactionPreparation {
   /// Entries that will be removed/summarized.
   final List<SessionTreeEntry> cutEntries;
 
-  /// Previous compaction summary, if any.
-  final String? previousSummary;
-
   /// Whether there is anything to cut.
   bool get canCompact => cutIndex > 0;
 
@@ -342,16 +344,14 @@ class CompactionPreparation {
     required this.tokensCut,
     required this.keptEntries,
     required this.cutEntries,
-    this.previousSummary,
   });
 }
 
 /// Prepares compaction by identifying the cut point and categorizing entries.
 CompactionPreparation prepareCompaction(
   List<SessionTreeEntry> entries,
-  int keepTokens, {
-  String? previousSummary,
-}) {
+  int keepTokens,
+) {
   final cutIndex = findCutPoint(entries, keepTokens) ?? 0;
   var tokensCut = 0;
   for (var i = 0; i < cutIndex; i++) {
@@ -366,7 +366,6 @@ CompactionPreparation prepareCompaction(
     tokensCut: tokensCut,
     keptEntries: entries.sublist(cutIndex),
     cutEntries: entries.sublist(0, cutIndex),
-    previousSummary: previousSummary,
   );
 }
 
@@ -423,6 +422,10 @@ int _estimateMessageTokens(AgentMessage message) {
       content.whereType<TextBlock>().map((b) => b.text).join(),
     CustomMessage(:final display) => display,
   };
+  // TODO(minor, .workflow/state/001-state-and-sessions/review.md:185):
+  // chars/4 undercounts CJK/emoji-heavy text (multi-byte chars are often
+  // 1-2 tokens each); acceptable while the usage ledger (R12) takes
+  // precedence. Revisit for CJK-heavy missions.
   return (text.length / 4).ceil();
 }
 
