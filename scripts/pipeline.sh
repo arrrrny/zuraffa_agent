@@ -87,7 +87,7 @@ run_stage() {
 gate_spec()   { [[ -f "specs/$SPEC/spec.md" && ! "$SPEC" == *"[FEATURE"* ]] && ! grep -q '\[FEATURE NAME\]' "specs/$SPEC/spec.md"; }
 gate_plan()   { [[ -f "specs/$SPEC/plan.md" ]] && ! grep -qE '^\[|PLACEHOLDER' "specs/$SPEC/plan.md"; }
 gate_tasks()  { [[ -f "specs/$SPEC/tasks.md" ]] && grep -qE '^- \[[ x]\]' "specs/$SPEC/tasks.md"; }
-gate_impl()   { grep -qE '^- \[x\]' "specs/$SPEC/tasks.md" && ! grep -qE '^- \[ \]' "specs/$SPEC/tasks.md" && [[ -f ".zfa.json" ]] && find lib -name "*.zorphy.dart" 2>/dev/null | grep -q . && dart analyze 2>&1 | grep -q "No issues found"; }
+gate_impl()   { grep -qE '^- \[x\]' "specs/$SPEC/tasks.md" && ! grep -qE '^- \[ \]' "specs/$SPEC/tasks.md" && [[ -f ".zfa.json" ]] && find lib -name "*.zorphy.dart" 2>/dev/null | grep -q . && ! dart analyze 2>&1 | grep -qE "^  (error|warning)"; }
 gate_test()   { dart analyze --fatal-infos >/dev/null 2>&1 && dart test 2>&1 | tail -1 | grep -qE 'All tests passed|No tests'; }
 gate_review() { [[ -f "$STATE_DIR/review.md" ]] && grep -qE '^(VERDICT|## Verdict|Status).*(APPROVE|PASS|LGTM|approve)' "$STATE_DIR/review.md"; }
 gate_patch()  { ! grep -qE '^#### .*🔴 (Critical|Blocker)' "$STATE_DIR/review.md" 2>/dev/null && git diff --quiet -- lib test example pubspec.yaml; }

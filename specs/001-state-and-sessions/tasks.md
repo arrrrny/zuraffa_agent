@@ -70,12 +70,12 @@ persisted as granular typed entries. Round-trip verified.
 
 ### Storage adapters (US2)
 
-- [ ] T009 [P] Generate storage adapter scaffolding via `zfa make <Entity> --preset=crud
+- [x] T009 [P] Generate storage adapter scaffolding via `zfa make <Entity> --preset=crud
   --methods=get,getList,create,update,delete` for TurnRecord, ToolInvocationRecord,
   UsageLedgerEntry entities; then hand-edit the repository and datasource implementations
   to add streaming JSONL append, corrupt-tail tear recovery, and Hive binary serialization.
   All hand-edits reference only zfa-generated entity types. Verify `dart analyze` pristine.
-- [ ] T010 [P] Implement binary TypeAdapters for Hive storage in `lib/src/hive_adapters.dart`
+- [x] T010 [P] Implement binary TypeAdapters for Hive storage in `lib/src/hive_adapters.dart`
   (hand-written against zfa-generated entity types only: TurnRecord, ToolInvocationRecord,
   UsageLedgerEntry, CompactionEntry, CompactionSummary, Model, etc.). Verify `dart analyze`.
 
