@@ -18,10 +18,10 @@ spec → plan → tasks → implement → test → review → patch → test →
 | tasks | `kimi -p` speckit-tasks | `tasks.md` has checkbox tasks covering spec requirements |
 | implement | `kimi -p` speckit-implement | all tasks checked `[x]` |
 | test | `kimi -p` verification | `dart analyze --fatal-infos` clean + `dart test` green |
-| review | `kimi -p` strict reviewer | `review.md` ends with `VERDICT: APPROVE` |
-| patch | `kimi -p` fixer | no CRITICAL/MAJOR left unaddressed |
+| review | `kimi -p` **/coderabbit skill** — opens the draft PR, then produces a CodeRabbit-style review (walkthrough + changes table + effort estimate, pre-merge checks, inline findings with category/severity/effort badges and suggestion blocks, posted to the PR via GitHub MCP) | `review.md` mirrors the findings and ends with `VERDICT: APPROVE`; PR carries the posted review |
+| patch | `kimi -p` fixer | no CRITICAL/MAJOR left unaddressed; fixes pushed to the PR branch |
 | test (2nd) | same gate | green again after patches |
-| merge | `kimi -p` finisher | branch committed, pushed, PR opened (NOT auto-merged — CI + human) |
+| merge | `kimi -p` finisher | PR open (non-draft), body carries spec link + verdict + test summary — NOT auto-merged |
 
 State lives in `.workflow/state/<slug>/` — stage logs, `stages.done`, `review.md`, `test-notes.md`.
 Resume anytime: `./scripts/pipeline.sh <slug> --from <stage>` skips completed stages.
@@ -50,7 +50,8 @@ Resume anytime: `./scripts/pipeline.sh <slug> --from <stage>` skips completed st
 ## Rules
 
 1. **No stage skipping** — a failed gate halts the chain; state is resumable, never bypassed.
-2. **PRs are never auto-merged** — merge happens after CI green + human approval.
-3. **Spec is the contract** — review stage checks implementation against spec.md, not vibes.
+2. **PRs are never auto-merged** — merge happens after CI green + human approval. The draft PR opens at the review stage (the coderabbit skill needs a PR to review); the merge stage only finalizes it.
+3. **Spec is the contract** — the CodeRabbit-style review checks implementation against spec.md, not vibes.
 4. **Ports carry attribution** — dart_agent_core/pi-derived code keeps MIT attribution headers (review gate).
 5. **Runtime purity** — no dart:io in engine runtime paths (test gate + review gate).
+6. **Review is CodeRabbit-style** — via the `coderabbit` user skill + GitHub MCP; findings mirror into `.workflow/state/<slug>/review.md` (severity-tagged, `VERDICT:` line) so the patch stage and gates stay local-machine-readable. On runners without the skill/GitHub MCP (bare CI), the stage falls back to the identical analysis inline on the branch diff — same format, same gate.

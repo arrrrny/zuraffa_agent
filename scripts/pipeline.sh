@@ -25,6 +25,20 @@ ROOT="$(pwd)"
 STATE_DIR=".workflow/state/$SPEC"
 mkdir -p "$STATE_DIR"
 
+issue_for() {
+  case "$1" in
+    001-engine-core-loop) echo 2 ;;
+    002-state-and-sessions) echo 3 ;;
+    003-tools-and-mcp) echo 4 ;;
+    004-providers-and-fallback) echo 5 ;;
+    005-subagents-and-declarative) echo 6 ;;
+    006-eval-harness-golden) echo 7 ;;
+    *) echo "" ;;
+  esac
+}
+ISSUE="$(issue_for "$SPEC")"
+ISSUE_REF="arrrrny/zuraffa_agent#${ISSUE:-n}"
+
 log() { printf '[pipeline:%s] %s\n' "$SPEC" "$*" >&2; }
 
 run_stage() {
@@ -34,7 +48,7 @@ run_stage() {
     return 0
   fi
   log "stage=$stage starting"
-  if ! kimi -p "$prompt" --allowedTools 'Bash,Read,Write,Edit,Glob,Grep' >"$STATE_DIR/$stage.log" 2>&1; then
+  if ! kimi -p "$prompt" --allowedTools 'Bash,Read,Write,Edit,Glob,Grep,Skill,mcp__github__*' >"$STATE_DIR/$stage.log" 2>&1; then
     log "stage=$stage FAILED (see $STATE_DIR/$stage.log)"
     return 1
   fi
@@ -53,7 +67,7 @@ gate_impl()   { grep -qE '^- \[x\]' "specs/$SPEC/tasks.md" && ! grep -qE '^- \[ 
 gate_test()   { dart analyze --fatal-infos >/dev/null 2>&1 && dart test 2>&1 | tail -1 | grep -qE 'All tests passed|No tests'; }
 gate_review() { [[ -f "$STATE_DIR/review.md" ]] && grep -qE '^(VERDICT|## Verdict|Status).*(APPROVE|PASS|LGTM|approve)' "$STATE_DIR/review.md"; }
 gate_patch()  { ! grep -qiE 'CRITICAL|BLOCKER' "$STATE_DIR/review.md" 2>/dev/null || git diff --quiet; }
-gate_merge()  { git rev-parse --verify "origin/main" >/dev/null 2>&1 || git rev-parse --verify "origin/master" >/dev/null 2>&1; }
+gate_merge()  { gh pr view --json state --jq '.state == "OPEN"' 2>/dev/null | grep -q true; }
 
 skip_if_done() { grep -qx "$1" "$STATE_DIR/stages.done" 2>/dev/null; }
 
@@ -65,9 +79,9 @@ declare -A prompts=(
   [tasks]="Use the speckit-tasks skill. Create specs/$SPEC/tasks.md from specs/$SPEC/plan.md following .specify/templates/tasks-template.md. Every requirement and acceptance scenario in the spec must map to at least one checkbox task. Include unit tests as tasks."
   [implement]="Use the speckit-implement skill. Execute every unchecked task in specs/$SPEC/tasks.md in order. Follow the plan. Write code + tests. Mark tasks [x] as you complete them. Do not skip tasks; if blocked, record the blocker in the task line and stop."
   [test]="Run the full verification: dart analyze --fatal-infos and dart test. Fix ONLY failures caused by the new code (do not expand scope). If unrelated pre-existing failures exist, note them in .workflow/state/$SPEC/test-notes.md and continue. Report a one-line PASS/FAIL summary at the end."
-  [review]="Act as a strict senior reviewer. Read the full diff (git diff main...HEAD or uncommitted changes) against specs/$SPEC/spec.md and plan.md. Check: acceptance scenarios satisfied, tests meaningful (not tautological), no scope creep, attribution headers on ported code, no dart:io in engine runtime paths, error paths handled. Write .workflow/state/$SPEC/review.md with findings tagged CRITICAL / MAJOR / MINOR and end with a line 'VERDICT: APPROVE' or 'VERDICT: REQUEST_CHANGES'."
-  [patch]="Fix every CRITICAL and MAJOR finding listed in .workflow/state/$SPEC/review.md. MINOR findings: fix if trivial, otherwise add a TODO comment referencing the review line. Keep changes minimal and re-run dart analyze on touched files."
-  [merge]="Branch check: ensure current branch is $SPEC (create from main if missing). Commit all changes with a conventional message referencing specs/$SPEC and issue arrrrny/zuraffa_agent#<n>. Then push and open a PR to main titled '$SPEC: <spec title>' body summarizing spec link, review verdict, and test summary. Do NOT merge the PR — leave it for CI + human."
+  [review]="Prepare the work for review, then produce a CodeRabbit-style review. Steps: (1) Ensure branch '$SPEC' exists (create from main if missing), commit ALL current changes with a conventional message referencing specs/$SPEC and $ISSUE_REF, push to origin. (2) If no PR exists for the branch, open a DRAFT PR to main titled '$SPEC: <short spec title>'. (3) Invoke the coderabbit skill (Skill tool, name 'coderabbit') on the PR you opened (arrrrny/zuraffa_agent) so it fetches the diff and posts the CodeRabbit-style review: walkthrough with changes table and effort estimate, pre-merge checks, inline findings with category/severity/effort badges and committable suggestion blocks. (4) After the skill run, write .workflow/state/$SPEC/review.md mirroring every finding (file, line, severity CRITICAL/MAJOR/MINOR, one-line fix), then end the file with a final line 'VERDICT: APPROVE' (zero Critical/Major findings) or 'VERDICT: REQUEST_CHANGES'. Review contract: acceptance scenarios in specs/$SPEC/spec.md are the definition of done; ported code must carry MIT attribution headers; engine runtime paths must not import dart:io; tests must be meaningful, not tautological. If the coderabbit skill or GitHub MCP tools are unavailable (e.g. bare CI runner), skip posting and perform the identical analysis inline on git diff main...$SPEC, writing the same review.md format with badges."
+  [patch]="Fix every CRITICAL and MAJOR finding listed in .workflow/state/$SPEC/review.md. MINOR findings: fix if trivial, otherwise add a TODO comment referencing the review line. Keep changes minimal, re-run dart analyze on touched files, then commit the fixes to branch '$SPEC' and push — the open PR updates automatically."
+  [merge]="The PR was opened at review stage. Finalize only: (1) confirm .workflow/state/$SPEC/review.md ends with 'VERDICT: APPROVE' — if not, stop and report. (2) Push any uncommitted changes to branch '$SPEC'. (3) Update the PR body with: spec link (specs/$SPEC/spec.md), the review verdict and link to the posted CodeRabbit review, and the test summary. (4) Convert the PR from draft to ready-for-review if applicable. Do NOT merge the PR — CI and the human merge it."
 )
 
 # stage → gate function name
