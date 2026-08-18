@@ -48,12 +48,21 @@ preflight() {
   command -v "$KIMI_BIN" >/dev/null 2>&1 || { log "preflight FAIL: kimi CLI not found"; return 1; }
   command -v dart >/dev/null 2>&1 || { log "preflight FAIL: dart not found"; return 1; }
   command -v gh >/dev/null 2>&1 || { log "preflight FAIL: gh not found"; return 1; }
-  # One tiny headless round-trip: proves flags, auth, and non-interactive mode.
-  if ! "$KIMI_BIN" -p "Reply with exactly: PREFLIGHT_OK" 2>/dev/null | grep -q "PREFLIGHT_OK"; then
-    log "preflight FAIL: headless kimi round-trip failed (check auth: kimi doctor)"
-    return 1
-  fi
-  log "preflight OK"
+  # Headless round-trip with retries: a transient LLM/network/quota error must
+  # not kill the run. Evidence of each attempt is kept for diagnosis.
+  local i out rc attempts=3
+  for i in 1 2 3; do
+    out="$("$KIMI_BIN" -p "Reply with exactly: PREFLIGHT_OK" 2>"$STATE_DIR/preflight-attempt-$i.err")" && rc=0 || rc=$?
+    printf '%s\n' "$out" >"$STATE_DIR/preflight-attempt-$i.out"
+    if [[ $rc -eq 0 && "$out" == *"PREFLIGHT_OK"* ]]; then
+      [[ $i -gt 1 ]] && log "preflight OK (passed on attempt $i)"
+      return 0
+    fi
+    log "preflight attempt $i/$attempts failed (rc=$rc)"
+    [[ $i -lt $attempts ]] && sleep $((i * 10))
+  done
+  log "preflight FAIL: headless round-trip failed 3x — evidence in $STATE_DIR/preflight-attempt-*.{out,err} (auth? quota? network? try: kimi doctor)"
+  return 1
 }
 
 run_stage() {
