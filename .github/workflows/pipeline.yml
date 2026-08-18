@@ -19,6 +19,8 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Pub get
+        run: dart pub get
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
@@ -43,6 +45,8 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Pub get
+        run: dart pub get
       - name: Run spec pipeline
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
