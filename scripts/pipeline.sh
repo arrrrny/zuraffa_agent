@@ -16,7 +16,7 @@ DRY_RUN=false
 [[ "${*:-}" == *"--dry-run"* ]] && DRY_RUN=true
 
 if [[ -z "$SPEC" ]]; then
-  echo "usage: $0 <spec-slug> [--from <stage>] [--dry-run]" >&2
+  echo "usage: $0 <spec-slug> [--from <stage>] [--dry-run] [--skip-preflight]" >&2
   exit 1
 fi
 
@@ -41,6 +41,21 @@ ISSUE_REF="arrrrny/zuraffa_agent#${ISSUE:-n}"
 
 log() { printf '[pipeline:%s] %s\n' "$SPEC" "$*" >&2; }
 
+KIMI_BIN="${KIMI_BIN:-kimi}"
+
+preflight() {
+  log "preflight: validating executor contract"
+  command -v "$KIMI_BIN" >/dev/null 2>&1 || { log "preflight FAIL: kimi CLI not found"; return 1; }
+  command -v dart >/dev/null 2>&1 || { log "preflight FAIL: dart not found"; return 1; }
+  command -v gh >/dev/null 2>&1 || { log "preflight FAIL: gh not found"; return 1; }
+  # One tiny headless round-trip: proves flags, auth, and non-interactive mode.
+  if ! "$KIMI_BIN" -p "Reply with exactly: PREFLIGHT_OK" 2>/dev/null | grep -q "PREFLIGHT_OK"; then
+    log "preflight FAIL: headless kimi round-trip failed (check auth: kimi doctor)"
+    return 1
+  fi
+  log "preflight OK"
+}
+
 run_stage() {
   local stage="$1" prompt="$2" gate="$3"
   if [[ "$DRY_RUN" == true ]]; then
@@ -48,7 +63,7 @@ run_stage() {
     return 0
   fi
   log "stage=$stage starting"
-  if ! kimi -p "$prompt" --allowedTools 'Bash,Read,Write,Edit,Glob,Grep,Skill,mcp__github__*' >"$STATE_DIR/$stage.log" 2>&1; then
+  if ! "$KIMI_BIN" -p "$prompt" >"$STATE_DIR/$stage.log" 2>&1; then
     log "stage=$stage FAILED (see $STATE_DIR/$stage.log)"
     return 1
   fi
@@ -89,6 +104,10 @@ declare -A gates=(
   [spec]=gate_spec [plan]=gate_plan [tasks]=gate_tasks [implement]=gate_impl
   [test]=gate_test [review]=gate_review [patch]=gate_patch [merge]=gate_merge
 )
+
+if [[ "$DRY_RUN" != true && "${*:-}" != *"--skip-preflight"* ]]; then
+  preflight || { log "halting: preflight failed"; exit 1; }
+fi
 
 started=false
 for s in "${stages[@]}"; do
