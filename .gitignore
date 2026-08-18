@@ -3,3 +3,6 @@
 pubspec.lock
 .workflow/state/
 *.log
+.memsearch/
+.kimi-code/
+.specify/
