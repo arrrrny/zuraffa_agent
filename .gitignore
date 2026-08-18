@@ -5,4 +5,7 @@ pubspec.lock
 *.log
 .memsearch/
 .kimi-code/
-.specify/
+.specify/*
+!.specify/memory/
+.specify/memory/*
+!.specify/memory/constitution.md
