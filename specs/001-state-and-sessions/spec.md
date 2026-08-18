@@ -1,6 +1,6 @@
 # Feature Specification: State & Sessions
 
-**Feature Branch**: `002-state-and-sessions`
+**Feature Branch**: `001-state-and-sessions`
 
 **Created**: 2026-08-18
 

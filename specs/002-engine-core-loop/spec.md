@@ -1,6 +1,6 @@
 # Feature Specification: Engine Core Loop
 
-**Feature Branch**: `001-engine-core-loop`
+**Feature Branch**: `002-engine-core-loop`
 
 **Created**: 2026-08-18
 
