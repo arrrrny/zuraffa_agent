@@ -1,11 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: new principle added)
-- Modified principles: none — I–VIII retained byte-identical
-- Added principles: IX. Zorphy Is the Model Layer (non-negotiable)
+- Version change: 1.1.0 → 1.2.0 (MINOR: new principle added)
+- Modified principles: none — I–IX retained byte-identical
+- Added principles: X. Post-Build Analysis Must Be Pristine (non-negotiable)
 - Added sections: none
 - Removed sections: none
-- Deferred items: none
+- Templates requiring updates: none (spec/plan/tasks templates carry no
+  analyze-discipline text; alignment verified)
+- Deferred items: scripts/pipeline.sh must encode Article X in the implement
+  and test stage prompts + a post-build analyze gate as soon as the current
+  driver run exits (editing a running bash script corrupts its parse offset;
+  the running implement agent already works under Article I/II semantics)
 -->
 
 # zuraffa_agent Constitution
@@ -59,6 +64,14 @@ via the build pipeline). No hand-written model classes, no hand-rolled
 JSON serialization, no plain-class domain data. Zorphy is the single
 model system for the engine.
 
+### X. Post-Build Analysis Must Be Pristine (non-negotiable)
+After EVERY `zfa build`, the pipeline MUST immediately run `dart analyze`
+and report BOTH errors and warnings. The result MUST be pristine: zero
+errors, zero warnings. Any analyzer finding — error or warning — after a
+build is a misfire (Principle II): halt, postmortem (Principle IV), and if
+the finding originates in zfa-generated code, escalate upstream and wait
+(Principle III). Generated code that does not analyze clean is not done.
+
 ## Scope
 This constitution governs the `zuraffa_agent` repo and the spec-driven
 pipeline that builds it. Downstream ecosystem apps inherit Principles I–VI
@@ -77,4 +90,4 @@ redefinitions — each amendment updates the version line and dates below.
 Compliance is verified at every gate and in every PR; a violation is a
 misfire (Principle II) and gets a postmortem (Principle IV).
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18
+**Version**: 1.2.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18

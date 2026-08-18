@@ -1,0 +1,14 @@
+zuraffa_agent
+Copyright (c) 2026 Ahmet TOK and ZikZak AI Contributors
+
+This product contains ported and adapted software from:
+
+1. pi_agent (branch: 001-dart-agent-package)
+   Copyright (c) 2024-2026 Mario Zupan and contributors
+   Licensed under the MIT License.
+   Ported components: Tool schema validation, SKILL.md loader, prompt templates,
+   local execution environment, Server-Sent Events (SSE) parser.
+
+2. dart_agent_core
+   Copyright (c) 2024-2026 contributors
+   Licensed under the MIT License.

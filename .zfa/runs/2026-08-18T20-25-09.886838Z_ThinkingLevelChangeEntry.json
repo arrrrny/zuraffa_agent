@@ -1,0 +1,42 @@
+{
+  "name": "ThinkingLevelChangeEntry",
+  "timestamp": "2026-08-18T20:25:09.886838Z",
+  "duration_ms": 20,
+  "success": true,
+  "files": [
+    {
+      "type": "test",
+      "path": "test/domain/usecases/thinking_level_change_entry/get_thinking_level_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/thinking_level_change_entry/update_thinking_level_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/thinking_level_change_entry/toggle_thinking_level_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "options": {
+    "test": true,
+    "name": "ThinkingLevelChangeEntry",
+    "output_dir": "lib/src",
+    "id-field": "id",
+    "id-field-type": "String",
+    "query-field": "id",
+    "plugin_ids": [
+      "test"
+    ],
+    "execution_order": [
+      "test"
+    ]
+  }
+}

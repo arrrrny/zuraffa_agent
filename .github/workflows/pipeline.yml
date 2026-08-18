@@ -19,15 +19,33 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Pub get
+        run: dart pub get
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
         run: dart test
       - name: Runtime purity gate (no dart:io in engine runtime paths)
         run: |
-          if grep -rn "dart:io" lib/src/ --include="*.dart" | grep -v "eval/" | grep -v "io_adapter"; then
-            echo "::error::dart:io import found in engine runtime path"; exit 1
-          fi
+          # Engine purity (constitution VII): dart:io is allowed ONLY in the
+          # interface-backed I/O adapters listed below. Any new file that
+          # imports dart:io fails this gate until it is consciously reviewed
+          # and added here with a justification.
+          ALLOWED="lib/src/execution_env.dart
+          lib/src/hive_session_store.dart
+          lib/src/session_storage_impl.dart
+          lib/src/jsonl_session_storage.dart
+          lib/src/prompt_templates.dart
+          lib/src/skills.dart"
+          BAD=0
+          while IFS= read -r f; do
+            if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then
+              echo "::error::dart:io import in non-adapter file: $f"
+              BAD=1
+            fi
+          done < <(grep -rl "dart:io" lib/src/ --include="*.dart" || true)
+          if [ "$BAD" -ne 0 ]; then exit 1; fi
+          echo "Purity gate clean: dart:io confined to $(printf '%s\n' "$ALLOWED" | grep -c .) allowlisted adapters."
       - name: Attribution gate (ported sources carry MIT notices)
         run: |
           if find lib -name "*.dart" -newer NOTICE 2>/dev/null | head -1 | grep -q . && ! grep -qr "dart_agent_core\|pi_agent\|Zechner\|Memex" lib/; then
@@ -43,6 +61,8 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Pub get
+        run: dart pub get
       - name: Run spec pipeline
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}

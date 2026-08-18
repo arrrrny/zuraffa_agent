@@ -1,0 +1,1 @@
+{"plan_id":"plan_1787080337915","plugin_id":"test","capability_name":"create","args":{"name":"types","methods":[],"domain":"general","dryRun":true,"force":false,"verbose":false},"valid":true,"changes":[{"file":"test/domain/usecases/general/types_usecase_test.dart","action":"skipped"}]}

@@ -56,3 +56,10 @@ Resume anytime: `./scripts/pipeline.sh <slug> --from <stage>` skips completed st
 5. **Runtime purity** — no dart:io in engine runtime paths (test gate + review gate).
 6. **Review is CodeRabbit-style** — via the `coderabbit` user skill + GitHub MCP; findings mirror into `.workflow/state/<slug>/review.md` (severity-tagged, `VERDICT:` line) so the patch stage and gates stay local-machine-readable. On runners without the skill/GitHub MCP (bare CI), the stage falls back to the identical analysis inline on the branch diff — same format, same gate.
 7. **Preflight before every real run** — the driver validates the executor contract first (kimi present + one cheap headless round-trip proving flags/auth/non-interactive mode, dart, gh). Executor invocations must come from validated flags only; if the kimi CLI contract changes, preflight fails before any stage burns a run. `--skip-preflight` exists for explicit opt-out only.
+
+## zfa-CLI-only mandate (constitution I, enforced 2026-08-18)
+
+The first run of 001-state-and-sessions was hand-implemented (speckit-only) — a constitution violation kept as `reference/001-manual-port`. All real runs from now on:
+- **implement stage**: zfa CLI only (`zfa initialize`, `zfa entity create`, `zfa make`, `zfa build`, `zfa mock data`); tests/scaffolding generated automatically.
+- **First zfa misfire halts everything**: `.workflow/state/<spec>/misfire.md` (command, expected, actual, repro) → driver exits → escalate to zuraffa upstream → wait (constitution III).
+- **gate_impl** additionally requires `.zfa.json` + at least one `*.zorphy.dart` under lib/.
