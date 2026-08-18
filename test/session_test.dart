@@ -75,7 +75,7 @@ void runSessionSuite(
       final id2 = await append('b');
       final id3 = await append('c');
       await session.fork(id2);
-      final id4 = await append('d');
+      await append('d');
       final id5 = await append('e');
 
       await session.switchTo(id3);
@@ -112,7 +112,7 @@ void runSessionSuite(
 
     test('deleteBranch of the active leaf moves the leaf to the retained '
         'ancestor', () async {
-      final id1 = await append('a');
+      await append('a');
       final id2 = await append('b');
       await append('c'); // sibling leaf
       await session.fork(id2);

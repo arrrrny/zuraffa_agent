@@ -54,45 +54,43 @@ abstract final class HiveTypeIds {
 
 /// Registers every zuraffa adapter with Hive.
 ///
-/// Idempotent: re-registering (e.g. when another store opens) overrides the
-/// same adapter with `override: true` instead of throwing. Each adapter is
-/// registered with its concrete generic type so Hive dispatches by runtime
-/// type (registering a `<Object>` adapter would steal every write).
+/// Idempotent: adapters already registered (e.g. by an earlier store open in
+/// the same process) are left in place, so no override warnings are emitted.
+/// Each adapter is registered with its concrete generic type so Hive
+/// dispatches by runtime type (registering a `<Object>` adapter would steal
+/// every write).
 void registerZuraffaAdapters() {
-  Hive.registerAdapter<UserMessage>(UserMessageAdapter(), override: true);
-  Hive.registerAdapter<AssistantMessage>(
-      AssistantMessageAdapter(), override: true);
-  Hive.registerAdapter<ToolResultMessage>(
-      ToolResultMessageAdapter(), override: true);
-  Hive.registerAdapter<CustomMessage>(CustomMessageAdapter(), override: true);
-  Hive.registerAdapter<TextBlock>(TextBlockAdapter(), override: true);
-  Hive.registerAdapter<ImageBlock>(ImageBlockAdapter(), override: true);
-  Hive.registerAdapter<AudioBlock>(AudioBlockAdapter(), override: true);
-  Hive.registerAdapter<DocumentBlock>(DocumentBlockAdapter(), override: true);
-  Hive.registerAdapter<ToolCallBlock>(ToolCallBlockAdapter(), override: true);
-  Hive.registerAdapter<ThinkingBlock>(ThinkingBlockAdapter(), override: true);
-  Hive.registerAdapter<MessageEntry>(MessageEntryAdapter(), override: true);
-  Hive.registerAdapter<ThinkingLevelChangeEntry>(
-      ThinkingLevelChangeEntryAdapter(), override: true);
-  Hive.registerAdapter<ModelChangeEntry>(
-      ModelChangeEntryAdapter(), override: true);
-  Hive.registerAdapter<CompactionEntry>(
-      CompactionEntryAdapter(), override: true);
-  Hive.registerAdapter<BranchSummaryEntry>(
-      BranchSummaryEntryAdapter(), override: true);
-  Hive.registerAdapter<LabelEntry>(LabelEntryAdapter(), override: true);
-  Hive.registerAdapter<CustomEntry>(CustomEntryAdapter(), override: true);
-  Hive.registerAdapter<TurnRecord>(TurnRecordAdapter(), override: true);
-  Hive.registerAdapter<ToolInvocationRecord>(
-      ToolInvocationRecordAdapter(), override: true);
-  Hive.registerAdapter<UsageLedgerEntry>(
-      UsageLedgerEntryAdapter(), override: true);
-  Hive.registerAdapter<Model>(ModelAdapter(), override: true);
-  Hive.registerAdapter<Usage>(UsageAdapter(), override: true);
-  Hive.registerAdapter<CompactionSummary>(
-      CompactionSummaryAdapter(), override: true);
-  Hive.registerAdapter<ArtifactRef>(ArtifactRefAdapter(), override: true);
-  Hive.registerAdapter<SessionInfo>(SessionInfoAdapter(), override: true);
+  void register<T>(TypeAdapter<T> adapter) {
+    if (!Hive.isAdapterRegistered(adapter.typeId)) {
+      Hive.registerAdapter(adapter);
+    }
+  }
+
+  register<UserMessage>(UserMessageAdapter());
+  register<AssistantMessage>(AssistantMessageAdapter());
+  register<ToolResultMessage>(ToolResultMessageAdapter());
+  register<CustomMessage>(CustomMessageAdapter());
+  register<TextBlock>(TextBlockAdapter());
+  register<ImageBlock>(ImageBlockAdapter());
+  register<AudioBlock>(AudioBlockAdapter());
+  register<DocumentBlock>(DocumentBlockAdapter());
+  register<ToolCallBlock>(ToolCallBlockAdapter());
+  register<ThinkingBlock>(ThinkingBlockAdapter());
+  register<MessageEntry>(MessageEntryAdapter());
+  register<ThinkingLevelChangeEntry>(ThinkingLevelChangeEntryAdapter());
+  register<ModelChangeEntry>(ModelChangeEntryAdapter());
+  register<CompactionEntry>(CompactionEntryAdapter());
+  register<BranchSummaryEntry>(BranchSummaryEntryAdapter());
+  register<LabelEntry>(LabelEntryAdapter());
+  register<CustomEntry>(CustomEntryAdapter());
+  register<TurnRecord>(TurnRecordAdapter());
+  register<ToolInvocationRecord>(ToolInvocationRecordAdapter());
+  register<UsageLedgerEntry>(UsageLedgerEntryAdapter());
+  register<Model>(ModelAdapter());
+  register<Usage>(UsageAdapter());
+  register<CompactionSummary>(CompactionSummaryAdapter());
+  register<ArtifactRef>(ArtifactRefAdapter());
+  register<SessionInfo>(SessionInfoAdapter());
 }
 
 // ---------------------------------------------------------------------------
