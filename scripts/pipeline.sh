@@ -66,22 +66,45 @@ preflight() {
 }
 
 run_stage() {
-  local stage="$1" prompt="$2" gate="$3"
+  local stage="$1" prompt="$2" gate="$3" attempt=0 max_attempts=3
   if [[ "$DRY_RUN" == true ]]; then
     log "DRY-RUN stage=$stage gate=[$gate]"
     return 0
   fi
-  log "stage=$stage starting"
-  if ! "$KIMI_BIN" -p "$prompt" >"$STATE_DIR/$stage.log" 2>&1; then
+  while :; do
+    attempt=$((attempt + 1))
+    log "stage=$stage starting (attempt $attempt)"
+    if "$KIMI_BIN" -p "$prompt" >"$STATE_DIR/$stage.log" 2>&1; then
+      if [[ -n "$gate" ]] && ! eval "$gate"; then
+        log "stage=$stage GATE FAILED: $gate"
+        return 1
+      fi
+      printf '%s\n' "$stage" >>"$STATE_DIR/stages.done"
+      log "stage=$stage OK"
+      return 0
+    fi
+    # Provider transients (rate limit) are retried after the reset window;
+    # everything else fails fast (constitution: stop on first misfire).
+    local reset_at
+    reset_at="$(grep -oE 'reset at [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}' "$STATE_DIR/$stage.log" | head -1 | sed 's/^reset at //')"
+    if grep -qE 'rate_limit|Usage limit reached' "$STATE_DIR/$stage.log" && [[ -n "$reset_at" ]] && [[ $attempt -lt $max_attempts ]]; then
+      local target now wait cap
+      target="$(date -j -f '%Y-%m-%d %H:%M:%S' "$reset_at" +%s 2>/dev/null || date -d "$reset_at" +%s 2>/dev/null || echo 0)"
+      now="$(date +%s)"
+      wait=$((target - now + 60))
+      [[ $wait -lt 60 ]] && wait=60
+      cap="${KIMI_MAX_WAIT_SEC:-28800}"
+      if [[ $wait -gt $cap ]]; then
+        log "stage=$stage: provider rate-limited; reset at $reset_at exceeds KIMI_MAX_WAIT_SEC=$cap — halting"
+        return 1
+      fi
+      log "stage=$stage: provider rate-limited; sleeping ${wait}s until $reset_at (attempt $attempt/$max_attempts)"
+      sleep "$wait"
+      continue
+    fi
     log "stage=$stage FAILED (see $STATE_DIR/$stage.log)"
     return 1
-  fi
-  if [[ -n "$gate" ]] && ! eval "$gate"; then
-    log "stage=$stage GATE FAILED: $gate"
-    return 1
-  fi
-  printf '%s\n' "$stage" >>"$STATE_DIR/stages.done"
-  log "stage=$stage OK"
+  done
 }
 
 gate_spec()   { [[ -f "specs/$SPEC/spec.md" && ! "$SPEC" == *"[FEATURE"* ]] && ! grep -q '\[FEATURE NAME\]' "specs/$SPEC/spec.md"; }
