@@ -62,7 +62,7 @@ persisted as granular typed entries. Round-trip verified.
 
 ### ZFA entity creation (US1)
 
-- [ ] T007 [P] Verify all12 entities were created by zfa entity create and `zfa build` produces
+- [x] T007 [P] Verify all12 entities were created by zfa entity create and `zfa build` produces
   .zorphy.dart + .g.dart for each; run `dart analyze` (must be No issues found)
 - [ ] T008 [P] For each entity, generate a mock data file with `zfa mock data <Entity> --force`
   (auto-creates sub-entity mocks); then augment with realistic values for the 50+ tool-call
