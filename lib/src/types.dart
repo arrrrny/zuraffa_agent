@@ -703,6 +703,211 @@ class CustomEntry extends SessionTreeEntry {
   int get hashCode => Object.hash(super.hashCode, customType);
 }
 
+/// A turn record entry closing a turn by referencing its message entries.
+///
+/// Wraps the turn's message entry IDs by reference — no content duplication
+/// (data-model.md). The "same branch" half of the validation rule (every
+/// referenced ID must live on the active branch) is enforced by
+/// [AgentSession.appendTurn]; construction validates the local invariants:
+/// a non-empty ID list, a 1-based turn number, and a non-negative duration.
+class TurnRecord extends SessionTreeEntry {
+  /// 1-based turn number within the session.
+  final int turnNumber;
+
+  /// IDs of the message entries belonging to this turn (non-empty).
+  final List<String> messageEntryIds;
+
+  /// Why the turn ended, if the last assistant message reported it.
+  final StopReason? stopReason;
+
+  /// When the turn started.
+  final DateTime startedAt;
+
+  /// When the turn ended.
+  final DateTime endedAt;
+
+  /// Turn duration in milliseconds (non-negative).
+  final int durationMs;
+
+  /// Creates a turn record.
+  TurnRecord({
+    required super.id,
+    required super.parentId,
+    required super.timestamp,
+    required this.turnNumber,
+    required this.messageEntryIds,
+    this.stopReason,
+    required this.startedAt,
+    required this.endedAt,
+    required this.durationMs,
+  }) {
+    if (turnNumber < 1) {
+      throw ArgumentError.value(turnNumber, 'turnNumber', 'must be >= 1');
+    }
+    if (messageEntryIds.isEmpty) {
+      throw ArgumentError.value(
+          messageEntryIds, 'messageEntryIds', 'must not be empty');
+    }
+    if (durationMs < 0) {
+      throw ArgumentError.value(durationMs, 'durationMs', 'must be >= 0');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is TurnRecord &&
+      super == other &&
+      other.turnNumber == turnNumber &&
+      _listEq(other.messageEntryIds, messageEntryIds) &&
+      other.stopReason == stopReason &&
+      other.startedAt == startedAt &&
+      other.endedAt == endedAt &&
+      other.durationMs == durationMs;
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, turnNumber,
+      Object.hashAll(messageEntryIds), stopReason, startedAt, endedAt,
+      durationMs);
+}
+
+/// A tool invocation record: one per executed tool call.
+///
+/// [resultEntryId] is null while the tool is in flight and is finalized with
+/// the tool-result message entry ID when the call completes.
+class ToolInvocationRecord extends SessionTreeEntry {
+  /// ID of the tool call this record corresponds to.
+  final String toolCallId;
+
+  /// Name of the executed tool.
+  final String toolName;
+
+  /// Arguments passed to the tool (JSON-compatible map).
+  final Map<String, dynamic> arguments;
+
+  /// Entry ID of the tool result, or null while in flight.
+  final String? resultEntryId;
+
+  /// Whether the tool execution reported an error.
+  final bool isError;
+
+  /// Execution duration in milliseconds.
+  final int durationMs;
+
+  /// References to material the tool produced (resolvable via
+  /// [ArtifactResolver], spec 003).
+  final List<ArtifactRef> artifactRefs;
+
+  /// Creates a tool invocation record.
+  ToolInvocationRecord({
+    required super.id,
+    required super.parentId,
+    required super.timestamp,
+    required this.toolCallId,
+    required this.toolName,
+    required this.arguments,
+    this.resultEntryId,
+    this.isError = false,
+    this.durationMs = 0,
+    this.artifactRefs = const [],
+  }) {
+    if (durationMs < 0) {
+      throw ArgumentError.value(durationMs, 'durationMs', 'must be >= 0');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ToolInvocationRecord &&
+      super == other &&
+      other.toolCallId == toolCallId &&
+      other.toolName == toolName &&
+      _mapEq(other.arguments, arguments) &&
+      other.resultEntryId == resultEntryId &&
+      other.isError == isError &&
+      other.durationMs == durationMs &&
+      _listEq(other.artifactRefs, artifactRefs);
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, toolCallId, toolName,
+      resultEntryId, isError, durationMs, Object.hashAll(artifactRefs));
+}
+
+/// A per-LLM-call token usage record.
+///
+/// The raw material of the [UsageLedger] projection
+/// (contracts/support-assets.md). All token counts are non-negative.
+class UsageLedgerEntry extends SessionTreeEntry {
+  /// Identifier of the LLM call this record describes.
+  final String callId;
+
+  /// Turn this call belongs to.
+  final int turnNumber;
+
+  /// Model that served the call.
+  final Model model;
+
+  /// Input tokens billed for the call (non-negative).
+  final int inputTokens;
+
+  /// Output tokens billed for the call (non-negative).
+  final int outputTokens;
+
+  /// Tokens used for cache creation (provider-specific, non-negative).
+  final int? cacheCreationInputTokens;
+
+  /// Tokens read from cache (provider-specific, non-negative).
+  final int? cacheReadInputTokens;
+
+  /// Creates a usage ledger entry.
+  UsageLedgerEntry({
+    required super.id,
+    required super.parentId,
+    required super.timestamp,
+    required this.callId,
+    required this.turnNumber,
+    required this.model,
+    required this.inputTokens,
+    required this.outputTokens,
+    this.cacheCreationInputTokens,
+    this.cacheReadInputTokens,
+  }) {
+    if (turnNumber < 1) {
+      throw ArgumentError.value(turnNumber, 'turnNumber', 'must be >= 1');
+    }
+    if (inputTokens < 0) {
+      throw ArgumentError.value(inputTokens, 'inputTokens', 'must be >= 0');
+    }
+    if (outputTokens < 0) {
+      throw ArgumentError.value(outputTokens, 'outputTokens', 'must be >= 0');
+    }
+    final cacheCreation = cacheCreationInputTokens;
+    if (cacheCreation != null && cacheCreation < 0) {
+      throw ArgumentError.value(
+          cacheCreation, 'cacheCreationInputTokens', 'must be >= 0');
+    }
+    final cacheRead = cacheReadInputTokens;
+    if (cacheRead != null && cacheRead < 0) {
+      throw ArgumentError.value(cacheRead, 'cacheReadInputTokens', 'must be >= 0');
+    }
+  }
+  @override
+  bool operator ==(Object other) =>
+      other is UsageLedgerEntry &&
+      super == other &&
+      other.callId == callId &&
+      other.turnNumber == turnNumber &&
+      other.model == model &&
+      other.inputTokens == inputTokens &&
+      other.outputTokens == outputTokens &&
+      other.cacheCreationInputTokens == cacheCreationInputTokens &&
+      other.cacheReadInputTokens == cacheReadInputTokens;
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, callId, turnNumber, model,
+      inputTokens, outputTokens, cacheCreationInputTokens,
+      cacheReadInputTokens);
+}
+
 /// Session metadata.
 class SessionInfo {
   /// Unique session identifier.
@@ -1036,11 +1241,40 @@ bool _msgListEq(List<AgentMessage> a, List<AgentMessage> b) {
   return true;
 }
 
+bool _listEq<T>(List<T> a, List<T> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 bool _mapEq(Map<String, dynamic>? a, Map<String, dynamic>? b) {
   if (a == null || b == null) return identical(a, b);
   if (a.length != b.length) return false;
   for (final entry in a.entries) {
-    if (!b.containsKey(entry.key) || b[entry.key] != entry.value) return false;
+    if (!b.containsKey(entry.key)) return false;
+    if (!_deepEq(entry.value, b[entry.key])) return false;
   }
   return true;
+}
+
+bool _deepEq(Object? a, Object? b) {
+  if (identical(a, b)) return true;
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key)) return false;
+      if (!_deepEq(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!_deepEq(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  return a == b;
 }

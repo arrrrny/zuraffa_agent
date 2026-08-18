@@ -269,6 +269,9 @@ void main() {
             BranchSummaryEntry() => 'branch',
             LabelEntry() => 'label',
             CustomEntry() => 'custom',
+            TurnRecord() => 'turn',
+            ToolInvocationRecord() => 'toolInvocation',
+            UsageLedgerEntry() => 'usage',
           };
 
       final entry = MessageEntry(

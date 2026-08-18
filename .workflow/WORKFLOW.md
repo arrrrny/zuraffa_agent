@@ -30,8 +30,8 @@ Resume anytime: `./scripts/pipeline.sh <slug> --from <stage>` skips completed st
 
 | Spec | Epic R# | Issue |
 |---|---|---|
-| `001-engine-core-loop` | R1 | arrrrny/zuraffa_agent#2 |
-| `002-state-and-sessions` | R2 | #3 |
+| `001-state-and-sessions` | R2 | arrrrny/zuraffa_agent#3 |
+| `002-engine-core-loop` | R1 | #2 |
 | `003-tools-and-mcp` | R3 | #4 |
 | `004-providers-and-fallback` | R4 | #5 |
 | `005-subagents-and-declarative` | R5 | #6 |
@@ -39,9 +39,11 @@ Resume anytime: `./scripts/pipeline.sh <slug> --from <stage>` skips completed st
 
 ## Dependency order (bootstrap driver)
 
+**Ordering is dependency-first, NOT numeric — and the numbering now MATCHES it.** Spec 002-engine-core-loop (loop) consumes the types/seeds shipped by 001-state-and-sessions — its Assumptions state "Types are shared with the state/sessions spec (seed lands first)". Numeric order == execution order: 001 runs before 002. Deviations are always user-directed, never silent.
+
 ```
-002 (types/seed) ──► 001 (loop) ──► 003 (tools/MCP) ──► 004 (providers) ──► 005 (sub-agents/specs)
-                                                                           006 (evals; needs 001+003)
+001-state-and-sessions (types/seed) ──► 002-engine-core-loop (loop) ──► 003-tools-and-mcp ──► 004-providers-and-fallback ──► 005-subagents-and-declarative
+                                                                                                                 006-eval-harness-golden (needs 002+004)
 ```
 
 `./scripts/bootstrap.sh` runs pipelines in this order. 004 can start after 001 in parallel;

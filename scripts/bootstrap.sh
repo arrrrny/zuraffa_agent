@@ -4,7 +4,7 @@
 # --dry-run prints the order without executing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ORDER=(002-state-and-sessions 001-engine-core-loop 003-tools-and-mcp 004-providers-and-fallback 005-subagents-and-declarative 006-eval-harness-golden)
+ORDER=(001-state-and-sessions 002-engine-core-loop 003-tools-and-mcp 004-providers-and-fallback 005-subagents-and-declarative 006-eval-harness-golden)
 for spec in "${ORDER[@]}"; do
   echo "[bootstrap] === $spec ==="
   ./scripts/pipeline.sh "$spec" "$@"

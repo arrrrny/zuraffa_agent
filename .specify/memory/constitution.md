@@ -1,8 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: new principle added)
-- Modified principles: none — I–VIII retained byte-identical
-- Added principles: IX. Zorphy Is the Model Layer (non-negotiable)
+- Version change: 1.1.0 → 1.2.0 (MINOR: materially expanded guidance — scoped
+  exemption clause added to an existing principle)
+- Modified principles: IX. Zorphy Is the Model Layer — added exemption for the
+  attributed pi_agent seed entity layer (specs/002-state-and-sessions); the
+  normative rule text above the clause is retained byte-identical. I–VIII
+  untouched.
+- Added principles: none
 - Added sections: none
 - Removed sections: none
 - Deferred items: none
@@ -59,6 +63,19 @@ via the build pipeline). No hand-written model classes, no hand-rolled
 JSON serialization, no plain-class domain data. Zorphy is the single
 model system for the engine.
 
+**Exemption — attributed port seeds (v1.2.0)**: Article IX governs
+zuraffa-native model code. Attributed ports under Principle VIII are
+exempt where Zorphy conversion would break the port: the seed entity
+layer ported from `pi_agent` (specs/002-state-and-sessions — `types.dart`,
+`tools.dart`, and the session/compaction entity surface) keeps its
+hand-written sealed classes with attribution headers, because (a) Principle
+VIII requires ports to retain upstream shape with provenance, and (b) that
+layer's serialization contracts (JSONL on-disk format, hand-written Hive
+adapters) are fixed by the feature's ratified contracts. The exemption is
+scoped to the seeded files and their in-place evolution; every NEW
+zuraffa-native entity, enum, or value object created outside those ported
+files MUST use Zorphy.
+
 ## Scope
 This constitution governs the `zuraffa_agent` repo and the spec-driven
 pipeline that builds it. Downstream ecosystem apps inherit Principles I–VI
@@ -77,4 +94,4 @@ redefinitions — each amendment updates the version line and dates below.
 Compliance is verified at every gate and in every PR; a violation is a
 misfire (Principle II) and gets a postmortem (Principle IV).
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18
+**Version**: 1.2.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18

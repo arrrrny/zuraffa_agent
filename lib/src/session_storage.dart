@@ -65,6 +65,12 @@ abstract class SessionStorage {
   /// Load all entries from storage.
   Future<List<SessionTreeEntry>> loadEntries();
 
+  /// Remove an entry from storage.
+  ///
+  /// NEW member (pi_agent's interface has no deletion): branch pruning
+  /// (`AgentSession.deleteBranch`) needs it. No-op when [id] is absent.
+  Future<void> removeEntry(String id);
+
   /// Find a specific entry by ID.
   Future<SessionTreeEntry?> findEntry(String id);
 

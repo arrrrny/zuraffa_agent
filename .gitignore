@@ -13,3 +13,4 @@ pubspec.lock
 !.specify/memory/
 .specify/memory/*
 !.specify/memory/constitution.md
+specs/002-state-and-sessions
