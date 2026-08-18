@@ -6,10 +6,22 @@
 // CompactionEntry lands on the active branch only (invariant I2).
 library;
 
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 DateTime _t(int i) => DateTime.utc(2026, 8, 1).add(Duration(minutes: i));
+
+/// Copies the committed fixture into a temp dir so tests never mutate it.
+String _missionFixtureCopy() {
+  final source = File('test/fixtures/mission_50.jsonl');
+  final dir = Directory.systemTemp.createTempSync('mission50_');
+  addTearDown(() => dir.deleteSync(recursive: true));
+  final copy = File('${dir.path}/mission_50.jsonl');
+  copy.writeAsBytesSync(source.readAsBytesSync());
+  return copy.path;
+}
 
 /// Test [ArtifactResolver] stub: resolves every ref to a marker string.
 class _StubArtifactResolver implements ArtifactResolver {
@@ -375,7 +387,7 @@ void main() {
         enabled: true, reserveTokens: 200, keepRecentTokens: 600);
 
     test('fixture has 50+ tool calls across 3 turns', () async {
-      final store = JsonlSessionStorage('test/fixtures/mission_50.jsonl');
+      final store = JsonlSessionStorage(_missionFixtureCopy());
       final session = AgentSession(store);
       final entries = await session.getEntries();
       expect(entries.whereType<TurnRecord>(), hasLength(3));
@@ -386,13 +398,13 @@ void main() {
     test('compacted outcome equals the uncompacted baseline and stays under '
         'budget', () async {
       // Uncompacted baseline.
-      final baselineStore = JsonlSessionStorage('test/fixtures/mission_50.jsonl');
+      final baselineStore = JsonlSessionStorage(_missionFixtureCopy());
       final baselineSession = AgentSession(baselineStore);
       final baselineOutcome = _outcome((await baselineSession.buildContext()).messages);
       expect(baselineOutcome, 'adopt plan alpha.');
 
       // Compacted run: compact only at turn boundaries.
-      final store = JsonlSessionStorage('test/fixtures/mission_50.jsonl');
+      final store = JsonlSessionStorage(_missionFixtureCopy());
       final session = AgentSession(store);
       final entries = await session.getEntries();
       final turns = entries.whereType<TurnRecord>().toList();
