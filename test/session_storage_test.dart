@@ -404,8 +404,8 @@ void main() {
       final loaded = await store.loadEntries();
       watch.stop();
       expect(loaded, hasLength(200));
-      expect(watch.elapsedMilliseconds, lessThan(2000),
-          reason: 'append + reopen + load of 200 entries < 2s '
+      expect(watch.elapsedMilliseconds, lessThan(1000),
+          reason: 'append + reopen + load of 200 entries < 1s '
               '(measured ${watch.elapsedMilliseconds}ms)');
     });
   });
