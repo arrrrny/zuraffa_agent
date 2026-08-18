@@ -34,6 +34,7 @@ jobs:
           ALLOWED="lib/src/execution_env.dart
           lib/src/hive_session_store.dart
           lib/src/session_storage_impl.dart
+          lib/src/jsonl_session_storage.dart
           lib/src/prompt_templates.dart
           lib/src/skills.dart"
           BAD=0
