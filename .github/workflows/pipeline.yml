@@ -1,0 +1,58 @@
+name: spec-pipeline
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: "Spec slug to run the pipeline for (empty = verify-only)"
+        required: false
+        default: ""
+
+jobs:
+  verify:
+    # CI gate for every PR: analyze + test the engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Analyze
+        run: dart analyze --fatal-infos
+      - name: Test
+        run: dart test
+      - name: Runtime purity gate (no dart:io in engine runtime paths)
+        run: |
+          if grep -rn "dart:io" lib/src/ --include="*.dart" | grep -v "eval/" | grep -v "io_adapter"; then
+            echo "::error::dart:io import found in engine runtime path"; exit 1
+          fi
+      - name: Attribution gate (ported sources carry MIT notices)
+        run: |
+          if find lib -name "*.dart" -newer NOTICE 2>/dev/null | head -1 | grep -q . && ! grep -qr "dart_agent_core\|pi_agent\|Zechner\|Memex" lib/; then
+            echo "::warning::No attribution markers found — verify no unattributed ports landed"
+          fi
+
+  pipeline:
+    # Manual dispatch: run the full spec chain for one spec
+    if: github.event_name == 'workflow_dispatch' && inputs.spec != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Run spec pipeline
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          chmod +x scripts/*.sh .specify/scripts/bash/*.sh 2>/dev/null || true
+          ./scripts/pipeline.sh "${{ inputs.spec }}"
+      - name: Upload pipeline state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-state-${{ inputs.spec }}
+          path: .workflow/state/
+          if-no-files-found: ignore
