@@ -1,11 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: (unratified template) → 1.0.0
-- Added principles: I. CLI-Built Only, II. Stop on First Misfire,
-  III. Escalate Upstream and Wait, IV. Postmortem Every Misfire,
-  V. Gates Are Non-Negotiable, VI. Probes Must Retain Evidence,
-  VII. Engine Purity, VIII. Attributed Ports
-- Added sections: Scope, Misfire Register, Governance
+- Version change: 1.0.0 → 1.1.0 (MINOR: new principle added)
+- Modified principles: none — I–VIII retained byte-identical
+- Added principles: IX. Zorphy Is the Model Layer (non-negotiable)
+- Added sections: none
 - Removed sections: none
 - Deferred items: none
 -->
@@ -54,6 +52,13 @@ Runtime paths are `dart:io`-free.
 Ported code carries attribution headers. Current ports: `dart_agent_core`,
 `pi_agent` (both MIT).
 
+### IX. Zorphy Is the Model Layer (non-negotiable)
+ALL entities, enums, and value objects in this codebase MUST be created
+with Zorphy (@Zorphy annotations, generated .zorphy.dart/.g.dart outputs
+via the build pipeline). No hand-written model classes, no hand-rolled
+JSON serialization, no plain-class domain data. Zorphy is the single
+model system for the engine.
+
 ## Scope
 This constitution governs the `zuraffa_agent` repo and the spec-driven
 pipeline that builds it. Downstream ecosystem apps inherit Principles I–VI
@@ -72,4 +77,4 @@ redefinitions — each amendment updates the version line and dates below.
 Compliance is verified at every gate and in every PR; a violation is a
 misfire (Principle II) and gets a postmortem (Principle IV).
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18
+**Version**: 1.1.0 | **Ratified**: 2026-08-18 | **Last Amended**: 2026-08-18
