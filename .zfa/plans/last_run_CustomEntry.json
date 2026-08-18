@@ -1,0 +1,1 @@
+{"plan_id":"last_run_CustomEntry","plugin_id":"manager","capability_name":"make","args":{"test":true,"name":"CustomEntry","output_dir":"lib/src","id-field":"id","id-field-type":"String","query-field":"id","plugin_ids":["test"],"execution_order":["test"]},"valid":true,"changes":[]}

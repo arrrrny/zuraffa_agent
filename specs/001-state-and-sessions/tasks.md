@@ -81,14 +81,14 @@ persisted as granular typed entries. Round-trip verified.
 
 ### Session tree operations (US2)
 
-- [ ] T011 [US2] Implement `AgentSession` tree operations (append, fork, switchTo, getBranch,
+- [x] T011 [US2] Implement `AgentSession` tree operations (append, fork, switchTo, getBranch,
   buildContext) in `lib/src/session.dart`. Hand-written engine glue referencing ONLY zfa-generated
   entity types (TurnRecord, ToolInvocationRecord, UsageLedgerEntry, CompactionSummary, etc.).
   Never reference old manual-run API names. Verify `dart analyze` pristine.
 
 ### Compaction orchestration (US3)
 
-- [ ] T012 [US3] Implement compaction orchestration in `lib/src/compaction.dart`. Hand-written
+- [x] T012 [US3] Implement compaction orchestration in `lib/src/compaction.dart`. Hand-written
   engine glue that uses zfa-generated CompactionSummary, CompactionEntry entities and the
   typed entry list. Never reference HeuristicSummarizer or old manual-run compact() function.
   Verify `dart analyze` pristine.
@@ -99,20 +99,20 @@ persisted as granular typed entries. Round-trip verified.
 
 ### Test generation with zfa (all stories)
 
-- [ ] T013 [P] For each zfa-generated entity, run `zfa make <Entity> --test` to generate test
+- [x] T013 [P] For each zfa-generated entity, run `zfa make <Entity> --test` to generate test
   scaffolds; then hand-fill scenario-specific assertions (round-trip JSON, field validation,
   mock-data correctness). All test files use zfa-generated types only.
   Verify `dart analyze` + `dart test` pass.
-- [ ] T014 [P] Create the 50+ tool-call mission fixture as a zfa-generated mock (via
+- [x] T014 [P] Create the 50+ tool-call mission fixture as a zfa-generated mock (via
   `zfa mock data` augmentation) stored in `test/fixtures/mission_50.jsonl`. Tests that
   read this fixture MUST copy it to a temp directory (never mutate committed fixtures).
   Verify `dart analyze` + `dart test` pass.
 
 ### Engine loop + providers (US4)
 
-- [ ] T015 [US4] Implement provider fallback logic in `lib/src/providers.dart` (hand-written
+- [x] T015 [US4] Implement provider fallback logic in `lib/src/providers.dart` (hand-written
   engine glue using zfa-generated Model entity types). Verify `dart analyze` pristine.
-- [ ] T016 [US4] Implement tool registry and skill loading in `lib/src/tools.dart` and
+- [x] T016 [US4] Implement tool registry and skill loading in `lib/src/tools.dart` and
   `lib/src/skills.dart` (hand-written, using zfa-generated entity types for tool invocation
   records). Verify `dart analyze` pristine.
 
@@ -120,17 +120,17 @@ persisted as granular typed entries. Round-trip verified.
 
 ## Phase 5: Final verification
 
-- [ ] T017 Run full `dart analyze --fatal-infos` — must be **No issues found** (Article X)
-- [ ] T018 Run full `dart test` — all tests must pass
-- [ ] T019 Commit all generated + hand-written code, push to `001-state-and-sessions`
+- [x] T017 Run full `dart analyze --fatal-infos` — must be **No issues found** (Article X)
+- [x] T018 Run full `dart test` — all tests must pass
+- [x] T019 Commit all generated + hand-written code, push to `001-state-and-sessions`
 
 ---
 
 ## Post-task verification checklist
 
 After completing all tasks, verify:
-- [ ] Every file under `lib/src/domain/entities/` has a `.zorphy.dart` + `.g.dart` pair
-- [ ] `dart analyze` = No issues found across the entire tree
-- [ ] `dart test` = All tests passed (after tests are generated via zfa make --test)
-- [ ] No file imports references old manual-run types (AgentSession, ContentBlock, UsageEntry, etc.)
-- [ ] `test/fixtures/mission_50.jsonl` is never mutated by any test (fixture is copied, not opened directly)
+- [x] Every file under `lib/src/domain/entities/` has a `.zorphy.dart` + `.g.dart` pair
+- [x] `dart analyze` = No issues found across the entire tree
+- [x] `dart test` = All tests passed (after tests are generated via zfa make --test)
+- [x] No file imports references old manual-run types (AgentSession, ContentBlock, UsageEntry, etc.)
+- [x] `test/fixtures/mission_50.jsonl` is never mutated by any test (fixture is copied, not opened directly)

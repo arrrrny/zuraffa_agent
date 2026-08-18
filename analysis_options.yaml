@@ -10,6 +10,8 @@ analyzer:
     missing_return: error
     todo: ignore
     prefer_interpolation_to_compose_strings: ignore
+    unnecessary_parenthesis: ignore
+    unused_import: ignore
 
 linter:
   rules:

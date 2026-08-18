@@ -1,0 +1,42 @@
+{
+  "name": "LabelEntry",
+  "timestamp": "2026-08-18T20:25:09.658062Z",
+  "duration_ms": 19,
+  "success": true,
+  "files": [
+    {
+      "type": "test",
+      "path": "test/domain/usecases/label_entry/get_label_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/label_entry/update_label_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/label_entry/toggle_label_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "options": {
+    "test": true,
+    "name": "LabelEntry",
+    "output_dir": "lib/src",
+    "id-field": "id",
+    "id-field-type": "String",
+    "query-field": "id",
+    "plugin_ids": [
+      "test"
+    ],
+    "execution_order": [
+      "test"
+    ]
+  }
+}

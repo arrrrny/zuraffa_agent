@@ -1,0 +1,42 @@
+{
+  "name": "ModelChangeEntry",
+  "timestamp": "2026-08-18T20:25:09.825762Z",
+  "duration_ms": 21,
+  "success": true,
+  "files": [
+    {
+      "type": "test",
+      "path": "test/domain/usecases/model_change_entry/get_model_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/model_change_entry/update_model_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    },
+    {
+      "type": "test",
+      "path": "test/domain/usecases/model_change_entry/toggle_model_change_entry_usecase_test.dart",
+      "action": "skipped",
+      "content": null
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "options": {
+    "test": true,
+    "name": "ModelChangeEntry",
+    "output_dir": "lib/src",
+    "id-field": "id",
+    "id-field-type": "String",
+    "query-field": "id",
+    "plugin_ids": [
+      "test"
+    ],
+    "execution_order": [
+      "test"
+    ]
+  }
+}

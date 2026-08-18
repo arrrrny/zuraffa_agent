@@ -1,0 +1,1 @@
+{"plan_id":"last_run_ArtifactRef","plugin_id":"manager","capability_name":"make","args":{"test":true,"name":"ArtifactRef","output_dir":"lib/src","plugin_ids":[],"execution_order":[]},"valid":true,"changes":[]}

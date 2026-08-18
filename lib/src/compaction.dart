@@ -201,7 +201,7 @@ Future<CompactionResult> compact(
     tokensAfter: tokensAfter,
   );
 
-  return CompactionResult(entry: entry, summary: summary);
+  return CompactionResult(entry: entry, summary: compactionSummary);
 }
 
 /// Built-in rule-based summarizer extracting decisions, tools, and outputs.
@@ -349,14 +349,22 @@ String? _extractText(AgentMessage msg) {
   switch (msg) {
     case AssistantMessage():
       final buf = StringBuffer();
-      for (final block in msg.content) {
-        if (block is TextBlock) buf.write(block.text);
+      for (var i = 0; i < msg.content.length; i++) {
+        final block = msg.content[i];
+        if (block is TextBlock) {
+          if (buf.isNotEmpty) buf.write('\n');
+          buf.write(block.text);
+        }
       }
       return buf.isEmpty ? null : buf.toString();
     case UserMessage():
       final buf = StringBuffer();
-      for (final block in msg.content) {
-        if (block is TextBlock) buf.write(block.text);
+      for (var i = 0; i < msg.content.length; i++) {
+        final block = msg.content[i];
+        if (block is TextBlock) {
+          if (buf.isNotEmpty) buf.write('\n');
+          buf.write(block.text);
+        }
       }
       return buf.isEmpty ? null : buf.toString();
     default:
