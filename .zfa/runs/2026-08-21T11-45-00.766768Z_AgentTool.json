@@ -1,0 +1,26 @@
+{
+  "name": "AgentTool",
+  "timestamp": "2026-08-21T11:45:00.766768Z",
+  "duration_ms": 0,
+  "success": true,
+  "files": [],
+  "errors": [],
+  "warnings": [],
+  "options": {
+    "mock": true,
+    "mock-data-only": false,
+    "mock-json": false,
+    "name": "AgentTool",
+    "output_dir": "lib/src",
+    "xray": false,
+    "id-field": "id",
+    "id-field-type": "String",
+    "query-field": "id",
+    "plugin_ids": [
+      "mock"
+    ],
+    "execution_order": [
+      "mock"
+    ]
+  }
+}

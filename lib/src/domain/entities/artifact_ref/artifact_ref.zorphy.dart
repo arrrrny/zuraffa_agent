@@ -11,44 +11,55 @@ part of 'artifact_ref.dart';
 @JsonSerializable(explicitToJson: true, checked: true)
 class ArtifactRef {
   ArtifactRef({
-    required String this.kind,
     required String this.id,
-    String? this.uri,
+    required String this.mimeType,
+    required int this.sizeBytes,
+    required DateTime this.createdAt,
   });
 
   factory ArtifactRef.fromJson(Map<String, dynamic> json) =>
       _$ArtifactRefFromJson(json);
 
-  final String kind;
-
   final String id;
 
-  final String? uri;
+  final String mimeType;
 
-  ArtifactRef copyWith({String? kind, String? id, String? uri}) {
+  final int sizeBytes;
+
+  final DateTime createdAt;
+
+  ArtifactRef copyWith({
+    String? id,
+    String? mimeType,
+    int? sizeBytes,
+    DateTime? createdAt,
+  }) {
     return ArtifactRef(
-      kind: kind ?? this.kind,
       id: id ?? this.id,
-      uri: uri ?? this.uri,
+      mimeType: mimeType ?? this.mimeType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
-  ArtifactRef copyWithArtifactRef({String? kind, String? id, String? uri}) {
-    return copyWith(kind: kind, id: id, uri: uri);
+  ArtifactRef copyWithArtifactRef({
+    String? id,
+    String? mimeType,
+    int? sizeBytes,
+    DateTime? createdAt,
+  }) {
+    return copyWith(
+      id: id,
+      mimeType: mimeType,
+      sizeBytes: sizeBytes,
+      createdAt: createdAt,
+    );
   }
 
   ArtifactRef patchWithArtifactRef([ArtifactRefPatch? patchInput]) {
     final _patcher = patchInput ?? ArtifactRefPatch();
     final _patchMap = _patcher.patchMap;
     return ArtifactRef(
-      kind: _patchMap.containsKey(ArtifactRef$.kind)
-          ? ((_patchMap[ArtifactRef$.kind] is Function)
-                    ? _patchMap[ArtifactRef$.kind](this.kind)
-                    : (_patchMap[ArtifactRef$.kind] is Patch)
-                    ? _patchMap[ArtifactRef$.kind].applyTo(this.kind)
-                    : _patchMap[ArtifactRef$.kind])
-                as String
-          : this.kind,
       id: _patchMap.containsKey(ArtifactRef$.id)
           ? ((_patchMap[ArtifactRef$.id] is Function)
                     ? _patchMap[ArtifactRef$.id](this.id)
@@ -57,14 +68,30 @@ class ArtifactRef {
                     : _patchMap[ArtifactRef$.id])
                 as String
           : this.id,
-      uri: _patchMap.containsKey(ArtifactRef$.uri)
-          ? ((_patchMap[ArtifactRef$.uri] is Function)
-                    ? _patchMap[ArtifactRef$.uri](this.uri)
-                    : (_patchMap[ArtifactRef$.uri] is Patch)
-                    ? _patchMap[ArtifactRef$.uri].applyTo(this.uri)
-                    : _patchMap[ArtifactRef$.uri])
-                as String?
-          : this.uri,
+      mimeType: _patchMap.containsKey(ArtifactRef$.mimeType)
+          ? ((_patchMap[ArtifactRef$.mimeType] is Function)
+                    ? _patchMap[ArtifactRef$.mimeType](this.mimeType)
+                    : (_patchMap[ArtifactRef$.mimeType] is Patch)
+                    ? _patchMap[ArtifactRef$.mimeType].applyTo(this.mimeType)
+                    : _patchMap[ArtifactRef$.mimeType])
+                as String
+          : this.mimeType,
+      sizeBytes: _patchMap.containsKey(ArtifactRef$.sizeBytes)
+          ? ((_patchMap[ArtifactRef$.sizeBytes] is Function)
+                    ? _patchMap[ArtifactRef$.sizeBytes](this.sizeBytes)
+                    : (_patchMap[ArtifactRef$.sizeBytes] is Patch)
+                    ? _patchMap[ArtifactRef$.sizeBytes].applyTo(this.sizeBytes)
+                    : _patchMap[ArtifactRef$.sizeBytes])
+                as int
+          : this.sizeBytes,
+      createdAt: _patchMap.containsKey(ArtifactRef$.createdAt)
+          ? ((_patchMap[ArtifactRef$.createdAt] is Function)
+                    ? _patchMap[ArtifactRef$.createdAt](this.createdAt)
+                    : (_patchMap[ArtifactRef$.createdAt] is Patch)
+                    ? _patchMap[ArtifactRef$.createdAt].applyTo(this.createdAt)
+                    : _patchMap[ArtifactRef$.createdAt])
+                as DateTime
+          : this.createdAt,
     );
   }
 
@@ -72,24 +99,27 @@ class ArtifactRef {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is ArtifactRef &&
-        kind == other.kind &&
         id == other.id &&
-        uri == other.uri;
+        mimeType == other.mimeType &&
+        sizeBytes == other.sizeBytes &&
+        createdAt == other.createdAt;
   }
 
   @override
   int get hashCode {
-    return Object.hash(this.kind, this.id, this.uri);
+    return Object.hash(this.id, this.mimeType, this.sizeBytes, this.createdAt);
   }
 
   @override
   String toString() {
     return 'ArtifactRef(' +
-        'kind: ${kind}' +
-        ', ' +
         'id: ${id}' +
         ', ' +
-        'uri: ${uri})';
+        'mimeType: ${mimeType}' +
+        ', ' +
+        'sizeBytes: ${sizeBytes}' +
+        ', ' +
+        'createdAt: ${createdAt})';
   }
 
   Map<String, dynamic> toJsonLean() {
@@ -112,14 +142,6 @@ class ArtifactRef {
 }
 
 extension ArtifactRefPropertyHelpers on ArtifactRef {
-  bool get hasKind {
-    return this.kind.isNotEmpty;
-  }
-
-  bool get noKind {
-    return this.kind.isEmpty;
-  }
-
   bool get hasId {
     return this.id.isNotEmpty;
   }
@@ -128,16 +150,12 @@ extension ArtifactRefPropertyHelpers on ArtifactRef {
     return this.id.isEmpty;
   }
 
-  bool get hasUri {
-    return this.uri?.isNotEmpty == true;
+  bool get hasMimeType {
+    return this.mimeType.isNotEmpty;
   }
 
-  bool get noUri {
-    return this.uri?.isEmpty ?? true;
-  }
-
-  String get uriRequired {
-    return this.uri ?? (throw StateError('uri is required but was null'));
+  bool get noMimeType {
+    return this.mimeType.isEmpty;
   }
 }
 
@@ -147,16 +165,11 @@ extension ArtifactRefSerialization on ArtifactRef {
   }
 }
 
-enum ArtifactRef$ { kind, id, uri }
+enum ArtifactRef$ { id, mimeType, sizeBytes, createdAt }
 
 class ArtifactRefPatch extends PatchBase<ArtifactRef, ArtifactRef$> {
   ArtifactRef applyTo(ArtifactRef entity) {
     return entity.patchWithArtifactRef(this);
-  }
-
-  ArtifactRefPatch withKind(String? value) {
-    patchMap[ArtifactRef$.kind] = value;
-    return this;
   }
 
   ArtifactRefPatch withId(String? value) {
@@ -164,30 +177,49 @@ class ArtifactRefPatch extends PatchBase<ArtifactRef, ArtifactRef$> {
     return this;
   }
 
-  ArtifactRefPatch withUri(String? value) {
-    patchMap[ArtifactRef$.uri] = value;
+  ArtifactRefPatch withMimeType(String? value) {
+    patchMap[ArtifactRef$.mimeType] = value;
+    return this;
+  }
+
+  ArtifactRefPatch withSizeBytes(int? value) {
+    patchMap[ArtifactRef$.sizeBytes] = value;
+    return this;
+  }
+
+  ArtifactRefPatch withCreatedAt(DateTime? value) {
+    patchMap[ArtifactRef$.createdAt] = value;
     return this;
   }
 }
 
 /// Field descriptors for [ArtifactRef] query construction
 abstract final class ArtifactRefFields {
-  static const kind = Field<ArtifactRef, String>('kind', _$kind);
-
   static const id = Field<ArtifactRef, String>('id', _$id);
 
-  static const uri = Field<ArtifactRef, String?>('uri', _$uri);
+  static const mimeType = Field<ArtifactRef, String>('mimeType', _$mimeType);
 
-  static String _$kind(ArtifactRef e) {
-    return e.kind;
-  }
+  static const sizeBytes = Field<ArtifactRef, int>('sizeBytes', _$sizeBytes);
+
+  static const createdAt = Field<ArtifactRef, DateTime>(
+    'createdAt',
+    _$createdAt,
+  );
 
   static String _$id(ArtifactRef e) {
     return e.id;
   }
 
-  static String? _$uri(ArtifactRef e) {
-    return e.uri;
+  static String _$mimeType(ArtifactRef e) {
+    return e.mimeType;
+  }
+
+  static int _$sizeBytes(ArtifactRef e) {
+    return e.sizeBytes;
+  }
+
+  static DateTime _$createdAt(ArtifactRef e) {
+    return e.createdAt;
   }
 }
 
@@ -195,16 +227,20 @@ extension ArtifactRefCompareE on ArtifactRef {
   Map<String, dynamic> compareToArtifactRef(ArtifactRef other) {
     final Map<String, dynamic> diff = {};
 
-    if (kind != other.kind) {
-      diff['kind'] = () => other.kind;
-    }
-
     if (id != other.id) {
       diff['id'] = () => other.id;
     }
 
-    if (uri != other.uri) {
-      diff['uri'] = () => other.uri;
+    if (mimeType != other.mimeType) {
+      diff['mimeType'] = () => other.mimeType;
+    }
+
+    if (sizeBytes != other.sizeBytes) {
+      diff['sizeBytes'] = () => other.sizeBytes;
+    }
+
+    if (createdAt != other.createdAt) {
+      diff['createdAt'] = () => other.createdAt;
     }
     return diff;
   }

@@ -5,7 +5,7 @@
 
 // Tool validation and definition — hand-written engine glue.
 //
-// Provides AgentTool definition and JSON-Schema subset parameter validation.
+// Provides AgentTool definition, ToolDispatcher interface, and JSON-Schema subset parameter validation.
 
 /// Represents an executable agent tool with typed parameters.
 class AgentTool<TParameters, TDetails> {
@@ -20,6 +20,31 @@ class AgentTool<TParameters, TDetails> {
     required this.inputSchema,
     this.execute,
   });
+}
+
+/// Interface for tool dispatching.
+///
+/// The engine uses this interface to dispatch tool calls without
+/// knowing the implementation details (in-proc, MCP, etc.).
+abstract class ToolDispatcher {
+  /// Dispatches a tool call and returns the result as a string.
+  ///
+  /// [toolName] - The name of the tool to call.
+  /// [arguments] - The tool arguments (validated against the tool's schema).
+  ///
+  /// Returns the tool result as a string.
+  /// Throws [ToolNotFoundException] if the tool is not registered.
+  Future<String> dispatch(String toolName, Map<String, dynamic> arguments);
+}
+
+/// Exception thrown when a tool is not found.
+class ToolNotFoundException implements Exception {
+  final String toolName;
+
+  ToolNotFoundException(this.toolName);
+
+  @override
+  String toString() => 'Tool not found: $toolName';
 }
 
 /// Validates a parameter map against a JSON-Schema subset definition.

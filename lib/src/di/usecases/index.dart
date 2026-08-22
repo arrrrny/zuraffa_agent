@@ -16,6 +16,40 @@ import 'get_usage_ledger_entry_usecase_di.dart';
 import 'update_tool_invocation_record_usecase_di.dart';
 import 'update_turn_record_usecase_di.dart';
 import 'update_usage_ledger_entry_usecase_di.dart';
+import 'golden_mission_usecase_di.dart';
+import 'suite_usecase_di.dart';
+import 'agent_spec_usecase_di.dart';
+import 'agent_tool_usecase_di.dart';
+import 'approval_request_usecase_di.dart';
+import 'artifact_ref_usecase_di.dart';
+import 'artifact_service_config_usecase_di.dart';
+import 'artifact_store_result_usecase_di.dart';
+import 'artifact_usecase_di.dart';
+import 'branch_summary_entry_usecase_di.dart';
+import 'client_health_usecase_di.dart';
+import 'compaction_entry_usecase_di.dart';
+import 'compaction_summary_usecase_di.dart';
+import 'custom_entry_usecase_di.dart';
+import 'dispatch_tool_usecase_di.dart';
+import 'engine_event_usecase_di.dart';
+import 'enums_usecase_di.dart';
+import 'fallback_chain_usecase_di.dart';
+import 'label_entry_usecase_di.dart';
+import 'mission_config_usecase_di.dart';
+import 'model_change_entry_usecase_di.dart';
+import 'model_usecase_di.dart';
+import 'repetition_tracker_usecase_di.dart';
+import 'stop_policy_usecase_di.dart';
+import 'store_params_usecase_di.dart';
+import 'sub_agent_type_usecase_di.dart';
+import 'thinking_level_change_entry_usecase_di.dart';
+import 'tool_call_signature_usecase_di.dart';
+import 'tool_dispatch_result_usecase_di.dart';
+import 'tool_invocation_record_usecase_di.dart';
+import 'tool_result_usecase_di.dart';
+import 'turn_context_usecase_di.dart';
+import 'turn_record_usecase_di.dart';
+import 'usage_ledger_entry_usecase_di.dart';
 
 void registerAllUseCases(GetIt getIt) {
   registerCreateToolInvocationRecordUseCase(getIt);
@@ -33,6 +67,74 @@ void registerAllUseCases(GetIt getIt) {
   registerUpdateToolInvocationRecordUseCase(getIt);
   registerUpdateTurnRecordUseCase(getIt);
   registerUpdateUsageLedgerEntryUseCase(getIt);
+
+  registerGoldenMissionUseCase(getIt);
+
+  registerSuiteUseCase(getIt);
+
+  registerAgentSpecUseCase(getIt);
+
+  registerAgentToolUseCase(getIt);
+
+  registerApprovalRequestUseCase(getIt);
+
+  registerArtifactRefUseCase(getIt);
+
+  registerArtifactServiceConfigUseCase(getIt);
+
+  registerArtifactStoreResultUseCase(getIt);
+
+  registerArtifactUseCase(getIt);
+
+  registerBranchSummaryEntryUseCase(getIt);
+
+  registerClientHealthUseCase(getIt);
+
+  registerCompactionEntryUseCase(getIt);
+
+  registerCompactionSummaryUseCase(getIt);
+
+  registerCustomEntryUseCase(getIt);
+
+  registerDispatchToolUseCase(getIt);
+
+  registerEngineEventUseCase(getIt);
+
+  registerEnumsUseCase(getIt);
+
+  registerFallbackChainUseCase(getIt);
+
+  registerLabelEntryUseCase(getIt);
+
+  registerMissionConfigUseCase(getIt);
+
+  registerModelChangeEntryUseCase(getIt);
+
+  registerModelUseCase(getIt);
+
+  registerRepetitionTrackerUseCase(getIt);
+
+  registerStopPolicyUseCase(getIt);
+
+  registerStoreParamsUseCase(getIt);
+
+  registerSubAgentTypeUseCase(getIt);
+
+  registerThinkingLevelChangeEntryUseCase(getIt);
+
+  registerToolCallSignatureUseCase(getIt);
+
+  registerToolDispatchResultUseCase(getIt);
+
+  registerToolInvocationRecordUseCase(getIt);
+
+  registerToolResultUseCase(getIt);
+
+  registerTurnContextUseCase(getIt);
+
+  registerTurnRecordUseCase(getIt);
+
+  registerUsageLedgerEntryUseCase(getIt);
 }
 
 // END GENERATED

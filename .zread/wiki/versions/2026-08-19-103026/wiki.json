@@ -1,0 +1,29 @@
+{
+  "id": "2026-08-19-103026",
+  "generated_at": "2026-08-19T07:30:26.989802Z",
+  "language": "en",
+  "pages": [
+    {
+      "slug": "1-overview",
+      "title": "Overview",
+      "file": "1-overview.md",
+      "section": "Get Started",
+      "level": "Beginner"
+    },
+    {
+      "slug": "2-quick-start",
+      "title": "Quick Start",
+      "file": "2-quick-start.md",
+      "section": "Get Started",
+      "level": "Beginner"
+    },
+    {
+      "slug": "3-architecture-and-design-philosophy",
+      "title": "Architecture \u0026 Design Philosophy",
+      "file": "3-architecture-and-design-philosophy.md",
+      "section": "Get Started",
+      "group": "Project Context",
+      "level": "Beginner"
+    }
+  ]
+}

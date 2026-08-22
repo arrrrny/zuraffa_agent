@@ -9,16 +9,21 @@ part of 'artifact_ref.dart';
 ArtifactRef _$ArtifactRefFromJson(Map<String, dynamic> json) =>
     $checkedCreate('ArtifactRef', json, ($checkedConvert) {
       final val = ArtifactRef(
-        kind: $checkedConvert('kind', (v) => v as String),
         id: $checkedConvert('id', (v) => v as String),
-        uri: $checkedConvert('uri', (v) => v as String?),
+        mimeType: $checkedConvert('mimeType', (v) => v as String),
+        sizeBytes: $checkedConvert('sizeBytes', (v) => (v as num).toInt()),
+        createdAt: $checkedConvert(
+          'createdAt',
+          (v) => DateTime.parse(v as String),
+        ),
       );
       return val;
     });
 
 Map<String, dynamic> _$ArtifactRefToJson(ArtifactRef instance) =>
     <String, dynamic>{
-      'kind': instance.kind,
       'id': instance.id,
-      'uri': ?instance.uri,
+      'mimeType': instance.mimeType,
+      'sizeBytes': instance.sizeBytes,
+      'createdAt': instance.createdAt.toIso8601String(),
     };

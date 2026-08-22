@@ -1,0 +1,40 @@
+{
+  "name": "AgentTool",
+  "timestamp": "2026-08-21T11:45:00.930908Z",
+  "duration_ms": 3,
+  "success": true,
+  "files": [
+    {
+      "type": "remote_datasource",
+      "path": "lib/src/data/datasources/agent_tool/agent_tool_remote_datasource.dart",
+      "action": "skipped",
+      "content": "// GENERATED - DO NOT EDIT\nimport 'package:zuraffa/zuraffa.dart';\n\nimport '../../../domain/entities/agent_tool/agent_tool.dart';\nimport 'agent_tool_datasource.dart';\n\nclass AgentToolRemoteDataSource\n    with Loggable, FailureHandler\n    implements AgentToolDataSource {\n  @override\n  Future<AgentTool> get(QueryParams<AgentTool> params) async {\n    throw UnimplementedError('Implement remote get');\n  }\n\n  @override\n  Future<AgentTool> update(UpdateParams<String, AgentToolPatch> params) async {\n    throw UnimplementedError('Implement remote update');\n  }\n\n  @override\n  Future<AgentTool> toggle(\n    ToggleParams<String, Field<AgentTool, dynamic>> params,\n  ) async {\n    throw UnimplementedError('Implement remote toggle');\n  }\n}\n\n// END GENERATED\n"
+    },
+    {
+      "type": "datasource",
+      "path": "lib/src/data/datasources/agent_tool/agent_tool_datasource.dart",
+      "action": "skipped",
+      "content": "// GENERATED - DO NOT EDIT\nimport 'package:zuraffa/zuraffa.dart';\n\nimport '../../../domain/entities/agent_tool/agent_tool.dart';\n\nabstract class AgentToolDataSource with Loggable, FailureHandler {\n  Future<AgentTool> get(QueryParams<AgentTool> params);\n  Future<AgentTool> update(UpdateParams<String, AgentToolPatch> params);\n  Future<AgentTool> toggle(\n    ToggleParams<String, Field<AgentTool, dynamic>> params,\n  );\n}\n\n// END GENERATED\n"
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "options": {
+    "datasource": true,
+    "local": false,
+    "remote": true,
+    "cache": false,
+    "name": "AgentTool",
+    "output_dir": "lib/src",
+    "xray": false,
+    "id-field": "id",
+    "id-field-type": "String",
+    "query-field": "id",
+    "plugin_ids": [
+      "datasource"
+    ],
+    "execution_order": [
+      "datasource"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"plan_id":"plan_1787232786097","plugin_id":"service","capability_name":"create","args":{"dryRun":true,"force":false,"verbose":false,"name":"ArtifactService"},"valid":true,"changes":[{"file":"lib/src/domain/services/artifact_service.dart","action":"created"}]}

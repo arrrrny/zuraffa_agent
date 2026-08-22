@@ -5,9 +5,24 @@ import '../../domain/entities/artifact_ref/artifact_ref.dart';
 /// Mock data for ArtifactRef
 class ArtifactRefMockData {
   static final List<ArtifactRef> artifactRefs = [
-    ArtifactRef(kind: 'kind 1', id: 'id 1', uri: 'uri 1'),
-    ArtifactRef(kind: 'kind 2', id: 'id 2', uri: 'uri 2'),
-    ArtifactRef(kind: 'kind 3', id: 'id 3', uri: null),
+    ArtifactRef(
+      id: 'id 1',
+      mimeType: 'mimeType 1',
+      sizeBytes: 1,
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+    ),
+    ArtifactRef(
+      id: 'id 2',
+      mimeType: 'mimeType 2',
+      sizeBytes: 2,
+      createdAt: DateTime.now().subtract(const Duration(days: 60)),
+    ),
+    ArtifactRef(
+      id: 'id 3',
+      mimeType: 'mimeType 3',
+      sizeBytes: 3,
+      createdAt: DateTime.now().subtract(const Duration(days: 90)),
+    ),
   ];
 
   static ArtifactRef get sampleArtifactRef => artifactRefs.first;
@@ -21,9 +36,10 @@ class ArtifactRefMockData {
 
   static ArtifactRef _createArtifactRef(int seed) {
     return ArtifactRef(
-      kind: 'kind $seed',
       id: 'id $seed',
-      uri: seed % 3 == 0 ? null : 'uri $seed',
+      mimeType: 'mimeType $seed',
+      sizeBytes: seed * 10,
+      createdAt: DateTime.now().subtract(Duration(days: seed * 30)),
     );
   }
 }
