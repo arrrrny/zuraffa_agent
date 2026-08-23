@@ -1,1 +1,0 @@
-{"plan_id":"last_run_AgentTool","plugin_id":"manager","capability_name":"make","args":{"datasource":true,"local":false,"remote":true,"cache":false,"name":"AgentTool","output_dir":"lib/src","xray":false,"id-field":"id","id-field-type":"String","query-field":"id","plugin_ids":["datasource"],"execution_order":["datasource"]},"valid":true,"changes":[]}

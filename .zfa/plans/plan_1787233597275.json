@@ -1,1 +1,0 @@
-{"plan_id":"plan_1787233597275","plugin_id":"provider","capability_name":"create","args":{"name":"ArtifactServiceProvider","domain":"artifact","params":"StoreParams","returns":"ArtifactStoreResult","type":"completable","data":false,"dryRun":true,"force":false,"verbose":false},"valid":true,"changes":[]}
