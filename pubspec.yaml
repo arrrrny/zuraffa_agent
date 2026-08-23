@@ -7,9 +7,6 @@ repository: https://github.com/arrrrny/zuraffa_agent
 environment:
   sdk: ^3.8.0
 
-dependency_overrides:
-  analyzer: 14.1.0
-
 dependencies:
   hive_ce: ^2.19.0
   http: ^1.2.0
