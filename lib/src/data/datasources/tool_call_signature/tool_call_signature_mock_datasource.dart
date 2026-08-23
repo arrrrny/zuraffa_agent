@@ -20,7 +20,7 @@ class ToolCallSignatureMockDataSource
   @override
   Future<ToolCallSignature> get(QueryParams<ToolCallSignature> params) async {
     logger.info('Getting ToolCallSignature with params: $params');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final item = ToolCallSignatureMockData.toolCallSignatures.query(params);
     logger.info('Successfully retrieved ToolCallSignature');
     return item;
@@ -31,22 +31,9 @@ class ToolCallSignatureMockDataSource
     UpdateParams<String, ToolCallSignaturePatch> params,
   ) async {
     logger.info('Updating ToolCallSignature: ${params.id}');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final existing = ToolCallSignatureMockData.sampleToolCallSignature;
     logger.info('Successfully updated ToolCallSignature');
-    return existing;
-  }
-
-  @override
-  Future<ToolCallSignature> toggle(
-    ToggleParams<String, Field<ToolCallSignature, dynamic>> params,
-  ) async {
-    logger.info(
-      'Toggling ToolCallSignature: ${params.id} on field ${params.field}',
-    );
-    await Future.delayed(_delay);
-    final existing = ToolCallSignatureMockData.sampleToolCallSignature;
-    logger.info('Successfully toggled ToolCallSignature');
     return existing;
   }
 }

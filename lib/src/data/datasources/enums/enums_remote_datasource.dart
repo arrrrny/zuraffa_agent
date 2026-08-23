@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/enums/enums.dart';
 import 'enums_datasource.dart';
 
-class EnumsRemoteDataSource
+abstract class EnumsRemoteDataSource
     with Loggable, FailureHandler
     implements EnumsDataSource {}
 

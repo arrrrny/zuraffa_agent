@@ -13,7 +13,7 @@ class ResolveAgentSpecUseCase extends UseCase<AgentSpec, String> {
   @override
   Future<AgentSpec> execute(String params, [CancelToken? cancelToken]) async {
     cancelToken?.throwIfCancelled();
-    return await _agentSpecService.resolve(params);
+    return _agentSpecService.resolve(params);
   }
 }
 

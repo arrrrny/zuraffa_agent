@@ -12,7 +12,7 @@ class IsHealthyUseCase extends UseCase<bool, String> {
   @override
   Future<bool> execute(String params, [CancelToken? cancelToken]) async {
     cancelToken?.throwIfCancelled();
-    return await _clientHealthService.isHealthy(params);
+    return _clientHealthService.isHealthy(params);
   }
 }
 

@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/repetition_tracker/repetition_tracker.dart';
 import 'repetition_tracker_datasource.dart';
 
-class RepetitionTrackerRemoteDataSource
+abstract class RepetitionTrackerRemoteDataSource
     with Loggable, FailureHandler
     implements RepetitionTrackerDataSource {}
 

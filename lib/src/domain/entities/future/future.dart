@@ -9,8 +9,6 @@ part 'future.g.dart';
 /// Future entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $Future {
-
   String get id;
-  dynamic? get value;
+  dynamic get value;
 }
-

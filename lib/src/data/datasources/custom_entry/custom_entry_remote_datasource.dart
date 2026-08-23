@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/custom_entry/custom_entry.dart';
 import 'custom_entry_datasource.dart';
 
-class CustomEntryRemoteDataSource
+abstract class CustomEntryRemoteDataSource
     with Loggable, FailureHandler
     implements CustomEntryDataSource {}
 

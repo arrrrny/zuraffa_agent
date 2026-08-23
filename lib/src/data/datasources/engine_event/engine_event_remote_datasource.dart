@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/engine_event/engine_event.dart';
 import 'engine_event_datasource.dart';
 
-class EngineEventRemoteDataSource
+abstract class EngineEventRemoteDataSource
     with Loggable, FailureHandler
     implements EngineEventDataSource {}
 

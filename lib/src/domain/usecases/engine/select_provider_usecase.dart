@@ -12,7 +12,7 @@ class SelectProviderUseCase extends UseCase<String, NoParams> {
   @override
   Future<String> execute(NoParams params, [CancelToken? cancelToken]) async {
     cancelToken?.throwIfCancelled();
-    return await _fallbackChainService.selectProvider();
+    return _fallbackChainService.selectProvider();
   }
 }
 

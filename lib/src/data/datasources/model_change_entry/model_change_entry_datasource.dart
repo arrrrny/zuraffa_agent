@@ -3,6 +3,11 @@ import 'package:zuraffa/zuraffa.dart';
 
 import '../../../domain/entities/model_change_entry/model_change_entry.dart';
 
-abstract class ModelChangeEntryDataSource with Loggable, FailureHandler {}
+abstract class ModelChangeEntryDataSource with Loggable, FailureHandler {
+  Future<ModelChangeEntry> get(QueryParams<ModelChangeEntry> params);
+  Future<ModelChangeEntry> update(
+    UpdateParams<String, ModelChangeEntryPatch> params,
+  );
+}
 
 // END GENERATED

@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/model_change_entry/model_change_entry.dart';
 import 'model_change_entry_datasource.dart';
 
-class ModelChangeEntryRemoteDataSource
+abstract class ModelChangeEntryRemoteDataSource
     with Loggable, FailureHandler
     implements ModelChangeEntryDataSource {}
 

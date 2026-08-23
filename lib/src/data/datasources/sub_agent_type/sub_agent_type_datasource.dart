@@ -3,6 +3,9 @@ import 'package:zuraffa/zuraffa.dart';
 
 import '../../../domain/entities/sub_agent_type/sub_agent_type.dart';
 
-abstract class SubAgentTypeDataSource with Loggable, FailureHandler {}
+abstract class SubAgentTypeDataSource with Loggable, FailureHandler {
+  Future<SubAgentType> get(QueryParams<SubAgentType> params);
+  Future<SubAgentType> update(UpdateParams<String, SubAgentTypePatch> params);
+}
 
 // END GENERATED

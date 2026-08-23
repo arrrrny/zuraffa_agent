@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/golden_mission/golden_mission.dart';
 import 'golden_mission_datasource.dart';
 
-class GoldenMissionRemoteDataSource
+abstract class GoldenMissionRemoteDataSource
     with Loggable, FailureHandler
     implements GoldenMissionDataSource {}
 

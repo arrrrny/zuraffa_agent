@@ -13,7 +13,7 @@ class ScoreSuiteUseCase extends UseCase<double, Suite> {
   @override
   Future<double> execute(Suite params, [CancelToken? cancelToken]) async {
     cancelToken?.throwIfCancelled();
-    return await _suiteService.score(params);
+    return _suiteService.score(params);
   }
 }
 

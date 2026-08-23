@@ -13,7 +13,7 @@ class GetToolUseCase extends UseCase<AgentTool, String> {
   @override
   Future<AgentTool> execute(String params, [CancelToken? cancelToken]) async {
     cancelToken?.throwIfCancelled();
-    return await _agentToolService.getTool(params);
+    return _agentToolService.getTool(params);
   }
 }
 

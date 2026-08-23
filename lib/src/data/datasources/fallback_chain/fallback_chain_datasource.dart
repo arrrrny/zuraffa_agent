@@ -3,6 +3,9 @@ import 'package:zuraffa/zuraffa.dart';
 
 import '../../../domain/entities/fallback_chain/fallback_chain.dart';
 
-abstract class FallbackChainDataSource with Loggable, FailureHandler {}
+abstract class FallbackChainDataSource with Loggable, FailureHandler {
+  Future<FallbackChain> get(QueryParams<FallbackChain> params);
+  Future<FallbackChain> update(UpdateParams<String, FallbackChainPatch> params);
+}
 
 // END GENERATED

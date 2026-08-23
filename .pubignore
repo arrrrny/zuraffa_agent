@@ -1,0 +1,12 @@
+# Project-internal agent and generator state
+.workflow/
+.zfa/
+.kimi-code/
+.memsearch/
+.specify/
+handoffs/
+specs/
+
+# Local tooling and fixtures
+fix_di.py
+tool/

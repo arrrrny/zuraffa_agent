@@ -20,7 +20,7 @@ class RepetitionTrackerMockDataSource
   @override
   Future<RepetitionTracker> get(QueryParams<RepetitionTracker> params) async {
     logger.info('Getting RepetitionTracker with params: $params');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final item = RepetitionTrackerMockData.repetitionTrackers.query(params);
     logger.info('Successfully retrieved RepetitionTracker');
     return item;
@@ -31,22 +31,9 @@ class RepetitionTrackerMockDataSource
     UpdateParams<String, RepetitionTrackerPatch> params,
   ) async {
     logger.info('Updating RepetitionTracker: ${params.id}');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final existing = RepetitionTrackerMockData.sampleRepetitionTracker;
     logger.info('Successfully updated RepetitionTracker');
-    return existing;
-  }
-
-  @override
-  Future<RepetitionTracker> toggle(
-    ToggleParams<String, Field<RepetitionTracker, dynamic>> params,
-  ) async {
-    logger.info(
-      'Toggling RepetitionTracker: ${params.id} on field ${params.field}',
-    );
-    await Future.delayed(_delay);
-    final existing = RepetitionTrackerMockData.sampleRepetitionTracker;
-    logger.info('Successfully toggled RepetitionTracker');
     return existing;
   }
 }

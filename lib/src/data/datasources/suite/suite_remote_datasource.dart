@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/suite/suite.dart';
 import 'suite_datasource.dart';
 
-class SuiteRemoteDataSource
+abstract class SuiteRemoteDataSource
     with Loggable, FailureHandler
     implements SuiteDataSource {}
 

@@ -16,7 +16,7 @@ class ListToolsUseCase extends UseCase<List<AgentTool>, NoParams> {
     CancelToken? cancelToken,
   ]) async {
     cancelToken?.throwIfCancelled();
-    return await _agentToolService.listTools();
+    return _agentToolService.listTools();
   }
 }
 

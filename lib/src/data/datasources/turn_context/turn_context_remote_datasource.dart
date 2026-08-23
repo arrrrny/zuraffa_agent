@@ -4,7 +4,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/turn_context/turn_context.dart';
 import 'turn_context_datasource.dart';
 
-class TurnContextRemoteDataSource
+abstract class TurnContextRemoteDataSource
     with Loggable, FailureHandler
     implements TurnContextDataSource {}
 

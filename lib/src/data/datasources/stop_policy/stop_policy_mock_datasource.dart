@@ -20,7 +20,7 @@ class StopPolicyMockDataSource
   @override
   Future<StopPolicy> get(QueryParams<StopPolicy> params) async {
     logger.info('Getting StopPolicy with params: $params');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final item = StopPolicyMockData.stopPolicys.query(params);
     logger.info('Successfully retrieved StopPolicy');
     return item;
@@ -31,20 +31,9 @@ class StopPolicyMockDataSource
     UpdateParams<String, StopPolicyPatch> params,
   ) async {
     logger.info('Updating StopPolicy: ${params.id}');
-    await Future.delayed(_delay);
+    await Future<void>.delayed(_delay);
     final existing = StopPolicyMockData.sampleStopPolicy;
     logger.info('Successfully updated StopPolicy');
-    return existing;
-  }
-
-  @override
-  Future<StopPolicy> toggle(
-    ToggleParams<String, Field<StopPolicy, dynamic>> params,
-  ) async {
-    logger.info('Toggling StopPolicy: ${params.id} on field ${params.field}');
-    await Future.delayed(_delay);
-    final existing = StopPolicyMockData.sampleStopPolicy;
-    logger.info('Successfully toggled StopPolicy');
     return existing;
   }
 }
