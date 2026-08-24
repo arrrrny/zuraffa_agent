@@ -23,23 +23,41 @@ void main() {
       expect(event.turnId, isNull);
     });
 
-    test('switch over EngineEvent is exhaustive when only TurnStarted exists', () {
-      // While only TurnStarted exists as a subtype, the switch is exhaustive
-      // with just the TurnStarted case. Once #16–#23 land, this test will
-      // need to be expanded with one case per subtype (and the `_` arm, if
-      // any, removed).
+    test('switch over EngineEvent is exhaustive with TurnStarted + TurnCompleted', () {
       String describe(EngineEvent e) => switch (e) {
         TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
       };
 
-      final event = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
-      expect(describe(event), 'turn_started(t-1)');
+      final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
+      final completeEvent = TurnCompleted(emittedAt: fixedTime);
+      expect(describe(startEvent), 'turn_started(t-1)');
+      expect(describe(completeEvent), 'turn_completed(null)');
     });
 
-    // Sentinel: NoParams is exported by package:zuraffa and reachable.
-    // If this stops compiling, the artifact_service.dart from PR #32 broke.
     test('NoParams is reachable (smoke)', () {
       expect(NoParams(), isA<NoParams>());
+    });
+  });
+
+  group('arrarrny/zuraffa_agent#23 — EngineEvent.TurnCompleted', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 7, 31, 0);
+
+    test('TurnCompleted is an EngineEvent', () {
+      final event = TurnCompleted(emittedAt: fixedTime);
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<TurnCompleted>());
+    });
+
+    test('TurnCompleted carries emittedAt + optional reason', () {
+      final event = TurnCompleted(emittedAt: fixedTime, reason: 'cancelled');
+      expect(event.emittedAt, fixedTime);
+      expect(event.reason, 'cancelled');
+    });
+
+    test('TurnCompleted.reason defaults to null on normal completion', () {
+      final event = TurnCompleted(emittedAt: fixedTime);
+      expect(event.reason, isNull);
     });
   });
 }

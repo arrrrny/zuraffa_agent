@@ -18,6 +18,7 @@
 library;
 
 part 'turn_started.dart';
+part 'turn_completed.dart';
 
 /// Sealed base for every event the agent engine emits at runtime.
 ///
