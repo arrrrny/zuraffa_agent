@@ -32,6 +32,7 @@ void main() {
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -155,5 +156,20 @@ void main() {
       expect(event.emittedAt, fixedTime);
       expect(event.providerName, 'sample');
       expect(event.error, 'sample');
+    });  });
+  group('arrarrny/zuraffa_agent#17 — EngineEvent.MissionStarted', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('MissionStarted is an EngineEvent', () {
+      final event = MissionStarted(emittedAt: fixedTime, missionId: 'sample', startedAt: fixedTime);
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<MissionStarted>());
+    });
+
+    test('MissionStarted carries payload fields', () {
+      final event = MissionStarted(emittedAt: fixedTime, missionId: 'sample', startedAt: fixedTime);
+      expect(event.emittedAt, fixedTime);
+      expect(event.missionId, 'sample');
+      expect(event.startedAt, fixedTime);
     });  });
 }
