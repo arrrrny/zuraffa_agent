@@ -9,3 +9,6 @@ pubspec.lock
 !.specify/memory/
 .specify/memory/*
 !.specify/memory/constitution.md
+
+# speckit worktrees (never commit)
+.worktrees/
