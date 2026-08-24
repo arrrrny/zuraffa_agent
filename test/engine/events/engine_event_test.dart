@@ -29,6 +29,7 @@ void main() {
         TurnCompleted(:final reason) => 'turn_completed($reason)',
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -108,5 +109,19 @@ void main() {
       expect(event.toolName, 'sample');
       expect(event.callId, 'sample');
       expect(event.ok, isTrue);
+    });  });
+  group('arrarrny/zuraffa_agent#20 — EngineEvent.ThinkingDelta', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('ThinkingDelta is an EngineEvent', () {
+      final event = ThinkingDelta(emittedAt: fixedTime, delta: 'sample');
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<ThinkingDelta>());
+    });
+
+    test('ThinkingDelta carries payload fields', () {
+      final event = ThinkingDelta(emittedAt: fixedTime, delta: 'sample');
+      expect(event.emittedAt, fixedTime);
+      expect(event.delta, 'sample');
     });  });
 }
