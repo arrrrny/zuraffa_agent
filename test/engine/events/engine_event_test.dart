@@ -28,6 +28,7 @@ void main() {
         TurnStarted(:final turnId) => 'turn_started($turnId)',
         TurnCompleted(:final reason) => 'turn_completed($reason)',
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -92,4 +93,20 @@ void main() {
       expect(event.callId, 'c-2');
     });
   });
+  group('arrarrny/zuraffa_agent#21 — EngineEvent.ToolCallCompleted', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('ToolCallCompleted is an EngineEvent', () {
+      final event = ToolCallCompleted(emittedAt: fixedTime, toolName: 'sample', callId: 'sample', ok: true);
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<ToolCallCompleted>());
+    });
+
+    test('ToolCallCompleted carries payload fields', () {
+      final event = ToolCallCompleted(emittedAt: fixedTime, toolName: 'sample', callId: 'sample', ok: true);
+      expect(event.emittedAt, fixedTime);
+      expect(event.toolName, 'sample');
+      expect(event.callId, 'sample');
+      expect(event.ok, isTrue);
+    });  });
 }

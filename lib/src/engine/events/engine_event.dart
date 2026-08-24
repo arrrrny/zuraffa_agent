@@ -20,6 +20,7 @@ library;
 part 'turn_started.dart';
 part 'turn_completed.dart';
 part 'tool_call_started.dart';
+part 'tool_call_completed.dart';
 
 /// Sealed base for every event the agent engine emits at runtime.
 ///
