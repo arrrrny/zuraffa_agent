@@ -23,16 +23,23 @@ void main() {
       expect(event.turnId, isNull);
     });
 
-    test('switch over EngineEvent is exhaustive with TurnStarted + TurnCompleted', () {
+    test('switch over EngineEvent is exhaustive with all current subtypes', () {
       String describe(EngineEvent e) => switch (e) {
         TurnStarted(:final turnId) => 'turn_started($turnId)',
         TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
       final completeEvent = TurnCompleted(emittedAt: fixedTime);
+      final toolStartEvent = ToolCallStarted(
+        emittedAt: fixedTime,
+        toolName: 'webview.browse',
+        callId: 'c-1',
+      );
       expect(describe(startEvent), 'turn_started(t-1)');
       expect(describe(completeEvent), 'turn_completed(null)');
+      expect(describe(toolStartEvent), 'tool_call_started(webview.browse)');
     });
 
     test('NoParams is reachable (smoke)', () {
@@ -58,6 +65,31 @@ void main() {
     test('TurnCompleted.reason defaults to null on normal completion', () {
       final event = TurnCompleted(emittedAt: fixedTime);
       expect(event.reason, isNull);
+    });
+  });
+
+  group('arrarrny/zuraffa_agent#22 — EngineEvent.ToolCallStarted', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 7, 32, 0);
+
+    test('ToolCallStarted is an EngineEvent', () {
+      final event = ToolCallStarted(
+        emittedAt: fixedTime,
+        toolName: 'webview.browse',
+        callId: 'c-1',
+      );
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<ToolCallStarted>());
+    });
+
+    test('ToolCallStarted carries emittedAt, toolName, callId', () {
+      final event = ToolCallStarted(
+        emittedAt: fixedTime,
+        toolName: 'fs.read',
+        callId: 'c-2',
+      );
+      expect(event.emittedAt, fixedTime);
+      expect(event.toolName, 'fs.read');
+      expect(event.callId, 'c-2');
     });
   });
 }
