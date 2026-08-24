@@ -30,6 +30,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -123,5 +124,20 @@ void main() {
       final event = ThinkingDelta(emittedAt: fixedTime, delta: 'sample');
       expect(event.emittedAt, fixedTime);
       expect(event.delta, 'sample');
+    });  });
+  group('arrarrny/zuraffa_agent#19 — EngineEvent.SteeringInjected', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('SteeringInjected is an EngineEvent', () {
+      final event = SteeringInjected(emittedAt: fixedTime, content: 'sample', injectedAt: fixedTime);
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<SteeringInjected>());
+    });
+
+    test('SteeringInjected carries payload fields', () {
+      final event = SteeringInjected(emittedAt: fixedTime, content: 'sample', injectedAt: fixedTime);
+      expect(event.emittedAt, fixedTime);
+      expect(event.content, 'sample');
+      expect(event.injectedAt, fixedTime);
     });  });
 }
