@@ -16,3 +16,4 @@ export 'src/hive_adapters.dart';
 export 'src/providers.dart';
 export 'src/tools.dart';
 export 'src/skills.dart';
+export 'src/engine/events/engine_event.dart';
