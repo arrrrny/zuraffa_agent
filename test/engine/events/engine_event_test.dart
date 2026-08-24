@@ -31,6 +31,7 @@ void main() {
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -139,5 +140,20 @@ void main() {
       expect(event.emittedAt, fixedTime);
       expect(event.content, 'sample');
       expect(event.injectedAt, fixedTime);
+    });  });
+  group('arrarrny/zuraffa_agent#18 — EngineEvent.ProviderError', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('ProviderError is an EngineEvent', () {
+      final event = ProviderError(emittedAt: fixedTime, providerName: 'sample', error: 'sample');
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<ProviderError>());
+    });
+
+    test('ProviderError carries payload fields', () {
+      final event = ProviderError(emittedAt: fixedTime, providerName: 'sample', error: 'sample');
+      expect(event.emittedAt, fixedTime);
+      expect(event.providerName, 'sample');
+      expect(event.error, 'sample');
     });  });
 }

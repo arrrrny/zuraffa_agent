@@ -23,6 +23,7 @@ part 'tool_call_started.dart';
 part 'tool_call_completed.dart';
 part 'thinking_delta.dart';
 part 'steering_injected.dart';
+part 'provider_error.dart';
 
 /// Sealed base for every event the agent engine emits at runtime.
 ///
