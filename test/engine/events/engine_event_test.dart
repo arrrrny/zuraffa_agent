@@ -33,6 +33,7 @@ void main() {
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -171,5 +172,20 @@ void main() {
       expect(event.emittedAt, fixedTime);
       expect(event.missionId, 'sample');
       expect(event.startedAt, fixedTime);
+    });  });
+  group('arrarrny/zuraffa_agent#16 — EngineEvent.MissionCompleted', () {
+    final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+
+    test('MissionCompleted is an EngineEvent', () {
+      final event = MissionCompleted(emittedAt: fixedTime, missionId: 'sample', status: 'sample', summary: null);
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<MissionCompleted>());
+    });
+
+    test('MissionCompleted carries payload fields', () {
+      final event = MissionCompleted(emittedAt: fixedTime, missionId: 'sample', status: 'sample', summary: null);
+      expect(event.emittedAt, fixedTime);
+      expect(event.missionId, 'sample');
+      expect(event.status, 'sample');
     });  });
 }
