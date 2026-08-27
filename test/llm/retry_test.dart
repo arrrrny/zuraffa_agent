@@ -44,5 +44,76 @@ void main() {
       expect(transport.requests, hasLength(2));
       expect(clock.sleeps, [100]);
     });
+
+    test('U5: a 5xx then success is retried and succeeds', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(statusCode: 503, body: 'overloaded'),
+          const ScriptedResponse(statusCode: 500, body: 'boom'),
+          const ScriptedResponse(statusCode: 200, body: '{"ok":2}'),
+        ],
+      );
+
+      final response = await sendWithRetry(
+        transport: transport,
+        request: request,
+        config: const RetryConfig(maxAttempts: 4, baseDelayMs: 100),
+        clock: clock,
+        provider: 'openai',
+        jitter: (_) => 0,
+      );
+
+      expect(response.statusCode, 200);
+      expect(transport.requests, hasLength(3));
+      expect(clock.sleeps, [100, 200]);
+    });
+
+    test('U6: exhausted retries throw the last HTTP error after maxAttempts attempts', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: List.filled(5, const ScriptedResponse(statusCode: 503, body: 'down')),
+      );
+
+      await expectLater(
+        sendWithRetry(
+          transport: transport,
+          request: request,
+          config: const RetryConfig(maxAttempts: 3, baseDelayMs: 100),
+          clock: clock,
+          provider: 'openai',
+          jitter: (_) => 0,
+        ),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 503)
+            .having((e) => e.body, 'body', 'down')),
+      );
+      expect(transport.requests, hasLength(3));
+      expect(clock.sleeps, [100, 200]);
+    });
+
+    test('U7: a non-retryable 4xx is thrown immediately with zero retries', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(statusCode: 401, body: '{"error":"bad key"}'),
+        ],
+      );
+
+      await expectLater(
+        sendWithRetry(
+          transport: transport,
+          request: request,
+          config: const RetryConfig(maxAttempts: 5, baseDelayMs: 100),
+          clock: clock,
+          provider: 'openai',
+          jitter: (_) => 0,
+        ),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 401)),
+      );
+      expect(transport.requests, hasLength(1));
+      expect(clock.sleeps, isEmpty);
+    });
   });
 }
