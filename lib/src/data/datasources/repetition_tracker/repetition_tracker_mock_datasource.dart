@@ -60,8 +60,9 @@ class RepetitionTrackerMockDatasource
   }
 
   @override
-  Future<void> reset() async =>
-      throw UnimplementedError('Implement RepetitionTrackerMockDatasource.reset');
+  Future<void> reset() async {
+    _events.clear();
+  }
 
   /// Drops every occurrence that is expired at [at] — an occurrence is
   /// expired when its age is >= the configured window (exactly `window`
