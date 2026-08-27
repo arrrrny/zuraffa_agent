@@ -3,6 +3,7 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/llm/context_compressor.dart';
+import 'package:zuraffa_agent/src/compaction.dart' show estimateContextTokens;
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'fake_llm_client.dart';
 import 'package:zuraffa_agent/src/types.dart';
@@ -181,6 +182,26 @@ void main() {
       expect(retrieved, isNotNull);
       expect(retrieved!.summary, fiveSectionSnapshot);
       expect(retrieved.messages, hasLength(15));
+    });
+
+    test('U9: a 100-message conversation compresses to <3000 total tokens (SC-001)', () async {
+      final history = bigHistory(messages: 100, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 5000, keepRecentMessages: 10),
+      );
+
+      final result = await compressor.compress(history);
+
+      final snapshotTokens = (result.snapshot.length / 4).ceil();
+      final preservedTokens = estimateContextTokens(result.preservedMessages);
+      expect(snapshotTokens + preservedTokens, lessThan(3000));
+      expect(result.compressedMessages, hasLength(90));
+      expect(result.preservedMessages, hasLength(10));
     });
   });
 }
