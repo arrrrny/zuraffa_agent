@@ -14,8 +14,8 @@
 
 import 'package:zuraffa/zuraffa.dart';
 
-import '../../../domain/entities/stop_policy/stop_policy.dart';
-import '../../../domain/repositories/stop_policy_repository.dart';
+import '../../domain/entities/stop_policy/stop_policy.dart';
+import '../../domain/repositories/stop_policy_repository.dart';
 import '../datasources/stop_policy/stop_policy_datasource.dart';
 
 /// Data-layer implementation of [StopPolicyRepository] over any

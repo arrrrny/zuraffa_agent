@@ -32,7 +32,9 @@ void main() {
 
       final repo = StopPolicyRepositoryImpl(ds);
       expect(await repo.getCurrent('strict'), equals(strict));
-      expect(await repo.getCurrent('default'), isNot(equals(strict)));
+      // edge-2 corollary: after the full replace, the default id is
+      // unreachable — StateError, not a stale value.
+      await expectLater(repo.getCurrent('default'), throwsA(isA<StateError>()));
     });
 
     test('A6: getCurrent with an unknown id raises StateError', () async {
