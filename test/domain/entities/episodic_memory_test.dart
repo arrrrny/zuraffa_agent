@@ -42,8 +42,10 @@ void main() {
       expect(restored.messages, hasLength(3));
       expect(restored.messages[1], isA<AssistantMessage>());
       // Round-tripped messages preserve content (value semantics).
-      final originalText = (messages[1].content.first as TextBlock).text;
-      final restoredText = (restored.messages[1].content.first as TextBlock).text;
+      final originalText =
+          ((messages[1] as AssistantMessage).content.first as TextBlock).text;
+      final restoredText = ((restored.messages[1] as AssistantMessage).content
+          .first as TextBlock).text;
       expect(restoredText, originalText);
     });
   });
