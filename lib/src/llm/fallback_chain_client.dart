@@ -90,6 +90,17 @@ class FallbackChainClient implements LlmClient {
 
   Map<String, ClientHealth> healthSnapshot() => throw UnimplementedError();
 
+  /// Context-overflow detection: a 400 whose body indicates the request
+  /// exceeded the model's context window — a smaller/other model may fit.
+  static final RegExp _contextOverflowPattern = RegExp(
+      r'context length|context_window|maximum context|too long|too many tokens',
+      caseSensitive: false);
+
+  static bool _isContextOverflow(LlmHttpException error) {
+    if (error.statusCode != 400 && error.statusCode != 413) return false;
+    return _contextOverflowPattern.hasMatch(error.body);
+  }
+
   /// Advance-class errors (spec 008 FR-003): connection/timeout
   /// ([LlmNetworkException]), 5xx, a 429 that exhausted the client's retry
   /// budget, and context overflow. Other 4xx (auth, bad request) fail fast.
@@ -98,6 +109,7 @@ class FallbackChainClient implements LlmClient {
     if (error is LlmHttpException) {
       if (error.statusCode >= 500) return true;
       if (error.statusCode == 429) return true;
+      if (_isContextOverflow(error)) return true;
       return false;
     }
     return false;

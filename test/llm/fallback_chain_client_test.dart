@@ -102,5 +102,25 @@ void main() {
       // Failed fast: provider B was never called.
       expect(forbiddenB.generateCalls, 0);
     });
+
+    test('U12: generate() advances on context-overflow errors (400 + context-length body)', () async {
+      final chain = makeChain([
+        FakeLlmClient(providerName: 'a', outcomes: [
+          const ScriptedOutcome(
+              error: LlmHttpException(
+                  provider: 'a',
+                  statusCode: 400,
+                  body:
+                      '{"error":{"message":"This model maximum context length is 8192 tokens"}}')),
+        ]),
+        FakeLlmClient(providerName: 'b', outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'big-context-b')),
+        ]),
+      ]);
+
+      final response = await chain
+          .generate(LlmRequest(messages: [UserMessage.text('huge')]));
+      expect(response.content, 'big-context-b');
+    });
   });
 }
