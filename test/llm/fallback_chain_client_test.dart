@@ -122,5 +122,33 @@ void main() {
           .generate(LlmRequest(messages: [UserMessage.text('huge')]));
       expect(response.content, 'big-context-b');
     });
+
+    test('U13: all providers failing throws a chain-exhausted error carrying every provider error', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused again')),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(
+            error: LlmHttpException(
+                provider: 'b', statusCode: 503, body: 'down')),
+      ]);
+      final chain = makeChain([a, b]);
+
+      await expectLater(
+        chain.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(isA<LlmFallbackExhaustedException>()
+            .having((e) => e.errorsByProvider.keys.toList(), 'providers',
+                ['a', 'b'])
+            .having((e) => e.errorsByProvider['a'], 'error-a',
+                isA<LlmNetworkException>())
+            .having((e) => e.errorsByProvider['b'], 'error-b',
+                isA<LlmHttpException>())),
+      );
+      expect(a.generateCalls, 1);
+      expect(b.generateCalls, 1);
+    });
   });
 }

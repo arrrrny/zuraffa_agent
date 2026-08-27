@@ -57,7 +57,7 @@ class FallbackChainClient implements LlmClient {
 
   @override
   Future<LlmResponse> generate(LlmRequest request) async {
-    Object? lastError;
+    final errors = <String, Object>{};
     for (final p in providers) {
       final breaker = _breakers[p.id]!;
       try {
@@ -67,13 +67,13 @@ class FallbackChainClient implements LlmClient {
       } catch (error) {
         breaker.recordFailure();
         if (_shouldAdvance(error)) {
-          lastError = error;
+          errors[p.id] = error;
           continue; // Advance to the next provider.
         }
         rethrow; // Non-advance errors fail fast.
       }
     }
-    throw lastError ?? StateError('fallback chain is empty');
+    throw LlmFallbackExhaustedException(errors);
   }
 
   @override
