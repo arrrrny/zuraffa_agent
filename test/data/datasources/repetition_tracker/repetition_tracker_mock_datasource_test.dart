@@ -55,7 +55,7 @@ void main() {
       });
 
       test('U8: injectable clock drives evaluation when no explicit now is passed', () async {
-        var now = DateTime(2026, 1, 1, 12);
+        final now = DateTime(2026, 1, 1, 12);
         final ds = RepetitionTrackerMockDatasource(
           config: const RepetitionTracker(id: 'rt', maxCalls: 2),
           clock: () => now,
