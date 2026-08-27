@@ -168,5 +168,46 @@ void main() {
         )),
       );
     });
+
+    test('U12: stream() parses SSE data lines to content deltas; the final chunk carries usage; [DONE] yields isComplete', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            headers: const {'content-type': 'text/event-stream'},
+            lines: [
+              '',
+              'data: {"id":"1","choices":[{"index":0,"delta":{"role":"assistant","content":"Hel"}}]}',
+              ': keep-alive comment line',
+              'data: {"id":"1","choices":[{"index":0,"delta":{"content":"lo"}}]}',
+              'data: {"id":"1","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
+              'data: {"id":"1","choices":[],"usage":{"prompt_tokens":25,"completion_tokens":9}}',
+              'data: [DONE]',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
+
+      expect(chunks, hasLength(3));
+      expect(chunks[0].content, 'Hel');
+      expect(chunks[0].isComplete, isFalse);
+      expect(chunks[1].content, 'lo');
+      expect(chunks[1].isComplete, isFalse);
+      expect(chunks[2].isComplete, isTrue);
+      expect(chunks[2].usage, equals(const LlmUsage(inputTokens: 25, outputTokens: 9)));
+      expect(chunks[2].finishReason, 'stop');
+
+      // The request asked for a streamed completion with usage accounting.
+      final sent = jsonDecode(transport.requests.single.body)
+          as Map<String, dynamic>;
+      expect(sent['stream'], isTrue);
+      expect(sent['stream_options'], {'include_usage': true});
+    });
   });
 }

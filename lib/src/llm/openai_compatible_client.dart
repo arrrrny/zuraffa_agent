@@ -51,8 +51,109 @@ class OpenAiCompatibleClient implements LlmClient {
   }
 
   @override
-  Stream<LlmResponseChunk> stream(LlmRequest request) {
-    throw UnimplementedError();
+  Stream<LlmResponseChunk> stream(LlmRequest request) async* {
+    final response = await openStreamWithRetry(
+      transport: transport,
+      request: _httpRequest(jsonEncode(_buildBody(request, stream: true))),
+      config: retryConfig,
+      clock: clock,
+      provider: providerName,
+      jitter: jitter,
+    );
+
+    final toolBuffers = <int, _OpenAiToolBuffer>{};
+    var finishReason = 'stop';
+    LlmUsage? usage;
+    var toolCallsEmitted = false;
+    var finalEmitted = false;
+
+    Stream<LlmResponseChunk> finalize() async* {
+      if (!toolCallsEmitted && toolBuffers.isNotEmpty) {
+        toolCallsEmitted = true;
+        yield LlmResponseChunk(
+          toolCalls: [
+            for (final buffer in toolBuffers.values)
+              LlmToolCall(
+                id: buffer.id ?? '',
+                name: buffer.name,
+                arguments: _parseArguments(buffer.arguments),
+              ),
+          ],
+        );
+      }
+      if (!finalEmitted) {
+        finalEmitted = true;
+        yield LlmResponseChunk(
+          usage: usage,
+          isComplete: true,
+          finishReason: finishReason,
+        );
+      }
+    }
+
+    await for (final line in response.lines) {
+      if (line.isEmpty || line.startsWith(':')) continue;
+      if (!line.startsWith('data:')) continue;
+      final payload = line.substring(5).trim();
+      if (payload == '[DONE]') {
+        yield* finalize();
+        return;
+      }
+      final Map<String, dynamic> event;
+      try {
+        event = jsonDecode(payload) as Map<String, dynamic>;
+      } on FormatException {
+        continue; // Skip malformed events without killing the stream.
+      }
+
+      final choices = (event['choices'] as List?) ?? const [];
+      if (choices.isEmpty) {
+        final rawUsage = event['usage'];
+        if (rawUsage is Map) usage = _parseUsage(rawUsage);
+        yield* finalize();
+        continue;
+      }
+      final choice = choices.first as Map;
+      final delta = (choice['delta'] as Map?) ?? const {};
+      for (final fragment in (delta['tool_calls'] as List?) ?? const []) {
+        final f = fragment as Map;
+        final index = (f['index'] as num?)?.toInt() ?? 0;
+        final buffer =
+            toolBuffers.putIfAbsent(index, _OpenAiToolBuffer.new);
+        final id = f['id'] as String?;
+        if (id != null && id.isNotEmpty) buffer.id ??= id;
+        final function = f['function'] as Map?;
+        if (function != null) {
+          final name = function['name'] as String?;
+          if (name != null && name.isNotEmpty) buffer.name += name;
+          buffer.arguments += (function['arguments'] as String?) ?? '';
+        }
+      }
+      final content = delta['content'] as String?;
+      if (content != null && content.isNotEmpty) {
+        yield LlmResponseChunk(content: content);
+      }
+      final reason = choice['finish_reason'] as String?;
+      if (reason != null) {
+        finishReason = reason;
+        if (reason == 'tool_calls' && toolBuffers.isNotEmpty) {
+          toolCallsEmitted = true;
+          yield LlmResponseChunk(
+            toolCalls: [
+              for (final buffer in toolBuffers.values)
+                LlmToolCall(
+                  id: buffer.id ?? '',
+                  name: buffer.name,
+                  arguments: _parseArguments(buffer.arguments),
+                ),
+            ],
+            finishReason: reason,
+          );
+        }
+      }
+    }
+    // Stream ended without an explicit [DONE] sentinel.
+    yield* finalize();
   }
 
   @override
@@ -234,4 +335,11 @@ class OpenAiCompatibleClient implements LlmClient {
     }
     return const {};
   }
+}
+
+/// Buffer accumulating streamed tool-call fragments for one index slot.
+class _OpenAiToolBuffer {
+  String? id;
+  String name = '';
+  String arguments = '';
 }

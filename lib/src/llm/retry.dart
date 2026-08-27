@@ -87,3 +87,41 @@ int _delayFor(
   final wobble = jitter == null ? 0 : jitter(core);
   return (core + wobble).clamp(0, config.maxDelayMs);
 }
+
+/// Opens a streaming request through [transport] honoring the retry policy for
+/// 429/5xx/connection failures on the initial HTTP exchange (mid-stream
+/// failures propagate to the caller; restart-on-next-provider is spec 008's
+/// policy decision).
+Future<LlmStreamResponse> openStreamWithRetry({
+  required LlmTransport transport,
+  required LlmHttpRequest request,
+  required RetryConfig config,
+  required LlmClock clock,
+  required String provider,
+  int Function(int coreDelayMs)? jitter,
+}) async {
+  var attempt = 0;
+  while (true) {
+    attempt += 1;
+    final LlmStreamResponse response;
+    try {
+      response = await transport.openStream(request);
+    } on LlmNetworkException {
+      if (attempt >= config.maxAttempts) rethrow;
+      await clock.sleep(_delayFor(attempt, config, jitter));
+      continue;
+    }
+    if (response.isOk) return response;
+    if (!_isRetryableStatus(response.statusCode) ||
+        attempt >= config.maxAttempts) {
+      throw LlmHttpException(
+        provider: provider,
+        statusCode: response.statusCode,
+        body: '',
+        headers: response.headers,
+      );
+    }
+    await clock.sleep(
+        _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter));
+  }
+}
