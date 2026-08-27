@@ -36,7 +36,8 @@ jobs:
           lib/src/session_storage_impl.dart
           lib/src/jsonl_session_storage.dart
           lib/src/prompt_templates.dart
-          lib/src/skills.dart"
+          lib/src/skills.dart
+          lib/src/llm/io_llm_transport.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then
