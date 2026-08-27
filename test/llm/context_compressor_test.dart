@@ -84,5 +84,30 @@ void main() {
             .toList()),
       );
     });
+
+    test('U5: the compression prompt names the five XML sections and carries the older messages', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 500, keepRecentMessages: 5),
+      );
+
+      await compressor.compress(history);
+
+      final request = client.requests.single;
+      // The system prompt demands the exact five-section XML contract.
+      expect(request.systemPrompt, contains('<overall_goal>'));
+      expect(request.systemPrompt, contains('<key_knowledge>'));
+      expect(request.systemPrompt, contains('<file_system_state>'));
+      expect(request.systemPrompt, contains('<recent_actions>'));
+      expect(request.systemPrompt, contains('<current_plan>'));
+      // The older messages are the conversation payload (15 of 20).
+      expect(request.messages, hasLength(15));
+      expect(request.messages.first, same(history.first));
+    });
   });
 }
