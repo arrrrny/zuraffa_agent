@@ -134,6 +134,12 @@ class SubAgentSpec {
       throw ArgumentError.value(wallClockTimeout, 'wallClockTimeout',
           'must not be negative');
     }
+    // FR-004 (spec 036): the extendsSpec == name 1-cycle is ill-formed.
+    // Deeper cycles and unknown parents are the loader's concern.
+    if (extendsSpec == name) {
+      throw ArgumentError.value(extendsSpec, 'extendsSpec',
+          'must not equal name (self-inheritance cycle)');
+    }
   }
 
   /// True for a leaf agent — cannot dispatch sub-agents ([subAgents]

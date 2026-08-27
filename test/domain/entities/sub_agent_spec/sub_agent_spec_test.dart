@@ -202,4 +202,33 @@ void main() {
       expect(unset.hasBudgets, isFalse);
     });
   });
+
+  group('spec 036 — SubAgentSpec inheritance 1-cycle check (FR-004)', () {
+    test('U9: extendsSpec == name throws ArgumentError (self-extends)', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'verify',
+          description: 'Verifier.',
+          systemPrompt: 'You verify.',
+          extendsSpec: 'verify',
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+              (e) => e.name, 'name', contains('extendsSpec')),
+        ),
+      );
+    });
+
+    test('U9 boundary: extendsSpec naming a distinct parent constructs', () {
+      final child = SubAgentSpec(
+        name: 'verify-strict',
+        description: 'Strict verifier.',
+        systemPrompt: 'You verify strictly.',
+        extendsSpec: 'verify',
+      );
+      expect(child.extendsSpec, 'verify');
+      expect(child.isRoot, isFalse);
+      expect(child.isLeaf, isTrue);
+    });
+  });
 }
