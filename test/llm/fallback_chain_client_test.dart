@@ -182,5 +182,42 @@ void main() {
       expect(a.generateCalls, 1); // still one call: the open breaker gated it
       expect(b.generateCalls, 2);
     });
+
+    test('U15: after cooldown, a half-open probe routes real traffic back to A on success', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(response: LlmResponse(content: 'a-probe-ok')),
+        const ScriptedOutcome(response: LlmResponse(content: 'a-steady')),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: 'from-b')),
+      ]);
+      final chain = makeChain([a, b], maxConsecutiveFailures: 1);
+
+      // A fails -> trips (maxConsecutiveFailures=1); B serves.
+      expect(
+          (await chain
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'from-b');
+
+      // Cooldown elapses -> A's breaker half-opens -> the probe routes back.
+      await clock.sleep(60000);
+      expect(
+          (await chain
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'a-probe-ok');
+
+      // Probe succeeded -> breaker closed -> traffic stays on A.
+      expect(
+          (await chain
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'a-steady');
+      expect(a.generateCalls, 3);
+      expect(b.generateCalls, 1);
+    });
   });
 }
