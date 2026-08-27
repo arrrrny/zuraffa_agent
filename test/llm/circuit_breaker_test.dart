@@ -35,5 +35,21 @@ void main() {
       expect(breaker.state, CircuitState.open);
       expect(breaker.consecutiveFailures, 3);
     });
+
+    test('U7: an open breaker transitions to half-open when the cooldown elapses (injected clock)', () async {
+      final breaker = makeBreaker(cooldownWindowMs: 60000);
+      breaker.recordFailure();
+      breaker.recordFailure();
+      breaker.recordFailure();
+      expect(breaker.state, CircuitState.open);
+
+      // Before the cooldown elapses the breaker stays open.
+      await clock.sleep(59999);
+      expect(breaker.state, CircuitState.open);
+
+      // At/after the cooldown the transition to half-open happens.
+      await clock.sleep(1);
+      expect(breaker.state, CircuitState.halfOpen);
+    });
   });
 }

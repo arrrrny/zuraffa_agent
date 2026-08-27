@@ -28,7 +28,19 @@ class CircuitBreaker {
   int _consecutiveFailures = 0;
   DateTime? _lastFailureAt;
 
-  CircuitState get state => _state;
+  CircuitState get state {
+    if (_state == CircuitState.open && _cooldownElapsed) {
+      _state = CircuitState.halfOpen;
+    }
+    return _state;
+  }
+
+  bool get _cooldownElapsed {
+    final lastFailure = _lastFailureAt;
+    if (lastFailure == null) return false;
+    return clock.now().difference(lastFailure).inMilliseconds >=
+        cooldownWindowMs;
+  }
   int get consecutiveFailures => _consecutiveFailures;
 
   void recordSuccess() {
