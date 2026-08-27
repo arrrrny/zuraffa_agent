@@ -98,6 +98,19 @@ class PassAtK {
     return compute(n: outcomes.length, c: c, k: k);
   }
 
+  /// Threshold decision (spec 037 FR-002): does this pass@k value meet the
+  /// policy threshold? Inclusive at equality — `value >= threshold` — so a
+  /// gate of "pass@1 >= 0.8" passes at exactly 0.8. Throws [ArgumentError]
+  /// for thresholds outside [0, 1] or NaN (a gate outside the metric's
+  /// range is a policy bug, not a near-miss).
+  bool meetsThreshold(double threshold) {
+    if (threshold.isNaN || threshold < 0 || threshold > 1) {
+      throw ArgumentError.value(
+          threshold, 'threshold', 'must be within [0, 1]');
+    }
+    return value >= threshold;
+  }
+
   static double _estimator(int n, int c, int k) {
     // If c == 0, no correct samples → pass@k = 0.
     if (c == 0) return 0.0;

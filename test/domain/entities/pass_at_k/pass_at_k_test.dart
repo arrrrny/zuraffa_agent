@@ -61,4 +61,37 @@ void main() {
       );
     });
   });
+
+  group('spec 037 — PassAtK.meetsThreshold (FR-002)', () {
+    test('U3: inclusive at t==value; flips on both sides of the boundary', () {
+      // n=5, c=1, k=2 -> pass@k ~= 0.4 (textbook case). The estimator's
+      // double arithmetic is not bit-exact to the decimal (1 - 0.6...),
+      // so the equality boundary is derived FROM the value itself —
+      // that is what "inclusive at t == value" means for a double metric.
+      final result = PassAtK.compute(n: 5, c: 1, k: 2);
+      expect(result.value, closeTo(0.4, 1e-9));
+      final t = result.value;
+      expect(result.meetsThreshold(t), isTrue,
+          reason: 't == value must meet (inclusive >=)');
+      expect(result.meetsThreshold(t - 1e-9), isTrue);
+      expect(result.meetsThreshold(t + 1e-9), isFalse);
+      // Endpoints of the valid range: 0.0 and 1.0 are exact doubles.
+      expect(PassAtK.compute(n: 5, c: 0, k: 1).meetsThreshold(0.0), isTrue);
+      expect(PassAtK.compute(n: 5, c: 4, k: 2).meetsThreshold(1.0), isTrue);
+    });
+
+    test('U4: thresholds outside [0,1] and NaN throw ArgumentError', () {
+      final result = PassAtK.compute(n: 5, c: 1, k: 2);
+      for (final bad in [-0.1, 1.1, double.nan]) {
+        expect(
+          () => result.meetsThreshold(bad),
+          throwsA(
+            isA<ArgumentError>()
+                .having((e) => e.name, 'name', contains('threshold')),
+          ),
+          reason: 'threshold $bad must be rejected',
+        );
+      }
+    });
+  });
 }
