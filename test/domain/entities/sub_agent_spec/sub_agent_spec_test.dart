@@ -231,4 +231,67 @@ void main() {
       expect(child.isLeaf, isTrue);
     });
   });
+
+  group('spec 036 — characterization pins (FR-005/FR-006, shipped behavior)', () {
+    test('U10 pin: isLeaf/isRoot across the four canonical shapes', () {
+      // root+leaf, root+branch, child+leaf are covered by the pre-existing
+      // provider suite; this pin completes child+branch and holds the matrix.
+      final rootLeaf = SubAgentSpec(
+          name: 'a', description: 'd', systemPrompt: 's');
+      final rootBranch = SubAgentSpec(
+          name: 'b', description: 'd', systemPrompt: 's', subAgents: ['a']);
+      final childLeaf = SubAgentSpec(
+          name: 'c', description: 'd', systemPrompt: 's', extendsSpec: 'a');
+      final childBranch = SubAgentSpec(
+          name: 'd2',
+          description: 'd',
+          systemPrompt: 's',
+          extendsSpec: 'b',
+          subAgents: ['a', 'c']);
+      expect(rootLeaf.isRoot, isTrue);
+      expect(rootLeaf.isLeaf, isTrue);
+      expect(rootBranch.isRoot, isTrue);
+      expect(rootBranch.isLeaf, isFalse);
+      expect(childLeaf.isRoot, isFalse);
+      expect(childLeaf.isLeaf, isTrue);
+      expect(childBranch.isRoot, isFalse);
+      expect(childBranch.isLeaf, isFalse);
+    });
+
+    test('U12 pin: equality/hashCode with non-const, independently built lists', () {
+      // FR-006: two specs equal in all ten fields, lists built separately at
+      // runtime (distinct instances, equal contents) must be == and hash
+      // equally. The pre-existing provider test used const literals, which
+      // canonicalize to identical instances — this pin exercises the
+      // element-wise comparison for real.
+      final a = SubAgentSpec(
+        name: 'verify',
+        description: 'Verifier.',
+        systemPrompt: 'Verify strictly.',
+        extendsSpec: 'base',
+        tools: ['fs.read', 'fs.write'],
+        subAgents: ['explore'],
+        riskTier: RiskTier.admin,
+        maxTurns: 5,
+        wallClockTimeout: const Duration(seconds: 30),
+        contextWindowTokens: 8000,
+      );
+      final b = SubAgentSpec(
+        name: 'verify',
+        description: 'Verifier.',
+        systemPrompt: 'Verify strictly.',
+        extendsSpec: 'base',
+        tools: ['fs.read', 'fs.write'],
+        subAgents: ['explore'],
+        riskTier: RiskTier.admin,
+        maxTurns: 5,
+        wallClockTimeout: const Duration(seconds: 30),
+        contextWindowTokens: 8000,
+      );
+      expect(identical(a.tools, b.tools), isFalse,
+          reason: 'the pin must use distinct list instances');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+    });
+  });
 }
