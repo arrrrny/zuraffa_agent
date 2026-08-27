@@ -149,7 +149,7 @@ void main() {
       expect(RiskTier.fromString('confirm'), RiskTier.confirm);
       expect(RiskTier.fromString('admin'), RiskTier.admin);
       for (final tier in RiskTier.values) {
-        expect(tier.fromString(tier.name), tier);
+        expect(RiskTier.fromString(tier.name), tier);
       }
     });
 
