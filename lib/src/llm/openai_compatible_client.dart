@@ -60,7 +60,7 @@ class OpenAiCompatibleClient implements LlmClient {
 
   LlmHttpRequest _httpRequest(String body) => LlmHttpRequest(
         uri: Uri.parse(
-            '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}/chat/completions'),
+            '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}chat/completions'),
         headers: {
           if (apiKey != null) 'authorization': 'Bearer $apiKey',
           'content-type': 'application/json',
