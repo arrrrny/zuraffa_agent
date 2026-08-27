@@ -6,6 +6,8 @@
 //
 // STUB replaced by implementation in the U1 green step.
 
+import '../types.dart';
+
 /// Deep list equality for value semantics (no package:collection dependency).
 bool _listEquals<T>(List<T> a, List<T> b) {
   if (a.length != b.length) return false;
@@ -49,7 +51,7 @@ class LlmToolSpec {
 /// A provider-agnostic completion request.
 class LlmRequest {
   final String? systemPrompt;
-  final List<Object> messages;
+  final List<AgentMessage> messages;
   final List<LlmToolSpec>? tools;
   final double? temperature;
   final int? maxTokens;
