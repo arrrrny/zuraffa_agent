@@ -99,9 +99,8 @@ class BeforeRunHookResult {
       : action = HookAction.continue_,
         messages = null,
         abortReason = null;
-  const BeforeRunHookResult.modify(List<AgentMessage> messages)
+  const BeforeRunHookResult.modify(List<AgentMessage> this.messages)
       : action = HookAction.modify,
-        messages = messages,
         abortReason = null;
   const BeforeRunHookResult.abort({String? reason})
       : action = HookAction.abort,
@@ -117,9 +116,8 @@ class ModelCallHookResult {
       : action = HookAction.continue_,
         request = null,
         abortReason = null;
-  const ModelCallHookResult.modify(LlmRequest request)
+  const ModelCallHookResult.modify(LlmRequest this.request)
       : action = HookAction.modify,
-        request = request,
         abortReason = null;
   const ModelCallHookResult.abort({String? reason})
       : action = HookAction.abort,
@@ -146,9 +144,8 @@ class AfterModelCallHookResult {
       : action = HookAction.continue_,
         response = null,
         abortReason = null;
-  const AfterModelCallHookResult.modify(LlmResponse response)
+  const AfterModelCallHookResult.modify(LlmResponse this.response)
       : action = HookAction.modify,
-        response = response,
         abortReason = null;
   const AfterModelCallHookResult.retry()
       : action = HookAction.retry,
@@ -172,17 +169,15 @@ class ToolCallHookResult {
         denyResult = null,
         denyIsError = false,
         abortReason = null;
-  const ToolCallHookResult.modify(LlmToolCall toolCall)
+  const ToolCallHookResult.modify(LlmToolCall this.toolCall)
       : action = HookAction.modify,
-        toolCall = toolCall,
         denyResult = null,
         denyIsError = false,
         abortReason = null;
-  const ToolCallHookResult.deny({String result = '', bool isError = true})
+  const ToolCallHookResult.deny(
+      {this.denyResult = '', this.denyIsError = true})
       : action = HookAction.deny,
         toolCall = null,
-        denyResult = result,
-        denyIsError = isError,
         abortReason = null;
   const ToolCallHookResult.abort({String? reason})
       : action = HookAction.abort,
@@ -202,10 +197,8 @@ class AfterToolCallHookResult {
         result = null,
         isError = null,
         abortReason = null;
-  const AfterToolCallHookResult.modify({required String result, bool isError = false})
+  const AfterToolCallHookResult.modify({required String this.result, this.isError = false})
       : action = HookAction.modify,
-        result = result,
-        isError = isError,
         abortReason = null;
   const AfterToolCallHookResult.abort({String? reason})
       : action = HookAction.abort,
@@ -233,9 +226,8 @@ class PersistStateHookResult {
       : action = HookAction.continue_,
         messages = null,
         abortReason = null;
-  const PersistStateHookResult.modify(List<AgentMessage> messages)
+  const PersistStateHookResult.modify(List<AgentMessage> this.messages)
       : action = HookAction.modify,
-        messages = messages,
         abortReason = null;
   const PersistStateHookResult.abort({String? reason})
       : action = HookAction.abort,

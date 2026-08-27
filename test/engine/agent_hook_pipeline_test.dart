@@ -241,7 +241,7 @@ void main() {
       final pipeline = AgentHookPipeline();
       pipeline.register(_CallbackHook(
         onBeforeToolCall: (ctx) async =>
-            const ToolCallHookResult.deny(result: 'denied by policy', isError: true),
+            const ToolCallHookResult.deny(denyResult: 'denied by policy', denyIsError: true),
       ));
       final decision = await pipeline.beforeToolCall(
           const ToolCallHookContext(toolCall: toolCall));
@@ -389,7 +389,7 @@ void main() {
       final mission = _MissionDriver(hooks: [
         _CallbackHook(
           onBeforeToolCall: (ctx) async => const ToolCallHookResult.deny(
-              result: 'tool disabled by policy', isError: true),
+              denyResult: 'tool disabled by policy', denyIsError: true),
         ),
       ]);
       await mission.run(toolsToExecute: const [_missionToolCall]);

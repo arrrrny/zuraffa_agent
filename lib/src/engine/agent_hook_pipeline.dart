@@ -84,7 +84,7 @@ class AgentHookPipeline {
   // -------------------------------------------------------------------
 
   Future<ModelChunkHookContext> onModelChunk(ModelChunkHookContext context) async {
-    var current = context;
+    final current = context;
     for (final hook in _hooks) {
       final result = await hook.onModelChunk(current);
       switch (result.action) {
@@ -190,7 +190,7 @@ class AgentHookPipeline {
 
   Future<TurnCompletionHookContext> onTurnCompletion(
       TurnCompletionHookContext context) async {
-    var current = context;
+    final current = context;
     for (final hook in _hooks) {
       final result = await hook.onTurnCompletion(current);
       switch (result.action) {
@@ -235,7 +235,7 @@ class AgentHookPipeline {
   // -------------------------------------------------------------------
 
   Future<AfterRunHookContext> afterRun(AfterRunHookContext context) async {
-    var current = context;
+    final current = context;
     for (final hook in _hooks) {
       await hook.afterRun(current); // result is continue-only by contract
     }

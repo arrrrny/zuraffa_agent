@@ -39,7 +39,7 @@ void main() {
       expect(modify.request!.temperature, 0.9);
 
       // deny carries the synthetic tool result.
-      const deny = ToolCallHookResult.deny(result: 'denied by policy', isError: true);
+      const deny = ToolCallHookResult.deny(denyResult: 'denied by policy', denyIsError: true);
       expect(deny.action, HookAction.deny);
       expect(deny.denyResult, 'denied by policy');
       expect(deny.denyIsError, isTrue);
