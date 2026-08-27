@@ -60,6 +60,10 @@ class FallbackChainClient implements LlmClient {
     final errors = <String, Object>{};
     for (final p in providers) {
       final breaker = _breakers[p.id]!;
+      if (!breaker.attemptAllowed()) {
+        errors[p.id] = StateError('circuit open');
+        continue; // Open breaker: skip this provider entirely.
+      }
       try {
         final response = await p.client.generate(request);
         breaker.recordSuccess();

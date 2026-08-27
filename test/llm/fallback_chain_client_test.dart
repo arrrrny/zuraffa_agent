@@ -150,5 +150,37 @@ void main() {
       expect(a.generateCalls, 1);
       expect(b.generateCalls, 1);
     });
+
+    test('U14: an open breaker skips its provider entirely (no call reaches it)', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        // Trips the breaker on its own (maxConsecutiveFailures=1).
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        // Would succeed if called again — it must NOT be called.
+        const ScriptedOutcome(response: LlmResponse(content: 'a-recovered-early')),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: 'from-b')),
+        const ScriptedOutcome(response: LlmResponse(content: 'from-b-again')),
+      ]);
+      final chain = makeChain([a, b], maxConsecutiveFailures: 1);
+
+      // First call: A fails (trips its breaker), B serves.
+      expect(
+          (await chain
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'from-b');
+      expect(a.generateCalls, 1);
+
+      // Second call: A's breaker is open — A is skipped, B serves again.
+      expect(
+          (await chain
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'from-b-again');
+      expect(a.generateCalls, 1); // still one call: the open breaker gated it
+      expect(b.generateCalls, 2);
+    });
   });
 }
