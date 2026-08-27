@@ -42,4 +42,21 @@ class EpisodicMemoryStore {
         if (memory.summary.toLowerCase().contains(needle)) memory,
     ];
   }
+
+  /// Paginated listing in insertion order (oldest first) — spec 010 FR-004.
+  ///
+  /// [offset] skips the first offset entries; [limit] caps the page size.
+  /// A non-positive or null-open limit yields everything from the offset on;
+  /// a limit <= 0 yields an empty page (graceful degradation for a
+  /// misbehaving model call). An offset beyond the end yields an empty page.
+  List<EpisodicMemory> list({int? limit, int offset = 0}) {
+    if (limit != null && limit <= 0) return const [];
+    if (offset < 0) offset = 0;
+    if (offset >= _entries.length) return const [];
+    var page = _entries.skip(offset).toList();
+    if (limit != null && page.length > limit) {
+      page = page.sublist(0, limit);
+    }
+    return List.unmodifiable(page);
+  }
 }
