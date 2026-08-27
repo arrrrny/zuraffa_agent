@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 7
 planned_at: ccca224
-updated_at: ccca224
+updated_at: 25c0285
 suite_baseline: green
 ---
 
@@ -18,13 +18,13 @@ an engine or replacing backend would call).
 
 | id  | behavior                                                                                  | traces    | kind    | state   | test                                                                                          |
 | --- | ----------------------------------------------------------------------------------------- | --------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
-| A1  | Recording maxCalls-1 times keeps isLooping false and count tracks occurrences             | AC US1-1  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A2  | The maxCalls-th in-window occurrence trips isLooping (inclusive threshold)                | AC US1-2  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A3  | Two signatures loop independently — counts are keyed per signature, never shared          | AC US1-3  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A4  | After the window passes, count is 0 and isLooping reverts to false                        | AC US2-1  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A5  | Boundary: a record exactly window-old is expired; one strictly inside is alive            | AC US2-2  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A6  | reset() zeroes all counts, clears every loop signal, preserves current() configuration    | AC US3-1  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A7  | record() returns the post-record in-window count (single round-trip read-after-write)     | AC US3-2  | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A1  | Recording maxCalls-1 times keeps isLooping false and count tracks occurrences             | AC US1-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A2  | The maxCalls-th in-window occurrence trips isLooping (inclusive threshold)                | AC US1-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A3  | Two signatures loop independently — counts are keyed per signature, never shared          | AC US1-3  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A4  | After the window passes, count is 0 and isLooping reverts to false                        | AC US2-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A5  | Boundary: a record exactly window-old is expired; one strictly inside is alive            | AC US2-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A6  | reset() zeroes all counts, clears every loop signal, preserves current() configuration    | AC US3-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| A7  | record() returns the post-record in-window count (single round-trip read-after-write)     | AC US3-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
 
 ## Inner loop: unit behaviors
 
@@ -35,22 +35,22 @@ observable result.
 
 | id  | behavior                                                                  | traces           | kind    | state   | test                                                                        |
 | --- | ------------------------------------------------------------------------- | ---------------- | ------- | ------- | --------------------------------------------------------------------------- |
-| U1  | Value equality across id, maxCalls and window                             | FR-001, SC-004   | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U2  | Equal instances have equal hashCodes                                      | FR-001, SC-004   | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U3  | Differing id, maxCalls or window makes instances unequal                  | FR-001, SC-004   | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U4  | isRepetition is false at maxCalls-1 and true at maxCalls                  | FR-002, SC-001   | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U5  | Defaults: maxCalls=5 and window=60s when omitted                          | FR-008           | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U6  | Constructor rejects maxCalls < 1                                          | FR edge-1        | example | PENDING | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U1  | Value equality across id, maxCalls and window                             | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U2  | Equal instances have equal hashCodes                                      | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U3  | Differing id, maxCalls or window makes instances unequal                  | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U4  | isRepetition is false at maxCalls-1 and true at maxCalls                  | FR-002, SC-001   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U5  | Defaults: maxCalls=5 and window=60s when omitted                          | FR-008           | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+| U6  | Constructor rejects maxCalls < 1                                          | FR edge-1        | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
 
 ### `lib/src/data/datasources/repetition_tracker/` (interface + mock)
 
 | id  | behavior                                                                  | traces           | kind    | state   | test                                                                        |
 | --- | ------------------------------------------------------------------------- | ---------------- | ------- | ------- | --------------------------------------------------------------------------- |
 | U7  | Mock implements the datasource interface (compile parity, issues #25/#26) | FR-003           | example | BASELINE | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U8  | Injectable clock drives evaluation when no explicit now is passed         | FR-004           | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U9  | isLooping equals current().isRepetition(count) for every signature        | FR-006           | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U10 | record with an explicit at-timestamp is respected for window pruning      | FR-004           | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U11 | A late record older than the window is pruned on first evaluation         | edge-2           | example | PENDING | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
+| U8  | Injectable clock drives evaluation when no explicit now is passed         | FR-004           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
+| U9  | isLooping equals current().isRepetition(count) for every signature        | FR-006           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
+| U10 | record with an explicit at-timestamp is respected for window pruning      | FR-004           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
+| U11 | A late record older than the window is pruned on first evaluation         | edge-2           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
 
 ## Invariants and edge cases still to place
 
