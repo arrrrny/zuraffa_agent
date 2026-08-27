@@ -115,5 +115,34 @@ void main() {
       expect(transport.requests, hasLength(1));
       expect(clock.sleeps, isEmpty);
     });
+
+    test('U8: backoff delays grow exponentially, are capped, and jitter is deterministic', () async {
+      // 4 failures then success -> 4 backoff delays: 100, 200, 400, 800.
+      Future<List<int>> delays(int Function(int core) jitter) async {
+        final transport = FakeLlmTransport(
+          provider: 'openai',
+          script: [
+            ...List.filled(4, const ScriptedResponse(statusCode: 500, body: 'x')),
+            const ScriptedResponse(statusCode: 200, body: '{}'),
+          ],
+        );
+        final localClock = FakeLlmClock();
+        await sendWithRetry(
+          transport: transport,
+          request: request,
+          config: const RetryConfig(
+              maxAttempts: 5, baseDelayMs: 100, maxDelayMs: 250),
+          clock: localClock,
+          provider: 'openai',
+          jitter: jitter,
+        );
+        return localClock.sleeps;
+      }
+
+      // Zero jitter: exponential growth then capped at maxDelayMs.
+      expect(await delays((_) => 0), [100, 200, 250, 250]);
+      // Deterministic jitter (half the core delay, capped overall).
+      expect(await delays((m) => m ~/ 2), [150, 250, 250, 250]);
+    });
   });
 }

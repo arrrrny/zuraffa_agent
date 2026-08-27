@@ -71,5 +71,5 @@ int _delayFor(
 ) {
   final core = config.baseDelayMs << (attempt - 1);
   final wobble = jitter == null ? 0 : jitter(core);
-  return core + wobble;
+  return (core + wobble).clamp(0, config.maxDelayMs);
 }
