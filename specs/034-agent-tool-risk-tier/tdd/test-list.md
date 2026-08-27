@@ -4,7 +4,7 @@ loop: inside-out
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 9 # acceptance criteria AC US1-1..3, US2-1..3, US3-1..3 in spec.md
 planned_at: 34b47f8
-updated_at: 34b47f8
+updated_at: 22a4d7b
 suite_baseline: green # 626 passed, 0 failed (post spec-033)
 ---
 
@@ -19,15 +19,15 @@ the declaration value object's public API (parsers, serialization, hashing)
 
 | id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
 | --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| A1  | Equal tools with distinct-but-equal paramsSchema instances share hashCode      | AC US3-1   | example | PENDING |                                                                |
-| A2  | Equal schemas built in different insertion orders hash equally                 | AC US3-2   | example | PENDING |                                                                |
-| A3  | Tools differing on any of the five fields are unequal                          | AC US3-3   | example | PENDING |                                                                |
-| A4  | RiskTier.fromString parses safe/confirm/admin exactly and round-trips via name | AC US1-1   | example | PENDING |                                                                |
-| A5  | RiskTier.fromString rejects unknown strings (incl. case mismatches) typed      | AC US1-2   | example | PENDING |                                                                |
-| A6  | Each tier's dispatch policy reads correctly (confirm pauses, admin gates)      | AC US1-3   | example | PENDING |                                                                |
-| A7  | A fully-declared tool round-trips JSON with tier, mode and deep schema         | AC US2-1   | example | PENDING |                                                                |
-| A8  | A schema-less tool serializes paramsSchema absent                              | AC US2-2   | example | PENDING |                                                                |
-| A9  | Malformed declaration JSON throws ArgumentError naming the field               | AC US2-3   | example | PENDING |                                                                |
+| A1  | Equal tools with distinct-but-equal paramsSchema instances share hashCode      | AC US3-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A2  | Equal schemas built in different insertion orders hash equally                 | AC US3-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A3  | Tools differing on any of the five fields are unequal                          | AC US3-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A4  | RiskTier.fromString parses safe/confirm/admin exactly and round-trips via name | AC US1-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A5  | RiskTier.fromString rejects unknown strings (incl. case mismatches) typed      | AC US1-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A6  | Each tier's dispatch policy reads correctly (confirm pauses, admin gates)      | AC US1-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A7  | A fully-declared tool round-trips JSON with tier, mode and deep schema         | AC US2-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A8  | A schema-less tool serializes paramsSchema absent                              | AC US2-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| A9  | Malformed declaration JSON throws ArgumentError naming the field               | AC US2-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
 
 ## Inner loop: unit behaviors
 
@@ -37,21 +37,21 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
 | --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U1  | ExecutionMode.fromString parses sequential/parallel; unknown rejects typed     | FR-003     | example | PENDING |                                                                |
-| U2  | fromString's ArgumentError carries the offending input as its value            | FR-002     | example | PENDING |                                                                |
+| U1  | ExecutionMode.fromString parses sequential/parallel; unknown rejects typed     | FR-003     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| U2  | fromString's ArgumentError carries the offending input as its value            | FR-002     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
 
 ### `lib/src/domain/entities/agent_tool/agent_tool.dart` (hash fold)
 
 | id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
 | --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U3  | The hash fold recurses into nested maps (a one-level fold would re-violate)    | FR-006     | example | PENDING |                                                                |
-| U4  | Schema array order matters for equality/hashing (required lists are ordered)   | FR-006     | example | PENDING |                                                                |
+| U3  | The hash fold recurses into nested maps (a one-level fold would re-violate)    | FR-006     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| U4  | Schema array order matters for equality/hashing (required lists are ordered)   | FR-006     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
 
 ### `lib/src/domain/entities/agent_tool/agent_tool.dart` (persistence)
 
 | id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
 | --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U5  | fromJson routes tier/mode through fromString — unknown tier in JSON fails like a declaration | FR-004 | example | PENDING |                |
+| U5  | fromJson routes tier/mode through fromString — unknown tier in JSON fails like a declaration | FR-004 | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
 | U6  | The 10 pre-existing provider/compile-parity tests keep passing unchanged       | FR-001, FR-005, FR-007 | BASELINE | BASELINE | `test/data/providers/agent_tool/agent_tool_provider_test.dart` |
 
 ## Invariants and edge cases still to place
@@ -80,7 +80,7 @@ Copied verbatim from `.specify/memory/tdd-profile.md` at planning time:
 
 | target | mutant | killed by |
 | ------ | ------ | --------- |
-| schema fold | hashCode drops the schema fold entirely (scaffold's bug, minus the identity hash) | A1 |
+| identity hash | hashCode passes the schema Map through Object.hash (the scaffold's bug) | A1 |
 | nested fold | fold stops at depth 1 (nested maps hashed by identity) | U3 |
 | parse guard | fromString silently returns safe on unknown input | A5 |
 | round-trip guard | fromJson ignores an unknown tier string and defaults to safe | A9/U5 |
