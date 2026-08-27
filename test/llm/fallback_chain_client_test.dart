@@ -287,5 +287,47 @@ void main() {
       expect(collected.last.isComplete, isFalse);
       expect(b.streamCalls, 0);
     });
+
+    test('U18: healthSnapshot() returns Map<provider, ClientHealth> matching live breaker states', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: 'ok')),
+        const ScriptedOutcome(response: LlmResponse(content: 'ok')),
+      ]);
+      final chain = makeChain([a, b], maxConsecutiveFailures: 3);
+
+      // Initial snapshot: both closed and healthy.
+      var snapshot = chain.healthSnapshot();
+      expect(snapshot.keys.toList(), ['a', 'b']);
+      expect(snapshot['a']!.state, 'closed');
+      expect(snapshot['b']!.state, 'closed');
+
+      // Failures flip the snapshot immediately, in real time.
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.state, 'closed');
+      expect(snapshot['a']!.consecutiveFailures, 1);
+      expect(snapshot['b']!.state, 'closed'); // success kept B closed
+
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.consecutiveFailures, 2);
+
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.state, 'open');
+      expect(snapshot['a']!.isHealthy, isFalse);
+      expect(snapshot['a']!.cooldownWindowMs, 60000);
+      expect(snapshot['a']!.lastFailureAt, isNotNull);
+      expect(snapshot['b']!.state, 'closed');
+      expect(snapshot['b']!.isHealthy, isTrue);
+    });
   });
 }

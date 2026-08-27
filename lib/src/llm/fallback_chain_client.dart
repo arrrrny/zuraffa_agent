@@ -121,7 +121,11 @@ class FallbackChainClient implements LlmClient {
     }
   }
 
-  Map<String, ClientHealth> healthSnapshot() => throw UnimplementedError();
+  /// Live health snapshot (spec 008 FR-005 / US3): one [ClientHealth] per
+  /// provider, reflecting breaker states at the moment of the call.
+  Map<String, ClientHealth> healthSnapshot() => {
+        for (final p in providers) p.id: _breakers[p.id]!.health(),
+      };
 
   /// Context-overflow detection: a 400 whose body indicates the request
   /// exceeded the model's context window — a smaller/other model may fit.
