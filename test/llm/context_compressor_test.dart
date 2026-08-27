@@ -238,5 +238,28 @@ void main() {
       expect((await byCount.compress(shortHistory)).strategy,
           CompressionStrategy.llm);
     });
+
+    test('U11: the heuristic fallback also creates a memory entry and preserves recent messages', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'c', cause: 'refused')),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 500, keepRecentMessages: 5),
+      );
+
+      final result = await compressor.compress(history);
+
+      expect(result.strategy, CompressionStrategy.heuristic);
+      expect(result.memory, isNotNull);
+      expect(result.memory!.messages, hasLength(15));
+      expect(result.preservedMessages, hasLength(5));
+      // Path parity: the fallback entry is also in the store.
+      expect(compressor.store.entries, hasLength(1));
+      expect(compressor.store.retrieve(result.memory!.id), isNotNull);
+    });
   });
 }
