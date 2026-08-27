@@ -23,6 +23,7 @@ class FakeLlmClient implements LlmClient {
   final List<ScriptedOutcome> outcomes;
   int generateCalls = 0;
   int streamCalls = 0;
+  final List<LlmRequest> requests = [];
   int _cursor = 0;
 
   FakeLlmClient({
@@ -43,6 +44,7 @@ class FakeLlmClient implements LlmClient {
   @override
   Future<LlmResponse> generate(LlmRequest request) async {
     generateCalls += 1;
+    requests.add(request);
     final outcome = _next();
     if (outcome.error != null) throw outcome.error!;
     return outcome.response ?? const LlmResponse(content: '');
