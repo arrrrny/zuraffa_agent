@@ -3,6 +3,7 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/llm/context_compressor.dart';
+import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'fake_llm_client.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
@@ -52,6 +53,36 @@ void main() {
       expect(result.memory, isNull);
       expect(client.generateCalls, 0);
       expect(compressor.store.entries, isEmpty);
+    });
+
+    test('U4: above threshold the LLM is called once; the last keepRecentMessages stay verbatim; older messages are compressed', () async {
+      final history = bigHistory(messages: 30, charsPerMessage: 400); // ~3000 tokens > 64000? no ->
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 1000, // ~30*100 tokens > threshold
+          keepRecentMessages: 5,
+        ),
+      );
+
+      final result = await compressor.compress(history);
+
+      expect(client.generateCalls, 1);
+      expect(result.strategy, CompressionStrategy.llm);
+      expect(result.snapshot, fiveSectionSnapshot);
+      expect(result.compressedMessages, hasLength(25));
+      expect(result.preservedMessages, hasLength(5));
+      // Recent messages preserved verbatim (same values, same order).
+      expect(
+        result.preservedMessages.map((m) => (m as UserMessage).content.first),
+        equals(history
+            .sublist(25)
+            .map((m) => (m as UserMessage).content.first)
+            .toList()),
+      );
     });
   });
 }

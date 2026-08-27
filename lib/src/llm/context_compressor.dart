@@ -81,6 +81,66 @@ class LLMBasedContextCompressor implements ContextCompressor {
         strategy: CompressionStrategy.none,
       );
     }
+    final compressed =
+        messages.sublist(0, messages.length - settings.keepRecentMessages);
+    final preserved =
+        messages.sublist(messages.length - settings.keepRecentMessages);
+
+    try {
+      final response = await client.generate(LlmRequest(
+        systemPrompt: _snapshotSystemPrompt,
+        messages: compressed,
+      ));
+      final snapshot = response.content;
+      if (!_isValidSnapshot(snapshot)) {
+        return _heuristicFallback(compressed, preserved);
+      }
+      final memory = _storeSnapshot(snapshot, compressed);
+      return CompressionResult(
+        snapshot: snapshot,
+        preservedMessages: List.unmodifiable(preserved),
+        compressedMessages: List.unmodifiable(compressed),
+        memory: memory,
+        strategy: CompressionStrategy.llm,
+      );
+    } catch (_) {
+      return _heuristicFallback(compressed, preserved);
+    }
+  }
+
+  static const _snapshotSystemPrompt = 'You are a context compressor. '
+      'Summarize the conversation so far into a single XML <state_snapshot> '
+      'document with exactly these five sections, each preserving key '
+      'decisions, file state, and plan progress: <overall_goal>, '
+      '<key_knowledge>, <file_system_state>, <recent_actions>, '
+      '<current_plan>.';
+
+  static const _sectionTags = [
+    '<overall_goal>',
+    '<key_knowledge>',
+    '<file_system_state>',
+    '<recent_actions>',
+    '<current_plan>',
+  ];
+
+  bool _isValidSnapshot(String snapshot) =>
+      snapshot.contains('<state_snapshot') &&
+      _sectionTags.every(snapshot.contains);
+
+  EpisodicMemory _storeSnapshot(String snapshot, List<AgentMessage> compressed) {
+    final memory = EpisodicMemory(
+      id: 'mem_${DateTime.now().microsecondsSinceEpoch}',
+      summary: snapshot,
+      messages: compressed,
+    );
+    store.add(memory);
+    return memory;
+  }
+
+  Future<CompressionResult> _heuristicFallback(
+    List<AgentMessage> compressed,
+    List<AgentMessage> preserved,
+  ) async {
     throw UnimplementedError();
   }
 
