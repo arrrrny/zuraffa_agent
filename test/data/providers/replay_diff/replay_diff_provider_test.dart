@@ -29,20 +29,32 @@ void main() {
       expect(provider, isA<ReplayDiffService>());
     });
 
-    test('ReplayDiffProvider.current throws UnimplementedError on NoParams', () {
+    test('ReplayDiffProvider.current returns the active replay diff', () async {
       final provider = ReplayDiffProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final diff = await provider.current(NoParams());
+      expect(diff, isA<ReplayDiff>());
+      expect(diff.id, 'default');
+      expect(diff.missionId, 'mission-0');
+      expect(diff.driftDetected, isFalse);
     });
 
-    test('ReplayDiffProvider.count throws UnimplementedError on NoParams', () {
+    test('ReplayDiffProvider.count returns 1', () async {
       final provider = ReplayDiffProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('ReplayDiffProvider honours an injected value object', () async {
+      final custom = ReplayDiff(
+        id: 'custom',
+        missionId: 'mission-x',
+        driftDetected: true,
+        diffSummary: 'bytes differ',
       );
+      final provider = ReplayDiffProvider(custom);
+      final diff = await provider.current(NoParams());
+      expect(diff.id, 'custom');
+      expect(diff.driftDetected, isTrue);
+      expect(diff.diffSummary, 'bytes differ');
     });
   });
 }

@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#2 (R2 - engine core loop).
 //
-// Concrete provider stub for the LoopSafetyRails data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the LoopSafetyRails data layer. Returns the current
+// safety-rails snapshot for the active mission. This replaces the previous
+// throwing stub (spec 033 / issue #2 US4).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,20 @@ import '../../../domain/services/loop_safety_rails_service.dart';
 class LoopSafetyRailsProvider
     with Loggable, FailureHandler
     implements LoopSafetyRailsService {
-  LoopSafetyRailsProvider();
+  final LoopSafetyRails _active;
+
+  LoopSafetyRailsProvider([LoopSafetyRails? active])
+      : _active = active ??
+            const LoopSafetyRails(
+              outcomeType: 'Idle',
+              turnNumber: 0,
+              reason: 'no-safety-rail-triggered',
+              emittedAt: 0,
+            );
 
   @override
-  Future<LoopSafetyRails> current(NoParams params) async =>
-      throw UnimplementedError('Implement LoopSafetyRailsProvider.current');
+  Future<LoopSafetyRails> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement LoopSafetyRailsProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

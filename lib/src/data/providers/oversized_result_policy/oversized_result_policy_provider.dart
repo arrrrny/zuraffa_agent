@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#4 (R3 - tools & mcp).
 //
-// Concrete provider stub for the OversizedResultPolicy data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the OversizedResultPolicy data layer. Returns the
+// active oversized-result policy (summarize + artifactRef). Replaces the
+// previous UnimplementedError stub (spec 031).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,20 @@ import '../../../domain/services/oversized_result_policy_service.dart';
 class OversizedResultPolicyProvider
     with Loggable, FailureHandler
     implements OversizedResultPolicyService {
-  OversizedResultPolicyProvider();
+  final OversizedResultPolicy _active;
+
+  OversizedResultPolicyProvider([OversizedResultPolicy? active])
+      : _active = active ??
+            const OversizedResultPolicy(
+              id: 'default',
+              thresholdBytes: 65536,
+              summaryMaxChars: 2000,
+              artifactStore: './artifacts',
+            );
 
   @override
-  Future<OversizedResultPolicy> current(NoParams params) async =>
-      throw UnimplementedError('Implement OversizedResultPolicyProvider.current');
+  Future<OversizedResultPolicy> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement OversizedResultPolicyProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

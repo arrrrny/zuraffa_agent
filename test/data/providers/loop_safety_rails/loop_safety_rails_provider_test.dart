@@ -29,20 +29,16 @@ void main() {
       expect(provider, isA<LoopSafetyRailsService>());
     });
 
-    test('LoopSafetyRailsProvider.current throws UnimplementedError on NoParams', () {
-      final provider = LoopSafetyRailsProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('LoopSafetyRailsProvider.current returns the active rails snapshot', () async {
+      final rails = await LoopSafetyRailsProvider().current(NoParams());
+      expect(rails, isA<LoopSafetyRails>());
+      expect(rails.outcomeType, isNotEmpty);
+      expect(rails.turnNumber, greaterThanOrEqualTo(0));
+      expect(rails.emittedAt, greaterThanOrEqualTo(0));
     });
 
-    test('LoopSafetyRailsProvider.count throws UnimplementedError on NoParams', () {
-      final provider = LoopSafetyRailsProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('LoopSafetyRailsProvider.count returns 1', () async {
+      expect(await LoopSafetyRailsProvider().count(NoParams()), 1);
     });
   });
 }

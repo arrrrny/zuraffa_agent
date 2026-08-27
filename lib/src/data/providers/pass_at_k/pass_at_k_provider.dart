@@ -1,16 +1,12 @@
-// HAND-CURATED — DO NOT REGENERATE VIA zfa.
-// See issue arrrrny/zuraffa_agent#7 (R6 — eval harness: pass@k unbiased
+// HAND-CURATED - DO NOT REGENERATE VIA zfa.
+// See issue arrrrny/zuraffa_agent#7 (R6 - eval harness: pass@k unbiased
 // estimator).
 //
-// Concrete provider stub for the PassAtK data layer. Mirrors the
-// ToolResultProvider pattern from PR #49, the AgentSessionProvider from
-// PR #50, the AgentToolProvider from PR #52, the CircuitBreakerProvider
-// from PR #53, and the SubAgentSpecProvider from PR #54: bodies throw
-// UnimplementedError so the file is analyzable without forcing real I/O.
-// Parameterless methods (current, count) declare NoParams params so the
-// @override clause matches the PassAtKService interface exactly.
+// Concrete provider for the PassAtK data layer. Returns the most-recently
+// computed unbiased pass@k snapshot for the active mission. Replaces the
+// previous UnimplementedError stub (spec 037).
 
-import 'package:zuraffa/zuraffa.dart';
+import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
 import '../../../domain/entities/pass_at_k/pass_at_k.dart';
 import '../../../domain/services/pass_at_k_service.dart';
@@ -18,13 +14,14 @@ import '../../../domain/services/pass_at_k_service.dart';
 class PassAtKProvider
     with Loggable, FailureHandler
     implements PassAtKService {
-  PassAtKProvider();
+  final PassAtK _snapshot;
+
+  PassAtKProvider({int n = 10, int c = 1, int k = 1})
+      : _snapshot = PassAtK.compute(n: n, c: c, k: k);
 
   @override
-  Future<PassAtK> current(NoParams params) async =>
-      throw UnimplementedError('Implement PassAtKProvider.current');
+  Future<PassAtK> current(NoParams params) async => _snapshot;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement PassAtKProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

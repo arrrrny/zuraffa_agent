@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the SessionTreeEntry value object +
-// SessionTreeEntryProvider stub. Pattern mirrors spec 033.
+// SessionTreeEntryProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,21 @@ void main() {
       expect(provider, isA<SessionTreeEntryService>());
     });
 
-    test('SessionTreeEntryProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SessionTreeEntryProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SessionTreeEntryProvider.current returns the active entry', () async {
+      final entry = await SessionTreeEntryProvider().current(NoParams());
+      expect(entry, isA<SessionTreeEntry>());
+      expect(entry.id, 'entry-default');
+      expect(entry.sessionId, 'session-default');
+      expect(entry.createdAt, 0);
     });
 
-    test('SessionTreeEntryProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SessionTreeEntryProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SessionTreeEntryProvider.current returns a supplied active entry', () async {
+      final active = SessionTreeEntry(id: 'entry-x', sessionId: 'sess-x', parentEntryId: 'entry-parent', createdAt: 99);
+      expect(await SessionTreeEntryProvider(active).current(NoParams()), active);
+    });
+
+    test('SessionTreeEntryProvider.count returns 1', () async {
+      expect(await SessionTreeEntryProvider().count(NoParams()), 1);
     });
   });
 }

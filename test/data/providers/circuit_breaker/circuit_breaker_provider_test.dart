@@ -17,8 +17,7 @@
 //   unchanged; no-op in closed/halfOpen.
 // - Value equality holds across all nine fields.
 // - The clean-arch layers (CircuitBreakerService + CircuitBreakerProvider)
-//   are wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+//   are wired correctly and compile, and the provider returns real behavior.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -172,20 +171,18 @@ void main() {
       expect(provider, isA<CircuitBreakerService>());
     });
 
-    test('CircuitBreakerProvider.current throws UnimplementedError on NoParams', () {
-      final provider = CircuitBreakerProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('CircuitBreakerProvider.current returns the active breaker snapshot', () async {
+      final breaker = await CircuitBreakerProvider().current(NoParams());
+      expect(breaker, isA<CircuitBreaker>());
+      expect(breaker.id, 'openai-compat');
+      expect(breaker.state, CircuitBreakerState.closed);
+      expect(breaker.failureThreshold, greaterThan(0));
+      expect(breaker.cooldown, greaterThan(Duration.zero));
+      expect(breaker.halfOpenThreshold, greaterThan(0));
     });
 
-    test('CircuitBreakerProvider.count throws UnimplementedError on NoParams', () {
-      final provider = CircuitBreakerProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('CircuitBreakerProvider.count returns 1', () async {
+      expect(await CircuitBreakerProvider().count(NoParams()), 1);
     });
   });
 }

@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the ToolDispatchMode value object +
-// ToolDispatchModeProvider stub. Pattern mirrors spec 033.
+// ToolDispatchModeProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -25,24 +25,18 @@ void main() {
 
   group('arrarrny/zuraffa_agent#4 - ToolDispatchMode clean-arch layers', () {
     test('ToolDispatchModeProvider is a ToolDispatchModeService', () {
-      final provider = ToolDispatchModeProvider();
-      expect(provider, isA<ToolDispatchModeService>());
+      expect(ToolDispatchModeProvider(), isA<ToolDispatchModeService>());
     });
 
-    test('ToolDispatchModeProvider.current throws UnimplementedError on NoParams', () {
-      final provider = ToolDispatchModeProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('ToolDispatchModeProvider.current returns the active dispatch mode', () async {
+      final mode = await ToolDispatchModeProvider().current(NoParams());
+      expect(mode, isA<ToolDispatchMode>());
+      expect(mode.mode, 'sequential');
+      expect(mode.maxParallel, greaterThan(0));
     });
 
-    test('ToolDispatchModeProvider.count throws UnimplementedError on NoParams', () {
-      final provider = ToolDispatchModeProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('ToolDispatchModeProvider.count returns 1', () async {
+      expect(await ToolDispatchModeProvider().count(NoParams()), 1);
     });
   });
 }

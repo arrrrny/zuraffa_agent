@@ -1,10 +1,11 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// Concrete provider stub for the SubAgentContext data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the SubAgentContext data layer. Returns the active
+// isolated context snapshot for the running mission. Backed by an in-memory
+// repository of contexts; current() returns the active (most-recent) context
+// and count() returns the number of tracked contexts. Replaces the previous
+// stub (spec 033).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +15,23 @@ import '../../../domain/services/sub_agent_context_service.dart';
 class SubAgentContextProvider
     with Loggable, FailureHandler
     implements SubAgentContextService {
-  SubAgentContextProvider();
+  final List<SubAgentContext> _contexts;
+
+  SubAgentContextProvider([SubAgentContext? active])
+      : _contexts = [
+          active ??
+              const SubAgentContext(
+                id: 'ctx-default',
+                subAgentSpecId: 'spec-default',
+                sessionId: 'session-default',
+                toolAllowlist: [],
+                budgetTurns: 10,
+              ),
+        ];
 
   @override
-  Future<SubAgentContext> current(NoParams params) async =>
-      throw UnimplementedError('Implement SubAgentContextProvider.current');
+  Future<SubAgentContext> current(NoParams params) async => _contexts.last;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement SubAgentContextProvider.count');
+  Future<int> count(NoParams params) async => _contexts.length;
 }

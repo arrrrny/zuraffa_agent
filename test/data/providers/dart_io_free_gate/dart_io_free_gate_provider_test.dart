@@ -29,20 +29,33 @@ void main() {
       expect(provider, isA<DartIoFreeGateService>());
     });
 
-    test('DartIoFreeGateProvider.current throws UnimplementedError on NoParams', () {
+    test('DartIoFreeGateProvider.current returns the active gate', () async {
       final provider = DartIoFreeGateProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final gate = await provider.current(NoParams());
+      expect(gate, isA<DartIoFreeGate>());
+      expect(gate.id, 'default');
+      expect(gate.gateName, 'dart-io-free');
+      expect(gate.enforcedPaths, contains('lib/src'));
+      expect(gate.violationCount, 0);
     });
 
-    test('DartIoFreeGateProvider.count throws UnimplementedError on NoParams', () {
+    test('DartIoFreeGateProvider.count returns 1', () async {
       final provider = DartIoFreeGateProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('DartIoFreeGateProvider honours an injected value object', () async {
+      final custom = DartIoFreeGate(
+        id: 'custom',
+        gateName: 'dart-io-free',
+        enforcedPaths: const [],
+        violationCount: 2,
       );
+      final provider = DartIoFreeGateProvider(custom);
+      final gate = await provider.current(NoParams());
+      expect(gate.id, 'custom');
+      expect(gate.violationCount, 2);
+      expect(gate.enforcedPaths, isEmpty);
     });
   });
 }

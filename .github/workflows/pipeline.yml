@@ -45,7 +45,19 @@ jobs:
           lib/src/skills.dart
           lib/src/llm/io_llm_transport.dart
           lib/src/mcp/io_sse_mcp_transport.dart
-          lib/src/mcp/io_stdio_mcp_transport.dart"
+          lib/src/mcp/io_stdio_mcp_transport.dart
+          # LlmHttpTransport: the LlmClient I/O boundary. A real LLM call on the
+          # Dart VM requires an HTTP client, and proxy egress (HTTP CONNECT
+          # through http://localhost:8890) requires dart:io's HttpClient.findProxy.
+          # Pure request-build / response-parse helpers are unit-tested without
+          # network; only this adapter touches platform I/O. (spec 065)
+          # JsonlEntityStorage: generic durable JSONL adapter for datasources
+          # that need local persistence (turn records, tool invocations, usage
+          # ledger). dart:io is confined here per Constitution VII; production
+          # datasources delegate I/O to this adapter instead of importing
+          # dart:io directly. (spec 065)
+          lib/src/data/datasources/jsonl_entity_storage.dart
+          lib/src/data/providers/llm_client/llm_http_transport.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then

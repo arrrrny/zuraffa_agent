@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#7 (R6 - eval harness).
 //
-// Concrete provider stub for the ReplayDiff data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the ReplayDiff data layer. Returns the active
+// replay-diff snapshot (input drift detection) as a constructed default
+// (spec 052).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,20 @@ import '../../../domain/services/replay_diff_service.dart';
 class ReplayDiffProvider
     with Loggable, FailureHandler
     implements ReplayDiffService {
-  ReplayDiffProvider();
+  final ReplayDiff _active;
+
+  ReplayDiffProvider([ReplayDiff? active])
+      : _active = active ??
+            const ReplayDiff(
+              id: 'default',
+              missionId: 'mission-0',
+              driftDetected: false,
+              diffSummary: null,
+            );
 
   @override
-  Future<ReplayDiff> current(NoParams params) async =>
-      throw UnimplementedError('Implement ReplayDiffProvider.current');
+  Future<ReplayDiff> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement ReplayDiffProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

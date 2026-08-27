@@ -29,20 +29,32 @@ void main() {
       expect(provider, isA<ReplayCliSurfaceService>());
     });
 
-    test('ReplayCliSurfaceProvider.current throws UnimplementedError on NoParams', () {
+    test('ReplayCliSurfaceProvider.current returns the active replay CLI surface', () async {
       final provider = ReplayCliSurfaceProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final surface = await provider.current(NoParams());
+      expect(surface, isA<ReplayCliSurface>());
+      expect(surface.id, 'default');
+      expect(surface.missionId, 'mission-0');
+      expect(surface.graderMatrixId, 'grader-0');
+      expect(surface.verbosity, 'normal');
     });
 
-    test('ReplayCliSurfaceProvider.count throws UnimplementedError on NoParams', () {
+    test('ReplayCliSurfaceProvider.count returns 1', () async {
       final provider = ReplayCliSurfaceProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('ReplayCliSurfaceProvider honours an injected value object', () async {
+      final custom = ReplayCliSurface(
+        id: 'custom',
+        missionId: 'mission-x',
+        graderMatrixId: 'grader-x',
+        verbosity: 'verbose',
       );
+      final provider = ReplayCliSurfaceProvider(custom);
+      final surface = await provider.current(NoParams());
+      expect(surface.id, 'custom');
+      expect(surface.verbosity, 'verbose');
     });
   });
 }

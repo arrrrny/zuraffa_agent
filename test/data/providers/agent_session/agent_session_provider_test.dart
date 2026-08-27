@@ -8,8 +8,7 @@
 //   parentSessionId / currentEntryId state.
 // - Value equality holds across all seven fields.
 // - The clean-arch layers (AgentSessionService + AgentSessionProvider)
-//   are wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+//   are wired correctly and the provider returns the active session.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -147,24 +146,18 @@ void main() {
 
   group('arrarrny/zuraffa_agent#1 — AgentSession clean-arch layers', () {
     test('AgentSessionProvider is an AgentSessionService', () {
-      final provider = AgentSessionProvider();
-      expect(provider, isA<AgentSessionService>());
+      expect(AgentSessionProvider(), isA<AgentSessionService>());
     });
 
-    test('AgentSessionProvider.current throws UnimplementedError on NoParams', () {
-      final provider = AgentSessionProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('AgentSessionProvider.current returns the active session', () async {
+      final session = await AgentSessionProvider().current(NoParams());
+      expect(session, isA<AgentSession>());
+      expect(session.id, 'default');
+      expect(session.rootEntryId, 'root');
     });
 
-    test('AgentSessionProvider.count throws UnimplementedError on NoParams', () {
-      final provider = AgentSessionProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('AgentSessionProvider.count returns 1', () async {
+      expect(await AgentSessionProvider().count(NoParams()), 1);
     });
   });
 }

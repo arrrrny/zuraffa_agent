@@ -12,7 +12,9 @@
 //   deep equality on paramsSchema.
 // - The clean-arch layers (AgentToolService + AgentToolProvider) are
 //   wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+// - The provider returns a built-in default tool when its registry is
+//   empty, the most-recently-registered tool otherwise, and a matching
+//   count.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -141,20 +143,36 @@ void main() {
       expect(provider, isA<AgentToolService>());
     });
 
-    test('AgentToolProvider.current throws UnimplementedError on NoParams', () {
-      final provider = AgentToolProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('AgentToolProvider.current returns a built-in default tool when the registry is empty', () async {
+      final tool = await AgentToolProvider().current(NoParams());
+      expect(tool, isA<AgentTool>());
+      expect(tool.id, isNotEmpty);
+      expect(tool.riskTier, RiskTier.safe);
+      expect(tool.executionMode, ExecutionMode.sequential);
     });
 
-    test('AgentToolProvider.count throws UnimplementedError on NoParams', () {
+    test('AgentToolProvider.count returns 0 for an empty registry', () async {
+      expect(await AgentToolProvider().count(NoParams()), 0);
+    });
+
+    test('AgentToolProvider.current returns the most-recently-registered tool', () async {
       final provider = AgentToolProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      provider.register(AgentTool(id: 'fs.read', description: 'Read a file.'));
+      final latest = AgentTool(
+        id: 'fs.write',
+        description: 'Write a file.',
+        riskTier: RiskTier.confirm,
       );
+      provider.register(latest);
+      expect(await provider.current(NoParams()), equals(latest));
+      expect(await provider.count(NoParams()), 2);
+    });
+
+    test('AgentToolProvider accepts a seeded registry', () async {
+      final seeded = AgentTool(id: 'web.fetch', description: 'Fetch a URL.');
+      final provider = AgentToolProvider([seeded]);
+      expect(await provider.current(NoParams()), equals(seeded));
+      expect(await provider.count(NoParams()), 1);
     });
   });
 }

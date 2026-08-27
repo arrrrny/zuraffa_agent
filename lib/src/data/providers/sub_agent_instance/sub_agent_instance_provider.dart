@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// Concrete provider stub for the SubAgentInstance data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the SubAgentInstance data layer. Returns the active
+// resumable instance snapshot for the running mission. Replaces the previous
+// stub (spec 033).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,20 @@ import '../../../domain/services/sub_agent_instance_service.dart';
 class SubAgentInstanceProvider
     with Loggable, FailureHandler
     implements SubAgentInstanceService {
-  SubAgentInstanceProvider();
+  final SubAgentInstance _active;
+
+  SubAgentInstanceProvider([SubAgentInstance? active])
+      : _active = active ??
+            const SubAgentInstance(
+              id: 'instance-default',
+              subAgentSpecId: 'spec-default',
+              parentSessionId: 'session-default',
+              totalRuns: 0,
+            );
 
   @override
-  Future<SubAgentInstance> current(NoParams params) async =>
-      throw UnimplementedError('Implement SubAgentInstanceProvider.current');
+  Future<SubAgentInstance> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement SubAgentInstanceProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

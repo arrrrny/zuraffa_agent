@@ -10,8 +10,7 @@
 //   list state.
 // - Value equality holds across all four fields of SteeringQueue.
 // - The clean-arch layers (SteeringQueueService + SteeringQueueProvider)
-//   are wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+//   are wired correctly, compile, and report real behavior.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -123,20 +122,29 @@ void main() {
       expect(provider, isA<SteeringQueueService>());
     });
 
-    test('SteeringQueueProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SteeringQueueProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SteeringQueueProvider.current returns the active queue', () async {
+      final q = await SteeringQueueProvider().current(NoParams());
+      expect(q, isA<SteeringQueue>());
+      expect(q.id, 'queue-default');
+      expect(q.isEmpty, isTrue);
+      expect(q.processedCount, 0);
+      expect(q.lastInjectedAt, isNull);
     });
 
-    test('SteeringQueueProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SteeringQueueProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('SteeringQueueProvider.current returns a supplied active queue', () async {
+      final ts = DateTime.utc(2026, 8, 24, 9, 0, 0);
+      final m = SteeringMessage(id: 'm-1', content: 'x', injectedAt: ts);
+      final active = SteeringQueue(
+        id: 'q-x',
+        pending: [m],
+        processedCount: 2,
+        lastInjectedAt: ts,
       );
+      expect(await SteeringQueueProvider(active).current(NoParams()), active);
+    });
+
+    test('SteeringQueueProvider.count returns the tracked queue count', () async {
+      expect(await SteeringQueueProvider().count(NoParams()), 1);
     });
   });
 }

@@ -29,20 +29,29 @@ void main() {
       expect(provider, isA<RecordedTrafficService>());
     });
 
-    test('RecordedTrafficProvider.current throws UnimplementedError on NoParams', () {
-      final provider = RecordedTrafficProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('RecordedTrafficProvider.current returns the active traffic snapshot', () async {
+      final traffic = await RecordedTrafficProvider().current(NoParams());
+      expect(traffic, isA<RecordedTraffic>());
+      expect(traffic.id, 'default');
+      expect(traffic.missionId, 'mission-1');
+      expect(traffic.llmCallCount, 0);
+      expect(traffic.toolCallCount, 0);
     });
 
-    test('RecordedTrafficProvider.count throws UnimplementedError on NoParams', () {
-      final provider = RecordedTrafficProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('RecordedTrafficProvider.current honors an injected snapshot', () async {
+      final injected = const RecordedTraffic(
+        id: 'rt-1',
+        missionId: 'ref-7',
+        llmCallCount: 12,
+        toolCallCount: 4,
+        recordedAt: 999,
       );
+      final traffic = await RecordedTrafficProvider(injected).current(NoParams());
+      expect(traffic, same(injected));
+    });
+
+    test('RecordedTrafficProvider.count returns 1', () async {
+      expect(await RecordedTrafficProvider().count(NoParams()), 1);
     });
   });
 }

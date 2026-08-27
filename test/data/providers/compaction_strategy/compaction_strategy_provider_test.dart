@@ -29,20 +29,32 @@ void main() {
       expect(provider, isA<CompactionStrategyService>());
     });
 
-    test('CompactionStrategyProvider.current throws UnimplementedError on NoParams', () {
-      final provider = CompactionStrategyProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('CompactionStrategyProvider.current returns the active strategy', () async {
+      final strategy = await CompactionStrategyProvider().current(NoParams());
+      expect(strategy, isA<CompactionStrategy>());
+      expect(strategy.id, 'selective');
+      expect(strategy.sessionId, '');
+      expect(strategy.retainEntryIds, isEmpty);
+      expect(strategy.summarizeEntryIds, isEmpty);
+      expect(strategy.artifactRefs, isEmpty);
+      expect(strategy.compactedAt, 0);
     });
 
-    test('CompactionStrategyProvider.count throws UnimplementedError on NoParams', () {
-      final provider = CompactionStrategyProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('CompactionStrategyProvider honors an injected active strategy', () async {
+      final injected = CompactionStrategy(
+        id: 'custom',
+        sessionId: 'sess-x',
+        retainEntryIds: const ['e1'],
+        summarizeEntryIds: const ['e2'],
+        artifactRefs: const ['a1'],
+        compactedAt: 42,
       );
+      final strategy = await CompactionStrategyProvider(injected).current(NoParams());
+      expect(strategy, same(injected));
+    });
+
+    test('CompactionStrategyProvider.count returns 1', () async {
+      expect(await CompactionStrategyProvider().count(NoParams()), 1);
     });
   });
 }

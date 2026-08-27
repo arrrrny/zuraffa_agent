@@ -2,14 +2,13 @@
 // See issue arrrrny/zuraffa_agent#2 (R1 — engine core: steering & follow-up
 // queues).
 //
-// Concrete provider stub for the SteeringQueue data layer. Mirrors the
-// ToolResultProvider pattern from PR #49 and the AgentSessionProvider
-// pattern from PR #50: bodies throw UnimplementedError so the file is
-// analyzable without forcing real I/O. Parameterless methods (current,
-// count) declare NoParams params so the @override clause matches the
-// SteeringQueueService interface exactly.
+// Concrete provider for the SteeringQueue data layer. Returns the active
+// queue snapshot for the running mission. Backed by an in-memory repository
+// of queue snapshots; current() returns the active (most-recent) snapshot and
+// count() returns the number of tracked snapshots. Replaces the previous stub
+// (spec 033).
 
-import 'package:zuraffa/zuraffa.dart';
+import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
 import '../../../domain/entities/steering_queue/steering_queue.dart';
 import '../../../domain/services/steering_queue_service.dart';
@@ -17,13 +16,21 @@ import '../../../domain/services/steering_queue_service.dart';
 class SteeringQueueProvider
     with Loggable, FailureHandler
     implements SteeringQueueService {
-  SteeringQueueProvider();
+  final List<SteeringQueue> _queues;
+
+  SteeringQueueProvider([SteeringQueue? active])
+      : _queues = [
+          active ??
+              const SteeringQueue(
+                id: 'queue-default',
+                pending: [],
+                processedCount: 0,
+              ),
+        ];
 
   @override
-  Future<SteeringQueue> current(NoParams params) async =>
-      throw UnimplementedError('Implement SteeringQueueProvider.current');
+  Future<SteeringQueue> current(NoParams params) async => _queues.last;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement SteeringQueueProvider.count');
+  Future<int> count(NoParams params) async => _queues.length;
 }

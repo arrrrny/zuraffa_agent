@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#3 (R1 - state & sessions).
 //
-// Concrete provider stub for the CompactionStrategy data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the CompactionStrategy data layer. Returns the active
+// compaction strategy (selective retain/summarize). Replaces the previous
+// UnimplementedError stub (spec 033).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,22 @@ import '../../../domain/services/compaction_strategy_service.dart';
 class CompactionStrategyProvider
     with Loggable, FailureHandler
     implements CompactionStrategyService {
-  CompactionStrategyProvider();
+  final CompactionStrategy _active;
+
+  CompactionStrategyProvider([CompactionStrategy? active])
+      : _active = active ??
+            const CompactionStrategy(
+              id: 'selective',
+              sessionId: '',
+              retainEntryIds: [],
+              summarizeEntryIds: [],
+              artifactRefs: [],
+              compactedAt: 0,
+            );
 
   @override
-  Future<CompactionStrategy> current(NoParams params) async =>
-      throw UnimplementedError('Implement CompactionStrategyProvider.current');
+  Future<CompactionStrategy> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement CompactionStrategyProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

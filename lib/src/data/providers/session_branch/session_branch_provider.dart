@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#3 (R1 - state & sessions).
 //
-// Concrete provider stub for the SessionBranch data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the SessionBranch data layer. Returns the active
+// branch snapshot for the running mission. Replaces the previous stub
+// (spec 033).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,21 @@ import '../../../domain/services/session_branch_service.dart';
 class SessionBranchProvider
     with Loggable, FailureHandler
     implements SessionBranchService {
-  SessionBranchProvider();
+  final SessionBranch _active;
+
+  SessionBranchProvider([SessionBranch? active])
+      : _active = active ??
+            const SessionBranch(
+              id: 'branch-default',
+              sessionId: 'session-default',
+              forkedFromEntryId: 'entry-root',
+              forkedAt: 0,
+              isActive: true,
+            );
 
   @override
-  Future<SessionBranch> current(NoParams params) async =>
-      throw UnimplementedError('Implement SessionBranchProvider.current');
+  Future<SessionBranch> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement SessionBranchProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

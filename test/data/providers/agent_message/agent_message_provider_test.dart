@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the AgentMessage value object +
-// AgentMessageProvider stub. Pattern mirrors spec 033.
+// AgentMessageProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,31 @@ void main() {
       expect(provider, isA<AgentMessageService>());
     });
 
-    test('AgentMessageProvider.current throws UnimplementedError on NoParams', () {
-      final provider = AgentMessageProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('AgentMessageProvider.current returns an empty default when the log is empty', () async {
+      final message = await AgentMessageProvider().current(NoParams());
+      expect(message, isA<AgentMessage>());
+      expect(message.parts, isEmpty);
+      expect(message.role, isNotEmpty);
     });
 
-    test('AgentMessageProvider.count throws UnimplementedError on NoParams', () {
+    test('AgentMessageProvider.count returns 0 for an empty log', () async {
+      expect(await AgentMessageProvider().count(NoParams()), 0);
+    });
+
+    test('AgentMessageProvider.current returns the most recently appended message', () async {
       final provider = AgentMessageProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      provider.append(AgentMessage(id: 'm-1', role: 'user', parts: const ['hi']));
+      final latest = AgentMessage(id: 'm-2', role: 'assistant', parts: const ['yo']);
+      provider.append(latest);
+      expect(await provider.current(NoParams()), equals(latest));
+      expect(await provider.count(NoParams()), 2);
+    });
+
+    test('AgentMessageProvider accepts a seeded message log', () async {
+      final seeded = AgentMessage(id: 'm-9', role: 'user', parts: const ['seed']);
+      final provider = AgentMessageProvider([seeded]);
+      expect(await provider.current(NoParams()), equals(seeded));
+      expect(await provider.count(NoParams()), 1);
     });
   });
 }

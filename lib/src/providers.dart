@@ -1,84 +1,14 @@
-// Provider fallback logic — hand-written engine glue using zfa-generated
-// Model entity types for provider/model resolution and fallback chains.
+// Provider configuration — single source of truth.
 //
-// Never references old manual-run types. All types are zfa-generated
-// or hand-written against zfa-generated types.
+// This file previously defined a hand-written duplicate ProviderConfig plus a
+// ProviderResolver / ResolvedModel pair. Those were removed during production
+// hardening: the canonical, spec-exact ProviderConfig value object lives at
+// domain/entities/provider_config/provider_config.dart (spec 052) and is the
+// single ProviderConfig type for the whole package. Provider fallback/resolution
+// is handled by the FallbackChain provider (spec 037 / issue #7).
+//
+// This file now simply re-exports the canonical entity so the public API
+// `package:zuraffa_agent/providers.dart` continues to resolve ProviderConfig to
+// the single correct definition.
 
-import 'types.dart';
-
-/// Represents a configured LLM provider with model preferences and fallback.
-class ProviderConfig {
-  final String providerId;
-  final List<String> modelIds;
-  final int defaultContextWindow;
-
-  const ProviderConfig({
-    required this.providerId,
-    required this.modelIds,
-    this.defaultContextWindow = 8192,
-  });
-}
-
-/// A resolved model selection with provider context.
-class ResolvedModel {
-  final Model model;
-  final String providerId;
-
-  const ResolvedModel({required this.model, required this.providerId});
-}
-
-/// Fallback strategy for provider/model selection.
-///
-/// Maintains an ordered list of [ProviderConfig] entries. When resolving,
-/// tries each provider's models in order until one matches the requested
-/// criteria or falls back to the first available model.
-class ProviderResolver {
-  final List<ProviderConfig> _providers;
-
-  const ProviderResolver(this._providers);
-
-  /// Resolves a model by provider ID and optional model ID.
-  ///
-  /// If [providerId] is specified, only that provider is tried.
-  /// If [modelId] is specified, only that exact model is returned.
-  /// Falls back through the provider chain if no exact match is found.
-  ResolvedModel? resolve({
-    String? providerId,
-    String? modelId,
-    int? minContextWindow,
-  }) {
-    final candidates = providerId != null
-        ? _providers.where((p) => p.providerId == providerId).toList()
-        : _providers.toList();
-
-    for (final provider in candidates) {
-      for (final mid in provider.modelIds) {
-        if (modelId != null && mid != modelId) continue;
-
-        return ResolvedModel(
-          model: Model(
-            provider: provider.providerId,
-            modelId: mid,
-            contextWindow: provider.defaultContextWindow,
-          ),
-          providerId: provider.providerId,
-        );
-      }
-    }
-
-    return null; // No match found.
-  }
-
-  /// Returns all available provider IDs.
-  List<String> get availableProviders =>
-      _providers.map((p) => p.providerId).toList();
-
-  /// Returns all model IDs for a given provider.
-  List<String> modelsForProvider(String providerId) {
-    final provider = _providers.cast<ProviderConfig?>().firstWhere(
-          (p) => p?.providerId == providerId,
-          orElse: () => null,
-        );
-    return provider?.modelIds ?? const [];
-  }
-}
+export 'domain/entities/provider_config/provider_config.dart';

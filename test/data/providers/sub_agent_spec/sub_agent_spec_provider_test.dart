@@ -11,8 +11,7 @@
 //   budgets when provided.
 // - Value equality holds across all ten fields.
 // - The clean-arch layers (SubAgentSpecService + SubAgentSpecProvider)
-//   are wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+//   are wired correctly, compile, and report real behavior.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -174,20 +173,26 @@ void main() {
       expect(provider, isA<SubAgentSpecService>());
     });
 
-    test('SubAgentSpecProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SubAgentSpecProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SubAgentSpecProvider.current returns the active spec', () async {
+      final spec = await SubAgentSpecProvider().current(NoParams());
+      expect(spec, isA<SubAgentSpec>());
+      expect(spec.name, 'explore');
+      expect(spec.description, 'Default exploratory sub-agent.');
+      expect(spec.riskTier, RiskTier.safe);
+      expect(spec.isLeaf, isTrue);
     });
 
-    test('SubAgentSpecProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SubAgentSpecProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('SubAgentSpecProvider.current returns a supplied active spec', () async {
+      final active = SubAgentSpec(
+        name: 'composer',
+        description: 'Compose.',
+        systemPrompt: 'You compose.',
       );
+      expect(await SubAgentSpecProvider(active).current(NoParams()), active);
+    });
+
+    test('SubAgentSpecProvider.count returns 1', () async {
+      expect(await SubAgentSpecProvider().count(NoParams()), 1);
     });
   });
 }

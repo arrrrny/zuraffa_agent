@@ -29,20 +29,28 @@ void main() {
       expect(provider, isA<McpTransportService>());
     });
 
-    test('McpTransportProvider.current throws UnimplementedError on NoParams', () {
-      final provider = McpTransportProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('McpTransportProvider.current returns the active transport', () async {
+      final transport = await McpTransportProvider().current(NoParams());
+      expect(transport, isA<McpTransport>());
+      expect(transport.id, 'inproc');
+      expect(transport.transportType, 'in-proc');
+      expect(transport.endpoint, 'in-process');
+      expect(transport.authRequired, isFalse);
     });
 
-    test('McpTransportProvider.count throws UnimplementedError on NoParams', () {
-      final provider = McpTransportProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('McpTransportProvider honors an injected active transport', () async {
+      final injected = const McpTransport(
+        id: 'remote',
+        transportType: 'sse',
+        endpoint: 'http://localhost:8080/sse',
+        authRequired: true,
       );
+      final transport = await McpTransportProvider(injected).current(NoParams());
+      expect(transport, same(injected));
+    });
+
+    test('McpTransportProvider.count returns 1', () async {
+      expect(await McpTransportProvider().count(NoParams()), 1);
     });
   });
 }
