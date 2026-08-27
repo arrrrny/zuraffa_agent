@@ -183,41 +183,48 @@ void main() {
       expect(b.generateCalls, 2);
     });
 
-    test('U15: after cooldown, a half-open probe routes real traffic back to A on success', () async {
+    test('U15: after cooldown, a half-open probe routes real traffic back to A on success and CLOSES the breaker', () async {
+      // maxConsecutiveFailures=3: after the probe closes the breaker, A must
+      // fail three more times before tripping again — which pins the
+      // closed-vs-stuck-half-open distinction.
       final a = FakeLlmClient(providerName: 'a', outcomes: [
         const ScriptedOutcome(
             error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
+        const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused')),
         const ScriptedOutcome(response: LlmResponse(content: 'a-probe-ok')),
+        const ScriptedOutcome(
+            error: LlmHttpException(
+                provider: 'a', statusCode: 503, body: 'blip')),
         const ScriptedOutcome(response: LlmResponse(content: 'a-steady')),
       ]);
       final b = FakeLlmClient(providerName: 'b', outcomes: [
-        const ScriptedOutcome(response: LlmResponse(content: 'from-b')),
+        const ScriptedOutcome(response: LlmResponse(content: 'b-1')),
+        const ScriptedOutcome(response: LlmResponse(content: 'b-2')),
+        const ScriptedOutcome(response: LlmResponse(content: 'b-3')),
+        const ScriptedOutcome(response: LlmResponse(content: 'b-4')),
+        const ScriptedOutcome(response: LlmResponse(content: 'b-5')),
       ]);
-      final chain = makeChain([a, b], maxConsecutiveFailures: 1);
+      final chain = makeChain([a, b], maxConsecutiveFailures: 3);
+      final ask = () => chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
 
-      // A fails -> trips (maxConsecutiveFailures=1); B serves.
-      expect(
-          (await chain
-                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
-              .content,
-          'from-b');
-
-      // Cooldown elapses -> A's breaker half-opens -> the probe routes back.
-      await clock.sleep(60000);
-      expect(
-          (await chain
-                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
-              .content,
-          'a-probe-ok');
-
-      // Probe succeeded -> breaker closed -> traffic stays on A.
-      expect(
-          (await chain
-                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
-              .content,
-          'a-steady');
+      // Three failures trip A's breaker; B serves all three.
+      expect((await ask()).content, 'b-1');
+      expect((await ask()).content, 'b-2');
+      expect((await ask()).content, 'b-3');
       expect(a.generateCalls, 3);
-      expect(b.generateCalls, 1);
+
+      // Cooldown elapses -> half-open -> the probe routes back to A.
+      await clock.sleep(60000);
+      expect((await ask()).content, 'a-probe-ok');
+
+      // One more failure (503) is NOT enough to re-trip a CLOSED breaker:
+      // B serves, and the NEXT call must go back to A (not skip it).
+      expect((await ask()).content, 'b-4');
+      expect((await ask()).content, 'a-steady');
+      expect(a.generateCalls, 6);
     });
   });
 }
