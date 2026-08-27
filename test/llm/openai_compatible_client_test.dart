@@ -209,5 +209,80 @@ void main() {
       expect(sent['stream'], isTrue);
       expect(sent['stream_options'], {'include_usage': true});
     });
+
+    test('U13: tool-call fragments assemble by index across chunks; malformed arguments default to an empty map', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              // Two interleaved tool streams (index 0 and 1) + one malformed
+              // argument payload on index 1.
+              'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_a","type":"function","function":{"name":"get_weather","arguments":"{\\"ci"}}]}}]}',
+              'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":1,"id":"call_b","type":"function","function":{"name":"get_time","arguments":"{bad json"}}]}}]}',
+              'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"ty\\":\\"Paris\\"}"}}]}}]}',
+              'data: {"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}',
+              'data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":5}}',
+              'data: [DONE]',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('call tools')]))
+          .toList();
+
+      final toolChunk =
+          chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
+      expect(toolChunk.toolCalls, hasLength(2));
+      expect(
+        toolChunk.toolCalls[0],
+        equals(const LlmToolCall(
+          id: 'call_a',
+          name: 'get_weather',
+          arguments: {'city': 'Paris'},
+        )),
+      );
+      // Malformed argument JSON tolerates gracefully (AC-2): empty map.
+      expect(
+        toolChunk.toolCalls[1],
+        equals(const LlmToolCall(
+          id: 'call_b',
+          name: 'get_time',
+          arguments: {},
+        )),
+      );
+      expect(chunks.last.isComplete, isTrue);
+    });
+
+    test('U14: a non-2xx response raises LlmHttpException with statusCode and body', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: List.filled(
+          3,
+          const ScriptedResponse(
+            statusCode: 500,
+            body: '{"error":{"message":"upstream boom"}}',
+          ),
+        ),
+      );
+      final client = makeClient(
+        transport,
+        retryConfig: const RetryConfig(maxAttempts: 3, baseDelayMs: 10),
+      );
+
+      await expectLater(
+        client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 500)
+            .having((e) => e.body, 'body',
+                '{"error":{"message":"upstream boom"}}')
+            .having((e) => e.provider, 'provider', 'openai')),
+      );
+      expect(transport.requests, hasLength(3));
+    });
   });
 }
