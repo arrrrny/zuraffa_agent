@@ -208,7 +208,8 @@ void main() {
         const ScriptedOutcome(response: LlmResponse(content: 'b-5')),
       ]);
       final chain = makeChain([a, b], maxConsecutiveFailures: 3);
-      final ask = () => chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      Future<LlmResponse> ask() =>
+          chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
 
       // Three failures trip A's breaker; B serves all three.
       expect((await ask()).content, 'b-1');
@@ -298,6 +299,7 @@ void main() {
             error: LlmNetworkException(provider: 'a', cause: 'refused')),
       ]);
       final b = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: 'ok')),
         const ScriptedOutcome(response: LlmResponse(content: 'ok')),
         const ScriptedOutcome(response: LlmResponse(content: 'ok')),
       ]);
