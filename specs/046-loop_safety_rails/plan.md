@@ -1,5 +1,9 @@
 # Implementation Plan: LoopSafetyRails typed outcomes
-**Branch**: `046-loop_safety_rails` | **Date**: 2026-08-24
+**Branch**: `feat/specs-046-047-048-049` | **Date**: 2026-08-28
+
+## Technical Context
+- **Repo**: zuraffa_agent — clean-architecture providers/entities/services, engine layer, MCP transport, build_runner codegen, test harness (dart test + mocktail).
+- **Pattern**: mirrors spec 033 (SteeringQueue + SteeringMessage): plain Dart value objects, no @Zorphy codegen, compiles without build_runner.
 
 ## Summary
 Hand-curate the `LoopSafetyRails` value object (R2 spec-exact) + `LoopSafetyRailsService` + `LoopSafetyRailsProvider`. Pattern mirrors spec 033 (SteeringQueue + SteeringMessage): plain Dart value objects, no @Zorphy codegen, compiles without build_runner.
