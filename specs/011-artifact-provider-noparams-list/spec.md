@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-24
 
-**Status**: Draft
+**Status**: Approved *(refined by /speckit.specify — added AC-1..AC-4 ids; re-anchored the success criteria to the current tree: the hand-curated pair landed via PR #32 (861362d) BEFORE this spec cycle ran, so this cycle completes the spec-kit artifacts and performs a fresh TDD verification (green re-run + mutation checks) rather than re-implementing; the pubspec duplicate-`dependency_overrides` blocker is fixed on this branch so SC-001 is actually runnable off-machine)*
 
 **Input**: Bug arrrrny/zuraffa_agent#11 — `zfa make`-generated `ArtifactProvider.list` declares `Future<List<ArtifactRef>> Function()` while the generated `ArtifactService` interface declares `Future<List<ArtifactRef>> Function(NoParams)`. The two generated artifacts are inconsistent and `lib` does not compile. This spec defines the consistent, hand-curated replacement that lives in the consuming repo so the build gate is green even before the upstream zfa generator ships the matching fix.
 
@@ -21,8 +21,8 @@ As the build CI, I see `dart analyze --fatal-infos` succeed on `lib/src/data/pro
 **Acceptance Scenarios**:
 
 1. **Given** an `ArtifactService` interface declaring `Future<List<ArtifactRef>> list(NoParams params)`, **When** `ArtifactProvider` is generated to `implement ArtifactService`, **Then** its `list` method declares `Future<List<ArtifactRef>> list(NoParams params)` and `dart analyze` reports no `invalid_override` error.
-2. **Given** the parameterless service method `int thresholdBytes(NoParams params)`, **When** `ArtifactProvider` overrides it, **Then** the override is `int thresholdBytes(NoParams params)` (this is the shared root cause with issue #12; the fix is identical and the same hand-curated file closes both issues, but each issue gets its own PR per the per-issue worktree rule).
-3. **Given** any future contributor running `dart test`, **Then** the parameterless-method round-trip test (`list(NoParams())` and `thresholdBytes(NoParams())`) passes against the in-memory stub provider.
+2. **Given** the parameterless service method `int thresholdBytes(NoParams params)`, **When** `ArtifactProvider` overrides it, **Then** the override is `int thresholdBytes(NoParams params)` (shared root cause with issue #12; the hand-curated file resolves both — each issue still gets its own PR per the per-issue worktree rule). **[AC-2]**
+3. **Given** any future contributor running `dart test`, **Then** the parameterless-method round-trip test (`list(NoParams())` and `thresholdBytes(NoParams())`) passes against the in-memory stub provider. **[AC-3]**
 
 ### User Story 2 - Pattern is reproducible for other parameterless services (Priority: P2)
 
@@ -34,7 +34,7 @@ As the next agent fixing a sibling zfa-bug (e.g. #12, #25, #27, #29), I copy the
 
 **Acceptance Scenarios**:
 
-1. **Given** the merged `ArtifactService` / `ArtifactProvider` files, **When** an agent clones them for the next parameterless-service fix, **Then** the cloned files pass `dart analyze` after only the entity-type swap.
+1. **Given** the merged `ArtifactService` / `ArtifactProvider` files, **When** an agent clones them for the next parameterless-service fix, **Then** the cloned files pass `dart analyze` after only the entity-type swap. **[AC-4]**
 
 ### Edge Cases
 
@@ -64,7 +64,7 @@ As the next agent fixing a sibling zfa-bug (e.g. #12, #25, #27, #29), I copy the
 ### Measurable Outcomes
 
 - **SC-001**: `dart analyze --fatal-infos` exits 0 on the worktree.
-- **SC-002**: `dart test` exits 0 with ≥ 130 tests passing (the 129 pre-existing + at least one new NoParams override test).
+- **SC-002**: `dart test` keeps every pre-existing test passing plus the new NoParams override tests (the "129+1" counts in the draft refer to the tree at draft time, 2026-08-24; the current master baseline is +379 passed / 8 pre-existing loading failures, re-verified on this branch).
 - **SC-003**: No `invalid_override` analyzer code is reported against `ArtifactProvider` or any sibling file.
 - **SC-004**: The PR is merged to `master` (squash) and the merged commit, when checked out and re-tested, is green.
 
