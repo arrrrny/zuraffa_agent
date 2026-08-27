@@ -22,7 +22,7 @@ List<AgentMessage> bigHistory({int messages = 100, int charsPerMessage = 400}) =
     List.generate(
       messages,
       (i) => UserMessage.text(
-          'msg-$i: ${'x' * charsPerMessage} Decision: use approach $i.'),
+          'msg-$i: ${'x' * charsPerMessage}\nDecision: use approach $i.'),
     );
 
 void main() {
@@ -131,6 +131,30 @@ void main() {
       expect(result.snapshot, contains('<current_plan>'));
       expect(result.compressedMessages, hasLength(15));
       expect(result.preservedMessages, hasLength(5));
+    });
+
+    test('U7: an LLM error falls back to the heuristic summarizer (SC-003)', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(
+            error: LlmHttpException(
+                provider: 'compressor', statusCode: 503, body: 'down')),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 500, keepRecentMessages: 5),
+      );
+
+      final result = await compressor.compress(history);
+
+      expect(result.strategy, CompressionStrategy.heuristic);
+      expect(result.snapshot, contains('<state_snapshot>'));
+      expect(result.preservedMessages, hasLength(5));
+      // The heuristic path extracts Decision lines from the cut messages.
+      expect(result.snapshot, contains('use approach'));
+      // The LLM was attempted (and only once).
+      expect(client.generateCalls, 1);
     });
   });
 }
