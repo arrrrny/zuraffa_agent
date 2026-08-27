@@ -203,5 +203,40 @@ void main() {
       expect(result.compressedMessages, hasLength(90));
       expect(result.preservedMessages, hasLength(10));
     });
+
+    test('U10: tokenThreshold 32000 triggers where 64000 does not; messageCountThreshold honored (AC-5)', () async {
+      // ~40,000 tokens of history (100 msgs x 1600 chars / 4).
+      final history = bigHistory(messages: 100, charsPerMessage: 1600);
+
+      // Default 64000: no compression.
+      final idleClient = FakeLlmClient(providerName: 'c', outcomes: const []);
+      final idle = makeCompressor(idleClient);
+      expect((await idle.compress(history)).strategy,
+          CompressionStrategy.none);
+      expect(idleClient.generateCalls, 0);
+
+      // 32000: compression triggers.
+      final activeClient = FakeLlmClient(providerName: 'c', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final active = makeCompressor(
+        activeClient,
+        settings: const ContextCompressionSettings(tokenThreshold: 32000),
+      );
+      expect((await active.compress(history)).strategy, CompressionStrategy.llm);
+
+      // Message-count trigger: 50 messages is small in tokens but big in count.
+      final shortHistory = bigHistory(messages: 50, charsPerMessage: 10);
+      final countClient = FakeLlmClient(providerName: 'c', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final byCount = makeCompressor(
+        countClient,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 64000, messageCountThreshold: 40),
+      );
+      expect((await byCount.compress(shortHistory)).strategy,
+          CompressionStrategy.llm);
+    });
   });
 }
