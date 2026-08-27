@@ -226,5 +226,37 @@ void main() {
       expect((await ask()).content, 'a-steady');
       expect(a.generateCalls, 6);
     });
+
+    test('U16: stream() mid-stream failure on A restarts on B — partial chunks then a complete stream, never silent truncation', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        ScriptedOutcome(
+          chunks: [
+            const LlmResponseChunk(content: 'partial-'),
+          ],
+          streamError:
+              const LlmNetworkException(provider: 'a', cause: 'reset'),
+        ),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        ScriptedOutcome(
+          chunks: [
+            const LlmResponseChunk(content: 'full-'),
+            const LlmResponseChunk(content: 'answer', isComplete: true),
+          ],
+        ),
+      ]);
+      final chain = makeChain([a, b]);
+
+      final chunks = await chain
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
+
+      // A's partial chunk is preserved, then B's complete stream follows.
+      expect(chunks.map((c) => c.content).toList(),
+          ['partial-', 'full-', 'answer']);
+      expect(chunks.last.isComplete, isTrue);
+      expect(a.streamCalls, 1);
+      expect(b.streamCalls, 1);
+    });
   });
 }

@@ -81,8 +81,31 @@ class FallbackChainClient implements LlmClient {
   }
 
   @override
-  Stream<LlmResponseChunk> stream(LlmRequest request) {
-    throw UnimplementedError();
+  Stream<LlmResponseChunk> stream(LlmRequest request) async* {
+    final errors = <String, Object>{};
+    for (final p in providers) {
+      final breaker = _breakers[p.id]!;
+      if (!breaker.attemptAllowed()) {
+        errors[p.id] = StateError('circuit open');
+        continue;
+      }
+      var emitted = 0;
+      try {
+        await for (final chunk in p.client.stream(request)) {
+          emitted += 1;
+          yield chunk;
+        }
+        breaker.recordSuccess();
+        return; // Stream completed on this provider.
+      } catch (error) {
+        breaker.recordFailure();
+        if (!_shouldAdvance(error)) rethrow;
+        // Mid-stream failures restart on the next provider (FR-004): the
+        // consumer keeps the partial chunks and receives a complete stream.
+        errors[p.id] = error;
+      }
+    }
+    throw LlmFallbackExhaustedException(errors);
   }
 
   @override
