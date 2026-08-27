@@ -25,7 +25,8 @@ void main() {
 
       expect(history.messages, hasLength(1));
       expect(
-        (history.messages.first.content.first as TextBlock).text,
+        ((history.messages.first as UserMessage).content.first as TextBlock)
+            .text,
         'recent',
       );
       expect(history.episodicMemories, hasLength(2));
