@@ -33,8 +33,8 @@
 ## Phase 4: US3 — pin shipped semantics (characterization)
 
 - [x] T009 [P] [US3] Pin tests: structural getters across the four canonical shapes (isLeaf/isRoot/hasBudgets) [A5] [U10] [U11] — expected green against shipped code (characterization, deliberate-mutant verified)
-- [x] T10 [P] [US3] Pin tests: value equality/hashCode across all ten fields with independently constructed lists (FR-006) [A6] [U12]
-- [x] T11 [P] [US3] Pin tests: clean-arch layers unchanged (11 pre-existing provider/entity tests stay green — FR-007, SC-003) [A7] [U13] [U14]
+- [x] T010 [P] [US3] Pin tests: value equality/hashCode across all ten fields with independently constructed lists (FR-006) [A6] [U12]
+- [x] T011 [P] [US3] Pin tests: clean-arch layers unchanged (11 pre-existing provider/entity tests stay green — FR-007, SC-003) [A7] [U13] [U14]
 
 ## Phase 5: Verification + docs
 
