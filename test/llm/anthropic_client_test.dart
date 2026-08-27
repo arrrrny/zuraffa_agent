@@ -161,5 +161,116 @@ void main() {
       );
       expect(response.finishReason, 'stop');
     });
+
+    test('U16: stream() parses message_start usage, thinking/text deltas, and message_delta stop reason + output usage', () async {
+      final transport = FakeLlmTransport(
+        provider: 'anthropic',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'event: message_start',
+              'data: {"type":"message_start","message":{"usage":{"input_tokens":25,"output_tokens":1}}}',
+              '',
+              'event: content_block_start',
+              'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
+              '',
+              'event: content_block_delta',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Hmm, weather."}}',
+              '',
+              'event: content_block_delta',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hel"}}',
+              '',
+              'event: content_block_delta',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"lo"}}',
+              '',
+              'event: message_delta',
+              'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":42}}',
+              '',
+              'event: message_stop',
+              'data: {"type":"message_stop"}',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks =
+          await client.stream(LlmRequest(messages: [UserMessage.text('hi')])).toList();
+
+      final thinking = chunks.where((c) => c.thinking != null).toList();
+      expect(thinking, hasLength(1));
+      expect(thinking.single.thinking, 'Hmm, weather.');
+
+      final text = chunks.where((c) => c.content != null).toList();
+      expect(text.map((c) => c.content).toList(), ['Hel', 'lo']);
+
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.finishReason, 'stop');
+      expect(last.usage,
+          equals(const LlmUsage(inputTokens: 25, outputTokens: 42)));
+    });
+
+    test('U17: tool_use blocks assemble from input_json_delta partial_json fragments', () async {
+      final transport = FakeLlmTransport(
+        provider: 'anthropic',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'data: {"type":"message_start","message":{"usage":{"input_tokens":10,"output_tokens":1}}}',
+              'data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_2","name":"get_weather","input":{}}}',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\\"ci"}}',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"ty\\": \\"Par"}}',
+              'data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"is\\"}"}}',
+              'data: {"type":"content_block_stop","index":0}',
+              'data: {"type":"message_delta","delta":{"stop_reason":"tool_use"},"usage":{"output_tokens":9}}',
+              'data: {"type":"message_stop"}',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('weather?')]))
+          .toList();
+
+      final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
+      expect(
+        toolChunk.toolCalls.single,
+        equals(const LlmToolCall(
+          id: 'toolu_2',
+          name: 'get_weather',
+          arguments: {'city': 'Paris'},
+        )),
+      );
+      expect(chunks.last.isComplete, isTrue);
+      expect(chunks.last.finishReason, 'tool_calls');
+    });
+
+    test('U18: a non-2xx response raises a typed error', () async {
+      final transport = FakeLlmTransport(
+        provider: 'anthropic',
+        script: [
+          const ScriptedResponse(
+            statusCode: 400,
+            body: '{"type":"error","error":{"type":"invalid_request_error"}}',
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      await expectLater(
+        client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 400)
+            .having((e) => e.provider, 'provider', 'anthropic')),
+      );
+      // Non-retryable 4xx: exactly one request, zero backoffs.
+      expect(transport.requests, hasLength(1));
+      expect(clock.sleeps, isEmpty);
+    });
   });
 }
