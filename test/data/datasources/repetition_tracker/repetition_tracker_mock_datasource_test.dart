@@ -132,5 +132,36 @@ void main() {
         expect(await ds.record('tool_a@1:hash1'), equals(1));
       });
     });
+
+    group('A6..A7 persistence contract + reset (cycle 4)', () {
+      test('A6: reset() zeroes all counts, clears every loop signal, preserves current() config', () async {
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 2),
+        );
+        final t0 = DateTime(2026, 1, 1, 12);
+        await ds.record('tool_a@1:hash1', at: t0);
+        await ds.record('tool_a@1:hash1', at: t0);
+        await ds.record('tool_b@1:hash2', at: t0);
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0), isTrue);
+
+        await ds.reset();
+
+        expect(await ds.count('tool_a@1:hash1', now: t0), equals(0));
+        expect(await ds.count('tool_b@1:hash2', now: t0), equals(0));
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0), isFalse);
+        expect(await ds.current(), equals(const RepetitionTracker(id: 'rt', maxCalls: 2)));
+      });
+
+      test('A7: record() returns the post-record in-window count (read-after-write)', () async {
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 5),
+        );
+        final t0 = DateTime(2026, 1, 1, 12);
+        expect(await ds.record('fresh@1:h', at: t0), equals(1));
+        expect(await ds.record('fresh@1:h', at: t0.add(const Duration(seconds: 1))), equals(2));
+        // A record outside the window does not inflate the returned count.
+        expect(await ds.record('fresh@1:h', at: t0.add(const Duration(seconds: 120))), equals(1));
+      });
+    });
   });
 }
