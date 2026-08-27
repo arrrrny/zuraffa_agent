@@ -1,0 +1,48 @@
+// Runtime lineage: ported from dart_agent_core (MIT License, Copyright (c)
+// 2024-2026 contributors) — see NOTICE. dart_agent_core is NOT a dependency
+// of this package (constitution VIII): re-implemented in-tree per
+// specs/010-episodic-memory/spec.md with this attribution retained.
+
+import '../types.dart';
+import '../domain/entities/episodic_memory/episodic_memory.dart';
+
+/// The conversation context the engine assembles for the model: the active
+/// [messages] plus the [episodicMemories] created by earlier compressions
+/// (spec 010 US1 AC2 / FR — "memory summaries are available for retrieval").
+///
+/// Spec 002's engine-loop integration consumes this value object when it
+/// builds the model prompt; the summaries are surfaced without the original
+/// messages so the active context stays small — the full originals are one
+/// `retrieve_memory` call away (see RetrieveMemoryTool).
+class AgentMessageHistory {
+  /// Active (uncompressed) conversation messages, oldest first.
+  final List<AgentMessage> messages;
+
+  /// Episodic memories from earlier compressions, in insertion order
+  /// (oldest first).
+  final List<EpisodicMemory> episodicMemories;
+
+  const AgentMessageHistory({
+    this.messages = const [],
+    this.episodicMemories = const [],
+  });
+
+  /// Memory summaries in insertion order — the compact, context-building
+  /// view of [episodicMemories].
+  List<String> get memorySummaries =>
+      [for (final memory in episodicMemories) memory.summary];
+
+  /// A history with additional active messages appended.
+  AgentMessageHistory appendMessages(Iterable<AgentMessage> more) =>
+      AgentMessageHistory(
+        messages: [...messages, ...more],
+        episodicMemories: episodicMemories,
+      );
+
+  /// A history with an additional episodic memory (insertion order).
+  AgentMessageHistory addMemory(EpisodicMemory memory) =>
+      AgentMessageHistory(
+        messages: messages,
+        episodicMemories: [...episodicMemories, memory],
+      );
+}
