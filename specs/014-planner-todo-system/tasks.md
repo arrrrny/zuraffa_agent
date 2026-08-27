@@ -1,0 +1,15 @@
+# Tasks: Planner/TODO System
+- [x] T1 Write the planner test suite first (TDD red): `test/data/providers/planner/planner_provider_test.dart` — StepStatus enum, PlanStep transitions, PlanState SC-001 progress accuracy + SC-003 five-turn persistence, PlanMode FR-003 semantics, Planner/WriteTodosTool FR-001 injectability + SC-002, PlanChangedEvent FR-005, clean-arch layer wiring.
+- [x] T2 Create `lib/src/domain/entities/planner/step_status.dart` (enum: pending, inProgress, completed, cancelled).
+- [x] T3 Create `lib/src/domain/entities/planner/plan_step.dart` (value object + copyWith + equality).
+- [x] T4 Create `lib/src/domain/entities/planner/plan_state.dart` (immutable snapshot + count/progress getters + pure update methods).
+- [x] T5 Create `lib/src/domain/entities/planner/plan_mode.dart` (enum: none, auto, must + injection/planning semantics).
+- [x] T6 Create `lib/src/domain/entities/planner/plan_changed_event.dart` (previous/next/emittedAt).
+- [x] T7 Create `lib/src/domain/entities/planner/write_todos_tool.dart` (canonical AgentTool declaration + params schema).
+- [x] T8 Create `lib/src/domain/entities/planner/planner.dart` (Planner value object exposing the tool per mode).
+- [x] T9 Create `lib/src/domain/repositories/plan_state_repository.dart` (abstract).
+- [x] T10 Create `lib/src/domain/services/planner_service.dart` (abstract, NoParams parameterless methods).
+- [x] T11 Create `lib/src/data/providers/planner/planner_provider.dart` (concrete stub).
+- [x] T12 Upload plan.md/tasks.md alongside spec.md.
+- [x] T13 `dart pub get && dart analyze --fatal-infos && dart test` all green (baseline 379 + new planner tests).
+- [x] T14 Commit + push + PR to master (repair commits for PR #58 breakage ride along on this branch).
