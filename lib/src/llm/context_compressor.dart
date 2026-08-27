@@ -7,6 +7,7 @@
 
 import '../compaction.dart'
     show CompactionSummarizer, HeuristicSummarizer, estimateContextTokens;
+
 import '../domain/entities/episodic_memory/episodic_memory.dart';
 import '../types.dart';
 import 'episodic_memory_store.dart';
@@ -93,7 +94,7 @@ class LLMBasedContextCompressor implements ContextCompressor {
       ));
       final snapshot = response.content;
       if (!_isValidSnapshot(snapshot)) {
-        return _heuristicFallback(compressed, preserved);
+        return await _heuristicFallback(compressed, preserved);
       }
       final memory = _storeSnapshot(snapshot, compressed);
       return CompressionResult(
@@ -104,7 +105,7 @@ class LLMBasedContextCompressor implements ContextCompressor {
         strategy: CompressionStrategy.llm,
       );
     } catch (_) {
-      return _heuristicFallback(compressed, preserved);
+      return await _heuristicFallback(compressed, preserved);
     }
   }
 
@@ -141,7 +142,39 @@ class LLMBasedContextCompressor implements ContextCompressor {
     List<AgentMessage> compressed,
     List<AgentMessage> preserved,
   ) async {
-    throw UnimplementedError();
+    final now = DateTime.now().toUtc();
+    final entries = [
+      for (var i = 0; i < compressed.length; i++)
+        MessageEntry(
+          id: 'heuristic_$i',
+          timestamp: now,
+          message: compressed[i],
+        ),
+    ];
+    final summary = await fallbackSummarizer.summarize(
+      cutEntries: entries,
+      keptEntries: const [],
+    );
+    final snapshot = StringBuffer('<state_snapshot>');
+    snapshot.write('<overall_goal>continue the mission</overall_goal>');
+    snapshot.write(
+        '<key_knowledge>${summary.decisions.join('; ')}</key_knowledge>');
+    snapshot.write('<file_system_state>see key knowledge</file_system_state>');
+    snapshot.write('<recent_actions>');
+    snapshot.write([...summary.toolNames, ...summary.keyResults].join('; '));
+    snapshot.write('</recent_actions>');
+    snapshot.write(
+        '<current_plan>${summary.planState ?? 'continue'}</current_plan>');
+    snapshot.write('</state_snapshot>');
+
+    final memory = _storeSnapshot(snapshot.toString(), compressed);
+    return CompressionResult(
+      snapshot: snapshot.toString(),
+      preservedMessages: List.unmodifiable(preserved),
+      compressedMessages: List.unmodifiable(compressed),
+      memory: memory,
+      strategy: CompressionStrategy.heuristic,
+    );
   }
 
   bool _shouldCompress(List<AgentMessage> messages) {

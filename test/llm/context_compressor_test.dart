@@ -109,5 +109,28 @@ void main() {
       expect(request.messages, hasLength(15));
       expect(request.messages.first, same(history.first));
     });
+
+    test('U6: an invalid XML snapshot (missing sections) falls back to the heuristic summarizer', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(
+            response: LlmResponse(content: 'sure, here is a summary without xml')),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 500, keepRecentMessages: 5),
+      );
+
+      final result = await compressor.compress(history);
+
+      expect(result.strategy, CompressionStrategy.heuristic);
+      // Heuristic fallback still produces the five-section XML shape.
+      expect(result.snapshot, contains('<state_snapshot>'));
+      expect(result.snapshot, contains('<overall_goal>'));
+      expect(result.snapshot, contains('<current_plan>'));
+      expect(result.compressedMessages, hasLength(15));
+      expect(result.preservedMessages, hasLength(5));
+    });
   });
 }
