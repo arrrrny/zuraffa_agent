@@ -1,6 +1,18 @@
 # Implementation Plan: ArtifactProvider.list NoParams override fix
 
-**Branch**: `011-artifact-provider-noparams-list` | **Date**: 2026-08-24 | **Spec**: [spec.md](./spec.md)
+**Branch**: `011-artifact-provider-noparams-list` | **Date**: 2026-08-24 (refined 2026-08-27) | **Spec**: [spec.md](./spec.md)
+
+> **Cycle amendment (2026-08-27)**: the hand-curated `ArtifactService` +
+> `ArtifactProvider` pair and the contract test landed via PR #32 (squash
+> 861362d) before this SDD cycle ran. This cycle therefore (a) unblocks the
+> build off-machine by removing the duplicate `dependency_overrides` key in
+> pubspec.yaml (the stray dev-machine path override — same fix as the
+> spec-007 stack), (b) completes the spec-kit artifacts (this plan, tasks,
+> TDD test-list/cycle-log/verification), and (c) performs a fresh TDD
+> verification: green re-run of the contract suite, `dart analyze` gates on
+> the pair, and deliberate-mutant checks including re-introducing the exact
+> #11 bug shape. No re-implementation: the merged files ARE the deliverable
+> this spec documents.
 
 **Input**: Feature specification from `/specs/011-artifact-provider-noparams-list/spec.md`
 

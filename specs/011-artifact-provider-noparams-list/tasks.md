@@ -4,37 +4,37 @@
 
 ## T1 — Create directory layout
 
-- [ ] T1.1 `mkdir -p lib/src/domain/services`
-- [ ] T1.2 `mkdir -p lib/src/data/providers/artifact`
-- [ ] T1.3 `mkdir -p test/data/providers/artifact`
+- [x] T1.1 `mkdir -p lib/src/domain/services`
+- [x] T1.2 `mkdir -p lib/src/data/providers/artifact`
+- [x] T1.3 `mkdir -p test/data/providers/artifact`
 
 ## T2 — Hand-curated service interface
 
-- [ ] T2.1 Write `lib/src/domain/services/artifact_service.dart` declaring `abstract class ArtifactService` with `Future<List<ArtifactRef>> list(NoParams params)` and `int thresholdBytes(NoParams params)`.
-- [ ] T2.2 Header comment: `// HAND-CURATED — see issue arrrrny/zuraffa_agent#11 — zfa generator does not yet ship a consistent ArtifactService/ArtifactProvider pair; this file is the canonical source until it does.` and imports `package:zuraffa/zuraffa.dart` (for `NoParams`) and `../entities/artifact_ref/artifact_ref.dart`.
-- [ ] T2.3 Run `dart analyze lib/src/domain/services/artifact_service.dart` — must report 0 issues.
+- [x] T2.1 Write `lib/src/domain/services/artifact_service.dart` declaring `abstract class ArtifactService` with `Future<List<ArtifactRef>> list(NoParams params)` and `int thresholdBytes(NoParams params)`.
+- [x] T2.2 Header comment: `// HAND-CURATED — see issue arrrrny/zuraffa_agent#11 — zfa generator does not yet ship a consistent ArtifactService/ArtifactProvider pair; this file is the canonical source until it does.` and imports `package:zuraffa/zuraffa.dart` (for `NoParams`) and `../entities/artifact_ref/artifact_ref.dart`.
+- [x] T2.3 Run `dart analyze lib/src/domain/services/artifact_service.dart` — must report 0 issues.
 
 ## T3 — Hand-curated provider stub
 
-- [ ] T3.1 Write `lib/src/data/providers/artifact/artifact_provider.dart` declaring `class ArtifactProvider implements ArtifactService`.
-- [ ] T3.2 Both methods (`list`, `thresholdBytes`) MUST declare the exact `NoParams params` parameter and MUST be decorated `@override`.
-- [ ] T3.3 Bodies are `async => throw UnimplementedError('Implement ArtifactProvider.<method>')` (for `list`) and `=> throw UnimplementedError(...)` (for `thresholdBytes`).
-- [ ] T3.4 Header comment block identical in spirit to T2.2.
-- [ ] T3.5 Run `dart analyze lib/src/data/providers/artifact/artifact_provider.dart` — must report 0 issues including no `invalid_override`.
+- [x] T3.1 Write `lib/src/data/providers/artifact/artifact_provider.dart` declaring `class ArtifactProvider implements ArtifactService`.
+- [x] T3.2 Both methods (`list`, `thresholdBytes`) MUST declare the exact `NoParams params` parameter and MUST be decorated `@override`.
+- [x] T3.3 Bodies are `async => throw UnimplementedError('Implement ArtifactProvider.<method>')` (for `list`) and `=> throw UnimplementedError(...)` (for `thresholdBytes`).
+- [x] T3.4 Header comment block identical in spirit to T2.2.
+- [x] T3.5 Run `dart analyze lib/src/data/providers/artifact/artifact_provider.dart` — must report 0 issues including no `invalid_override`.
 
 ## T4 — Regression test for the NoParams override
 
-- [ ] T4.1 Write `test/data/providers/artifact/artifact_provider_test.dart` with two tests:
+- [x] T4.1 Write `test/data/providers/artifact/artifact_provider_test.dart` with two tests:
   - `test('ArtifactProvider is an ArtifactService', () { expect(ArtifactProvider(), isA<ArtifactService>()); });`
   - `test('ArtifactProvider.list throws UnimplementedError on NoParams()', () async { await expectLater(ArtifactProvider().list(NoParams()), throwsA(isA<UnimplementedError>())); });`
   - `test('ArtifactProvider.thresholdBytes throws UnimplementedError on NoParams()', () { expect(() => ArtifactProvider().thresholdBytes(NoParams()), throwsA(isA<UnimplementedError>())); });`
-- [ ] T4.2 `dart test test/data/providers/artifact/artifact_provider_test.dart` — must pass all 3 tests.
+- [x] T4.2 `dart test test/data/providers/artifact/artifact_provider_test.dart` — must pass all 3 tests.
 
 ## T5 — Repo-wide gate
 
-- [ ] T5.1 `dart pub get` — succeeds.
-- [ ] T5.2 `dart analyze --fatal-infos` — exits 0, no new warnings.
-- [ ] T5.3 `dart test` — all pre-existing 129 tests still pass + 3 new ones = ≥132 tests passing.
+- [x] T5.1 `dart pub get` — succeeds.
+- [x] T5.2 `dart analyze --fatal-infos` — exits 0, no new warnings.
+- [x] T5.3 `dart test` — all pre-existing 129 tests still pass + 3 new ones = ≥132 tests passing.
 
 ## T6 — Commit + PR + merge + pull + re-test
 
