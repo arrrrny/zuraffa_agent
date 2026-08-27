@@ -49,8 +49,14 @@ class CircuitBreaker {
   }
 
   void recordFailure() {
-    _consecutiveFailures += 1;
     _lastFailureAt = clock.now();
+    if (_state == CircuitState.halfOpen) {
+      // A failed probe re-opens immediately with a fresh count.
+      _consecutiveFailures = 1;
+      _state = CircuitState.open;
+      return;
+    }
+    _consecutiveFailures += 1;
     if (_consecutiveFailures >= maxConsecutiveFailures) {
       _state = CircuitState.open;
     }

@@ -51,5 +51,27 @@ void main() {
       await clock.sleep(1);
       expect(breaker.state, CircuitState.halfOpen);
     });
+
+    test('U8: a half-open probe success closes the breaker; a probe failure re-opens it', () async {
+      final success = makeBreaker();
+      success.recordFailure();
+      success.recordFailure();
+      success.recordFailure();
+      await clock.sleep(60000);
+      expect(success.state, CircuitState.halfOpen);
+      success.recordSuccess();
+      expect(success.state, CircuitState.closed);
+      expect(success.consecutiveFailures, 0);
+
+      final failure = makeBreaker();
+      failure.recordFailure();
+      failure.recordFailure();
+      failure.recordFailure();
+      await clock.sleep(60000);
+      expect(failure.state, CircuitState.halfOpen);
+      failure.recordFailure();
+      expect(failure.state, CircuitState.open);
+      expect(failure.consecutiveFailures, 1);
+    });
   });
 }
