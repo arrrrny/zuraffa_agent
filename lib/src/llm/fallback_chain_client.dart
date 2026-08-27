@@ -66,7 +66,7 @@ class FallbackChainClient implements LlmClient {
         return response;
       } catch (error) {
         breaker.recordFailure();
-        if (error is LlmNetworkException) {
+        if (_shouldAdvance(error)) {
           lastError = error;
           continue; // Advance to the next provider.
         }
@@ -89,4 +89,17 @@ class FallbackChainClient implements LlmClient {
   }
 
   Map<String, ClientHealth> healthSnapshot() => throw UnimplementedError();
+
+  /// Advance-class errors (spec 008 FR-003): connection/timeout
+  /// ([LlmNetworkException]), 5xx, a 429 that exhausted the client's retry
+  /// budget, and context overflow. Other 4xx (auth, bad request) fail fast.
+  static bool _shouldAdvance(Object error) {
+    if (error is LlmNetworkException) return true;
+    if (error is LlmHttpException) {
+      if (error.statusCode >= 500) return true;
+      if (error.statusCode == 429) return true;
+      return false;
+    }
+    return false;
+  }
 }

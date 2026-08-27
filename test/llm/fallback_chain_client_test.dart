@@ -51,5 +51,56 @@ void main() {
       expect(a.generateCalls, 1);
       expect(b.generateCalls, 1);
     });
+
+    test('U11: generate() advances on 5xx and on a 429 that exhausted retries; fails fast on other 4xx', () async {
+      final chainFiveHundred = makeChain([
+        FakeLlmClient(providerName: 'a', outcomes: [
+          const ScriptedOutcome(
+              error: LlmHttpException(
+                  provider: 'a', statusCode: 500, body: 'boom')),
+        ]),
+        FakeLlmClient(providerName: 'b', outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'after-5xx')),
+        ]),
+      ]);
+      expect(
+          (await chainFiveHundred
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'after-5xx');
+
+      final chainRateLimited = makeChain([
+        FakeLlmClient(providerName: 'a', outcomes: [
+          const ScriptedOutcome(
+              error: LlmHttpException(
+                  provider: 'a', statusCode: 429, body: 'slow down')),
+        ]),
+        FakeLlmClient(providerName: 'b', outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'after-429')),
+        ]),
+      ]);
+      expect(
+          (await chainRateLimited
+                  .generate(LlmRequest(messages: [UserMessage.text('x')])))
+              .content,
+          'after-429');
+
+      final forbiddenA = FakeLlmClient(providerName: 'a', outcomes: [
+        const ScriptedOutcome(
+            error: LlmHttpException(
+                provider: 'a', statusCode: 403, body: 'forbidden')),
+      ]);
+      final forbiddenB = FakeLlmClient(providerName: 'b', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: 'never')),
+      ]);
+      final chainForbidden = makeChain([forbiddenA, forbiddenB]);
+      await expectLater(
+        chainForbidden.generate(LlmRequest(messages: [UserMessage.text('x')])),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 403)),
+      );
+      // Failed fast: provider B was never called.
+      expect(forbiddenB.generateCalls, 0);
+    });
   });
 }
