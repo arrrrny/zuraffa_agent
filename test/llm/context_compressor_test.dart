@@ -156,5 +156,31 @@ void main() {
       // The LLM was attempted (and only once).
       expect(client.generateCalls, 1);
     });
+
+    test('U8: compression creates an EpisodicMemory entry (snapshot + originals) retrievable from the store', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(providerName: 'compressor', outcomes: [
+        const ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+      ]);
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+            tokenThreshold: 500, keepRecentMessages: 5),
+      );
+
+      final result = await compressor.compress(history);
+
+      final memory = result.memory;
+      expect(memory, isNotNull);
+      expect(memory!.summary, fiveSectionSnapshot);
+      expect(memory.messages, hasLength(15));
+
+      // The entry is in the store and retrievable with its originals.
+      expect(compressor.store.entries, hasLength(1));
+      final retrieved = compressor.store.retrieve(memory.id);
+      expect(retrieved, isNotNull);
+      expect(retrieved!.summary, fiveSectionSnapshot);
+      expect(retrieved.messages, hasLength(15));
+    });
   });
 }
