@@ -94,4 +94,21 @@ void main() {
       }
     });
   });
+
+  group('spec 037 — estimator invariants (FR-003, characterization)', () {
+    test('U5 pin: pass@k is non-decreasing in k across 1..n-c', () {
+      // n=20, c=4 -> sweep k=1..16 (n-c=16). Larger draws hit a correct
+      // sample more easily under without-replacement sampling.
+      var previous = PassAtK.compute(n: 20, c: 4, k: 1).value;
+      for (var k = 2; k <= 16; k++) {
+        final current = PassAtK.compute(n: 20, c: 4, k: k).value;
+        expect(current >= previous, isTrue,
+            reason: 'pass@k decreased from k=${k - 1} to k=$k');
+        previous = current;
+      }
+      // Certainty begins at k = n-c+1 (the k-th product term hits zero:
+      // at k = n-c the value is 1 - 1/C(n,k) ~= 0.99979 for n=20, c=4).
+      expect(PassAtK.compute(n: 20, c: 4, k: 17).value, 1.0);
+    });
+  });
 }
