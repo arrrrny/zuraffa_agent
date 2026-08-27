@@ -4,7 +4,7 @@ loop: inside-out
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 8
 planned_at: a1934c3
-updated_at: a1934c3
+updated_at: f5c4e92
 suite_baseline: green
 ---
 
@@ -20,14 +20,14 @@ consumer uses.
 
 | id  | behavior                                                                       | traces   | kind    | state   | test                                                        |
 | --- | ------------------------------------------------------------------------------ | -------- | ------- | ------- | ----------------------------------------------------------- |
-| A1  | A success result with payload round-trips through JSON exactly                 | AC US1-1 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A2  | An error result round-trips with isError true and content preserved            | AC US1-2 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A3  | An error result without payload serializes without a payload key               | AC US1-3 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A4  | The oversized path yields summary + artifactRef + isSummarized true            | AC US2-1 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A5  | A summarized result's artifactRef survives the round-trip                      | AC US2-2 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A6  | An inline result is isSummarized false and serializes without artifactRef      | AC US2-3 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A7  | Equal results with distinct-but-equal payload instances share hashCode         | AC US3-1 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A8  | Results differing in content/payload/isError/artifactRef are unequal           | AC US3-2 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A1  | A success result with payload round-trips through JSON exactly                 | AC US1-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A2  | An error result round-trips with isError true and content preserved            | AC US1-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A3  | An error result without payload serializes without a payload key               | AC US1-3 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A4  | The oversized path yields summary + artifactRef + isSummarized true            | AC US2-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A5  | A summarized result's artifactRef survives the round-trip                      | AC US2-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A6  | An inline result is isSummarized false and serializes without artifactRef      | AC US2-3 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A7  | Equal results with distinct-but-equal payload instances share hashCode         | AC US3-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| A8  | Results differing in content/payload/isError/artifactRef are unequal           | AC US3-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
 
 ## Inner loop: unit behaviors
 
@@ -37,14 +37,14 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior                                                                       | traces         | kind    | state   | test                                                        |
 | --- | ------------------------------------------------------------------------------ | -------------- | ------- | ------- | ----------------------------------------------------------- |
-| U1  | success factory sets isError false; error factory sets isError true            | FR-002         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U2  | Default construction stays isError=false (backward compat)                     | FR-001         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U3  | isError participates in equality                                               | FR-002         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U4  | Payload hashing is order-independent across insertion orders                   | FR-006         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U5  | null payload equals null only — never an empty map                             | edge-1         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U6  | oversized constructor requires summary + artifactRef (assert contract)         | FR-004         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U7  | oversized error results are constructible (edge-5)                             | FR-004, edge-5 | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U8  | fromJson round-trips a ref with uri null (nullable uri survives)               | FR-003         | example | PENDING | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U1  | success factory sets isError false; error factory sets isError true            | FR-002         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U2  | Default construction stays isError=false (backward compat)                     | FR-001         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U3  | isError participates in equality                                               | FR-002         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U4  | Payload hashing is order-independent across insertion orders                   | FR-006         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U5  | null payload equals null only — never an empty map                             | edge-1         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U6  | oversized constructor requires summary + artifactRef (assert contract)         | FR-004         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U7  | oversized error results are constructible (edge-5)                             | FR-004, edge-5 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| U8  | fromJson round-trips a ref with uri null (nullable uri survives)               | FR-003         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
 
 ### `lib/src/data/providers/tool_result/` (layers untouched — FR-007)
 
