@@ -225,3 +225,35 @@ class LlmResponseChunk {
       'LlmResponseChunk(content: ${content == null ? "null" : content!.length} '
       'chars, complete: $isComplete)';
 }
+
+/// Typed error for a non-2xx provider response (spec 007 AC-3): carries the
+/// provider label, HTTP status code, response body, and response headers.
+class LlmHttpException implements Exception {
+  final String provider;
+  final int statusCode;
+  final String body;
+  final Map<String, String> headers;
+
+  const LlmHttpException({
+    required this.provider,
+    required this.statusCode,
+    required this.body,
+    this.headers = const {},
+  });
+
+  @override
+  @override
+  String toString() =>
+      'LlmHttpException: $provider returned HTTP $statusCode: $body';
+}
+
+/// Connection-level failure (no HTTP status arrived) — retryable class.
+class LlmNetworkException implements Exception {
+  final String provider;
+  final Object cause;
+
+  const LlmNetworkException({required this.provider, required this.cause});
+
+  @override
+  String toString() => 'LlmNetworkException: $provider: $cause';
+}

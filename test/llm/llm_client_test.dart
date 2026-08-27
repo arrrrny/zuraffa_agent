@@ -66,4 +66,19 @@ void main() {
       expect(done.usage, equals(usage));
     });
   });
+  group('LlmHttpException (U2)', () {
+    test('carries provider, statusCode, body, and a readable message', () {
+      final err = LlmHttpException(
+        provider: 'openai',
+        statusCode: 503,
+        body: '{"error":{"message":"overloaded"}}',
+      );
+      expect(err.provider, 'openai');
+      expect(err.statusCode, 503);
+      expect(err.body, '{"error":{"message":"overloaded"}}');
+      expect(err.toString(), contains('503'));
+      expect(err.toString(), contains('openai'));
+      expect(err.toString(), contains('overloaded'));
+    });
+  });
 }
