@@ -15,8 +15,12 @@ void main() {
     test('U1: fromResults derives n/c and equals compute on the triple', () {
       final outcomes = [
         true, false, true, true, false,
-        true, false, true, false, false, // 6 true, 4 false
+        true, false, true, false, true, // 6 true, 4 false
       ];
+      // Fixture precondition: count the trues explicitly so a future edit
+      // cannot silently drift the arithmetic again (misfire #3 root cause).
+      expect(outcomes.where((p) => p).length, 6, reason: 'fixture must hold 6 trues');
+      expect(outcomes.length, 10);
       final viaRun = PassAtK.fromResults(outcomes, k: 3);
       final direct = PassAtK.compute(n: 10, c: 6, k: 3);
       expect(viaRun.n, 10);
