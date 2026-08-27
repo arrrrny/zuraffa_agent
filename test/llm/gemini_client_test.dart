@@ -161,5 +161,101 @@ void main() {
       );
       expect(response.finishReason, 'stop');
     });
+
+    test('U20: stream() parses JSONL chunks into text parts and function calls, completing cleanly', () async {
+      final transport = FakeLlmTransport(
+        provider: 'gemini',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'data: {"candidates":[{"content":{"parts":[{"text":"Hel"}],"role":"model"},"index":0}]}',
+              '',
+              'data: {"candidates":[{"content":{"parts":[{"text":"lo"}],"role":"model"},"index":0}]}',
+              'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}],"role":"model"},"index":0,"finishReason":"STOP"}]}',
+              'data: {"candidates":[{"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":25,"candidatesTokenCount":9}}',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
+
+      expect(
+          chunks.where((c) => c.content != null).map((c) => c.content).toList(),
+          ['Hel', 'lo']);
+      final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
+      expect(
+        toolChunk.toolCalls.single,
+        equals(const LlmToolCall(
+          id: 'call_0',
+          name: 'get_weather',
+          arguments: {'city': 'Paris'},
+        )),
+      );
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.finishReason, 'stop');
+      expect(last.usage,
+          equals(const LlmUsage(inputTokens: 25, outputTokens: 9)));
+
+      final sent =
+          jsonDecode(transport.requests.single.body) as Map<String, dynamic>;
+      expect(sent.keys, contains('contents'));
+      expect(transport.requests.single.uri.toString(),
+          'https://api.test/v1beta/models/test-model:streamGenerateContent?alt=sse');
+    });
+
+    test('U21: a MALFORMED_FUNCTION_CALL finishReason surfaces in the response without throwing', () async {
+      final transport = FakeLlmTransport(
+        provider: 'gemini',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'data: {"candidates":[{"content":{"parts":[{"text":"Let me try a tool call."}],"role":"model"},"index":0}]}',
+              'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"bad_","args":{"truncated":true}}}],"role":"model"},"index":0,"finishReason":"MALFORMED_FUNCTION_CALL"}]}',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('do it')]))
+          .toList();
+
+      // No throw: the malformed call is surfaced as a tool call chunk plus a
+      // finishReason on the completing chunk.
+      expect(chunks, isNotEmpty);
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.finishReason, 'malformed_function_call');
+    });
+
+    test('U22: a non-2xx response raises a typed error', () async {
+      final transport = FakeLlmTransport(
+        provider: 'gemini',
+        script: [
+          const ScriptedResponse(
+            statusCode: 403,
+            body: '{"error":{"code":403,"message":"API key not valid"}}',
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      await expectLater(
+        client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(isA<LlmHttpException>()
+            .having((e) => e.statusCode, 'statusCode', 403)
+            .having((e) => e.provider, 'provider', 'gemini')),
+      );
+      expect(transport.requests, hasLength(1));
+      expect(clock.sleeps, isEmpty);
+    });
   });
 }
