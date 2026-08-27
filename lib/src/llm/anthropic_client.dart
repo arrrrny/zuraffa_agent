@@ -159,7 +159,7 @@ class AnthropicClient implements LlmClient {
   LlmHttpRequest _httpRequest(String body) => LlmHttpRequest(
         uri: Uri.parse('$baseUrl${baseUrl.endsWith('/') ? '' : '/'}messages'),
         headers: {
-          if (apiKey != null) 'x-api-key': apiKey!,
+          'x-api-key': ?apiKey,
           'anthropic-version': apiVersion,
           'content-type': 'application/json',
         },
