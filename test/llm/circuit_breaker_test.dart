@@ -73,5 +73,32 @@ void main() {
       expect(failure.state, CircuitState.open);
       expect(failure.consecutiveFailures, 1);
     });
+
+    test('U9: attempt gating blocks while open before cooldown, allows one probe after, and health() projects ClientHealth', () async {
+      final breaker = makeBreaker(cooldownWindowMs: 30000);
+      // No attemptAllowed yet: compile-time member; behavior asserted below.
+      expect(breaker.attemptAllowed(), isTrue); // closed -> allowed
+
+      breaker.recordFailure();
+      breaker.recordFailure();
+      breaker.recordFailure();
+      expect(breaker.state, CircuitState.open);
+      // Open before cooldown: attempts blocked.
+      expect(breaker.attemptAllowed(), isFalse);
+
+      // After cooldown: exactly one probe is allowed (half-open).
+      await clock.sleep(30000);
+      expect(breaker.attemptAllowed(), isTrue);
+      expect(breaker.state, CircuitState.halfOpen);
+
+      // health() projects the breaker into a ClientHealth snapshot.
+      final health = breaker.health();
+      expect(health.state, 'half-open');
+      expect(health.consecutiveFailures, 3);
+      expect(health.cooldownWindowMs, 30000);
+      expect(health.isHealthy, isFalse);
+      expect(health.id, isNotEmpty);
+      expect(health.lastFailureAt, isNotNull);
+    });
   });
 }

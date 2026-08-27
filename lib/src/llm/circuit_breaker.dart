@@ -62,5 +62,26 @@ class CircuitBreaker {
     }
   }
 
-  ClientHealth health() => throw UnimplementedError();
+  /// Whether a call may be attempted right now: closed always allows;
+  /// open allows nothing; half-open allows the single recovery probe.
+  bool attemptAllowed() {
+    final current = state; // Evaluates the lazy open -> half-open transition.
+    return current == CircuitState.closed || current == CircuitState.halfOpen;
+  }
+
+  /// Projects the breaker into a [ClientHealth] snapshot value.
+  ClientHealth health() {
+    final current = state;
+    return ClientHealth(
+      state: switch (current) {
+        CircuitState.closed => 'closed',
+        CircuitState.open => 'open',
+        CircuitState.halfOpen => 'half-open',
+      },
+      consecutiveFailures: _consecutiveFailures,
+      cooldownWindowMs: cooldownWindowMs,
+      lastFailureAt: _lastFailureAt ?? clock.now(),
+      isHealthy: current != CircuitState.open,
+    );
+  }
 }
