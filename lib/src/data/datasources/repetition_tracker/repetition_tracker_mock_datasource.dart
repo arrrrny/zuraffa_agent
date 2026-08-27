@@ -41,15 +41,16 @@ class RepetitionTrackerMockDatasource
   @override
   Future<int> record(String signature, {DateTime? at}) async {
     final occurredAt = at ?? _clock();
-    _events.putIfAbsent(signature, () => []).add(occurredAt);
-    return _events[signature]!.length;
+    final occurrences = _events.putIfAbsent(signature, () => []);
+    occurrences.add(occurredAt);
+    return _prune(occurrences, at: occurredAt).length;
   }
 
   @override
   Future<int> count(String signature, {DateTime? now}) async {
     final occurrences = _events[signature];
     if (occurrences == null) return 0;
-    return occurrences.length;
+    return _prune(occurrences, at: now ?? _clock()).length;
   }
 
   @override
@@ -61,4 +62,15 @@ class RepetitionTrackerMockDatasource
   @override
   Future<void> reset() async =>
       throw UnimplementedError('Implement RepetitionTrackerMockDatasource.reset');
+
+  /// Drops every occurrence that is expired at [at] — an occurrence is
+  /// expired when its age is >= the configured window (exactly `window`
+  /// old counts as expired; strictly younger is alive). Returns the
+  /// surviving list.
+  List<DateTime> _prune(List<DateTime> occurrences, {required DateTime at}) {
+    occurrences.removeWhere(
+      (occurredAt) => at.difference(occurredAt) >= _config.window,
+    );
+    return occurrences;
+  }
 }

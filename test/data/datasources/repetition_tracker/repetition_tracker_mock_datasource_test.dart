@@ -25,8 +25,9 @@ void main() {
         final t0 = DateTime(2026, 1, 1, 12);
         expect(await ds.record('tool_a@1:hash1', at: t0), equals(1));
         expect(await ds.record('tool_a@1:hash1', at: t0.add(const Duration(seconds: 1))), equals(2));
-        expect(await ds.count('tool_a@1:hash1'), equals(2));
-        expect(await ds.isLooping('tool_a@1:hash1'), isFalse);
+        final inWindow = t0.add(const Duration(seconds: 2));
+        expect(await ds.count('tool_a@1:hash1', now: inWindow), equals(2));
+        expect(await ds.isLooping('tool_a@1:hash1', now: inWindow), isFalse);
       });
 
       test('A2: the maxCalls-th in-window occurrence trips isLooping (inclusive)', () async {
@@ -37,7 +38,7 @@ void main() {
         for (var i = 0; i < 3; i++) {
           await ds.record('tool_a@1:hash1', at: t0.add(Duration(seconds: i)));
         }
-        expect(await ds.isLooping('tool_a@1:hash1'), isTrue);
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0.add(const Duration(seconds: 3))), isTrue);
       });
 
       test('A3: two signatures loop independently — counts are keyed per signature', () async {
@@ -48,10 +49,10 @@ void main() {
         await ds.record('tool_a@1:hash1', at: t0);
         await ds.record('tool_a@1:hash1', at: t0);
         await ds.record('tool_b@1:hash2', at: t0);
-        expect(await ds.count('tool_a@1:hash1'), equals(2));
-        expect(await ds.count('tool_b@1:hash2'), equals(1));
-        expect(await ds.isLooping('tool_a@1:hash1'), isTrue);
-        expect(await ds.isLooping('tool_b@1:hash2'), isFalse);
+        expect(await ds.count('tool_a@1:hash1', now: t0), equals(2));
+        expect(await ds.count('tool_b@1:hash2', now: t0), equals(1));
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0), isTrue);
+        expect(await ds.isLooping('tool_b@1:hash2', now: t0), isFalse);
       });
 
       test('U8: injectable clock drives evaluation when no explicit now is passed', () async {
@@ -72,8 +73,8 @@ void main() {
         final t0 = DateTime(2026, 1, 1, 12);
         await ds.record('tool_a@1:hash1', at: t0);
         final config = await ds.current();
-        final count = await ds.count('tool_a@1:hash1');
-        expect(await ds.isLooping('tool_a@1:hash1'), equals(config.isRepetition(count)));
+        final count = await ds.count('tool_a@1:hash1', now: t0);
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0), equals(config.isRepetition(count)));
       });
     });
 
@@ -84,7 +85,7 @@ void main() {
         );
         final t0 = DateTime(2026, 1, 1, 12);
         await ds.record('tool_a@1:hash1', at: t0);
-        await ds.record('tool_a@1:hash1', at: t0.add(const Duration(seconds: 10)));
+        await ds.record('tool_a@1:hash1', at: t0);
         expect(await ds.isLooping('tool_a@1:hash1', now: t0.add(const Duration(seconds: 30))), isTrue);
 
         final afterWindow = t0.add(const Duration(seconds: 61));
@@ -112,11 +113,10 @@ void main() {
           config: const RepetitionTracker(id: 'rt', maxCalls: 5, window: Duration(seconds: 60)),
           clock: () => now,
         );
-        // Recorded "10s ago" via explicit at: the write path must count it
-        // while it is alive...
-        final tenSecondsAgo = now.subtract(const Duration(seconds: 10));
-        expect(await ds.record('tool_a@1:hash1', at: tenSecondsAgo), equals(1));
-        // ...and prune it once the window has passed it by.
+        // Recorded "61s ago" via explicit at: the write path must prune it
+        // once the window has passed it by.
+        final beforeWindow = now.subtract(const Duration(seconds: 61));
+        expect(await ds.record('tool_a@1:hash1', at: beforeWindow), equals(1));
         expect(await ds.record('tool_a@1:hash1', at: now), equals(1));
       });
 
