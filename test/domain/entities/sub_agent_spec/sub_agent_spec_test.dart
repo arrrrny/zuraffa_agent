@@ -122,4 +122,84 @@ void main() {
       expect(toolUser.subAgents, hasLength(1));
     });
   });
+
+  group('spec 036 — SubAgentSpec budget validation (FR-003)', () {
+    test('U6: maxTurns 0 throws, maxTurns 1 is valid (both sides)', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'x',
+          description: 'x',
+          systemPrompt: 'x',
+          maxTurns: 0,
+        ),
+        throwsA(
+          isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('maxTurns')),
+        ),
+      );
+      final boundary = SubAgentSpec(
+        name: 'x',
+        description: 'x',
+        systemPrompt: 'x',
+        maxTurns: 1,
+      );
+      expect(boundary.maxTurns, 1);
+      expect(boundary.hasBudgets, isTrue);
+    });
+
+    test('U7: contextWindowTokens 0 throws, 1 is valid (both sides)', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'x',
+          description: 'x',
+          systemPrompt: 'x',
+          contextWindowTokens: 0,
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+              (e) => e.name, 'name', contains('contextWindowTokens')),
+        ),
+      );
+      final boundary = SubAgentSpec(
+        name: 'x',
+        description: 'x',
+        systemPrompt: 'x',
+        contextWindowTokens: 1,
+      );
+      expect(boundary.contextWindowTokens, 1);
+    });
+
+    test('U8: negative wallClockTimeout throws; Duration.zero and null valid', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'x',
+          description: 'x',
+          systemPrompt: 'x',
+          wallClockTimeout: const Duration(seconds: -1),
+        ),
+        throwsA(
+          isA<ArgumentError>().having(
+              (e) => e.name, 'name', contains('wallClockTimeout')),
+        ),
+      );
+      // Duration.zero is the documented "no wall-clock limit" sentinel — valid.
+      final zero = SubAgentSpec(
+        name: 'x',
+        description: 'x',
+        systemPrompt: 'x',
+        wallClockTimeout: Duration.zero,
+      );
+      expect(zero.wallClockTimeout, Duration.zero);
+      expect(zero.hasBudgets, isTrue);
+      // Null (inherit from parent) is valid and leaves hasBudgets to other
+      // fields.
+      final unset = SubAgentSpec(
+        name: 'x',
+        description: 'x',
+        systemPrompt: 'x',
+      );
+      expect(unset.wallClockTimeout, isNull);
+      expect(unset.hasBudgets, isFalse);
+    });
+  });
 }

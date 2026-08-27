@@ -120,6 +120,20 @@ class SubAgentSpec {
       throw ArgumentError.value(subAgents, 'subAgents',
           'must not contain blank sub-agent ids');
     }
+    // FR-003 (spec 036): budgets, when supplied, must be positive.
+    // Duration.zero stays valid — it is the documented "no wall-clock
+    // limit" sentinel; null always means "inherit from parent".
+    if (maxTurns != null && maxTurns! < 1) {
+      throw ArgumentError.value(maxTurns, 'maxTurns', 'must be >= 1 when set');
+    }
+    if (contextWindowTokens != null && contextWindowTokens! < 1) {
+      throw ArgumentError.value(contextWindowTokens, 'contextWindowTokens',
+          'must be >= 1 when set');
+    }
+    if (wallClockTimeout != null && wallClockTimeout!.isNegative) {
+      throw ArgumentError.value(wallClockTimeout, 'wallClockTimeout',
+          'must not be negative');
+    }
   }
 
   /// True for a leaf agent — cannot dispatch sub-agents ([subAgents]
