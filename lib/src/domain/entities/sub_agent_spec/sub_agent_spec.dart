@@ -109,6 +109,17 @@ class SubAgentSpec {
       throw ArgumentError.value(
           systemPrompt, 'systemPrompt', 'must not be empty');
     }
+    // FR-002 (spec 036): allowlist ids must be non-blank — a blank id in a
+    // YAML-loaded allowlist is loader drift that would silently widen or
+    // corrupt dispatch checks.
+    if (tools.any((id) => id.isEmpty)) {
+      throw ArgumentError.value(tools, 'tools',
+          'must not contain blank tool ids');
+    }
+    if (subAgents.any((id) => id.isEmpty)) {
+      throw ArgumentError.value(subAgents, 'subAgents',
+          'must not contain blank sub-agent ids');
+    }
   }
 
   /// True for a leaf agent — cannot dispatch sub-agents ([subAgents]

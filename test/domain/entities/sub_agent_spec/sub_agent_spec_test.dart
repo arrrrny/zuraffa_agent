@@ -70,4 +70,56 @@ void main() {
       expect(spec.riskTier, RiskTier.safe);
     });
   });
+
+  group('spec 036 — SubAgentSpec allowlist validation (FR-002)', () {
+    test('U4: blank tool id inside tools throws ArgumentError', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'explore',
+          description: 'Explore a topic broadly.',
+          systemPrompt: 'You are an explorer.',
+          tools: ['fs.read', ''],
+        ),
+        throwsA(
+          isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('tools')),
+        ),
+      );
+    });
+
+    test('U5: blank sub-agent name inside subAgents throws ArgumentError', () {
+      expect(
+        () => SubAgentSpec(
+          name: 'orchestrator',
+          description: 'Orchestrates sub-agents.',
+          systemPrompt: 'You are an orchestrator.',
+          subAgents: ['explore', ''],
+        ),
+        throwsA(
+          isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('subAgents')),
+        ),
+      );
+    });
+
+    test('U4/U5 boundary: empty allowlists and non-blank ids stay valid', () {
+      final leaf = SubAgentSpec(
+        name: 'explore',
+        description: 'Explore a topic broadly.',
+        systemPrompt: 'You are an explorer.',
+      );
+      expect(leaf.tools, isEmpty);
+      expect(leaf.subAgents, isEmpty);
+
+      final toolUser = SubAgentSpec(
+        name: 'composer',
+        description: 'Compose long-form content.',
+        systemPrompt: 'You are a composer.',
+        tools: ['fs.read', 'web.fetch'],
+        subAgents: ['explore'],
+      );
+      expect(toolUser.tools, hasLength(2));
+      expect(toolUser.subAgents, hasLength(1));
+    });
+  });
 }
