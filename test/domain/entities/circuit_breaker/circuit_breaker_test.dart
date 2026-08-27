@@ -157,7 +157,6 @@ void main() {
     });
 
     test('U3: malformed JSON throws ArgumentError naming the field', () {
-      const goodTs = '2026-08-24T09:00:00.000Z';
       expect(
         () => CircuitBreaker.fromJson(const {'failureThreshold': 3, 'cooldown': 30000000, 'halfOpenThreshold': 2}),
         throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'id')),
@@ -169,7 +168,15 @@ void main() {
         reason: 'missing failureThreshold',
       );
       expect(
-        () => CircuitBreaker.fromJson(const {'id': 'b', 'failureThreshold': 3, 'cooldown': 30000000, 'halfOpenThreshold': 2, 'state': 'exploded'}),
+        () => CircuitBreaker.fromJson(const {
+          'id': 'b',
+          'failureThreshold': 3,
+          'cooldown': 30000000,
+          'halfOpenThreshold': 2,
+          'failureCount': 0,
+          'halfOpenSuccesses': 0,
+          'state': 'exploded',
+        }),
         throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'state')),
         reason: 'unknown state',
       );
@@ -179,7 +186,7 @@ void main() {
         reason: 'threshold below 1',
       );
       expect(
-        () => CircuitBreaker.fromJson(const {'id': 'b', 'failureThreshold': 3, 'cooldown': 0, 'halfOpenThreshold': 2}),
+        () => CircuitBreaker.fromJson(const {'id': 'b', 'failureThreshold': 3, 'cooldown': 0, 'halfOpenThreshold': 2, 'failureCount': 0, 'halfOpenSuccesses': 0}),
         throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'cooldown')),
         reason: 'non-positive cooldown',
       );
@@ -189,7 +196,15 @@ void main() {
         reason: 'negative counter',
       );
       expect(
-        () => CircuitBreaker.fromJson(const {'id': 'b', 'failureThreshold': 3, 'cooldown': 30000000, 'halfOpenThreshold': 2, 'openedAt': 'not-a-timestamp'}),
+        () => CircuitBreaker.fromJson(const {
+          'id': 'b',
+          'failureThreshold': 3,
+          'cooldown': 30000000,
+          'halfOpenThreshold': 2,
+          'failureCount': 0,
+          'halfOpenSuccesses': 0,
+          'openedAt': 'not-a-timestamp',
+        }),
         throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'openedAt')),
         reason: 'unparseable timestamp',
       );
