@@ -39,6 +39,33 @@ class AgentMessageHistory {
         episodicMemories: episodicMemories,
       );
 
+  /// A history truncated to the LAST [keep] active messages (oldest
+  /// evicted first — context-window eviction order, spec 041 FR-004).
+  /// Episodic memories ride along untouched: truncation never loses a
+  /// memory summary. `keep` of 0 yields an empty active window; negative
+  /// [keep] throws [ArgumentError]. Pure — the receiver is unchanged.
+  AgentMessageHistory truncate(int keep) {
+    if (keep < 0) {
+      throw ArgumentError.value(keep, 'keep', 'must not be negative');
+    }
+    if (keep == 0) {
+      return AgentMessageHistory(
+        messages: const [],
+        episodicMemories: episodicMemories,
+      );
+    }
+    if (keep >= messages.length) {
+      return AgentMessageHistory(
+        messages: messages,
+        episodicMemories: episodicMemories,
+      );
+    }
+    return AgentMessageHistory(
+      messages: messages.sublist(messages.length - keep),
+      episodicMemories: episodicMemories,
+    );
+  }
+
   /// A history with an additional episodic memory (insertion order).
   AgentMessageHistory addMemory(EpisodicMemory memory) =>
       AgentMessageHistory(
