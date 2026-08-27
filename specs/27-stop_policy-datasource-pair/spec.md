@@ -16,7 +16,7 @@ As the engine loop, I read the currently active StopPolicy (max turns, wall-cloc
 
 **Why this priority**: The stop policy is the safety surface bounding every mission (spec 002 US4); reading it correctly through the clean-arch chain is the load-bearing behavior all other stories build on.
 
-**Independent Test**: Seed the mock datasource with a policy; `StopPolicyProvider.current(NoParams())` must return exactly that policy through repository delegation.
+**Independent Test**: Seed the mock datasource with a policy; `StopPolicyProvider.current(NoParams())` must return exactly that policy through the datasource.
 
 **Acceptance Scenarios**:
 
@@ -46,11 +46,11 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 
 **Why this priority**: The datasource pair is the seam that keeps storage out of the engine; the wiring must be pinned by tests so backends can be replaced.
 
-**Independent Test**: A repository implementation built over any conforming datasource passes the same read/update/reset behaviors; the provider delegates to the repository, never to a concrete datasource.
+**Independent Test**: A repository implementation built over any conforming datasource passes the same read/update/reset behaviors; the provider consumes the datasource through its interface (constructor-injectable), never a concrete implementation.
 
 **Acceptance Scenarios**:
 
-1. **Given** the provider is constructed with a repository over the mock datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state).
+1. **Given** the provider is constructed over a datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state); the repository consumes the same datasource for id-keyed access.
 2. **Given** `getCurrent` is called with an id that matches no stored policy, **Then** a typed error surfaces (no silent default substitution — a wrong-id read is a wiring bug).
 
 ### Edge Cases
@@ -68,8 +68,8 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 - **FR-002**: The datasource interface MUST define the persistence contract for the single-instance value object: `current()`, `update(policy)`, `reset()` — all asynchronous.
 - **FR-003**: The mock datasource MUST implement the contract in memory: seeded with the default, `update` fully replaces, `reset` restores the default, `current` returns the live value.
 - **FR-004**: A concrete repository (`StopPolicyRepositoryImpl`) MUST implement the domain `StopPolicyRepository` (`getCurrent(id)`, `update(policy)`, `reset(id)`) by delegating to the datasource, raising `StateError` on an id mismatch.
-- **FR-005**: The provider MUST implement the domain `StopPolicyService` (`current(NoParams)`, `defaultPolicy(NoParams)`) by consuming the repository — `current` delegates to `getCurrent`, `defaultPolicy` returns the canonical default constant.
-- **FR-006**: Constructor backward compatibility MUST hold: `StopPolicyProvider()` and `StopPolicyMockDatasource()` parameterless constructions keep compiling; the provider defaults its wiring to a repository over a fresh mock datasource.
+- **FR-005**: The provider MUST implement the domain `StopPolicyService` (`current(NoParams)`, `defaultPolicy(NoParams)`) by consuming the datasource's id-less `current()` for the live policy (the service surface is id-less by design — `NoParams`), and by returning the canonical default constant for `defaultPolicy`. The repository remains the id-keyed domain-facing seam over the same datasource; both consume the datasource.
+- **FR-006**: Constructor backward compatibility MUST hold: `StopPolicyProvider()` and `StopPolicyMockDatasource()` parameterless constructions keep compiling; the provider defaults its wiring to a fresh mock datasource.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -85,7 +85,7 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 
 - **SC-001**: read-after-update: `update(p)` then `current()` returns `p` (AC US2-1).
 - **SC-002**: reset restores the documented default through the whole chain (AC US2-2).
-- **SC-003**: the provider serves reads through the repository over the datasource — a policy seeded into the datasource is returned by `StopPolicyProvider.current(NoParams())` (AC US1-2, US3-1).
+- **SC-003**: the provider serves the id-less read through the datasource — a policy seeded into the datasource is returned by `StopPolicyProvider.current(NoParams())` (AC US1-2, US3-1); the repository serves the id-keyed reads over the same datasource (AC US3-2).
 - **SC-004**: unknown-id reads raise `StateError` (AC US3-2, edge-1).
 - **SC-005**: `dart analyze` zero new issues; full `dart test` green (post-spec-25 baseline: 544 passed / 5 pre-existing analyze issues).
 

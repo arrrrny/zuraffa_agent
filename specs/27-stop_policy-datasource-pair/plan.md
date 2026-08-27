@@ -81,7 +81,7 @@ Key decisions:
 
 1. **`StopPolicy.defaultPolicy` static const** on the entity — single source of truth for `maxTurns=100, wallClockTimeout=0, repetitionThreshold=5, enabled=true, id='default'`; the mock's reset target and the provider's `defaultPolicy` both reference it.
 2. **Repository raises `StateError` on id mismatch** (`getCurrent('unknown')`) — wrong-id reads are wiring bugs and must not be silently substituted (edge-1). `update` stores the policy verbatim (full replace), so a changed id makes the old id unreachable.
-3. **Provider defaults its wiring** — parameterless `StopPolicyProvider()` keeps compiling (FR-006) by defaulting to `StopPolicyRepositoryImpl(StopPolicyMockDatasource())`; constructor injection accepts any repository for tests and backend swaps.
+3. **Provider defaults its wiring** — parameterless `StopPolicyProvider()` keeps compiling (FR-006) by defaulting to a fresh `StopPolicyMockDatasource()` behind the datasource interface; constructor injection accepts any datasource for tests and backend swaps. Design correction (TDD cycle 4 red): the service surface is id-less (`NoParams`), so the provider consumes the datasource's id-less `current()` directly — an id-keyed `getCurrent(id)` delegation cannot serve an arbitrary active policy. The repository stays the id-keyed domain seam; both consume the datasource ("how the service/repository consume it").
 4. **Enforcement stays out** — the pair persists and serves the policy; turn-count comparisons belong to the engine loop (spec 002/046). Tests never assert stop-condition firing.
 
 ## Meticulous Analysis / Risk Assessment
@@ -97,7 +97,7 @@ Key decisions:
 Phase 1 — Entity: add `StopPolicy.defaultPolicy` constant (test-first: default surface + values).
 Phase 2 — Datasource: extend interface with `update`; implement mock in memory.
 Phase 3 — Repository: `StopPolicyRepositoryImpl` over the datasource with `StateError` on id mismatch.
-Phase 4 — Provider: rewrite to consume the repository; keep parameterless default wiring.
+Phase 4 — Provider: rewrite to consume the datasource (id-less read); keep parameterless default wiring.
 Phase 5 — Tests: datasource pair behavior + full-chain consumption; green suite + clean analyze.
 
 All behavioral phases run through the TDD loop with recorded red evidence.
