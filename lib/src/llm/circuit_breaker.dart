@@ -81,7 +81,8 @@ class CircuitBreaker {
       consecutiveFailures: _consecutiveFailures,
       cooldownWindowMs: cooldownWindowMs,
       lastFailureAt: _lastFailureAt ?? clock.now(),
-      isHealthy: current != CircuitState.open,
+      // Only a closed breaker is healthy; half-open is still probing.
+      isHealthy: current == CircuitState.closed,
     );
   }
 }
