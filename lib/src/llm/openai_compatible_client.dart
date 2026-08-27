@@ -41,7 +41,7 @@ class OpenAiCompatibleClient implements LlmClient {
   Future<LlmResponse> generate(LlmRequest request) async {
     final response = await sendWithRetry(
       transport: transport,
-      request: _httpRequest(_buildBody(request, stream: false)),
+      request: _httpRequest(jsonEncode(_buildBody(request, stream: false))),
       config: retryConfig,
       clock: clock,
       provider: providerName,
