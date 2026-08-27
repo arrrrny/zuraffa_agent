@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-27
 
-**Status**: Draft
+**Status**: Approved *(refined by /speckit.specify — added acceptance-criterion ids AC-1..AC-6; mapped the draft's `ModelMessage` onto this engine's `AgentMessage` model (tool calls live in `AssistantMessage.content` as `ToolCallBlock`s); pinned the tool-call signature contract (name + argument map, key-order-insensitive, call-id-insensitive), the streak semantics (a different signature resets; intervening tool-result/user messages do not), the stagnation-diagnosis cadence (first check at llmCheckAfterTurns, then every llmCheckInterval turns), and the fail-open diagnosis contract (unparseable LLM output never stops a mission)*
 
 **Input**: Gap analysis vs dart_agent_core — zuraffa_agent has basic StopPolicy (maxTurns, timeout, repetition) but no LLM-based cognitive stagnation detection.
 
@@ -20,7 +20,9 @@ As the engine, I detect when the model repeats the same tool call with the same 
 
 **Acceptance Scenarios**:
 
-1. **Given** the same tool call (name + args) repeated N times, **When** the threshold is reached, **Then** a loop is detected and the mission stops.
+1. **Given** the same tool call signature (name + arguments) repeated `toolLoopThreshold` times in succession, **When** the threshold is reached, **Then** a loop is detected (isLoop=true, reason "tool_call_loop", confidence 1.0) and the mission should stop. **[AC-1]**
+2. **Given** a tool-call streak interrupted by a *different* tool call, **When** the different call is observed, **Then** the streak resets and no loop is detected from the earlier run. **[AC-2]**
+3. **Given** tool-result or user messages interleaved between identical tool calls, **When** the detector observes them, **Then** they do not reset the streak (a call→result→call→result chain still accumulates). **[AC-3]**
 
 ### User Story 2 - LLM-based stagnation detection (Priority: P1)
 
@@ -32,9 +34,9 @@ As the engine, after a configurable number of turns, I periodically send recent 
 
 **Acceptance Scenarios**:
 
-1. **Given** llmCheckAfterTurns=30, **When** 30 turns pass, **Then** an LLM diagnosis is triggered.
-2. **Given** the LLM diagnoses stagnation with confidence > 0.8, **When** the diagnosis returns, **Then** the loop is detected and the mission stops.
-3. **Given** a diagnosis below the confidence threshold, **When** it returns, **Then** the mission continues normally.
+1. **Given** llmCheckAfterTurns=30, **When** 30 turns pass, **Then** an LLM diagnosis is triggered (exactly one LLM call at the boundary). **[AC-4]**
+2. **Given** the LLM diagnoses stagnation with confidence > stagnationThreshold (default 0.8), **When** the diagnosis returns, **Then** the loop is detected and the mission stops. **[AC-5]**
+3. **Given** a diagnosis below the confidence threshold, **When** it returns, **Then** the mission continues normally (no detection). **[AC-6]**
 
 ### User Story 3 - Configurable thresholds (Priority: P2)
 
@@ -46,7 +48,7 @@ As an operator, I configure the loop detection parameters: tool call repetition 
 
 **Acceptance Scenarios**:
 
-1. **Given** custom thresholds, **When** detection runs, **Then** the configured thresholds are used.
+1. **Given** custom thresholds, **When** detection runs, **Then** the configured thresholds are used. **[AC-1/AC-4/AC-6 with non-default settings]**
 
 ## Requirements *(mandatory)*
 
@@ -60,20 +62,30 @@ As an operator, I configure the loop detection parameters: tool call repetition 
 
 ### Key Entities
 
-- **LoopDetector** (interface): detect(ModelMessage) → LoopDetectorResult
-- **DefaultLoopDetector**: tool-loop + LLM-based detection
-- **LoopDetectorResult**: isLoop, reason, confidence
-- **LoopDetectorConfig**: toolLoopThreshold, llmCheckAfterTurns, llmCheckInterval, stagnationThreshold
+- **LoopDetector** (interface): `Future<LoopDetectorResult> observe(AgentMessage message)` — one call per message as the conversation progresses (the draft's `detect(ModelMessage)` mapped onto the engine's AgentMessage model).
+- **DefaultLoopDetector**: tool-loop streak tracking + LLM-based stagnation diagnosis (uses the spec-007 `LlmClient` contract).
+- **LoopDetectorResult**: isLoop, reason, confidence (+ turnNumber at observation time).
+- **LoopDetectorConfig**: toolLoopThreshold (default 5), llmCheckAfterTurns (default 30), llmCheckInterval (default 5), stagnationThreshold (default 0.8), plus diagnosisWindowMessages (default 20 — how much recent history the diagnosis prompt carries).
+- **Tool call signature**: tool name + JSON-normalized argument map (sorted keys — key-order-insensitive; call `id` excluded — every engine call gets a fresh id, so the loop signal is name+arguments).
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: 5 identical tool calls are detected as a loop.
-- **SC-002**: 30+ turns of stagnation are detected via LLM diagnosis.
-- **SC-003**: False positives are below 5% on non-stagnant missions.
+- **SC-001**: 5 identical tool calls are detected as a loop (default threshold).
+- **SC-002**: 30+ turns of stagnation are detected via LLM diagnosis (scripted stagnation verdict).
+- **SC-003**: False positives are below 5% on non-stagnant missions — pinned deterministically: 50 varied tool calls and 50 varied assistant turns with non-stagnant diagnoses produce zero detections.
+- **SC-004**: `dart analyze` reports zero issues in files added by this feature; the full suite adds no new failures vs. the spec-010 baseline (+469 passed / 6 unrelated pre-existing loading failures).
 
 ## Dependencies
 
 - After: spec 007 (LLM clients for stagnation diagnosis)
 - Feeds: spec 002 (engine loop uses loop detector)
+
+## Assumptions
+
+- "Turn" = one assistant message; the engine will call `observe()` once per message (spec 002 wires the engine integration; this spec ships the detector).
+- The stagnation diagnosis prompt asks the LLM for a JSON verdict `{"isStagnant": bool, "confidence": number, "reason": string}`; a verdict that fails to parse is fail-open (no detection, error surfaced on the result) — a malformed diagnosis must never stop a mission by itself.
+- The LLM client is optional at construction: without one, DefaultLoopDetector still performs tool-loop detection (pure heuristic path) and never triggers a diagnosis.
+- Stagnation checks repeat every `llmCheckInterval` turns after the first `llmCheckAfterTurns` boundary; a stagnation hit is terminal (the detector keeps reporting the detection on subsequent observations until reset).
+- The detector holds no `dart:io` dependencies (constitution VII) and carries dart_agent_core-lineage attribution (VIII).
