@@ -6,7 +6,7 @@
 
 ## Summary
 
-Complete the value-object semantics the task names: add the `isError` discriminator with `success`/`error` factories, add JSON round-trip serialization (`toJson`/`fromJson` with nested artifactRef), add the oversized-result path (`ToolResult.oversized` requiring summary + artifactRef), and fix the scaffolded `hashCode` contract violation (payload excluded from hashing while participating in equality — distinct-but-equal map instances hash differently under Dart's identity-based map hashing). The service/provider layers keep their signatures and stubs (compile parity pinned).
+Complete the value-object semantics the task names: add the `isError` discriminator with `success`/`error` factories, add JSON round-trip serialization (`toJson`/`fromJson` with nested artifactRef), add the oversized-result path (`ToolResult.oversized` requiring summary + artifactRef), and strengthen the scaffolded `hashCode` (payload excluded from hashing — contract-legal but payload-only differences collide deterministically; the refinement folds payload entries in an order-independent commutative sum). The service/provider layers keep their signatures and stubs (compile parity pinned).
 
 ## Technical Context
 
@@ -82,13 +82,13 @@ Key decisions:
 ## Meticulous Analysis / Risk Assessment
 
 - **Risk: breaking the 7 existing tests.** The existing test file constructs `ToolResult(content:..., structuredPayload:..., artifactRef:...)` — the additive defaulted `isError` keeps those compiling and passing; equality additions (`isError`) don't affect cases where both sides default false. The existing hashCode test doesn't exist (only equality) — the new contract is strictly stronger.
-- **Risk: hashCode/equality contract on maps.** Dart maps use identity hashing; the fold over entries must be order-independent (sorted or commutative combine — `Object.hash` combine via fold is order-DEPENDENT, so fold over `entries` sorted by key, or use a commutative combiner like XOR/sum of per-entry hashes). Chosen: sum of `Object.hash(key, value)` per entry — commutative, order-independent.
+- **Risk: hashCode/equality contract on maps.** Dart maps use identity hashing; folding the map object itself would violate ==/hashCode for equal results with distinct instances. The fold over entries must be order-independent: chosen combiner is a SUM of per-entry `Object.hash(key, value)` — commutative, order-independent. Verification finding (recorded in cycle-log): the SCAFFOLD also satisfies the ==/hashCode contract (it never touches the map); its weakness is distribution (payload-only differences always collide), so A7 is a regression guard, not a bug-fix proof.
 - **Risk: fromJson type coercion.** Payload arrives as `Map<String, dynamic>` from jsonDecode; cast defensively, treat non-map payload as error (ArgumentError) rather than silent null.
 - **Risk: oversized error bodies.** Allowed by design (edge-5) — `oversized` takes `isError` too.
 
 ## Implementation Phases
 
-Phase 1 — isError + factories + equality/hashCode fix (test-first: the hashCode contract red is the scaffold's live bug).
+Phase 1 — isError + factories + equality/hashCode strengthening (test-first; A7/U4 double as contract regression guards — verified green against both implementations).
 Phase 2 — serialization round-trip (test-first).
 Phase 3 — oversized path (test-first).
 Phase 4 — Gates: full suite + analyze; existing provider tests untouched and passing.

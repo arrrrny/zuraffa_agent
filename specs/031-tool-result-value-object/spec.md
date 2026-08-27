@@ -46,9 +46,9 @@ As the engine (spec 003 US4), when a tool returns a body beyond the size thresho
 
 As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing per spec 060), so equal results must hash equally — including when their structuredPayload maps are distinct-but-equal map instances.
 
-**Why this priority**: The scaffolded `hashCode` hashes only `content + artifactRef`; Dart maps hash by identity, so two equal results with equal-but-distinct payload instances hash differently — a live `==`/`hashCode` contract violation that corrupts any hash-based consumer.
+**Why this priority**: The scaffolded `hashCode` hashes only `content + artifactRef`, so the payload is invisible to the hash — contract-legal (equal results always hash equally), but unequal results differing only in payload collide 100% of the time, degrading every hash-based consumer (set dedup, replay diff maps). The refinement folds the payload in order-independently.
 
-**Independent Test**: Two results with equal content, equal payload (distinct map instances), and equal artifactRef are `==` AND share `hashCode`.
+**Independent Test**: Two results with equal content, equal payload (distinct map instances), and equal artifactRef are `==` AND share `hashCode`; hash quality is regression-guarded by the order-independence test.
 
 **Acceptance Scenarios**:
 
@@ -72,7 +72,7 @@ As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing p
 - **FR-003**: `toJson()` MUST produce a JSON map with `content`, `structuredPayload` (null-safe), `artifactRef` (nested kind/id/uri, null-safe), and `isError`; `ToolResult.fromJson` MUST round-trip all four fields exactly.
 - **FR-004**: The oversized path (`ToolResult.oversized`) MUST require a summary and an artifactRef; such results report `isSummarized == true` (artifactRef non-null).
 - **FR-005**: `isSummarized` MUST remain the derived getter (artifactRef != null) — true for any result carrying a ref, false otherwise; serialization omits a null artifactRef.
-- **FR-006**: Equality MUST compare content, structuredPayload (deep map equality), isError, and artifactRef; `hashCode` MUST be consistent with equality — equal results (including distinct-but-equal payload instances) hash equally (order-independent payload hashing).
+- **FR-006**: Equality MUST compare content, structuredPayload (deep map equality), isError, and artifactRef; `hashCode` MUST be consistent with equality (equal results — including distinct-but-equal payload instances, any insertion order — hash equally) and MUST fold the payload in an order-independent way so payload-only differences stop colliding deterministically.
 - **FR-007**: The clean-arch layers (`ToolResultService.current/count`, `ToolResultProvider`) MUST keep their existing signatures and compile parity; the provider stubs remain UnimplementedError (no behavioral change in this feature — the value object semantics are the deliverable).
 
 ### Key Entities *(include if feature involves data)*
@@ -88,7 +88,7 @@ As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing p
 - **SC-001**: success/error round-trips preserve all fields including isError (AC US1-1..3).
 - **SC-002**: the oversized path produces summary + artifactRef + `isSummarized` true, surviving round-trip (AC US2-1..2).
 - **SC-003**: inline results serialize without artifactRef and report `isSummarized` false (AC US2-3).
-- **SC-004**: equal results with distinct-but-equal payload instances share hashCode (AC US3-1) — the scaffold's live contract violation, fixed.
+- **SC-004**: equal results with distinct-but-equal payload instances share hashCode (AC US3-1) — contract regression guard; the refined fold additionally removes the scaffold's deterministic payload-only collisions.
 - **SC-005**: field-different results are unequal across all four axes (AC US3-2).
 - **SC-006**: `dart analyze` zero new issues; full `dart test` green (post-spec-29 baseline: 562 passed / 5 pre-existing analyze issues).
 
