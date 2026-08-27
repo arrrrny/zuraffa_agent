@@ -144,5 +144,31 @@ void main() {
       // Deterministic jitter (half the core delay, capped overall).
       expect(await delays((m) => m ~/ 2), [150, 250, 250, 250]);
     });
+
+    test('U9: a Retry-After header overrides the computed backoff delay', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(
+            statusCode: 429,
+            headers: {'retry-after': '7'},
+            body: 'rate limited',
+          ),
+          const ScriptedResponse(statusCode: 200, body: '{}'),
+        ],
+      );
+
+      await sendWithRetry(
+        transport: transport,
+        request: request,
+        config: const RetryConfig(
+            maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+        clock: clock,
+        provider: 'openai',
+        jitter: (_) => 0,
+      );
+
+      expect(clock.sleeps, [7000]);
+    });
   });
 }

@@ -60,8 +60,18 @@ Future<LlmHttpResponse> sendWithRetry({
         headers: response.headers,
       );
     }
-    await clock.sleep(_delayFor(attempt, config, jitter));
+    await clock.sleep(
+        _retryAfterMs(response.headers) ??
+            _delayFor(attempt, config, jitter));
   }
+}
+
+/// Parses a `Retry-After` header (seconds form). A server directive is
+/// honored as-is: it is NOT clamped by [RetryConfig.maxDelayMs].
+int? _retryAfterMs(Map<String, String> headers) {
+  final raw = headers['retry-after'] ?? headers['Retry-After'];
+  if (raw == null) return null;
+  return int.tryParse(raw.trim())?.clamp(0, 3600) * 1000;
 }
 
 int _delayFor(
