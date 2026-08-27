@@ -85,6 +85,11 @@ class AnthropicClient implements LlmClient {
                 ((message['usage'] as Map?)?['input_tokens'] as num?)
                         ?.toInt() ??
                     usage.inputTokens,
+            cachedTokens:
+                ((message['usage'] as Map?)?['cache_read_input_tokens']
+                        as num?)
+                    ?.toInt() ??
+                usage.cachedTokens,
           );
         case 'content_block_start':
           final block = (event['content_block'] as Map?) ?? const {};
