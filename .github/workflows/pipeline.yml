@@ -31,6 +31,12 @@ jobs:
           # interface-backed I/O adapters listed below. Any new file that
           # imports dart:io fails this gate until it is consciously reviewed
           # and added here with a justification.
+          #
+          # The grep matches import/export DIRECTIVES only — not raw text.
+          # Matching the bare string "dart:io" was a false-positive factory:
+          # pure-Dart files whose doc comments explain they do NOT use
+          # dart:io (e.g. llm_clock.dart, llm_transport.dart) tripped the
+          # gate on master after the spec-007 stack merged.
           ALLOWED="lib/src/execution_env.dart
           lib/src/hive_session_store.dart
           lib/src/session_storage_impl.dart
@@ -44,7 +50,7 @@ jobs:
               echo "::error::dart:io import in non-adapter file: $f"
               BAD=1
             fi
-          done < <(grep -rl "dart:io" lib/src/ --include="*.dart" || true)
+          done < <(grep -rlE "^[[:space:]]*(import|export)[[:space:]]+['\"]dart:io" lib/src/ --include="*.dart" || true)
           if [ "$BAD" -ne 0 ]; then exit 1; fi
           echo "Purity gate clean: dart:io confined to $(printf '%s\n' "$ALLOWED" | grep -c .) allowlisted adapters."
       - name: Attribution gate (ported sources carry MIT notices)
