@@ -161,12 +161,12 @@ class _StagnationVerdict {
     required this.isStagnant,
     required this.confidence,
     required this.reason,
-    this.error,
-  });
+  }) : error = null;
 
   const _StagnationVerdict.error(String message)
       : isStagnant = false,
         confidence = 0,
         reason = '',
         error = message;
+
 }
