@@ -8,8 +8,6 @@ import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'fake_llm_client.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
-import 'fake_llm_clock.dart';
-
 const fiveSectionSnapshot = '<state_snapshot>\n'
     '  <overall_goal>Ship the auth feature.</overall_goal>\n'
     '  <key_knowledge>OAuth 2.1 with PKCE chosen; token lifetime 15m.</key_knowledge>\n'
@@ -27,12 +25,6 @@ List<AgentMessage> bigHistory({int messages = 100, int charsPerMessage = 400}) =
     );
 
 void main() {
-  late FakeLlmClock clock;
-
-  setUp(() {
-    clock = FakeLlmClock();
-  });
-
   LLMBasedContextCompressor makeCompressor(
     FakeLlmClient client, {
     ContextCompressionSettings settings = const ContextCompressionSettings(),
