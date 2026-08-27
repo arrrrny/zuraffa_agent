@@ -81,6 +81,23 @@ class PassAtK {
     return PassAtK._(n: n, c: c, k: k, value: value);
   }
 
+  /// Compute pass@k over an eval run's outcomes (spec 037 FR-001).
+  ///
+  /// Sampling semantics: [outcomes] is the mission's recorded run list —
+  /// n = its length, c = the count of `true` (passed) runs — and k draws
+  /// are taken without replacement from those n outcomes, so the result is
+  /// identical to [compute] on the derived triple. Throws [ArgumentError]
+  /// on an empty outcome list or an invalid k (via compute's validation —
+  /// single source of truth).
+  static PassAtK fromResults(List<bool> outcomes, {required int k}) {
+    if (outcomes.isEmpty) {
+      throw ArgumentError.value(
+          outcomes, 'outcomes', 'must contain at least one run');
+    }
+    final c = outcomes.where((passed) => passed).length;
+    return compute(n: outcomes.length, c: c, k: k);
+  }
+
   static double _estimator(int n, int c, int k) {
     // If c == 0, no correct samples → pass@k = 0.
     if (c == 0) return 0.0;
