@@ -84,7 +84,7 @@ class SubAgentSpec {
   /// Null means inherit from parent spec (or use the engine default).
   final int? contextWindowTokens;
 
-  const SubAgentSpec({
+  SubAgentSpec({
     required this.name,
     required this.description,
     required this.systemPrompt,
@@ -95,7 +95,21 @@ class SubAgentSpec {
     this.maxTurns,
     this.wallClockTimeout,
     this.contextWindowTokens,
-  });
+  }) {
+    // Construction-time validation (spec 036, FR-001): identity fields
+    // must be non-empty. Invalid specs fail fast at load time instead of
+    // misbehaving at dispatch time.
+    if (name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be empty');
+    }
+    if (description.isEmpty) {
+      throw ArgumentError.value(description, 'description', 'must not be empty');
+    }
+    if (systemPrompt.isEmpty) {
+      throw ArgumentError.value(
+          systemPrompt, 'systemPrompt', 'must not be empty');
+    }
+  }
 
   /// True for a leaf agent — cannot dispatch sub-agents ([subAgents]
   /// is empty).
