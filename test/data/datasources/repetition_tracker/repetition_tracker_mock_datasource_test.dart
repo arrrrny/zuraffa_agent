@@ -76,5 +76,61 @@ void main() {
         expect(await ds.isLooping('tool_a@1:hash1'), equals(config.isRepetition(count)));
       });
     });
+
+    group('A4..A5 + U10..U11 window expiry (cycle 3)', () {
+      test('A4: after the window passes, count is 0 and isLooping reverts to false', () async {
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 2, window: Duration(seconds: 60)),
+        );
+        final t0 = DateTime(2026, 1, 1, 12);
+        await ds.record('tool_a@1:hash1', at: t0);
+        await ds.record('tool_a@1:hash1', at: t0.add(const Duration(seconds: 10)));
+        expect(await ds.isLooping('tool_a@1:hash1', now: t0.add(const Duration(seconds: 30))), isTrue);
+
+        final afterWindow = t0.add(const Duration(seconds: 61));
+        expect(await ds.count('tool_a@1:hash1', now: afterWindow), equals(0));
+        expect(await ds.isLooping('tool_a@1:hash1', now: afterWindow), isFalse);
+      });
+
+      test('A5: boundary — a record exactly window-old is expired, strictly inside is alive', () async {
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 1, window: Duration(seconds: 60)),
+        );
+        final t0 = DateTime(2026, 1, 1, 12);
+        await ds.record('expired@1:h', at: t0);
+        await ds.record('alive@1:h', at: t0.add(const Duration(seconds: 1)));
+
+        // Exactly window old -> expired.
+        expect(await ds.count('expired@1:h', now: t0.add(const Duration(seconds: 60))), equals(0));
+        // Strictly inside the window -> alive.
+        expect(await ds.count('alive@1:h', now: t0.add(const Duration(seconds: 60))), equals(1));
+      });
+
+      test('U10: record with an explicit at-timestamp is respected for window pruning', () async {
+        final now = DateTime(2026, 1, 1, 12);
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 5, window: Duration(seconds: 60)),
+          clock: () => now,
+        );
+        // Recorded "10s ago" via explicit at: the write path must count it
+        // while it is alive...
+        final tenSecondsAgo = now.subtract(const Duration(seconds: 10));
+        expect(await ds.record('tool_a@1:hash1', at: tenSecondsAgo), equals(1));
+        // ...and prune it once the window has passed it by.
+        expect(await ds.record('tool_a@1:hash1', at: now), equals(1));
+      });
+
+      test('U11: a late record older than the window is pruned on first evaluation', () async {
+        final now = DateTime(2026, 1, 1, 12);
+        final ds = RepetitionTrackerMockDatasource(
+          config: const RepetitionTracker(id: 'rt', maxCalls: 5, window: Duration(seconds: 60)),
+          clock: () => now,
+        );
+        // Out-of-order, older than the window: dead on arrival.
+        await ds.record('tool_a@1:hash1', at: now.subtract(const Duration(seconds: 120)));
+        expect(await ds.count('tool_a@1:hash1'), equals(0));
+        expect(await ds.record('tool_a@1:hash1'), equals(1));
+      });
+    });
   });
 }
