@@ -1,0 +1,8 @@
+data: {"id":"c","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"}}]}
+data: {"id":"c","choices":[{"index":0,"delta":{"content":", "}}]}
+data: {"id":"c","choices":[{"index":0,"delta":{"content":"world."}}]}
+data: {"id":"c","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_1","type":"function","function":{"name":"get_weather","arguments":"{\"city\":"}}]}}]}
+data: {"id":"c","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":" \"Paris\"}"}}]}}]}
+data: {"id":"c","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}
+data: {"id":"c","choices":[],"usage":{"prompt_tokens":25,"completion_tokens":42,"prompt_tokens_details":{"cached_tokens":8},"completion_tokens_details":{"reasoning_tokens":7}}}
+data: [DONE]

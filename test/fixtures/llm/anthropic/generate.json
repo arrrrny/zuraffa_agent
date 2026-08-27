@@ -1,0 +1,15 @@
+{
+  "id": "msg_contract",
+  "content": [
+    {
+      "type": "text",
+      "text": "Hello, world."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 42,
+    "cache_read_input_tokens": 8
+  }
+}
