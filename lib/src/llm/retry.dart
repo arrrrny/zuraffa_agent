@@ -71,7 +71,11 @@ Future<LlmHttpResponse> sendWithRetry({
 int? _retryAfterMs(Map<String, String> headers) {
   final raw = headers['retry-after'] ?? headers['Retry-After'];
   if (raw == null) return null;
-  return int.tryParse(raw.trim())?.clamp(0, 3600) * 1000;
+  final seconds = int.tryParse(raw.trim());
+  if (seconds == null) return null;
+  if (seconds < 0) return 0;
+  if (seconds > 3600) return 3600000;
+  return seconds * 1000;
 }
 
 int _delayFor(
