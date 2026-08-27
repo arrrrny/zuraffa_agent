@@ -4,7 +4,6 @@
 import 'dart:convert';
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/domain/entities/custom_entry/custom_entry.dart';
 import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memory.dart';
 import 'package:zuraffa_agent/src/llm/persistent_episodic_memory_store.dart';
 import 'package:zuraffa_agent/src/session_storage.dart';

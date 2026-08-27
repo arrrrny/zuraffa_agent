@@ -5,7 +5,6 @@
 
 import 'dart:convert';
 
-import '../domain/entities/custom_entry/custom_entry.dart';
 import '../domain/entities/episodic_memory/episodic_memory.dart';
 import '../session_storage.dart';
 import '../types.dart';

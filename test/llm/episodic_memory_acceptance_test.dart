@@ -171,7 +171,7 @@ void main() {
       var history = <AgentMessage>[
         for (var i = 0; i < 6; i++) UserMessage.text('h1-$i'),
       ];
-      var result = await compressor.compress(history);
+      final result = await compressor.compress(history);
       history = [
         ...result.preservedMessages,
         for (var i = 0; i < 6; i++) UserMessage.text('h2-$i'),
