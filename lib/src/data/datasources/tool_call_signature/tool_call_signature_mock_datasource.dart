@@ -33,10 +33,10 @@ class ToolCallSignatureMockDatasource
   Future<ToolCallSignature?> lookup(String key) async => _store[key];
 
   @override
-  Future<int> count() async =>
-      throw UnimplementedError('Implement ToolCallSignatureMockDatasource.count');
+  Future<int> count() async => _store.length;
 
   @override
-  Future<void> reset() async =>
-      throw UnimplementedError('Implement ToolCallSignatureMockDatasource.reset');
+  Future<void> reset() async {
+    _store.clear();
+  }
 }
