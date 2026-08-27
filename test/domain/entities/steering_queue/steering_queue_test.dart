@@ -21,7 +21,6 @@ import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.
 void main() {
   final t1 = DateTime.utc(2026, 8, 24, 9, 0, 0);
   final t2 = DateTime.utc(2026, 8, 24, 9, 1, 0);
-  final t3 = DateTime.utc(2026, 8, 24, 9, 2, 0);
 
   SteeringMessage msg(String id, String content, DateTime at) =>
       SteeringMessage(id: id, content: content, injectedAt: at);
