@@ -45,6 +45,17 @@ class StopPolicy {
     this.enabled = true,
   });
 
+  /// Canonical default policy — the single source of truth for the values
+  /// documented on `StopPolicyService.defaultPolicy` and the reset target
+  /// of every `StopPolicyDatasource` implementation.
+  static const StopPolicy defaultPolicy = StopPolicy(
+    id: 'default',
+    maxTurns: 100,
+    wallClockTimeout: Duration.zero,
+    repetitionThreshold: 5,
+    enabled: true,
+  );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
