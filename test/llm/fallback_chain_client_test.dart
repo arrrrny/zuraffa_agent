@@ -258,5 +258,34 @@ void main() {
       expect(a.streamCalls, 1);
       expect(b.streamCalls, 1);
     });
+
+    test('U17: stream() mid-stream policy skip propagates the error to the consumer (configurable)', () async {
+      final a = FakeLlmClient(providerName: 'a', outcomes: [
+        ScriptedOutcome(
+          chunks: [const LlmResponseChunk(content: 'partial-')],
+          streamError:
+              const LlmNetworkException(provider: 'a', cause: 'reset'),
+        ),
+      ]);
+      final b = FakeLlmClient(providerName: 'b', outcomes: [
+        ScriptedOutcome(
+          chunks: [const LlmResponseChunk(content: 'never', isComplete: true)],
+        ),
+      ]);
+      final chain = makeChain([a, b], policyMode: 'skip');
+
+      final collected = <LlmResponseChunk>[];
+      await expectLater(
+        chain
+            .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+            .listen(collected.add).asFuture<void>(),
+        throwsA(isA<LlmNetworkException>()),
+      );
+      // The consumer saw the partial chunks, then the error — no silent
+      // retry, no phantom completion.
+      expect(collected.map((c) => c.content).toList(), ['partial-']);
+      expect(collected.last.isComplete, isFalse);
+      expect(b.streamCalls, 0);
+    });
   });
 }

@@ -100,8 +100,14 @@ class FallbackChainClient implements LlmClient {
       } catch (error) {
         breaker.recordFailure();
         if (!_shouldAdvance(error)) rethrow;
-        // Mid-stream failures restart on the next provider (FR-004): the
-        // consumer keeps the partial chunks and receives a complete stream.
+        if (emitted > 0 && policyMode == 'skip') {
+          // Configurable mid-stream policy (FR-004): skip propagates the
+          // error after the partial chunks instead of restarting.
+          rethrow;
+        }
+        // Default restart policy: mid-stream failures restart on the next
+        // provider; the consumer keeps the partial chunks and receives a
+        // complete stream — never silent truncation.
         errors[p.id] = error;
       }
     }
