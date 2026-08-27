@@ -82,6 +82,51 @@ class UiTreePayload {
     }
   }
 
+  /// Serialize to the ui/tree+json contract map (spec 038 FR-001): exactly
+  /// `mimeType`, `vocabularyId`, `schemaVersion`, `tree`. Callers own
+  /// jsonEncode when crossing a string wire.
+  Map<String, dynamic> toJson() => {
+        'mimeType': mimeType,
+        'vocabularyId': vocabularyId,
+        'schemaVersion': schemaVersion,
+        'tree': tree,
+      };
+
+  /// Parse a ui/tree+json contract map (spec 038 FR-002). The mimeType is
+  /// part of the contract, not a hint: absent or different throws
+  /// [ArgumentError] naming `mimeType`. Empty pinning fields and a non-map
+  /// tree throw naming the offending field. Unknown top-level keys are
+  /// ignored (forward compatibility). Constructs through the standard
+  /// constructor so validation and depth/nodeCount precomputation apply —
+  /// `fromJson(toJson(p)) == p`.
+  factory UiTreePayload.fromJson(Map<String, dynamic> json) {
+    final parsedMime = json['mimeType'];
+    if (parsedMime is! String || parsedMime != mimeType) {
+      throw ArgumentError.value(parsedMime, 'mimeType',
+          'must be present and equal to "$mimeType"');
+    }
+    final parsedVocab = json['vocabularyId'];
+    if (parsedVocab is! String) {
+      throw ArgumentError.value(
+          parsedVocab, 'vocabularyId', 'must be a non-empty string');
+    }
+    final parsedSchema = json['schemaVersion'];
+    if (parsedSchema is! String) {
+      throw ArgumentError.value(
+          parsedSchema, 'schemaVersion', 'must be a non-empty string');
+    }
+    final parsedTree = json['tree'];
+    if (parsedTree is! Map<String, dynamic>) {
+      throw ArgumentError.value(
+          parsedTree, 'tree', 'must be a Map<String, dynamic>');
+    }
+    return UiTreePayload(
+      vocabularyId: parsedVocab,
+      schemaVersion: parsedSchema,
+      tree: parsedTree,
+    );
+  }
+
   /// Compute the max depth of a tree node. A leaf node (no `children`
   /// key or empty children list) has depth 1. The recursive walk uses
   /// the conventional `children` key (a `List` of `Map<String, dynamic>`).
