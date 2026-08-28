@@ -31,7 +31,7 @@ provider clients and fallback chain are driven end to end and asserted.
 | A3  | Every completed LLM call has a `UsageLedger` entry with provider + model + token counts                     | FR-003 | example | DONE    | test/data/providers/llm_client/llm_client_provider_test.dart ||
 | A4  | Provider A failing is served transparently by B; the mission observes only latency                          | FR-004 | example | DONE    | test/data/providers/fallback_chain/fallback_chain_provider_test.dart ||
 | A5  | A in open state with cooldown elapsed: a half-open probe routes real traffic back on success                | FR-004 | example | DONE    | test/domain/entities/circuit_breaker/circuit_breaker_test.dart :: "spec 035 — CircuitBreaker shouldProbe recovery readiness" + test/data/providers/circuit_breaker/circuit_breaker_provider_test.dart (tryHalfOpen open->halfOpen on cooldown, recordSuccess->closed) |
-| A6  | A mid-stream failure after partial chunks restarts on the next provider (or surfaces), never silently truncates | FR-004 | example | BLOCKED | (no keyword match in test/data/providers/fallback_chain/fallback_chain_provider_test.dart) ||
+| A6  | A mid-stream failure after partial chunks restarts on the next provider (or surfaces), never silently truncates | FR-004 | example | DONE    | test/llm/fallback_chain_client_test.dart :: "U16: stream() mid-stream failure on A restarts on B…" (restart branch) + "U17: stream() mid-stream policy skip propagates the error…" (surface branch) |
 | A7  | Any chain state, the `Map<provider, ClientHealth>` snapshot matches the internal breaker states             | FR-005 | example | DONE    | test/data/providers/health_snapshot/health_snapshot_provider_test.dart ||
 
 ## Inner loop: deferred — plan.md absent
