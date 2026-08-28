@@ -11,7 +11,7 @@
 ## Acceptance (outer loop)
 
 - [ ] [A1] Each provider client streams recorded fixtures identically: events, tool-call buffering, and usage fields.
-- [ ] [A2] With the engine pubspec resolved, `dart_agent_core` is absent and vendored files carry attribution headers.
+- [X] [A2] With the engine pubspec resolved, `dart_agent_core` is absent and vendored files carry attribution headers. (test/integration/spec_004_a2_dart_agent_core_test.dart)
 - [ ] [A3] Every completed LLM call has a `UsageLedger` entry with provider + model + token counts.
 - [ ] [A4] Provider A failing is served transparently by B; the mission observes only latency.
 - [ ] [A5] A in open state with cooldown elapsed: a half-open probe routes real traffic back on success.
