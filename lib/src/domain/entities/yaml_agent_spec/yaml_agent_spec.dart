@@ -24,6 +24,37 @@ class YamlAgentSpec {
     required this.systemPrompt,
   });
 
+  /// Validation diagnostics for a declarative spec.
+  ///
+  /// Returns the list of precise errors (empty when the spec is valid).
+  /// [parentOf] maps a spec id to its parent spec id (or null); [knownTools]
+  /// is the set of tool names the agent is allowed to reference.
+  List<String> validate({
+    required Map<String, String?> parentOf,
+    required Set<String> knownTools,
+  }) {
+    final errors = <String>[];
+    for (final tool in toolAllowlist) {
+      if (!knownTools.contains(tool)) {
+        errors.add("unknown tool '$tool' referenced by spec '$id'");
+      }
+    }
+    if (extendsSpecId != null && !parentOf.containsKey(extendsSpecId)) {
+      errors.add("unknown parent spec '$extendsSpecId' referenced by spec '$id'");
+    }
+    final chain = <String>[];
+    var current = extendsSpecId;
+    while (current != null) {
+      if (chain.contains(current)) {
+        errors.add("cyclic inheritance in spec '$id': ${[...chain, current].join(' -> ')}");
+        break;
+      }
+      chain.add(current);
+      current = parentOf[current];
+    }
+    return errors;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

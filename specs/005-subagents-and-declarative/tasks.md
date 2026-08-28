@@ -13,6 +13,6 @@
 - [ ] [A3] A failing sub-agent returns a typed failure result to the parent, which continues.
 - [ ] [A4] A persisted sub-agent instance id resumes its session tree from the stored leaf.
 - [ ] [A5] Spec B `extends` spec A: B inherits unspecified fields and overrides specified ones.
-- [ ] [A6] A spec referencing an unknown tool or with cyclic inheritance fails validation with a precise error.
+- [X] [A6] A spec referencing an unknown tool or with cyclic inheritance fails validation with a precise error. (test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart)
 - [ ] [A7] A country playbook YAML loaded as a spec changes agent behavior with no code change.
 - [ ] [A8] A dispatch-tool call with type + task creates/resumes the instance and awaits its result.

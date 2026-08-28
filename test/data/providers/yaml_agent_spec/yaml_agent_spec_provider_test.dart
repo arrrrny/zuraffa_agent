@@ -59,4 +59,38 @@ void main() {
       expect(spec.toolAllowlist, ['search']);
     });
   });
+
+  group('spec 005 A6 - declarative spec validation diagnostics', () {
+    test('a spec referencing an unknown tool fails validation with a precise error', () {
+      final spec = YamlAgentSpec(
+        id: 'id-x',
+        name: 'broken',
+        extendsSpecId: null,
+        toolAllowlist: const ['search', 'unknown_tool'],
+        systemPrompt: 'x',
+      );
+      final errors = spec.validate(
+        parentOf: const {},
+        knownTools: {'search', 'read_file'},
+      );
+      expect(errors, hasLength(1));
+      expect(errors.single, contains("unknown tool 'unknown_tool'"));
+      expect(errors.single, contains("spec 'id-x'"));
+    });
+
+    test('a spec with cyclic inheritance fails validation with a precise error', () {
+      // a -> b -> a
+      final specA = YamlAgentSpec(
+        id: 'a', name: 'A', extendsSpecId: 'b',
+        toolAllowlist: const [], systemPrompt: 'x',
+      );
+      final errors = specA.validate(
+        parentOf: const {'a': 'b', 'b': 'a'},
+        knownTools: const {},
+      );
+      expect(errors, anyElement(contains("cyclic inheritance")));
+      expect(errors, anyElement(contains("spec 'a'")));
+      expect(errors, anyElement(contains('b -> a -> b')));
+    });
+  });
 }

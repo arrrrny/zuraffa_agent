@@ -29,7 +29,7 @@ sub-agent dispatch and declarative spec loading are driven end to end and assert
 | A3  | A failing sub-agent returns a typed failure result to the parent, which continues                          | FR-001 | example | BLOCKED | (no keyword match in test/data/providers/sub_agent_spec/sub_agent_spec_provider_test.dart) ||
 | A4  | A persisted sub-agent instance id resumes its session tree from the stored leaf                            | FR-002 | example | BLOCKED | (no keyword match in test/data/providers/sub_agent_instance/sub_agent_instance_provider_test.dart) ||
 | A5  | Spec B `extends` spec A: B inherits unspecified fields and overrides specified ones                         | FR-003 | example | DONE    | test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart ||
-| A6  | A spec referencing an unknown tool or with cyclic inheritance fails validation with a precise error         | FR-003 | example | BLOCKED | (no keyword match in test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart) ||
+| A6  | A spec referencing an unknown tool or with cyclic inheritance fails validation with a precise error         | FR-003 | example | DONE    | test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart :: "spec 005 A6 - declarative spec validation diagnostics" |
 | A7  | A country playbook YAML loaded as a spec changes agent behavior with no code change                         | FR-003 | example | DONE    | test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart ||
 | A8  | A dispatch-tool call with type + task creates/resumes the instance and awaits its result                    | FR-004 | example | DONE    | test/data/providers/dispatch_tool/dispatch_tool_provider_test.dart ||
 
