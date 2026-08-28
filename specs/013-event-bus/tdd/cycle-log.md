@@ -18,3 +18,15 @@ plan is being recorded before any change.
 - green: `lib/src/events/event_bus.dart` implemented `on<T>` (registers listener) and `emit<T>` (delivers synchronously to every subscriber of type `T` in registration order, over a copied list so a handler may (un)subscribe during dispatch). Suite `dart test` -> 916 passed, 2 skipped
 - refactor: none needed (first cycle; implementation is the minimal pub/sub surface)
 - commit: `1a737f1`
+
+## Cycle 2: A2 multiple subscribers receive an event, in registration order
+
+- test: `test/events/event_bus_test.dart::A2: multiple subscribers each receive an event, in registration order` (new)
+- red (deliberate-mutant): the test passed on first run because A1's `emit<T>` already
+  loops every subscriber. Mutant — `emit` delivers only to `subs.first` — produced
+  `Expected: ['s1:x', 's2:x', 's3:x']` (only `['s1:x']`); restoring the full loop
+  returned it to green. This confirms the test actually guards multi-subscriber delivery.
+- green: no implementation change required; A2 is satisfied by the A1 `emit<T>` loop
+  over a copied subscriber list. Suite `dart test` -> 916 passed, 2 skipped.
+- refactor: none needed.
+- commit: `7155247`
