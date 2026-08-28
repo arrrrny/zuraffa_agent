@@ -72,6 +72,6 @@ existed and failed before the implementation.
 - notes: `registerFallbackValue(<ChatMessage>[...])` (no type args) is required
   for `any(named: 'messages')`; the `<List<ChatMessage>>` generic form does not
   compile against mocktail 1.0.5.
-- commit: <SHA>
+- commit: 22bf1aa
 
 
