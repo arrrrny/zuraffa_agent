@@ -30,3 +30,15 @@ plan is being recorded before any change.
   over a copied subscriber list. Suite `dart test` -> 916 passed, 2 skipped.
 - refactor: none needed.
 - commit: `7155247`
+
+## Cycle 3: A3 BeforeToolCallRequest handler response is used
+
+- test: `test/events/event_bus_test.dart::A3: a registered BeforeToolCallRequest handler response is used` (new)
+- red: `dart test test/events/event_bus_test.dart -n "A3"`
+  -> `Bad state: request/response not yet implemented` (stub `request` threw)
+- green: `lib/src/events/event_bus.dart` added `_handlers` map, `registerHandler<T,R>`
+  (stores an async closure returning `Object`) and `request<R>` (dispatches to the
+  most-recently-registered handler, casts its response to `R`, throws `StateError`
+  when none registered). Suite `dart test` -> 918 passed, 2 skipped.
+- refactor: none needed (handler closure casts `R` to `Object` at the boundary).
+- commit: `bbac0ce`

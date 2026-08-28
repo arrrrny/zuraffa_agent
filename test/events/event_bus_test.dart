@@ -21,5 +21,16 @@ void main() {
       bus.emit(LLMChunkEvent('x'));
       expect(order, ['s1:x', 's2:x', 's3:x']);
     });
+
+    test('A3: a registered BeforeToolCallRequest handler response is used', () async {
+      final bus = EventBus();
+      bus.registerHandler<BeforeToolCallRequest, BeforeToolCallResponse>((req) async {
+        return BeforeToolCallResponse({...req.args, 'approved': true});
+      });
+      final resp = await bus.request<BeforeToolCallResponse>(
+        BeforeToolCallRequest('web', {'url': 'x'}),
+      );
+      expect(resp.approved, isTrue);
+    });
   });
 }
