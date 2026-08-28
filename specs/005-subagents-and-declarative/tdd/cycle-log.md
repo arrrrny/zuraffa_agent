@@ -27,3 +27,21 @@ plan is being recorded before any change.
   returned no error -> A6 cyclic test failed. Restored.
 - No refactor needed.
 - suite after: `dart test` -> 934 passed, 2 skipped (0 failed).
+
+## Cycle A2/A3 — typed SubAgentResult (success summary + typed failure) (red -> green)
+
+- test: `test/domain/entities/sub_agent_instance/sub_agent_result_test.dart` ::
+  "spec 005 A2/A3 - SubAgentResult typed outcome"
+- RED: new test asserts `SubAgentResult.success` carries a `summary` (ok) and
+  `SubAgentResult.failure` is typed (`ok == false`, `failureKind` + `failureReason`).
+  Compile failure with the entity hidden: `Undefined name 'SubAgentResult'` /
+  `'SubAgentFailureKind'` — valid red (symbol must exist).
+- GREEN: added `lib/src/domain/entities/sub_agent_instance/sub_agent_result.dart`
+  — a plain-Dart value object (mirrors SubAgentInstance) with `SubAgentResult.success`
+  and `SubAgentResult.failure` factories and a `SubAgentFailureKind` enum. The prior
+  `SubAgentInstance.lastRunOutcome` was a raw String; this is the typed result the
+  behaviors require.
+- Deliberate mutant: changed `SubAgentResult.failure` to set `ok = true` -> A3 test
+  failed (`ok` expected false). Restored; green.
+- No refactor needed.
+- suite after: `dart test` -> 939 passed, 2 skipped (0 failed).

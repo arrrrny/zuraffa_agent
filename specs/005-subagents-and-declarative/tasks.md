@@ -9,8 +9,8 @@
 ## Acceptance (outer loop)
 
 - [ ] [A1] A registered sub-agent type dispatched runs with its own session, allowlist, and budget (spec 002 tree).
-- [ ] [A2] A completed sub-agent returns only its result summary to the parent context.
-- [ ] [A3] A failing sub-agent returns a typed failure result to the parent, which continues.
+- [X] [A2] A completed sub-agent returns only its result summary to the parent context. (test/domain/entities/sub_agent_instance/sub_agent_result_test.dart)
+- [X] [A3] A failing sub-agent returns a typed failure result to the parent, which continues. (test/domain/entities/sub_agent_instance/sub_agent_result_test.dart)
 - [ ] [A4] A persisted sub-agent instance id resumes its session tree from the stored leaf.
 - [ ] [A5] Spec B `extends` spec A: B inherits unspecified fields and overrides specified ones.
 - [X] [A6] A spec referencing an unknown tool or with cyclic inheritance fails validation with a precise error. (test/data/providers/yaml_agent_spec/yaml_agent_spec_provider_test.dart)
