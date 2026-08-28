@@ -115,3 +115,24 @@ plan is being recorded before any change.
   A4 failed (`Expected: '...' Actual: <null>`). Restored.
 - No refactor needed.
 - commit: (this cycle)
+
+## Cycle: A5 — prior turns' thinking blocks survive into turn N+1's context
+
+- test: `test/engine/mission_runner_002_a5_test.dart` :: "A5: turn 2's assembled
+  context still carries turn 1's thinking block"
+- RED: the test PASSED on its first run (`dart test
+  test/engine/mission_runner_002_a5_test.dart` -> `+1: All tests passed!`),
+  because A4's `thinking` field lives on the transcript and the transcript *is*
+  the context handed to the next turn. Per the playbook this triggers the
+  deliberate-mutant check instead of a red.
+- Deliberate mutant: `thinking: completion.reasoning` -> `thinking: null` in
+  `MissionRunner` -> A5 failed with `Expected: 'Turn one reasoning: ...'
+  Actual: <null>` on the turn-2 context assertion. Restored; A5 green again.
+  The test is not a tautology of A4: it asserts against the message list the
+  client actually received on turn 2 (recorded by the double), plus the wire
+  form via `toJson`, so a future "strip reasoning before the next call" step
+  would fail A5 while A4 stayed green.
+- GREEN: no production change needed for this behavior.
+- No refactor needed.
+- Full suite green (944 passed, 2 skipped, 48s).
+- commit: (this cycle)

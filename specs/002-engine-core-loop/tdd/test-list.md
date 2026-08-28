@@ -29,7 +29,7 @@ typed event stream / outcome.
 | A2  | A scripted 200-call mission completes without state corruption or event loss                                                          | FR-001       | example | DONE    | test/engine/mission_runner_002_a2_test.dart :: "A2: a 200-call mission completes with no event loss or state corruption" |
 | A3  | Identical inputs + a recorded LLM re-run 10× produce a byte-identical event stream (determinism)                                      | FR-001       | example | DONE    | test/engine/mission_runner_002_a3_test.dart :: "A3: 10 identical runs produce a byte-identical event stream" |
 | A4  | A provider streaming thinking deltas leaves the assistant message carrying thinking blocks next to tool calls at turn completion       | FR-002       | example | DONE    | test/engine/mission_runner_002_a4_test.dart :: "A4: a completed turn leaves the assistant message carrying its thinking block next to the tool result" |
-| A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | BLOCKED |      |
+| A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | DONE    | test/engine/mission_runner_002_a5_test.dart :: "A5: turn 2's assembled context still carries turn 1's thinking block" |
 | A6  | An enqueued steering message is injected before the next LLM call during a running mission                                            | FR-003       | example | DONE    | test/engine/mission_runner_test.dart :: "steering queue drains at turn start in FIFO order" |
 | A7  | Follow-up messages queued at mission end cause the loop to continue with them instead of exiting                                       | FR-003       | example | BLOCKED |      |
 | A8  | With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5                                    | FR-004       | example | DONE    | test/engine/mission_runner_002_a8_test.dart :: "A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after turn 5" |
@@ -53,7 +53,7 @@ passing test → verify, mark DONE" rule.
 | A2 | DONE | `test/engine/mission_runner_002_a2_test.dart` — 200-call stress, no event loss/state corruption (cycle b498e44) |
 | A3 | DONE | `test/engine/mission_runner_002_a3_test.dart` — 10× byte-identical stream (cycle 503ca33) |
 | A4 | DONE | resolved: `ChatMessage` gained a `thinking` field and `MissionRunner` now populates it from `ChatCompletion.reasoning` at turn completion. |
-| A5 | BLOCKED | same root cause as A4: cross-turn thinking-block-in-context needs persisted thinking blocks (not built). |
+| A5 | DONE | resolved with A4: the transcript is the context handed to the next turn, so the persisted `thinking` field survives turn boundaries (verified against the recorded turn-2 context, not the final transcript). |
 | A7 | BLOCKED | `MissionRunner` drains the steering queue at turn start but has no follow-up-at-end continuation path; the loop exits when the planner returns no tool calls. Requires a follow-up queue + re-entry — net-new engine feature. |
 | A9 | DONE | resolved: `MissionRunner` now takes an optional `repetitionTracker` datasource and ends with `MissionStatus.loopDetected` when a dispatched signature trips the threshold. |
 
