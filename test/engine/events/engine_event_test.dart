@@ -160,6 +160,7 @@ void main() {
     });  });
   group('arrarrny/zuraffa_agent#17 — EngineEvent.MissionStarted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
+    final startedTime = DateTime.utc(2026, 8, 24, 7, 45, 0);
 
     test('MissionStarted is an EngineEvent', () {
       final event = MissionStarted(emittedAt: fixedTime, missionId: 'sample', startedAt: fixedTime);
@@ -168,11 +169,30 @@ void main() {
     });
 
     test('MissionStarted carries payload fields', () {
-      final event = MissionStarted(emittedAt: fixedTime, missionId: 'sample', startedAt: fixedTime);
+      final event = MissionStarted(emittedAt: fixedTime, missionId: 'm-7', startedAt: startedTime);
       expect(event.emittedAt, fixedTime);
-      expect(event.missionId, 'sample');
-      expect(event.startedAt, fixedTime);
-    });  });
+      expect(event.missionId, 'm-7');
+      expect(event.startedAt, startedTime);
+      expect(event.startedAt, isNot(equals(event.emittedAt)));
+    });
+
+    test('describe(EngineEvent) switch routes MissionStarted to mission_started(missionId)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+      };
+
+      final event = MissionStarted(emittedAt: fixedTime, missionId: 'm-7', startedAt: startedTime);
+      expect(describe(event), 'mission_started(m-7)');
+    });
+  });
   group('arrarrny/zuraffa_agent#16 — EngineEvent.MissionCompleted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
