@@ -273,4 +273,135 @@ void main() {
       expect(describe(event), 'mission_completed(m-42)');
     });
   });
+
+  group('spec 066 — EngineEvent value semantics', () {
+    final t = DateTime.utc(2026, 8, 24, 7, 30, 0);
+    final otherTime = DateTime.utc(2026, 8, 24, 9, 15, 0);
+
+    test('TurnStarted equality, hashCode, toString', () {
+      final a = TurnStarted(emittedAt: t, turnId: 't-1');
+      final b = TurnStarted(emittedAt: t, turnId: 't-1');
+      expect(a, equals(b));
+      expect(b, equals(a));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(TurnStarted(emittedAt: t, turnId: 't-2'))));
+      expect(a, isNot(equals(TurnStarted(emittedAt: t))));
+      expect(a, isNot(equals(TurnStarted(emittedAt: otherTime, turnId: 't-1'))));
+      expect(a.toString(), 'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: t-1)');
+      expect(TurnStarted(emittedAt: t).toString(), 'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: null)');
+    });
+
+    test('TurnCompleted equality, hashCode, toString', () {
+      final a = TurnCompleted(emittedAt: t, reason: 'cancelled');
+      final b = TurnCompleted(emittedAt: t, reason: 'cancelled');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(TurnCompleted(emittedAt: t, reason: 'max-tokens-reached'))));
+      expect(a, isNot(equals(TurnCompleted(emittedAt: t))));
+      expect(a, isNot(equals(TurnCompleted(emittedAt: otherTime, reason: 'cancelled'))));
+      expect(a.toString(), 'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: cancelled)');
+      expect(TurnCompleted(emittedAt: t).toString(), 'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: null)');
+    });
+
+    test('ToolCallStarted equality, hashCode, toString', () {
+      final a = ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-1');
+      final b = ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-1');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(ToolCallStarted(emittedAt: t, toolName: 'fs.write', callId: 'c-1'))));
+      expect(a, isNot(equals(ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-2'))));
+      expect(a, isNot(equals(ToolCallStarted(emittedAt: otherTime, toolName: 'fs.read', callId: 'c-1'))));
+      expect(a.toString(), 'ToolCallStarted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1)');
+    });
+
+    test('ToolCallCompleted equality, hashCode, toString', () {
+      final a = ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: true);
+      final b = ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: true);
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: false))));
+      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.write', callId: 'c-1', ok: true))));
+      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-2', ok: true))));
+      expect(a, isNot(equals(ToolCallCompleted(emittedAt: otherTime, toolName: 'fs.read', callId: 'c-1', ok: true))));
+      expect(a.toString(), 'ToolCallCompleted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1, ok: true)');
+    });
+
+    test('ThinkingDelta equality, hashCode, toString', () {
+      final a = ThinkingDelta(emittedAt: t, delta: 'thinking...');
+      final b = ThinkingDelta(emittedAt: t, delta: 'thinking...');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(ThinkingDelta(emittedAt: t, delta: 'other'))));
+      expect(a, isNot(equals(ThinkingDelta(emittedAt: otherTime, delta: 'thinking...'))));
+      expect(a.toString(), 'ThinkingDelta(emittedAt: 2026-08-24 07:30:00.000Z, delta: thinking...)');
+    });
+
+    test('SteeringInjected equality, hashCode, toString', () {
+      final a = SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: otherTime);
+      final b = SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: otherTime);
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(SteeringInjected(emittedAt: t, content: 'other direction', injectedAt: otherTime))));
+      expect(a, isNot(equals(SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: t))));
+      expect(a, isNot(equals(SteeringInjected(emittedAt: otherTime, content: 'new direction', injectedAt: otherTime))));
+      expect(
+        a.toString(),
+        'SteeringInjected(emittedAt: 2026-08-24 07:30:00.000Z, content: new direction, injectedAt: 2026-08-24 09:15:00.000Z)',
+      );
+    });
+
+    test('ProviderError equality, hashCode, toString', () {
+      final a = ProviderError(emittedAt: t, providerName: 'openai', error: '401 unauthorized');
+      final b = ProviderError(emittedAt: t, providerName: 'openai', error: '401 unauthorized');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(ProviderError(emittedAt: t, providerName: 'anthropic', error: '401 unauthorized'))));
+      expect(a, isNot(equals(ProviderError(emittedAt: t, providerName: 'openai', error: '429 rate-limited'))));
+      expect(a, isNot(equals(ProviderError(emittedAt: otherTime, providerName: 'openai', error: '401 unauthorized'))));
+      expect(a.toString(), 'ProviderError(emittedAt: 2026-08-24 07:30:00.000Z, providerName: openai, error: 401 unauthorized)');
+    });
+
+    test('MissionStarted equality, hashCode, toString', () {
+      final a = MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: otherTime);
+      final b = MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: otherTime);
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(MissionStarted(emittedAt: t, missionId: 'm-8', startedAt: otherTime))));
+      expect(a, isNot(equals(MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: t))));
+      expect(a, isNot(equals(MissionStarted(emittedAt: otherTime, missionId: 'm-7', startedAt: otherTime))));
+      expect(
+        a.toString(),
+        'MissionStarted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, startedAt: 2026-08-24 09:15:00.000Z)',
+      );
+    });
+
+    test('MissionCompleted equality, hashCode, toString', () {
+      final a = MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: 'all goals met');
+      final b = MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: 'all goals met');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-8', status: 'success', summary: 'all goals met'))));
+      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'fail', summary: 'all goals met'))));
+      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: null))));
+      expect(a, isNot(equals(MissionCompleted(emittedAt: otherTime, missionId: 'm-7', status: 'success', summary: 'all goals met'))));
+      expect(
+        a.toString(),
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: success, summary: all goals met)',
+      );
+      expect(
+        MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'cancelled', summary: null).toString(),
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: cancelled, summary: null)',
+      );
+    });
+
+    test('different runtimeTypes are never equal', () {
+      // TurnStarted and TurnCompleted share the same field shape
+      // (DateTime + String?); only the runtimeType guard separates them.
+      final started = TurnStarted(emittedAt: t, turnId: 'same');
+      final completed = TurnCompleted(emittedAt: t, reason: 'same');
+      expect(started == completed, isFalse);
+      expect(completed == started, isFalse);
+
+    });
+  });
 }

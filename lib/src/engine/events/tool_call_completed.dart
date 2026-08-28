@@ -9,4 +9,21 @@ final class ToolCallCompleted extends EngineEvent {
   final bool ok;
 
   const ToolCallCompleted({required this.emittedAt, required this.toolName, required this.callId, required this.ok});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ToolCallCompleted &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          toolName == other.toolName &&
+          callId == other.callId &&
+          ok == other.ok);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, toolName, callId, ok);
+
+  @override
+  String toString() =>
+      'ToolCallCompleted(emittedAt: $emittedAt, toolName: $toolName, callId: $callId, ok: $ok)';
 }
