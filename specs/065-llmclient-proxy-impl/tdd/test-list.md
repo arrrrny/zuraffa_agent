@@ -15,8 +15,9 @@ suite_baseline: green # 909 tests passed, dart analyze clean
 > so component placement below is inferred from `spec.md` §Key Entities and the
 > existing source, not from a plan document. The feature is already implemented
 > (PR #71 merged) with five existing test files; behaviors already covered by a
-> passing test are recorded `DONE` with that test named. Two genuine unit gaps
-> remain (`U4`, `U11`) and are left `PENDING` for the loop to drive.
+> passing test are recorded `DONE` with that test named. The two unit gaps
+> originally left open (`U4`, `U11`) have since been driven to `DONE`; no
+> behavior on this list is open.
 
 ## Outer loop: acceptance behaviors
 
