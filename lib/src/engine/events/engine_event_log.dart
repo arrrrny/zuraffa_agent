@@ -50,11 +50,11 @@ class EngineEventLog {
   /// Whether at least one event has been recorded.
   bool get isNotEmpty => _events.isNotEmpty;
 
-  /// Events of exactly type [T], in insertion order.
+  /// Events of type [T] or a subtype of [T], in insertion order.
   List<T> byType<T extends EngineEvent>() =>
       List.unmodifiable(_events.whereType<T>());
 
-  /// The first event of exactly type [T], or `null` when none exists.
+  /// The first event of type [T] or a subtype of [T], or `null` when none exists.
   T? firstOfType<T extends EngineEvent>() {
     for (final event in _events) {
       if (event is T) return event;
@@ -62,7 +62,7 @@ class EngineEventLog {
     return null;
   }
 
-  /// The last event of exactly type [T], or `null` when none exists.
+  /// The last event of type [T] or a subtype of [T], or `null` when none exists.
   T? lastOfType<T extends EngineEvent>() {
     for (var i = _events.length - 1; i >= 0; i--) {
       final event = _events[i];
@@ -77,7 +77,12 @@ class EngineEventLog {
   /// is included; with `inclusive: false` only strictly later events count.
   List<EngineEvent> since(DateTime cutoff, {bool inclusive = true}) =>
       List.unmodifiable(
-        _events.where((e) => inclusive ? e.emittedAt.isAfter(cutoff) || e.emittedAt == cutoff : e.emittedAt.isAfter(cutoff)),
+        _events.where(
+          (e) => inclusive
+              ? e.emittedAt.isAfter(cutoff) ||
+                    e.emittedAt.isAtSameMomentAs(cutoff)
+              : e.emittedAt.isAfter(cutoff),
+        ),
       );
 
   /// Events emitted before [cutoff], in insertion order.
@@ -86,6 +91,11 @@ class EngineEventLog {
   /// included; with `inclusive: true` it is.
   List<EngineEvent> before(DateTime cutoff, {bool inclusive = false}) =>
       List.unmodifiable(
-        _events.where((e) => inclusive ? e.emittedAt.isBefore(cutoff) || e.emittedAt == cutoff : e.emittedAt.isBefore(cutoff)),
+        _events.where(
+          (e) => inclusive
+              ? e.emittedAt.isBefore(cutoff) ||
+                    e.emittedAt.isAtSameMomentAs(cutoff)
+              : e.emittedAt.isBefore(cutoff),
+        ),
       );
 }
