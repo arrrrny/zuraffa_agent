@@ -417,8 +417,8 @@ void main() {
       );
 
       expect(result.turnsUsed, 2);
-      expect(result.status, MissionStatus.budgetExhausted);
-      expect((events.last as MissionCompleted).status, 'budgetExhausted');
+      expect(result.status, MissionStatus.maxTurnsExceeded);
+      expect((events.last as MissionCompleted).status, 'maxTurnsExceeded');
       expect(dispatcher.calls, hasLength(2));
       expect(planner.invocations, hasLength(2));
     });

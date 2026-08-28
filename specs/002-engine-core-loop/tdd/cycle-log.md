@@ -57,3 +57,25 @@ plan is being recorded before any change.
   (931 passed, 2 skipped).
 - No refactor needed.
 - commit: `503ca33`
+
+## Cycle A8 — typed MaxTurnsExceeded outcome at the turn cap (red -> green)
+
+- test: `test/engine/mission_runner_002_a8_test.dart` :: "A8: maxTurns=5 with a
+  non-stopping model ends in MaxTurnsExceeded after turn 5"
+- RED: new test drives `MissionRunner` with `maxTurns=5` and a planner that always
+  asks for a tool call, so the loop can only terminate on the turn cap. Asserts
+  `turnsUsed == 5`, `result.status.name == 'maxTurnsExceeded'`, and the terminal
+  `MissionCompleted.status == 'maxTurnsExceeded'`. First run FAILED: the engine
+  emitted the generic `budgetExhausted` status (069's turn-cap path), so
+  `result.status.name` was `'budgetExhausted'` != `'maxTurnsExceeded'`.
+- GREEN: added a dedicated `MissionStatus.maxTurnsExceeded` enum value and set the
+  turn-cap branch in `lib/src/engine/mission_runner.dart` to it (the wall-clock
+  deadline path keeps `budgetExhausted`). `MissionCompleted.status` already
+  serializes `status.name`, so the event now carries `maxTurnsExceeded` too.
+  Aligned the spec 069 test at `test/engine/mission_runner_test.dart` to expect
+  `maxTurnsExceeded` (previously asserted the now-removed `maxTurnsExhausted`
+  name). Test passes; full suite green (932 passed, 2 skipped).
+- Deliberate mutant: reverted the turn-cap branch to `budgetExhausted` ->
+  A8 failed (`budgetExhausted` != `maxTurnsExceeded`). Restored.
+- No refactor needed.
+- commit: (this cycle)

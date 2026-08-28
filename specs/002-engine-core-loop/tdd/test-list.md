@@ -32,7 +32,7 @@ typed event stream / outcome.
 | A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | PENDING |      |
 | A6  | An enqueued steering message is injected before the next LLM call during a running mission                                            | FR-003       | example | DONE    | test/engine/mission_runner_test.dart :: "steering queue drains at turn start in FIFO order" |
 | A7  | Follow-up messages queued at mission end cause the loop to continue with them instead of exiting                                       | FR-003       | example | PENDING |      |
-| A8  | With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5                                    | FR-004       | example | PENDING |      |
+| A8  | With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5                                    | FR-004       | example | DONE    | test/engine/mission_runner_002_a8_test.dart :: "A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after turn 5" |
 | A9  | Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly                                  | FR-004       | example | PENDING |      |
 | A10 | During any mission, consumers receive events in order with monotonic turn/sequence identifiers                                         | FR-005       | example | DONE    | test/engine/mission_runner_test.dart :: "natural single-turn mission emits the full ordered event sequence" |
 
@@ -49,9 +49,9 @@ passing test → verify, mark DONE" rule.
 | A1 | DONE | "tool dispatch round-trip emits correlated events and feeds results back" — asserts transcript `[user,assistant,tool,assistant]`, `turnsUsed: 2`, status completed |
 | A6 | DONE | "steering queue drains at turn start in FIFO order" — `SteeringInjected` before `TurnStarted`, FIFO order |
 | A10 | DONE | "natural single-turn mission emits the full ordered event sequence" + tool-dispatch test assert exact ordered event types |
-| A8 | GAP (partial) | 069 stops at maxTurns (`MissionStatus.budgetExhausted`) but `002` requires a typed `MaxTurnsExceeded` outcome; no such event/status exists in the `EngineEvent` set |
-| A2 | GAP | no 200-call stress test in 069 |
-| A3 | GAP | no determinism (10× byte-identical stream) test |
+| A8 | DONE | `MissionRunner` now emits `MissionStatus.maxTurnsExceeded` (distinct from wall-clock `budgetExhausted`) at the turn cap; `test/engine/mission_runner_002_a8_test.dart` drives maxTurns=5 with a non-stopping model and asserts the typed outcome + event status |
+| A2 | DONE | `test/engine/mission_runner_002_a2_test.dart` — 200-call stress, no event loss/state corruption (cycle b498e44) |
+| A3 | DONE | `test/engine/mission_runner_002_a3_test.dart` — 10× byte-identical stream (cycle 503ca33) |
 | A4 | GAP | no thinking/`reasoning` block persistence assertion |
 | A5 | GAP | no cross-turn thinking-block-in-context assertion |
 | A7 | GAP | queue drains at turn start; no follow-up-at-end continuation |

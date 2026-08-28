@@ -15,6 +15,6 @@
 - [ ] [A5] In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled.
 - [X] [A6] An enqueued steering message is injected before the next LLM call during a running mission. (covered by test/engine/mission_runner_test.dart)
 - [ ] [A7] Follow-up messages queued at mission end cause the loop to continue with them instead of exiting.
-- [ ] [A8] With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5.
+- [X] [A8] With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5. (test/engine/mission_runner_002_a8_test.dart)
 - [ ] [A9] Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly.
 - [X] [A10] During any mission, consumers receive events in order with monotonic turn/sequence identifiers. (covered by test/engine/mission_runner_test.dart)

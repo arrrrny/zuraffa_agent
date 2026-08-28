@@ -49,8 +49,12 @@ enum MissionStatus {
   /// The model finished naturally (`finishReason == 'stop'`, no tool calls).
   completed,
 
-  /// The turn cap or the wall-clock deadline stopped the mission.
+  /// The wall-clock deadline stopped the mission (distinct from the turn cap).
   budgetExhausted,
+
+  /// The turn cap (loop.maxTurns / stopPolicy.maxTurns) was hit — a typed
+  /// MaxTurnsExceeded outcome distinct from wall-clock budget exhaustion.
+  maxTurnsExceeded,
 
   /// The provider failed terminally mid-mission.
   providerFailed,
@@ -189,7 +193,7 @@ class MissionRunner {
 
     while (true) {
       if (turnsUsed >= effectiveMaxTurns) {
-        status = MissionStatus.budgetExhausted;
+        status = MissionStatus.maxTurnsExceeded;
         break;
       }
       if (deadline != null && _clock().isAfter(deadline)) {
