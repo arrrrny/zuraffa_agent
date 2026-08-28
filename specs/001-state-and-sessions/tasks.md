@@ -62,6 +62,20 @@ persisted as granular typed entries. Round-trip verified.
 
 ### ZFA entity creation (US1)
 
+- [x] [U1] Distinct typed entities with field access + value equality (types_test) — US1-AC1/FR-001
+- [x] [U2] Entries retrievable independently by sealed subtype identity (roundtrip_test) — US1-AC1/FR-001
+- [x] [U3] Each entity round-trips as typed object, no Map<String,dynamic> escapes (roundtrip_test/types_test) — US1-AC2/FR-001
+- [x] [U4] Fork shares ancestry 1..N, diverges, both resumable (session_storage_test) — US2-AC1/FR-002
+- [x] [U5] buildContext reconstructs active branch exactly + active model/compaction (session_storage_test) — US2-AC2/FR-002
+- [x] [U6] Active leaf persists across close/reopen → resume from latest leaf (session_storage_test) — US2-AC3/FR-002/003
+- [x] [U7] JSONL store round-trips a session; mission_50.jsonl loads (session_storage_test) — US2-AC4/FR-003/SC-001
+- [x] [U8] Corrupt JSONL tail recovered to last valid entry (session_storage_test) — Edge/FR-003
+- [x] [U9] deleteBranch prunes unreferenced entries, retains shared ancestry (session_storage_test) — Edge/FR-002
+- [x] [U10] Compaction retains decisions + tool names, merges summaries (compaction_test) — US3-AC1/FR-004
+- [x] [U11] 50+ tool-call mission stays under budget; shouldCompact/findCutPoint/prepareCompaction (compaction_test) — US3-AC2/FR-004/SC-002
+- [x] [U12] UsageLedger aggregates typed entries (usage_ledger_test) — US1-AC1/FR-001
+- [x] [U13] pi_agent seed merged with attribution; suite green (no dedicated test) — US4-AC1/FR-005
+- [x] [U14] No stub loop ships in state/session layer (code review + green suite) — US4-AC2/FR-005
 - [x] T007 [P] Verify all12 entities were created by zfa entity create and `zfa build` produces
   .zorphy.dart + .g.dart for each; run `dart analyze` (must be No issues found)
 - [x] T008 [P] For each entity, generate a mock data file with `zfa mock data <Entity> --force`

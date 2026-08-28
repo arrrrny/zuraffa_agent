@@ -1,4 +1,7 @@
 # Tasks: StopPolicy clean-architecture layers
+- [x] [U1] StopPolicyRepository defines getCurrent/update/reset; impl delegates + StateError on unknown id — `stop_policy_repository_impl_test.dart::U8: StopPolicyRepositoryImpl is a StopPolicyRepository`
+- [x] [U2] StopPolicyService current/defaultPolicy(NoParams); provider is a service; parameterless compiles — `stop_policy_provider_test.dart::U10: StopPolicyProvider is a StopPolicyService`
+- [x] [U3] Provider returns default when fresh, serves seeded policy, reset restores default through the chain — `stop_policy_provider_test.dart::A1: a fresh chain returns the default policy from current()`
 - T1 Create `lib/src/domain/repositories/stop_policy_repository.dart` (abstract).
 - T2 Create `lib/src/domain/services/stop_policy_service.dart` (abstract, NoParams parameterless methods).
 - T3 Create `lib/src/data/providers/stop_policy/stop_policy_provider.dart` (concrete stub).

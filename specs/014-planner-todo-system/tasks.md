@@ -1,5 +1,13 @@
 # Tasks: Planner/TODO System
 - [x] T1 Write the planner test suite first (TDD red): `test/data/providers/planner/planner_provider_test.dart` — StepStatus enum, PlanStep transitions, PlanState SC-001 progress accuracy + SC-003 five-turn persistence, PlanMode FR-003 semantics, Planner/WriteTodosTool FR-001 injectability + SC-002, PlanChangedEvent FR-005, clean-arch layer wiring.
+- [x] [U1] StepStatus has pending/inProgress/completed/cancelled + isTerminal — `planner_provider_test.dart::StepStatus`
+- [x] [U2] PlanStep defaults to pending; copyWith is pure; value equality — `planner_provider_test.dart::PlanStep`
+- [x] [U3] PlanState reports accurate counts + progressFraction (SC-001) — `planner_provider_test.dart::PlanState — SC-001 accurate progress`
+- [x] [U4] PlanMode none/auto/must injection + planning semantics (FR-003) — `planner_provider_test.dart::PlanMode — FR-003 configuration`
+- [x] [U5] PlanChangedEvent carries previous/next/emittedAt + completedGained (FR-005) — `planner_provider_test.dart::PlanChangedEvent — FR-005`
+- [x] [U6] WriteTodosTool is an AgentTool declaration; Planner injects per mode; must forces planning (FR-001/SC-002) — `planner_provider_test.dart::Planner + WriteTodosTool — FR-001 injectable tool`
+- [x] [U7] PlanState persists across 5 turns via immutable snapshots (SC-003) — `planner_provider_test.dart::PlanState — SC-003 persists across turns`
+- [x] [U8] Clean-arch layers wired: PlannerProvider is a PlannerService stub; type bounds usable — `planner_provider_test.dart::Clean-architecture layers`
 - [x] T2 Create `lib/src/domain/entities/planner/step_status.dart` (enum: pending, inProgress, completed, cancelled).
 - [x] T3 Create `lib/src/domain/entities/planner/plan_step.dart` (value object + copyWith + equality).
 - [x] T4 Create `lib/src/domain/entities/planner/plan_state.dart` (immutable snapshot + count/progress getters + pure update methods).
