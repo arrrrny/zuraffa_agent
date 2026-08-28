@@ -363,5 +363,22 @@ void main() {
       expect(record, isNull, reason: 'dangling link resolves to null');
       expect(layer, isNull);
     });
+
+    test('remember rejects an id already used in the opposite layer', () {
+      final system = AgentMemorySystem();
+      system.remember(rec('dup', 'long-term first'));
+      expect(
+          () => system.remember(rec('dup', 'session clash'),
+              sessionId: 's'),
+          throwsArgumentError,
+          reason: 'id already in long-term');
+
+      final other = AgentMemorySystem();
+      other.remember(rec('dup', 'session first',
+          source: src(sessionId: 's')), sessionId: 's');
+      expect(() => other.remember(rec('dup', 'long-term clash')),
+          throwsArgumentError,
+          reason: 'id already in session');
+    });
   });
 }

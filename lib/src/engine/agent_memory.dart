@@ -405,10 +405,22 @@ class AgentMemorySystem {
 
   /// Stores [record]: long-term when [sessionId] is null, session memory
   /// otherwise. Returns the stored record.
+  ///
+  /// Throws [ArgumentError] if [record.id] already exists in the opposite
+  /// layer — ids are globally unique across the system so [recall] never
+  /// double-counts a record and [promote] never silently overwrites.
   MemoryRecord remember(MemoryRecord record, {String? sessionId}) {
     if (sessionId == null) {
+      if (sessionMemory.contains(record.id)) {
+        throw ArgumentError.value(record.id, 'record.id',
+            'memory id already used in session memory');
+      }
       longTermMemory.remember(record);
     } else {
+      if (longTermMemory.contains(record.id)) {
+        throw ArgumentError.value(record.id, 'record.id',
+            'memory id already used in long-term memory');
+      }
       sessionMemory.remember(sessionId, record);
     }
     return record;
