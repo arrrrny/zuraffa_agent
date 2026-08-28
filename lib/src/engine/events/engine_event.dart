@@ -17,6 +17,8 @@
 
 library;
 
+import '../../domain/entities/planner/plan_changed_event.dart';
+
 part 'turn_started.dart';
 part 'turn_completed.dart';
 part 'tool_call_started.dart';
@@ -26,6 +28,7 @@ part 'steering_injected.dart';
 part 'provider_error.dart';
 part 'mission_started.dart';
 part 'mission_completed.dart';
+part 'plan_changed.dart';
 part 'engine_event.g.dart';
 
 /// Sealed base for every event the agent engine emits at runtime.

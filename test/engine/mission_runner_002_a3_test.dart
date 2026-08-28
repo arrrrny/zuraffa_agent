@@ -112,6 +112,8 @@ String eventKey(EngineEvent e) => switch (e) {
         'SteeringInjected|$emittedAt|$content|$injectedAt',
       ProviderError(:final emittedAt, :final providerName, :final error) =>
         'ProviderError|$emittedAt|$providerName|$error',
+      PlanChanged(:final emittedAt, :final change) =>
+        'PlanChanged|$emittedAt|${change.previous.id}|${change.next.id}',
     };
 
 void main() {

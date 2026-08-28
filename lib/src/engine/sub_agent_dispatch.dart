@@ -107,9 +107,18 @@ enum SubAgentDispatchStatus {
   /// The child mission's provider failed terminally.
   providerFailed,
 
+  /// The child mission hit its turn cap (loop.maxTurns / policy.maxTurns).
+  maxTurnsExceeded,
+
+  /// The child mission repeated the same tool call up to the threshold.
+  loopDetected,
+
+  /// The child mission's goal was achieved before the natural stop.
+  goalAchieved,
+
   /// The dispatch was refused before any run: admin risk tier without an
   /// explicit grant (spec 036: "the engine refuses to dispatch admin-risk
-  /// sub-agents without an admin grant").
+  /// sub-agents without an admin grant")
   refusedRiskTier,
 }
 
@@ -260,6 +269,9 @@ class SubAgentDispatchService {
       MissionStatus.completed => SubAgentDispatchStatus.completed,
       MissionStatus.budgetExhausted => SubAgentDispatchStatus.budgetExhausted,
       MissionStatus.providerFailed => SubAgentDispatchStatus.providerFailed,
+      MissionStatus.maxTurnsExceeded => SubAgentDispatchStatus.maxTurnsExceeded,
+      MissionStatus.loopDetected => SubAgentDispatchStatus.loopDetected,
+      MissionStatus.goalAchieved => SubAgentDispatchStatus.goalAchieved,
     };
 
     // Bookkeeping: a run happened — totalRuns + 1, outcome recorded. The
