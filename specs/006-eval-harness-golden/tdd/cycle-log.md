@@ -57,3 +57,34 @@ plan is being recorded before any change.
   genuinely pinned on both sides. Restored.
 - No refactor needed.
 - commit: (this cycle)
+
+## Cycle: A8 — GM-1..GM-5 suite runs in CI and reports/gates correctly
+
+- test: `test/eval/suite_runner_006_a8_test.dart` :: two acceptance cases —
+  "A8: GM-1..GM-5 suite — all tasks pass the gate → exitCode 0" and
+  "A8: GM-1..GM-5 suite — tasks below threshold fail the gate → exitCode 1".
+- RED: written and run after the production path already existed
+  (MissionRunner spec 069, CassetteReplayLlmClient A1, SuiteGate A4). First run
+  failed to load on three compile errors — `EngineLoopExecutor` not imported and
+  `const` applied to non-const fakes (`_OkDispatcher`/`_SearchThenStopPlanner`).
+  Those are test-only harness wiring mistakes, not a missing behavior, so they
+  were fixed and the test re-run; the proper red for the behavior itself is the
+  deliberate-mutant check below.
+- GREEN: the two cases drive a `Suite` (tasks GM-1..GM-5, k=2, gateThreshold
+  0.8) by running each golden mission n=5 times through a real `MissionRunner`
+  backed by `CassetteReplayLlmClient.fromGoldenMission`, grading each replay's
+  summary with an exact matcher, and calling `SuiteGate.evaluate`. Passing
+  cohort: every task scores pass@k 1.0 → suite score 1.0, passed, exitCode 0.
+  Failing cohort: GM-3/GM-4/GM-5 score 0.0, GM-1/GM-2 score 1.0 → suite mean
+  0.4 < 0.8, failed, exitCode 1, breakdown names the three regressed tasks. Full
+  suite green (952 passed, 2 skipped, 65s). No production code was added or
+  changed — this is the end-to-end composition the outer-only plan had left
+  BLOCKED ("needs harness runner test").
+- Deliberate mutant: `suite_gate.dart` `passed = score >= suite.gateThreshold &&
+  !incomplete` -> `passed = false`. The passing-cohort case failed
+  (`Expected: true Actual: <false>`); the failing-cohort case still passed (it
+  expects false). Restored the line exactly. The test is not vacuous: it pins the
+  gate's pass/fail verdict, not just the score.
+- No refactor needed (the test isolates a self-contained harness; the runner,
+  replay client, and gate are already minimal and shared).
+- commit: (this cycle)

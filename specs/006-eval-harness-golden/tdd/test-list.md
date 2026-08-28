@@ -30,7 +30,7 @@ harness is driven end to end (record → replay, scoring, grading, gating) and a
 | A5  | A task with an exact grader decides by byte-equality                                                      | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
 | A6  | A task with a schema grader decides by JSON-Schema validity                                               | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
 | A7  | A model-judge grader (recorded judge) decides by parsed verdict; the judge call replays deterministically  | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
-| A8  | GM-1..GM-5 defined as harness suites run in CI and report/gate correctly                                  | FR-004 | example | BLOCKED | `Suite` entity supports GM-1..GM-5 task lists + `gateThreshold` (test/domain/entities/suite_test.dart); CI RUN + report/gate execution NOT asserted — needs harness runner test |
+| A8  | GM-1..GM-5 defined as harness suites run in CI and report/gate correctly                                  | FR-004 | example | DONE    | test/eval/suite_runner_006_a8_test.dart :: "A8: GM-1..GM-5 suite — all tasks pass the gate → exitCode 0" (+ the below-threshold failing cohort) |
 | A9  | The eval runtime package scanned has no `dart:io` imports (CLI/loader layers exempt)                      | FR-005 | example | DONE    | test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart ||
 
 ## Inner loop: deferred — plan.md absent
