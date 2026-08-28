@@ -2,6 +2,8 @@ import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
 
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
+import 'package:zuraffa_agent/src/domain/entities/planner/plan_changed_event.dart';
+import 'package:zuraffa_agent/src/domain/entities/planner/plan_state.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#24 — sealed EngineEvent library', () {
@@ -34,6 +36,7 @@ void main() {
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
         MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
       };
 
       final startEvent = TurnStarted(emittedAt: fixedTime, turnId: 't-1');
@@ -188,4 +191,80 @@ void main() {
       expect(event.missionId, 'sample');
       expect(event.status, 'sample');
     });  });
+
+  group('spec 067 — EngineEvent.PlanChanged', () {
+    final emitted = DateTime.utc(2026, 8, 24, 7, 30, 0);
+    final applied = DateTime.utc(2026, 8, 24, 7, 29, 0);
+    final previous = PlanState(id: 'p-1', steps: []);
+    final next = PlanState(id: 'p-2', steps: []);
+
+    PlanChangedEvent change() =>
+        PlanChangedEvent(emittedAt: applied, previous: previous, next: next);
+
+    test('PlanChanged is an EngineEvent', () {
+      final event = PlanChanged(emittedAt: emitted, change: change());
+      expect(event, isA<EngineEvent>());
+      expect(event, isA<PlanChanged>());
+    });
+
+    test('PlanChanged carries emittedAt + the PlanChangedEvent payload', () {
+      final c = change();
+      final event = PlanChanged(emittedAt: emitted, change: c);
+      expect(event.emittedAt, emitted);
+      expect(identical(event.change, c), isTrue);
+      expect(event.change.previous, same(previous));
+      expect(event.change.next, same(next));
+      // change.emittedAt is when the plan change was applied — a distinct
+      // instant from the engine emission time.
+      expect(event.change.emittedAt, applied);
+      expect(event.change.emittedAt, isNot(equals(event.emittedAt)));
+    });
+
+    test('describe(EngineEvent) switch routes PlanChanged to plan_changed(next plan id)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+      };
+
+      final event = PlanChanged(emittedAt: emitted, change: change());
+      expect(describe(event), 'plan_changed(p-2)');
+    });
+
+    test('PlanChanged value semantics (born with spec 066 pattern)', () {
+      final a = PlanChanged(emittedAt: emitted, change: change());
+      final b = PlanChanged(emittedAt: emitted, change: change());
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(
+        a,
+        isNot(equals(PlanChanged(
+          emittedAt: DateTime.utc(2026, 8, 24, 9, 15, 0),
+          change: change(),
+        ))),
+      );
+      final otherChange = PlanChangedEvent(
+        emittedAt: applied,
+        previous: previous,
+        next: PlanState(id: 'p-9', steps: []),
+      );
+      expect(a, isNot(equals(PlanChanged(emittedAt: emitted, change: otherChange))));
+      expect(
+        a.toString(),
+        'PlanChanged(emittedAt: 2026-08-24 07:30:00.000Z, change: '
+        'PlanChangedEvent(emittedAt: 2026-08-24 07:29:00.000Z, completedGained: 0, '
+        'previous: PlanState(id: p-1, steps: 0, completed: 0, inProgress: 0, '
+        'pending: 0, cancelled: 0, currentStepId: null), '
+        'next: PlanState(id: p-2, steps: 0, completed: 0, inProgress: 0, '
+        'pending: 0, cancelled: 0, currentStepId: null)))',
+      );
+    });
+  });
 }
