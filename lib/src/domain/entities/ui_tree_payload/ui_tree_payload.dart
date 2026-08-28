@@ -136,6 +136,12 @@ class UiTreePayload {
     final removed = <String>[];
     final changed = <String>[];
     _diffNodes('root', tree, other.tree, added, removed, changed);
+    // Emit lexically-sorted path lists so diffs are deterministic and stable
+    // for replay artifacts (per UiTreePayload/UiTreeDiff contract), independent
+    // of the positional traversal order produced by _diffNodes.
+    added.sort();
+    removed.sort();
+    changed.sort();
     return UiTreeDiff(
       addedPaths: added,
       removedPaths: removed,
