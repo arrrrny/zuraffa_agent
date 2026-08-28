@@ -42,6 +42,7 @@ import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
 import 'events/engine_event.dart';
+import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
 
 /// Terminal status of a mission run.
@@ -54,6 +55,10 @@ enum MissionStatus {
 
   /// The provider failed terminally mid-mission.
   providerFailed,
+
+  /// Goal mode (spec 071): the GoalEvaluator judged the goal achieved
+  /// from the transcript; the mission stopped early.
+  goalAchieved,
 }
 
 /// Outcome of one mission run: id, terminal [status], turns consumed, the
@@ -70,6 +75,8 @@ class MissionResult {
   final int turnsUsed;
   final List<ChatMessage> transcript;
   final String? summary;
+  final Goal? goal;
+  final bool goalAchieved;
 
   MissionResult({
     required this.missionId,
@@ -77,6 +84,8 @@ class MissionResult {
     required this.turnsUsed,
     required List<ChatMessage> transcript,
     this.summary,
+    this.goal,
+    this.goalAchieved = false,
   }) : transcript = List.unmodifiable(transcript);
 
   @override
@@ -88,7 +97,9 @@ class MissionResult {
           status == other.status &&
           turnsUsed == other.turnsUsed &&
           _listEq(transcript, other.transcript) &&
-          summary == other.summary);
+          summary == other.summary &&
+          goal == other.goal &&
+          goalAchieved == other.goalAchieved);
 
   static bool _listEq(List<ChatMessage> a, List<ChatMessage> b) {
     if (identical(a, b)) return true;
@@ -106,12 +117,15 @@ class MissionResult {
         turnsUsed,
         Object.hashAll(transcript),
         summary,
+        goal,
+        goalAchieved,
       );
 
   @override
   String toString() =>
       'MissionResult(missionId: $missionId, status: ${status.name}, '
-      'turnsUsed: $turnsUsed, messages: ${transcript.length}, summary: $summary)';
+      'turnsUsed: $turnsUsed, messages: ${transcript.length}, summary: $summary'
+      '${goal != null ? ', goal: $goal' : ''}, goalAchieved: $goalAchieved)';
 }
 
 /// Strategy mapping a completed LLM turn to the tool calls the model wants.
@@ -162,11 +176,26 @@ class MissionRunner {
   /// [planner] decides which tools to dispatch after each non-natural
   /// completion; when null, the mission can only end naturally
   /// (`finishReason == 'stop'`) or by budget.
+  ///
+  /// Goal mode (spec 071): [goal] and [goalEvaluator] must be supplied
+  /// together (both or neither); with them active the runner consults the
+  /// evaluator after each turn's tool dispatch and before the natural-stop
+  /// check, stopping early with [MissionStatus.goalAchieved] on a true
+  /// verdict. Goal mode never overrides budgets or the natural stop.
   Future<MissionResult> run({
     required String missionId,
     required List<ChatMessage> messages,
     ToolCallPlanner? planner,
+    Goal? goal,
+    GoalEvaluator? goalEvaluator,
   }) async {
+    if ((goal == null) != (goalEvaluator == null)) {
+      throw ArgumentError.value(
+        goal == null ? 'goalEvaluator' : 'goal',
+        'goal/goalEvaluator',
+        'goal mode requires goal and goalEvaluator together (both or neither)',
+      );
+    }
     final start = _clock();
     final deadline =
         (_stopPolicy.enabled && _stopPolicy.wallClockTimeout != Duration.zero)
@@ -274,6 +303,20 @@ class MissionRunner {
 
       _onEvent(TurnCompleted(emittedAt: _clock()));
 
+      // Goal mode (spec 071): consult the evaluator AFTER this turn's tool
+      // dispatch (tool results are visible) and BEFORE the natural-stop
+      // check (a goal met on the model's stop turn still reports
+      // goalAchieved). A true verdict stops the mission early.
+      if (goal != null &&
+          goalEvaluator!.isAchieved(
+            goal,
+            List<ChatMessage>.unmodifiable(transcript),
+          )) {
+        status = MissionStatus.goalAchieved;
+        summary = completion.content;
+        break;
+      }
+
       // Natural stop: the model finished and nothing was dispatched.
       if (calls.isEmpty && completion.finishReason == 'stop') {
         status = MissionStatus.completed;
@@ -295,6 +338,8 @@ class MissionRunner {
       turnsUsed: turnsUsed,
       transcript: transcript,
       summary: summary,
+      goal: goal,
+      goalAchieved: status == MissionStatus.goalAchieved,
     );
   }
 }
