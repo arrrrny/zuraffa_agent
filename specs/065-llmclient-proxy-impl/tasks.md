@@ -24,7 +24,7 @@ loop must still close.
 - [x] [U9] Test: `current()` returns active `LlmClient` from config, not stubbed (`llm_client_provider_test.dart`)
 - [x] [U10] Test: `count()` returns number of usable clients (`llm_client_provider_test.dart`)
 - [x] [U12] Test: `LlmClient` equality is value-based across all fields (`llm_client_provider_test.dart`)
-- [ ] [U11] Test: `ProviderConfig.timeoutMs` forwarded to the transport's completion call
+- [x] [U11] Test: `ProviderConfig.timeoutMs` forwarded to the transport's completion call
 - [x] Impl (PR #71): `LlmClientProvider` resolves from provider configuration
 - [x] [A2] Gate: Story 2 acceptance test (`provider resolves the active client from config`) green before story complete
 

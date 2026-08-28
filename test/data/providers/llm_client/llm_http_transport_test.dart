@@ -117,7 +117,7 @@ void main() {
       transport = LlmHttpTransport(clientFactory: () => client);
     });
 
-    Future<void> _exercise({required String? proxyUrl}) async {
+    Future<void> exercise({required String? proxyUrl}) async {
       when(() => client.postUrl(any())).thenThrow(
         const SocketException('simulated network — no real connection'),
       );
@@ -137,12 +137,12 @@ void main() {
 
     test('connects directly (no findProxy) when proxyUrl is null or empty', () async {
       // null proxy
-      await _exercise(proxyUrl: null);
+      await exercise(proxyUrl: null);
       expect(client.findProxyAssigned, isFalse,
           reason: 'findProxy must not be installed when proxyUrl is null');
 
       // empty proxy
-      await _exercise(proxyUrl: '');
+      await exercise(proxyUrl: '');
       expect(client.findProxyAssigned, isFalse,
           reason: 'findProxy must not be installed when proxyUrl is empty');
     });

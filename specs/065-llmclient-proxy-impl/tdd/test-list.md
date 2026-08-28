@@ -52,7 +52,7 @@ Grouped by the component from `spec.md` §Key Entities that owns them.
 | --- | ----------------------------------------------------------------- | ------------ | -------- | -------- | ------------------------------------------------------------------------------------- |
 | U9  | `current()` returns the active `LlmClient` from config (not stubbed) | FR-006       | example  | DONE     | `test/data/providers/llm_client/llm_client_provider_test.dart::LlmClientProvider.current returns the active LlmClient (no longer stubbed)` |
 | U10 | `count()` returns the number of usable configured clients          | FR-006       | example  | DONE     | `test/data/providers/llm_client/llm_client_provider_test.dart::LlmClientProvider.count returns the number of usable clients` |
-| U11 | Forwards `ProviderConfig.timeoutMs` to the transport's completion call | FR-003 (impl) | example  | PENDING  |                                                                                       |
+| U11 | Forwards `ProviderConfig.timeoutMs` to the transport's completion call | FR-003 (impl) | example  | DONE    | `test/data/providers/llm_client/llm_client_provider_test.dart::forwards ProviderConfig.timeoutMs to the transport completion timeout` |
 
 ### `lib/src/domain/entities/llm_client/*` (ChatMessage / ChatCompletion / LlmClient value objects)
 
