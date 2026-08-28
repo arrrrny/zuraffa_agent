@@ -301,6 +301,9 @@ class AgentSwarm {
           completedCount: successes,
         ));
       },
+      onError: (Object e, StackTrace st) {
+        if (!completer.isCompleted) completer.completeError(e, st);
+      },
     );
     return completer.future;
   }
