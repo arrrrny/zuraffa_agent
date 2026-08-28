@@ -45,3 +45,22 @@ plan is being recorded before any change.
   failed (`ok` expected false). Restored; green.
 - No refactor needed.
 - suite after: `dart test` -> 939 passed, 2 skipped (0 failed).
+
+## Cycle: A4 — resume a persisted sub-agent instance by id
+
+- test: `test/data/datasources/sub_agent_instance/sub_agent_instance_store_test.dart`
+  :: "A4: a persisted instance id resumes its session tree from the stored leaf"
+- RED: `dart test test/data/datasources/sub_agent_instance/sub_agent_instance_store_test.dart`
+  -> `Error: Method not found: 'SubAgentInstanceStore'.` — nothing persisted
+  sub-agent instances; `SubAgentInstanceProvider` only held one in-memory snapshot.
+- GREEN: added a hand-written `fromJson`/`toJson` pair to the `SubAgentInstance`
+  value object and `lib/src/data/datasources/sub_agent_instance/sub_agent_instance_store.dart`
+  (`save` / `resume` / `all`) backed by the allowlisted `JsonlEntityStorage`
+  adapter, volatile in-memory when `path` is null. The restart is modelled by
+  constructing a second store over the same JSONL path. Full suite green
+  (942 passed, 2 skipped, 77s).
+- Deliberate mutant: `'parentSessionId': parentSessionId` -> `'mutant'` in
+  `toJson` -> A4 failed on the resumed leaf. Restored.
+- No refactor needed: the store mirrors the existing remote-datasource shape
+  (nullable path, storage-or-memory) rather than inventing a second pattern.
+- commit: (this cycle)

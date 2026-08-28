@@ -24,6 +24,29 @@ class SubAgentInstance {
     this.lastRunOutcome,
   });
 
+  /// Rehydrates an instance from its durable JSON form (see [toJson]).
+  ///
+  /// Added for spec 005 FR-002 (resumable across engine restarts): the durable
+  /// store needs a symmetric round trip, and this value object carries no
+  /// codegen, so the pair is written by hand.
+  factory SubAgentInstance.fromJson(Map<String, dynamic> json) =>
+      SubAgentInstance(
+        id: json['id'] as String,
+        subAgentSpecId: json['subAgentSpecId'] as String,
+        parentSessionId: json['parentSessionId'] as String,
+        totalRuns: json['totalRuns'] as int,
+        lastRunOutcome: json['lastRunOutcome'] as String?,
+      );
+
+  /// The durable JSON form of this instance.
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'subAgentSpecId': subAgentSpecId,
+        'parentSessionId': parentSessionId,
+        'totalRuns': totalRuns,
+        'lastRunOutcome': lastRunOutcome,
+      };
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
