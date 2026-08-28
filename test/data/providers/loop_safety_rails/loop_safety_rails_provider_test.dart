@@ -21,6 +21,57 @@ void main() {
       final b = LoopSafetyRails(outcomeType: 'LoopDetected', turnNumber: 20, reason: 'val-b', emittedAt: 20);
       expect(a == b, isFalse);
     });
+
+    test('LoopSafetyRails inequality detected per-field: outcomeType', () {
+      final a = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r', emittedAt: 1);
+      final b = LoopSafetyRails(outcomeType: 'LoopDetected', turnNumber: 1, reason: 'r', emittedAt: 1);
+      expect(a == b, isFalse);
+    });
+
+    test('LoopSafetyRails inequality detected per-field: turnNumber', () {
+      final a = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r', emittedAt: 1);
+      final b = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 2, reason: 'r', emittedAt: 1);
+      expect(a == b, isFalse);
+    });
+
+    test('LoopSafetyRails inequality detected per-field: reason', () {
+      final a = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r1', emittedAt: 1);
+      final b = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r2', emittedAt: 1);
+      expect(a == b, isFalse);
+    });
+
+    test('LoopSafetyRails inequality detected per-field: emittedAt', () {
+      final a = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r', emittedAt: 1);
+      final b = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 1, reason: 'r', emittedAt: 2);
+      expect(a == b, isFalse);
+    });
+
+    test('identical instances are equal via identical() shortcut', () {
+      final instance = LoopSafetyRails(outcomeType: 'WallClockTimeout', turnNumber: 5, reason: 'timeout', emittedAt: 5);
+      expect(identical(instance, instance), isTrue);
+      expect(instance == instance, isTrue);
+    });
+  });
+
+  group('arrarrny/zuraffa_agent#2 - LoopSafetyRails toString', () {
+    test('toString includes outcomeType and turnNumber', () {
+      final r = LoopSafetyRails(outcomeType: 'MaxTurnsExceeded', turnNumber: 42, reason: 'limit', emittedAt: 100);
+      final s = r.toString();
+      expect(s, contains('MaxTurnsExceeded'));
+      expect(s, contains('42'));
+    });
+
+    test('toString includes reason', () {
+      final r = LoopSafetyRails(outcomeType: 'LoopDetected', turnNumber: 1, reason: 'infinite-loop', emittedAt: 1);
+      final s = r.toString();
+      expect(s, contains('infinite-loop'));
+    });
+
+    test('toString omits emittedAt for readability', () {
+      final r = LoopSafetyRails(outcomeType: 'WallClockTimeout', turnNumber: 10, reason: 't', emittedAt: 9999);
+      final s = r.toString();
+      expect(s, isNot(contains('9999')));
+    });
   });
 
   group('arrarrny/zuraffa_agent#2 - LoopSafetyRails clean-arch layers', () {
@@ -39,6 +90,10 @@ void main() {
 
     test('LoopSafetyRailsProvider.count returns 1', () async {
       expect(await LoopSafetyRailsProvider().count(NoParams()), 1);
+    });
+
+    test('LoopSafetyRailsProvider constructor takes no arguments', () {
+      expect(() => LoopSafetyRailsProvider(), returnsNormally);
     });
   });
 }
