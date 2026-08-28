@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the EngineLoop value object +
-// EngineLoopProvider stub. Pattern mirrors spec 033.
+// EngineLoopProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -25,24 +25,18 @@ void main() {
 
   group('arrarrny/zuraffa_agent#2 - EngineLoop clean-arch layers', () {
     test('EngineLoopProvider is a EngineLoopService', () {
-      final provider = EngineLoopProvider();
-      expect(provider, isA<EngineLoopService>());
+      expect(EngineLoopProvider(), isA<EngineLoopService>());
     });
 
-    test('EngineLoopProvider.current throws UnimplementedError on NoParams', () {
-      final provider = EngineLoopProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('EngineLoopProvider.current returns the active loop config', () async {
+      final loop = await EngineLoopProvider().current(NoParams());
+      expect(loop, isA<EngineLoop>());
+      expect(loop.maxTurns, greaterThan(0));
+      expect(loop.wallClockTimeoutMs, greaterThan(0));
     });
 
-    test('EngineLoopProvider.count throws UnimplementedError on NoParams', () {
-      final provider = EngineLoopProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('EngineLoopProvider.count returns 1', () async {
+      expect(await EngineLoopProvider().count(NoParams()), 1);
     });
   });
 }

@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#5 (R4 - providers & fallback).
 //
-// Concrete provider stub for the ProviderConfig data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the ProviderConfig data layer. Returns the active
+// provider configuration (Constitution: config-driven, not hard-coded). This
+// replaces the previous UnimplementedError stub (spec 052).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,21 @@ import '../../../domain/services/provider_config_service.dart';
 class ProviderConfigProvider
     with Loggable, FailureHandler
     implements ProviderConfigService {
-  ProviderConfigProvider();
+  final ProviderConfig _active;
+
+  ProviderConfigProvider([ProviderConfig? active])
+      : _active = active ??
+            const ProviderConfig(
+              id: 'kilo',
+              providerKind: 'openai',
+              baseUrl: 'https://api.kilo.ai/api/gateway',
+              models: ['tencent/hy3:free'],
+              timeoutMs: 30000,
+            );
 
   @override
-  Future<ProviderConfig> current(NoParams params) async =>
-      throw UnimplementedError('Implement ProviderConfigProvider.current');
+  Future<ProviderConfig> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement ProviderConfigProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#7 (R6 - eval harness).
 //
-// Concrete provider stub for the RecordedTraffic data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the RecordedTraffic data layer. Returns the active
+// recorded-LLM/tool-traffic snapshot. Replaces the previous
+// UnimplementedError stub (spec 037).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,21 @@ import '../../../domain/services/recorded_traffic_service.dart';
 class RecordedTrafficProvider
     with Loggable, FailureHandler
     implements RecordedTrafficService {
-  RecordedTrafficProvider();
+  final RecordedTraffic _active;
+
+  RecordedTrafficProvider([RecordedTraffic? active])
+      : _active = active ??
+            const RecordedTraffic(
+              id: 'default',
+              missionId: 'mission-1',
+              llmCallCount: 0,
+              toolCallCount: 0,
+              recordedAt: 0,
+            );
 
   @override
-  Future<RecordedTraffic> current(NoParams params) async =>
-      throw UnimplementedError('Implement RecordedTrafficProvider.current');
+  Future<RecordedTraffic> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement RecordedTrafficProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the SubAgentInstance value object +
-// SubAgentInstanceProvider stub. Pattern mirrors spec 033.
+// SubAgentInstanceProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,22 @@ void main() {
       expect(provider, isA<SubAgentInstanceService>());
     });
 
-    test('SubAgentInstanceProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SubAgentInstanceProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SubAgentInstanceProvider.current returns the active instance', () async {
+      final inst = await SubAgentInstanceProvider().current(NoParams());
+      expect(inst, isA<SubAgentInstance>());
+      expect(inst.id, 'instance-default');
+      expect(inst.parentSessionId, 'session-default');
+      expect(inst.totalRuns, 0);
+      expect(inst.lastRunOutcome, isNull);
     });
 
-    test('SubAgentInstanceProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SubAgentInstanceProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SubAgentInstanceProvider.current returns a supplied active instance', () async {
+      final active = SubAgentInstance(id: 'inst-x', subAgentSpecId: 'spec-x', parentSessionId: 'sess-x', totalRuns: 3, lastRunOutcome: 'ok');
+      expect(await SubAgentInstanceProvider(active).current(NoParams()), active);
+    });
+
+    test('SubAgentInstanceProvider.count returns 1', () async {
+      expect(await SubAgentInstanceProvider().count(NoParams()), 1);
     });
   });
 }

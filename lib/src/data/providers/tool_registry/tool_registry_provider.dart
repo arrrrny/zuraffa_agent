@@ -1,10 +1,10 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#4 (R3 - tools & mcp).
 //
-// Concrete provider stub for the ToolRegistry data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the ToolRegistry data layer. Returns the active
+// single-namespace registry snapshot (DDA + generated + remote-MCP tools
+// behind one lookup). Mirrors the ProviderConfigProvider /
+// EngineLoopProvider pattern (spec 052 / 045).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +14,21 @@ import '../../../domain/services/tool_registry_service.dart';
 class ToolRegistryProvider
     with Loggable, FailureHandler
     implements ToolRegistryService {
-  ToolRegistryProvider();
+  final ToolRegistry _active;
+
+  ToolRegistryProvider([ToolRegistry? active])
+      : _active = active ??
+            const ToolRegistry(
+              id: 'default',
+              toolNames: ['fs.read', 'fs.write', 'dispatch'],
+              ddToolCount: 2,
+              generatedToolCount: 1,
+              mcpToolCount: 0,
+            );
 
   @override
-  Future<ToolRegistry> current(NoParams params) async =>
-      throw UnimplementedError('Implement ToolRegistryProvider.current');
+  Future<ToolRegistry> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement ToolRegistryProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

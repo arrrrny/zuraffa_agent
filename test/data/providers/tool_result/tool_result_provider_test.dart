@@ -6,7 +6,8 @@
 //   surface ships the spec-exact shape: content + structuredPayload + artifactRef).
 // - The clean-arch layers (ToolResultService + ToolResultProvider) are
 //   wired correctly and compile.
-// - The provider's UnimplementedError stubs fire.
+// - The provider returns an empty default result when nothing has been
+//   emitted, the last-emitted result otherwise, and a matching count.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -69,18 +70,31 @@ void main() {
       expect(ToolResultProvider(), isA<ToolResultService>());
     });
 
-    test('ToolResultProvider.current throws UnimplementedError on NoParams', () {
-      expect(
-        () => ToolResultProvider().current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('ToolResultProvider.current returns an empty default when nothing was emitted', () async {
+      final result = await ToolResultProvider().current(NoParams());
+      expect(result, isA<ToolResult>());
+      expect(result.content, isEmpty);
+      expect(result.isSummarized, isFalse);
     });
 
-    test('ToolResultProvider.count throws UnimplementedError on NoParams', () {
-      expect(
-        () => ToolResultProvider().count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('ToolResultProvider.count returns 0 when nothing was emitted', () async {
+      expect(await ToolResultProvider().count(NoParams()), 0);
+    });
+
+    test('ToolResultProvider.current returns the last-emitted result', () async {
+      final provider = ToolResultProvider();
+      provider.emit(ToolResult(content: 'first'));
+      final latest = ToolResult(content: 'second', structuredPayload: {'k': 'v'});
+      provider.emit(latest);
+      expect(await provider.current(NoParams()), equals(latest));
+      expect(await provider.count(NoParams()), 2);
+    });
+
+    test('ToolResultProvider accepts a seeded result list', () async {
+      final seeded = ToolResult(content: 'seed');
+      final provider = ToolResultProvider([seeded]);
+      expect(await provider.current(NoParams()), equals(seeded));
+      expect(await provider.count(NoParams()), 1);
     });
   });
 }

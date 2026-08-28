@@ -1,33 +1,44 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#11.
 //
-// Mirrors the zfa-generated stub convention (see
-// `lib/src/data/datasources/turn_record/turn_record_remote_datasource.dart`
-// for the reference shape: `class X with Loggable, FailureHandler implements Y`,
-// bodies `throw UnimplementedError('Implement remote ...')`).
+// Concrete provider for the artifact data layer. Returns the persisted
+// artifact references and the per-call oversized-result threshold (in bytes,
+// beyond which a tool result is summarized + stored rather than streamed into
+// model context) as constructed/in-memory defaults (spec 052).
 //
 // The header intentionally does NOT say `// GENERATED - DO NOT EDIT` — this
 // file was written by hand and is the canonical source until zfa ships a
 // consistent ArtifactProvider/ArtifactService pair.
 
-import 'package:zuraffa/zuraffa.dart';
+import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
 import '../../../domain/entities/artifact_ref/artifact_ref.dart';
 import '../../../domain/services/artifact_service.dart';
 
-/// Stub provider for the artifact data layer.
+/// Provider for the artifact data layer.
 ///
-/// Bodies throw `UnimplementedError` on purpose: the parameter exists solely
-/// to satisfy the `@override` contract on `ArtifactService`. Real I/O is
-/// added by the consuming application when it wires a concrete store.
+/// Returns constructed/in-memory defaults so the engine stays free of platform
+/// I/O. Real persistence is wired by the consuming application.
 class ArtifactProvider with Loggable, FailureHandler implements ArtifactService {
-  ArtifactProvider();
+  static const int _kDefaultThresholdBytes = 65536;
+
+  final List<ArtifactRef> _refs;
+  final int _thresholdBytes;
+
+  ArtifactProvider([List<ArtifactRef>? refs, int? thresholdBytes])
+      : _refs = refs ??
+            [
+              ArtifactRef(
+                kind: 'file',
+                id: 'artifact-0',
+                uri: 'file:///tmp/artifact-0',
+              ),
+            ],
+        _thresholdBytes = thresholdBytes ?? _kDefaultThresholdBytes;
 
   @override
-  Future<List<ArtifactRef>> list(NoParams params) async =>
-      throw UnimplementedError('Implement ArtifactProvider.list');
+  Future<List<ArtifactRef>> list(NoParams params) async => _refs;
 
   @override
-  int thresholdBytes(NoParams params) =>
-      throw UnimplementedError('Implement ArtifactProvider.thresholdBytes');
+  int thresholdBytes(NoParams params) => _thresholdBytes;
 }

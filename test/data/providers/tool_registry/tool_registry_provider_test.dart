@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the ToolRegistry value object +
-// ToolRegistryProvider stub. Pattern mirrors spec 033.
+// ToolRegistryProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,24 @@ void main() {
       expect(provider, isA<ToolRegistryService>());
     });
 
-    test('ToolRegistryProvider.current throws UnimplementedError on NoParams', () {
-      final provider = ToolRegistryProvider();
+    test('ToolRegistryProvider.current returns the active registry snapshot', () async {
+      final registry = await ToolRegistryProvider().current(NoParams());
+      expect(registry, isA<ToolRegistry>());
+      expect(registry.id, 'default');
+      expect(registry.toolNames, isNotEmpty);
       expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+        registry.toolNames.length,
+        registry.ddToolCount + registry.generatedToolCount + registry.mcpToolCount,
       );
     });
 
-    test('ToolRegistryProvider.count throws UnimplementedError on NoParams', () {
-      final provider = ToolRegistryProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('ToolRegistryProvider.current honours an injected registry', () async {
+      final injected = ToolRegistry(id: 'custom', toolNames: const ['x'], ddToolCount: 1, generatedToolCount: 0, mcpToolCount: 0);
+      expect(await ToolRegistryProvider(injected).current(NoParams()), equals(injected));
+    });
+
+    test('ToolRegistryProvider.count returns 1', () async {
+      expect(await ToolRegistryProvider().count(NoParams()), 1);
     });
   });
 }

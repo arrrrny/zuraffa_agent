@@ -29,20 +29,34 @@ void main() {
       expect(provider, isA<YamlAgentSpecService>());
     });
 
-    test('YamlAgentSpecProvider.current throws UnimplementedError on NoParams', () {
+    test('YamlAgentSpecProvider.current returns the active agent spec', () async {
       final provider = YamlAgentSpecProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final spec = await provider.current(NoParams());
+      expect(spec, isA<YamlAgentSpec>());
+      expect(spec.id, 'default');
+      expect(spec.name, 'base');
+      expect(spec.toolAllowlist, contains('read_file'));
+      expect(spec.systemPrompt, isNotEmpty);
     });
 
-    test('YamlAgentSpecProvider.count throws UnimplementedError on NoParams', () {
+    test('YamlAgentSpecProvider.count returns 1', () async {
       final provider = YamlAgentSpecProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('YamlAgentSpecProvider honours an injected value object', () async {
+      final custom = YamlAgentSpec(
+        id: 'custom',
+        name: 'research',
+        extendsSpecId: 'base',
+        toolAllowlist: const ['search'],
+        systemPrompt: 'Research the topic.',
       );
+      final provider = YamlAgentSpecProvider(custom);
+      final spec = await provider.current(NoParams());
+      expect(spec.id, 'custom');
+      expect(spec.extendsSpecId, 'base');
+      expect(spec.toolAllowlist, ['search']);
     });
   });
 }

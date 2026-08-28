@@ -29,20 +29,28 @@ void main() {
       expect(provider, isA<PassKEmpiricalService>());
     });
 
-    test('PassKEmpiricalProvider.current throws UnimplementedError on NoParams', () {
-      final provider = PassKEmpiricalProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('PassKEmpiricalProvider.current returns the active pass^k snapshot', () async {
+      final result = await PassKEmpiricalProvider().current(NoParams());
+      expect(result, isA<PassKEmpirical>());
+      expect(result.id, 'default');
+      expect(result.taskId, 'mission-1');
+      expect(result.empiricalRate, 1.0);
     });
 
-    test('PassKEmpiricalProvider.count throws UnimplementedError on NoParams', () {
-      final provider = PassKEmpiricalProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+    test('PassKEmpiricalProvider.current honors an injected snapshot', () async {
+      final injected = const PassKEmpirical(
+        id: 'p-1',
+        taskId: 'ref-9',
+        k: 5,
+        successCount: 3,
+        empiricalRate: 0.6,
       );
+      final result = await PassKEmpiricalProvider(injected).current(NoParams());
+      expect(result, same(injected));
+    });
+
+    test('PassKEmpiricalProvider.count returns 1', () async {
+      expect(await PassKEmpiricalProvider().count(NoParams()), 1);
     });
   });
 }

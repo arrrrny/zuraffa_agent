@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the SubAgentContext value object +
-// SubAgentContextProvider stub. Pattern mirrors spec 033.
+// SubAgentContextProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,22 @@ void main() {
       expect(provider, isA<SubAgentContextService>());
     });
 
-    test('SubAgentContextProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SubAgentContextProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SubAgentContextProvider.current returns the active context', () async {
+      final ctx = await SubAgentContextProvider().current(NoParams());
+      expect(ctx, isA<SubAgentContext>());
+      expect(ctx.id, 'ctx-default');
+      expect(ctx.sessionId, 'session-default');
+      expect(ctx.toolAllowlist, isEmpty);
+      expect(ctx.budgetTurns, greaterThan(0));
     });
 
-    test('SubAgentContextProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SubAgentContextProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SubAgentContextProvider.current returns a supplied active context', () async {
+      final active = SubAgentContext(id: 'ctx-x', subAgentSpecId: 'spec-x', sessionId: 'sess-x', toolAllowlist: const ['fs.read'], budgetTurns: 5);
+      expect(await SubAgentContextProvider(active).current(NoParams()), active);
+    });
+
+    test('SubAgentContextProvider.count returns the tracked context count', () async {
+      expect(await SubAgentContextProvider().count(NoParams()), 1);
     });
   });
 }

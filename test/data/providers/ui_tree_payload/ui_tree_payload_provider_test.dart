@@ -140,20 +140,33 @@ void main() {
       expect(provider, isA<UiTreePayloadService>());
     });
 
-    test('UiTreePayloadProvider.current throws UnimplementedError on NoParams', () {
+    test('UiTreePayloadProvider.current returns the active payload', () async {
       final provider = UiTreePayloadProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final payload = await provider.current(NoParams());
+      expect(payload, isA<UiTreePayload>());
+      expect(payload.vocabularyId, 'shadcn-ui@1.0.0');
+      expect(payload.schemaVersion, '1.0.0');
+      expect(UiTreePayload.mimeType, 'ui/tree+json');
+      expect(payload.depth, greaterThanOrEqualTo(1));
+      expect(payload.nodeCount, greaterThanOrEqualTo(1));
     });
 
-    test('UiTreePayloadProvider.count throws UnimplementedError on NoParams', () {
+    test('UiTreePayloadProvider.count returns 1', () async {
       final provider = UiTreePayloadProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('UiTreePayloadProvider honours an injected value object', () async {
+      final custom = UiTreePayload(
+        vocabularyId: 'shadcn-ui@2.0.0',
+        schemaVersion: '2.0.0',
+        tree: {'type': 'Text'},
       );
+      final provider = UiTreePayloadProvider(custom);
+      final payload = await provider.current(NoParams());
+      expect(payload.vocabularyId, 'shadcn-ui@2.0.0');
+      expect(payload.depth, 1);
+      expect(payload.nodeCount, 1);
     });
   });
 }

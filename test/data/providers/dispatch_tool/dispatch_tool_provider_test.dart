@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the DispatchTool value object +
-// DispatchToolProvider stub. Pattern mirrors spec 033.
+// DispatchToolProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,21 @@ void main() {
       expect(provider, isA<DispatchToolService>());
     });
 
-    test('DispatchToolProvider.current throws UnimplementedError on NoParams', () {
-      final provider = DispatchToolProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('DispatchToolProvider.current returns the built-in dispatch tool', () async {
+      final tool = await DispatchToolProvider().current(NoParams());
+      expect(tool, isA<DispatchTool>());
+      expect(tool.toolName, 'dispatch');
+      expect(tool.subAgentSpecId, isNotEmpty);
+      expect(tool.riskTier, 'safe');
     });
 
-    test('DispatchToolProvider.count throws UnimplementedError on NoParams', () {
-      final provider = DispatchToolProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('DispatchToolProvider.current honours an injected dispatch tool', () async {
+      final injected = DispatchTool(id: 'custom', toolName: 'dispatch', subAgentSpecId: 'explore', riskTier: 'confirm');
+      expect(await DispatchToolProvider(injected).current(NoParams()), equals(injected));
+    });
+
+    test('DispatchToolProvider.count returns 1', () async {
+      expect(await DispatchToolProvider().count(NoParams()), 1);
     });
   });
 }

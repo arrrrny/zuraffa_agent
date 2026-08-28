@@ -29,20 +29,35 @@ void main() {
       expect(provider, isA<HealthSnapshotService>());
     });
 
-    test('HealthSnapshotProvider.current throws UnimplementedError on NoParams', () {
+    test('HealthSnapshotProvider.current returns the active chain snapshot', () async {
       final provider = HealthSnapshotProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+      final snapshot = await provider.current(NoParams());
+      expect(snapshot, isA<HealthSnapshot>());
+      expect(snapshot.id, 'default');
+      expect(snapshot.chainId, 'chain-0');
+      expect(snapshot.capturedAt, greaterThanOrEqualTo(0));
+      expect(snapshot.healthyProviders, greaterThanOrEqualTo(0));
+      expect(snapshot.trippedProviders, greaterThanOrEqualTo(0));
     });
 
-    test('HealthSnapshotProvider.count throws UnimplementedError on NoParams', () {
+    test('HealthSnapshotProvider.count returns 1', () async {
       final provider = HealthSnapshotProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
+      expect(await provider.count(NoParams()), 1);
+    });
+
+    test('HealthSnapshotProvider honours an injected value object', () async {
+      final custom = HealthSnapshot(
+        id: 'custom',
+        chainId: 'chain-x',
+        capturedAt: 42,
+        healthyProviders: 3,
+        trippedProviders: 1,
       );
+      final provider = HealthSnapshotProvider(custom);
+      final snapshot = await provider.current(NoParams());
+      expect(snapshot.id, 'custom');
+      expect(snapshot.healthyProviders, 3);
+      expect(snapshot.trippedProviders, 1);
     });
   });
 }

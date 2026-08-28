@@ -1,5 +1,5 @@
 // HAND-CURATED regression tests for the SessionBranch value object +
-// SessionBranchProvider stub. Pattern mirrors spec 033.
+// SessionBranchProvider. Pattern mirrors spec 033.
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
@@ -29,20 +29,21 @@ void main() {
       expect(provider, isA<SessionBranchService>());
     });
 
-    test('SessionBranchProvider.current throws UnimplementedError on NoParams', () {
-      final provider = SessionBranchProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SessionBranchProvider.current returns the active branch', () async {
+      final branch = await SessionBranchProvider().current(NoParams());
+      expect(branch, isA<SessionBranch>());
+      expect(branch.id, 'branch-default');
+      expect(branch.sessionId, 'session-default');
+      expect(branch.isActive, isTrue);
     });
 
-    test('SessionBranchProvider.count throws UnimplementedError on NoParams', () {
-      final provider = SessionBranchProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('SessionBranchProvider.current returns a supplied active branch', () async {
+      final active = SessionBranch(id: 'branch-x', sessionId: 'sess-x', forkedFromEntryId: 'entry-x', forkedAt: 42, isActive: false);
+      expect(await SessionBranchProvider(active).current(NoParams()), active);
+    });
+
+    test('SessionBranchProvider.count returns 1', () async {
+      expect(await SessionBranchProvider().count(NoParams()), 1);
     });
   });
 }

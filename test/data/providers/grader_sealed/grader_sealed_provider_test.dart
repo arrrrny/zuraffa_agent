@@ -29,20 +29,21 @@ void main() {
       expect(provider, isA<GraderSealedService>());
     });
 
-    test('GraderSealedProvider.current throws UnimplementedError on NoParams', () {
-      final provider = GraderSealedProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('GraderSealedProvider.current returns the active grader snapshot', () async {
+      final grader = await GraderSealedProvider().current(NoParams());
+      expect(grader, isA<GraderSealed>());
+      expect(grader.id, 'default');
+      expect(grader.graderType, 'exact');
     });
 
-    test('GraderSealedProvider.count throws UnimplementedError on NoParams', () {
-      final provider = GraderSealedProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('GraderSealedProvider.current honors an injected snapshot', () async {
+      final injected = const GraderSealed(id: 'g-1', graderType: 'schema');
+      final grader = await GraderSealedProvider(injected).current(NoParams());
+      expect(grader, same(injected));
+    });
+
+    test('GraderSealedProvider.count returns 1', () async {
+      expect(await GraderSealedProvider().count(NoParams()), 1);
     });
   });
 }

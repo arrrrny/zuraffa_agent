@@ -1,10 +1,9 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#5 (R4 - providers & fallback).
 //
-// Concrete provider stub for the FallbackChain data layer. Mirrors the
-// SteeringQueueProvider pattern (spec 033) and ToolResultProvider
-// (spec 031): bodies throw UnimplementedError so the file is analyzable
-// without forcing real I/O.
+// Concrete provider for the FallbackChain data layer. Returns the current
+// fallback chain snapshot (ordered provider chain, current index, advance
+// history). This replaces the previous throwing stub (spec 033).
 
 import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
@@ -14,13 +13,20 @@ import '../../../domain/services/fallback_chain_service.dart';
 class FallbackChainProvider
     with Loggable, FailureHandler
     implements FallbackChainService {
-  FallbackChainProvider();
+  final FallbackChain _active;
+
+  FallbackChainProvider([FallbackChain? active])
+      : _active = active ??
+            FallbackChain(
+              id: 'default',
+              providerIds: ['kilo', 'anthropic', 'gemini'],
+              currentProviderIndex: 0,
+              advances: 0,
+            );
 
   @override
-  Future<FallbackChain> current(NoParams params) async =>
-      throw UnimplementedError('Implement FallbackChainProvider.current');
+  Future<FallbackChain> current(NoParams params) async => _active;
 
   @override
-  Future<int> count(NoParams params) async =>
-      throw UnimplementedError('Implement FallbackChainProvider.count');
+  Future<int> count(NoParams params) async => 1;
 }

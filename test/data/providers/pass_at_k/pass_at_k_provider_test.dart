@@ -118,20 +118,26 @@ void main() {
       expect(provider, isA<PassAtKService>());
     });
 
-    test('PassAtKProvider.current throws UnimplementedError on NoParams', () {
-      final provider = PassAtKProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('PassAtKProvider.current returns a valid computed pass@k snapshot', () async {
+      final result = await PassAtKProvider(n: 5, c: 1, k: 2).current(NoParams());
+      expect(result, isA<PassAtK>());
+      // 1 - C(4,2)/C(5,2) = 1 - 6/10 = 0.4
+      expect(result.value, closeTo(0.4, 1e-9));
     });
 
-    test('PassAtKProvider.count throws UnimplementedError on NoParams', () {
-      final provider = PassAtKProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('PassAtKProvider.current returns 0 when there are no correct samples', () async {
+      final result = await PassAtKProvider(n: 10, c: 0, k: 1).current(NoParams());
+      expect(result.value, 0.0);
+    });
+
+    test('PassAtKProvider.current returns 1 when every k-subset hits a correct sample', () async {
+      // n=5, c=4, k=2 → n-c=1 < 2 → 1.0
+      final result = await PassAtKProvider(n: 5, c: 4, k: 2).current(NoParams());
+      expect(result.value, 1.0);
+    });
+
+    test('PassAtKProvider.count returns 1', () async {
+      expect(await PassAtKProvider().count(NoParams()), 1);
     });
   });
 }

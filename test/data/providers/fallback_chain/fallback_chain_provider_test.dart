@@ -29,20 +29,17 @@ void main() {
       expect(provider, isA<FallbackChainService>());
     });
 
-    test('FallbackChainProvider.current throws UnimplementedError on NoParams', () {
-      final provider = FallbackChainProvider();
-      expect(
-        () => provider.current(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('FallbackChainProvider.current returns the active chain snapshot', () async {
+      final chain = await FallbackChainProvider().current(NoParams());
+      expect(chain, isA<FallbackChain>());
+      expect(chain.id, 'default');
+      expect(chain.providerIds, isNotEmpty);
+      expect(chain.currentProviderIndex, inInclusiveRange(0, chain.providerIds.length - 1));
+      expect(chain.advances, greaterThanOrEqualTo(0));
     });
 
-    test('FallbackChainProvider.count throws UnimplementedError on NoParams', () {
-      final provider = FallbackChainProvider();
-      expect(
-        () => provider.count(NoParams()),
-        throwsA(isA<UnimplementedError>()),
-      );
+    test('FallbackChainProvider.count returns 1', () async {
+      expect(await FallbackChainProvider().count(NoParams()), 1);
     });
   });
 }
