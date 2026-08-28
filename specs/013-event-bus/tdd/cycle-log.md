@@ -42,3 +42,21 @@ plan is being recorded before any change.
   when none registered). Suite `dart test` -> 918 passed, 2 skipped.
 - refactor: none needed (handler closure casts `R` to `Object` at the boundary).
 - commit: `bbac0ce`
+
+## Cycle 4: A4 AgentController.publish delivers to all listeners
+
+- test: `test/events/event_bus_test.dart::A4: AgentController.publish delivers to all listeners like EventBus` (new)
+- red: `dart test test/events/event_bus_test.dart -n "A4"`
+  -> `Expected: ['hi']  Actual: []` (stub `AgentController.publish`/`listen` were no-ops)
+- green: `lib/src/events/event_bus.dart` `AgentController.publish<T>` delegates to
+  `_bus.emit<T>` and `listen<T>` to `_bus.on<T>`, so delivery is identical to the
+  bare bus. Suite `dart test` -> 919 passed, 2 skipped.
+- refactor: none needed.
+- commit: `3dd8459`
+
+## Summary
+
+All four acceptance behaviors (A1 pub/sub delivery, A2 multi-subscriber in-order,
+A3 request/response, A4 controller wrapper) are DONE and green. FR-005 (engine emits
+lifecycle events through the bus) is deferred — it depends on spec 002 landing its
+event stream, and is recorded as out of scope for this feature.

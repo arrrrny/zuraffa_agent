@@ -32,5 +32,13 @@ void main() {
       );
       expect(resp.approved, isTrue);
     });
+
+    test('A4: AgentController.publish delivers to all listeners like EventBus', () {
+      final controller = AgentController();
+      final received = <String>[];
+      controller.listen<LLMChunkEvent>((e) => received.add(e.chunk));
+      controller.publish(LLMChunkEvent('hi'));
+      expect(received, ['hi']);
+    });
   });
 }

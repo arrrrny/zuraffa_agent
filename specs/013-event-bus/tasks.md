@@ -13,4 +13,4 @@
 - [x] [A1] A subscriber to `LLMChunkEvent` receives each chunk event as the model streams.
 - [x] [A2] Multiple subscribers each receive an event when it fires.
 - [x] [A3] A registered `BeforeToolCallRequest` handler's response is used when the event fires.
-- [ ] [A4] An `AgentController.publish()` delivers the event to all listeners (identical to EventBus).
+- [x] [A4] An `AgentController.publish()` delivers the event to all listeners (identical to EventBus).

@@ -60,3 +60,14 @@ class EventBus {
     return (await handlers.last(event)) as R;
   }
 }
+
+/// Convenience wrapper over [EventBus] (spec 013, FR-004). `publish`/`listen`
+/// delegate to `emit`/`on`.
+class AgentController {
+  final EventBus _bus;
+  AgentController([EventBus? bus]) : _bus = bus ?? EventBus();
+
+  // Stub: no delivery until implemented.
+  void publish<T>(T event) => _bus.emit<T>(event);
+  void listen<T>(void Function(T) listener) => _bus.on<T>(listener);
+}

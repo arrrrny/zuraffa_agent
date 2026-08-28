@@ -27,7 +27,7 @@ bus and controller are driven end to end and asserted.
 | A1  | A subscriber to `LLMChunkEvent` receives each chunk event as the model streams                | FR-001       | example | DONE    | `test/events/event_bus_test.dart::A1: a subscriber to LLMChunkEvent receives each chunk event` |
 | A2  | Multiple subscribers each receive an event when it fires                                       | FR-001, FR-003 | example | DONE    | `test/events/event_bus_test.dart::A2: multiple subscribers each receive an event, in registration order` |
 | A3  | A registered `BeforeToolCallRequest` handler's response is used when the event fires           | FR-002       | example | DONE    | `test/events/event_bus_test.dart::A3: a registered BeforeToolCallRequest handler response is used` |
-| A4  | An `AgentController.publish()` delivers the event to all listeners (identical to EventBus)     | FR-004       | example | PENDING |      |
+| A4  | An `AgentController.publish()` delivers the event to all listeners (identical to EventBus)     | FR-004       | example | DONE    | `test/events/event_bus_test.dart::A4: AgentController.publish delivers to all listeners like EventBus` |
 
 ## Inner loop: deferred — plan.md absent
 
