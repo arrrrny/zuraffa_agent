@@ -2,10 +2,26 @@
 // helpers. These cover request construction and response parsing WITHOUT any
 // network access (FR-009), so they run in CI without the proxy.
 
+import 'dart:io';
+
+import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_http_transport.dart';
+
+// Inert HttpClient double: postUrl throws (no real network) and close is a
+// no-op, while the findProxy setter is observed so we can prove the
+// direct-connect path does not install a proxy resolver.
+class MockHttpClient extends Mock implements HttpClient {
+  // Records whether the proxy resolver (HttpClient.findProxy) was assigned.
+  bool findProxyAssigned = false;
+
+  @override
+  set findProxy(String Function(Uri)? f) {
+    findProxyAssigned = true;
+  }
+}
 
 void main() {
   group('arrarrny/zuraffa_agent#5 - request build', () {
@@ -85,6 +101,50 @@ void main() {
       final json = Map<String, dynamic>.from(validJson);
       (json['choices'][0] as Map)['message'] = {'role': 'assistant', 'content': ''};
       expect(() => parseChatCompletionResponse(json), throwsA(isA<LlmTransportException>()));
+    });
+  });
+
+  group('arrarrny/zuraffa_agent#5 - proxy routing decision (U4)', () {
+    late MockHttpClient client;
+    late LlmHttpTransport transport;
+
+    setUpAll(() {
+      registerFallbackValue(Uri.parse('http://localhost'));
+    });
+
+    setUp(() {
+      client = MockHttpClient();
+      transport = LlmHttpTransport(clientFactory: () => client);
+    });
+
+    Future<void> exercise({required String? proxyUrl}) async {
+      when(() => client.postUrl(any())).thenThrow(
+        const SocketException('simulated network — no real connection'),
+      );
+      when(() => client.close(force: any(named: 'force'))).thenAnswer((_) {});
+
+      await expectLater(
+        transport.complete(
+          baseUrl: 'http://example.test',
+          apiKey: 'test-key',
+          proxyUrl: proxyUrl,
+          model: 'tencent/hy3:free',
+          messages: const [ChatMessage(role: 'user', content: 'hi')],
+        ),
+        throwsA(isA<SocketException>()),
+      );
+    }
+
+    test('connects directly (no findProxy) when proxyUrl is null or empty', () async {
+      // null proxy
+      await exercise(proxyUrl: null);
+      expect(client.findProxyAssigned, isFalse,
+          reason: 'findProxy must not be installed when proxyUrl is null');
+
+      // empty proxy
+      await exercise(proxyUrl: '');
+      expect(client.findProxyAssigned, isFalse,
+          reason: 'findProxy must not be installed when proxyUrl is empty');
     });
   });
 }
