@@ -56,4 +56,4 @@ plan is being recorded before any change.
   from run 0 ("stream diverged") -> test failed. Restored; full suite green
   (931 passed, 2 skipped).
 - No refactor needed.
-- commit: `TBD`
+- commit: `503ca33`
