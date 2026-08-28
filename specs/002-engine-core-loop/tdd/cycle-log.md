@@ -42,3 +42,18 @@ plan is being recorded before any change.
 - No refactor needed; fakes duplicated from spec 069's test (candidate for a
   shared helper later).
 - commit: `b498e44`
+
+## Cycle A3 — determinism (red -> green)
+
+- test: `test/engine/mission_runner_002_a3_test.dart` :: "A3: 10 identical runs
+  produce a byte-identical event stream"
+- RED: new test drives MissionRunner 10x with an injected FIXED clock and asserts
+  every run yields the identical serialized event stream (exhaustive field-key
+  switch over the sealed EngineEvent union) and identical MissionResult. Passes
+  first run (behavior already implemented).
+- Deliberate mutant: changed `final start = _clock()` to `DateTime.now()` in
+  `lib/src/engine/mission_runner.dart` -> run 1's MissionStarted timestamp diverged
+  from run 0 ("stream diverged") -> test failed. Restored; full suite green
+  (931 passed, 2 skipped).
+- No refactor needed.
+- commit: `TBD`
