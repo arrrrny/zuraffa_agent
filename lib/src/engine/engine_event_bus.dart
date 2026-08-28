@@ -104,8 +104,13 @@ class EngineEventBus {
       try {
         entry.invoke(event);
       } catch (error) {
-        _onSubscriberError?.call(error, event);
-        // Swallowed on purpose — see the library doc comment.
+        // Isolate the hook itself: a throwing hook must not escape publish
+        // and break later subscribers or the publisher.
+        try {
+          _onSubscriberError?.call(error, event);
+        } catch (_) {
+          // Swallowed on purpose — see the library doc comment.
+        }
       }
     }
   }
