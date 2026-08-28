@@ -64,6 +64,7 @@ class LlmClientProvider
       proxyUrl: proxyUrl,
       model: _model,
       messages: messages,
+      timeout: Duration(milliseconds: config.timeoutMs),
     );
   }
 }

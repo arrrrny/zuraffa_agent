@@ -48,13 +48,20 @@ class JsonlEntityStorage<T> {
   }
 
   Future<void> _persist() async {
-    final file = File(path);
-    final sink = file.openWrite();
+    final target = File(path);
+    // Write to a temp file first, then atomically rename onto the target so a
+    // crash mid-write cannot truncate/destroy the existing durable copy.
+    final tmp = File('$path.tmp');
+    final sink = tmp.openWrite();
     for (final item in _store.values) {
       sink.writeln(jsonEncode(toJson(item)));
     }
     await sink.flush();
     await sink.close();
+    if (await target.exists()) {
+      await target.delete();
+    }
+    await tmp.rename(path);
   }
 
   Future<T?> get(String id) async {
