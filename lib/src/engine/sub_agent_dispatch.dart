@@ -221,11 +221,13 @@ class SubAgentDispatchService {
       );
     }
 
+    // Wall-clock limiting is owned by childPolicy (StopPolicy.wallClockTimeout);
+    // EngineLoop.wallClockTimeoutMs is never enforced, so it stays 0 here.
     final childLoop = EngineLoop(
       id: 'sub-${instance.id}',
       sessionId: instance.id,
       maxTurns: effectiveMaxTurns,
-      wallClockTimeoutMs: spec.wallClockTimeout?.inMilliseconds ?? 0,
+      wallClockTimeoutMs: 0,
       repetitionThreshold: 0,
     );
     final childPolicy = StopPolicy(

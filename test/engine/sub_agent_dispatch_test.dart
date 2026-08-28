@@ -98,6 +98,27 @@ class RecordingDispatcher implements ToolDispatcher {
   bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
 }
 
+/// LLM client that throws on its first completion — drives a provider error.
+class ThrowingLlmClient extends LlmClientProvider {
+  ThrowingLlmClient({this.error = 'boom'})
+      : super(
+          config: const ProviderConfig(
+            id: 'kilo',
+            providerKind: 'openai',
+            baseUrl: 'https://example.invalid/v1',
+            models: ['tencent/hy3:free'],
+            timeoutMs: 1,
+          ),
+          apiKey: 'test-key',
+        );
+
+  final String error;
+
+  @override
+  Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
+      throw Exception(error);
+}
+
 /// Plans tool calls by 1-based completion index.
 class ScriptedPlanner implements ToolCallPlanner {
   ScriptedPlanner(this.planByCall);
@@ -415,6 +436,29 @@ void main() {
 
       expect(result.status, SubAgentDispatchStatus.budgetExhausted);
       expect(result.instance.lastRunOutcome, 'budgetExhausted');
+    });
+
+    test('provider failure maps MissionStatus.providerFailed to providerFailed',
+        () async {
+      final llm = ThrowingLlmClient();
+      final events = <EngineEvent>[];
+      final service = SubAgentDispatchService(
+        toolDispatcher: RecordingDispatcher(),
+        llmClient: llm,
+      );
+
+      final result = await service.dispatch(
+        spec: spec(),
+        mission: 'go',
+        instance: instance,
+        onEvent: events.add,
+      );
+
+      expect(result.status, SubAgentDispatchStatus.providerFailed);
+      expect(result.resultSummary, isNull);
+      expect(events.whereType<ProviderError>(), isNotEmpty);
+      expect(result.instance.totalRuns, 3);
+      expect(result.instance.lastRunOutcome, 'providerFailed');
     });
 
     test('SubAgentDispatchResult value semantics and context snapshot', () async {
