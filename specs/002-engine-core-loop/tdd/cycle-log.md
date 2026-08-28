@@ -41,4 +41,4 @@ plan is being recorded before any change.
   `completed`). Restored; full suite green (930 passed, 2 skipped).
 - No refactor needed; fakes duplicated from spec 069's test (candidate for a
   shared helper later).
-- commit: `7648d1f`
+- commit: `b498e44`
