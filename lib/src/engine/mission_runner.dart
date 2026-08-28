@@ -41,6 +41,7 @@ import '../data/providers/engine_loop/engine_loop_executor.dart';
 import '../domain/entities/llm_client/chat_completion.dart';
 import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
+import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
 import 'events/engine_event.dart';
 import 'tool_dispatcher.dart';
@@ -168,6 +169,22 @@ class MissionRunner {
   final RepetitionTrackerDatasource? _repetition;
   final void Function(EngineEvent) _onEvent;
   final DateTime Function() _clock;
+
+  /// Appends [message] to this mission's steering / follow-up queue.
+  ///
+  /// The queue is a value object, so enqueueing swaps in a new snapshot. Safe
+  /// to call while the mission is running — including from an event handler as
+  /// a turn completes, which is how a follow-up "queued at mission end" keeps
+  /// the loop going instead of letting it exit (spec 002 FR-003).
+  ///
+  /// Throws [StateError] when the runner was constructed without a queue.
+  void enqueue(SteeringMessage message) {
+    final queue = _queue;
+    if (queue == null) {
+      throw StateError('MissionRunner has no steering queue to enqueue into');
+    }
+    _queue = queue.enqueue(message);
+  }
 
   /// Runs the mission identified by [missionId], starting from [messages].
   ///
@@ -314,8 +331,12 @@ class MissionRunner {
 
       _onEvent(TurnCompleted(emittedAt: _clock()));
 
-      // Natural stop: the model finished and nothing was dispatched.
+      // Natural stop: the model finished and nothing was dispatched. A
+      // follow-up queued while this turn was running (including from the
+      // TurnCompleted handler above) is not a finished mission: the loop
+      // continues and the next turn drains it (spec 002 FR-003).
       if (calls.isEmpty && completion.finishReason == 'stop') {
+        if (_queue != null && !_queue!.isEmpty) continue;
         status = MissionStatus.completed;
         summary = completion.content;
         break;

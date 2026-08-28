@@ -136,3 +136,21 @@ plan is being recorded before any change.
 - No refactor needed.
 - Full suite green (944 passed, 2 skipped, 48s).
 - commit: (this cycle)
+
+## Cycle: A7 — follow-up queued at mission end continues the loop
+
+- test: `test/engine/mission_runner_002_a7_test.dart` :: "A7: a follow-up queued
+  as the turn completes continues the loop instead of ending the mission"
+- RED: `dart test test/engine/mission_runner_002_a7_test.dart` ->
+  `Error: The method 'enqueue' isn't defined for the type 'MissionRunner'.` — the
+  runner had no public continuation seam; the natural-stop branch always broke.
+- GREEN: added `MissionRunner.enqueue` (throws when no queue was wired) and
+  changed the natural-stop branch to `continue` when `_queue` is non-empty, so a
+  follow-up injected during the turn — including from the `TurnCompleted` handler
+  — is drained by turn N+1 and the mission only ends once the queue is empty.
+  The `AlwaysStopsClient` (stops every turn, no tool calls) makes the follow-up
+  queue the sole continuation driver. Full suite green (945 passed, 2 skipped, 70s).
+- Deliberate mutant: removed the `if (_queue != null && !_queue!.isEmpty) continue;`
+  guard -> A7 failed (`Expected: <2> Actual: <1>` turns). Restored.
+- No refactor needed.
+- commit: (this cycle)
