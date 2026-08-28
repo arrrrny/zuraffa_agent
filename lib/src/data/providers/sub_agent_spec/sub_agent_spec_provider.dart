@@ -17,7 +17,7 @@ class SubAgentSpecProvider
 
   SubAgentSpecProvider([SubAgentSpec? active])
       : _active = active ??
-            const SubAgentSpec(
+            SubAgentSpec(
               name: 'explore',
               description: 'Default exploratory sub-agent.',
               systemPrompt: 'You are an explorer.',

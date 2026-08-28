@@ -16,7 +16,7 @@ class AgentMessageProvider
     with Loggable, FailureHandler
     implements AgentMessageService {
   /// Default message returned when the in-memory log is empty.
-  static const AgentMessage empty = AgentMessage(
+  static final AgentMessage empty = AgentMessage(
     id: 'empty',
     role: 'assistant',
     parts: [],

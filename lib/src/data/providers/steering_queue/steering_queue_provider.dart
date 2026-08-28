@@ -21,7 +21,7 @@ class SteeringQueueProvider
   SteeringQueueProvider([SteeringQueue? active])
       : _queues = [
           active ??
-              const SteeringQueue(
+              SteeringQueue(
                 id: 'queue-default',
                 pending: [],
                 processedCount: 0,
