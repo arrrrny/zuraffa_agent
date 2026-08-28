@@ -18,8 +18,9 @@
 // first — FIFO stability), then session insertion order (deterministic).
 //
 // distill() is an explicit call (session end / checkpoint / cron) — the
-// honest seam for a synchronous engine. Idempotent by construction:
-// promoted records leave the session store, duplicates never re-promote.
+// honest seam for a synchronous engine. Idempotent for records already in
+// long-term (duplicates never re-promote); overflow left under a
+// maxPerSession cap may re-promote on a second run.
 //
 // The distiller only touches AgentMemorySystem's public surface — over
 // the 076 persistent stores, distilled knowledge is durable immediately.
@@ -184,12 +185,20 @@ class MemoryDistiller {
         return a.$2.compareTo(b.$2);
       });
 
+    // Seed known long-term contents ONCE, then grow it as records are
+    // promoted — same-content siblings dedupe mid-run for free, without
+    // re-walking the whole store per candidate (O(C·M) → O(C+M)).
+    final knownLongTerm = <String>{
+      for (final record in system.longTermMemory.all)
+        _normalize(record.content),
+    };
+
     final promoted = <String>[];
     var budget = policy.maxPerSession; // null = uncapped.
     for (final (record, _) in indexed) {
       // Duplicate check FIRST — a duplicate is not promotable even with
       // budget left, so the more informative reason wins.
-      if (_knownToLongTerm(record.content)) {
+      if (knownLongTerm.contains(_normalize(record.content))) {
         skipped.add(SkippedRecord(record.id, SkipReason.duplicateOfLongTerm));
         continue;
       }
@@ -198,6 +207,7 @@ class MemoryDistiller {
         continue;
       }
       system.promote(record.id); // facade semantics: identity preserved.
+      knownLongTerm.add(_normalize(record.content)); // keep live for dedup.
       promoted.add(record.id);
       if (budget != null) budget--;
     }
@@ -208,17 +218,6 @@ class MemoryDistiller {
       sessionRemaining:
           system.sessionMemory.forSession(sessionId).length,
     );
-  }
-
-  /// Whether [content]'s normalized form already exists in long-term
-  /// memory. Runs against the LIVE store, so promotions earlier in the
-  /// same walk are visible — same-content siblings dedupe mid-run.
-  bool _knownToLongTerm(String content) {
-    final needle = _normalize(content);
-    for (final record in system.longTermMemory.all) {
-      if (_normalize(record.content) == needle) return true;
-    }
-    return false;
   }
 
   static String _normalize(String content) => content.trim().toLowerCase();
