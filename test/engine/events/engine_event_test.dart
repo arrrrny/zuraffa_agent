@@ -183,9 +183,48 @@ void main() {
     });
 
     test('MissionCompleted carries payload fields', () {
-      final event = MissionCompleted(emittedAt: fixedTime, missionId: 'sample', status: 'sample', summary: null);
+      final event = MissionCompleted(
+        emittedAt: fixedTime,
+        missionId: 'm-42',
+        status: 'success',
+        summary: 'all goals met',
+      );
       expect(event.emittedAt, fixedTime);
-      expect(event.missionId, 'sample');
-      expect(event.status, 'sample');
-    });  });
+      expect(event.missionId, 'm-42');
+      expect(event.status, 'success');
+      expect(event.summary, 'all goals met');
+    });
+
+    test('MissionCompleted.summary is nullable and round-trips null', () {
+      final event = MissionCompleted(
+        emittedAt: fixedTime,
+        missionId: 'm-42',
+        status: 'cancelled',
+        summary: null,
+      );
+      expect(event.summary, isNull);
+    });
+
+    test('describe(EngineEvent) switch routes MissionCompleted to mission_completed(missionId)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+      };
+
+      final event = MissionCompleted(
+        emittedAt: fixedTime,
+        missionId: 'm-42',
+        status: 'fail',
+        summary: 'goal 2 unreachable',
+      );
+      expect(describe(event), 'mission_completed(m-42)');
+    });
+  });
 }
