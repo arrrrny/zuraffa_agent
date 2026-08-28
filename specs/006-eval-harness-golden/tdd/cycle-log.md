@@ -31,3 +31,29 @@ plan is being recorded before any change.
   Actual: <0>` consumed). Restored.
 - No refactor needed.
 - commit: (this cycle)
+
+## Cycle: A4 — release gate decision with per-task breakdown
+
+- test: `test/eval/suite_gate_006_a4_test.dart` :: "A4: a suite scoring below the
+  gate threshold fails with a per-task breakdown" (plus both sides of the
+  threshold boundary and a missing-samples case)
+- RED: `dart test test/eval/suite_gate_006_a4_test.dart` ->
+  `Error: Undefined name 'SuiteGate'.` — `Suite.gateThreshold` existed as a field
+  but nothing turned sample counts into a verdict.
+- GREEN: added `lib/src/eval/suite_gate.dart` — `TaskSamples`, `TaskGateResult`,
+  `GateDecision`, and `SuiteGate.evaluate`, computing per-task pass@k through the
+  existing `PassAtK.compute` estimator, the suite score as their mean, the
+  verdict as `score >= gateThreshold`, an `exitCode` of 0/1 for CI, and a report
+  string naming each task with its score and verdict. Pure Dart, no `dart:io`
+  (FR-005). Full suite green (950 passed, 2 skipped, 68s).
+- Design decision forced by the third case: the first implementation let a suite
+  with a task that had NO samples still pass, because a 0.0 row only dragged the
+  mean. That is exactly the "silently skipped hardest mission" failure the
+  acceptance criterion is guarding against, so missing samples now veto the gate
+  outright (`incomplete` check) rather than being averaged away. The test was not
+  weakened to match the implementation; the implementation was corrected.
+- Deliberate mutant: `score >= suite.gateThreshold` -> `score >` -> the
+  at-threshold case failed (`Expected: true Actual: <false>`), so the boundary is
+  genuinely pinned on both sides. Restored.
+- No refactor needed.
+- commit: (this cycle)
