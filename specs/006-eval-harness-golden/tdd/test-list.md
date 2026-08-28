@@ -23,14 +23,14 @@ harness is driven end to end (record → replay, scoring, grading, gating) and a
 
 | id  | behavior                                                                                                  | traces | kind    | state   | test |
 | --- | -------------------------------------------------------------------------------------------------------- | ------ | ------- | ------- | ---- |
-| A1  | A recorded cassette replayed consumes recordings instead of live calls with identical event order         | FR-001 | example | BLOCKED | (no keyword match in test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart) ||
+| A1  | A recorded cassette replayed consumes recordings instead of live calls with identical event order         | FR-001 | example | BLOCKED | `GoldenMission` entity + cassette struct tested (test/domain/entities/golden_mission_test.dart); replay-consuming-recordings (not live) NOT asserted — needs harness replay execution test |
 | A2  | A replay whose inputs drift from the recording reports a mismatch loudly — never silently passes           | FR-001 | example | DONE    | test/data/providers/replay_diff/replay_diff_provider_test.dart ||
 | A3  | A suite with k samples/known pass counts scores pass@k matching the analytic value                         | FR-002 | example | DONE    | test/data/providers/pass_at_k/pass_at_k_provider_test.dart ||
-| A4  | A release gate of pass@k ≥ threshold fails CI with a per-task breakdown when a suite scores below          | FR-002 | example | BLOCKED | (no keyword match in test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart) ||
+| A4  | A release gate of pass@k ≥ threshold fails CI with a per-task breakdown when a suite scores below          | FR-002 | example | BLOCKED | `Suite.gateThreshold` field tested (test/domain/entities/suite_test.dart); gate DECISION (pass@k >= threshold passes, below fails CI w/ breakdown) NOT asserted — needs harness gate execution test |
 | A5  | A task with an exact grader decides by byte-equality                                                      | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
 | A6  | A task with a schema grader decides by JSON-Schema validity                                               | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
 | A7  | A model-judge grader (recorded judge) decides by parsed verdict; the judge call replays deterministically  | FR-003 | example | DONE    | test/data/providers/grader_sealed/grader_sealed_provider_test.dart ||
-| A8  | GM-1..GM-5 defined as harness suites run in CI and report/gate correctly                                  | FR-004 | example | BLOCKED | (no keyword match in test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart) ||
+| A8  | GM-1..GM-5 defined as harness suites run in CI and report/gate correctly                                  | FR-004 | example | BLOCKED | `Suite` entity supports GM-1..GM-5 task lists + `gateThreshold` (test/domain/entities/suite_test.dart); CI RUN + report/gate execution NOT asserted — needs harness runner test |
 | A9  | The eval runtime package scanned has no `dart:io` imports (CLI/loader layers exempt)                      | FR-005 | example | DONE    | test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart ||
 
 ## Inner loop: deferred — plan.md absent
