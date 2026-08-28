@@ -36,4 +36,10 @@ part 'engine_event.g.dart';
 /// exhaustively.
 sealed class EngineEvent {
   const EngineEvent();
+
+  /// When the engine emitted this event.
+  ///
+  /// Every subtype carries this field (spec 068 promoted it to the base so
+  /// temporal projections can filter the whole union uniformly).
+  DateTime get emittedAt;
 }
