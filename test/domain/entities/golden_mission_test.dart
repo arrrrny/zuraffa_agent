@@ -39,7 +39,7 @@ void main() {
       expect(mission.id, 'gm-1');
       expect(mission.name, 'security-scan');
       expect(mission.cassette, isNotNull);
-      expect(mission.cassette!['llm_responses'], isA<List<dynamic>>());
+      expect(mission.cassette['llm_responses'], isA<List<dynamic>>());
       expect(mission.taskDefinition, 'Scan codebase for vulnerabilities.');
       expect(mission.graderBindings, ['exact-match', 'schema-validate']);
     });
@@ -131,7 +131,7 @@ void main() {
           ],
         },
       );
-      expect(mission.cassette!['llm_responses'], hasLength(1));
+      expect(mission.cassette['llm_responses'], hasLength(1));
     });
 
     test('cassette contains tool_results', () {
@@ -142,7 +142,7 @@ void main() {
           ],
         },
       );
-      expect(mission.cassette!['tool_results'], hasLength(1));
+      expect(mission.cassette['tool_results'], hasLength(1));
     });
 
     test('cassette with multiple responses', () {
@@ -154,7 +154,7 @@ void main() {
           ),
         },
       );
-      expect(mission.cassette!['llm_responses'], hasLength(10));
+      expect(mission.cassette['llm_responses'], hasLength(10));
     });
   });
 

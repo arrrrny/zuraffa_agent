@@ -15,6 +15,11 @@
 // Pattern: plain Dart value object (no @Zorphy annotation) so the file
 // compiles without running build_runner, same as AgentSession (PR #50),
 // ToolResult (PR #49), and StopPolicy (PR #47).
+//
+// Refined under specs/033-steering-queue (TDD): the persistence contract —
+// toJson/fromJson round-tripping id, content, and injectedAt exactly
+// (ISO-8601 timestamp, typed ArgumentError on malformed input) so a
+// steering message survives the store boundary between turns.
 
 /// SteeringMessage value object.
 ///
@@ -43,6 +48,44 @@ class SteeringMessage {
     required this.content,
     required this.injectedAt,
   });
+
+  /// Serializes to a JSON map: `{id, content, injectedAt}` — all three
+  /// fields are required, so none is ever omitted. The timestamp is an
+  /// ISO-8601 string (UTC instants round-trip exactly).
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'content': content,
+        'injectedAt': injectedAt.toIso8601String(),
+      };
+
+  /// Parses a [SteeringMessage] from its JSON shape (see [toJson]).
+  /// Throws [ArgumentError] naming the offending key when a required
+  /// field is missing, ill-typed, or the timestamp is unparseable —
+  /// never fabricates a default.
+  factory SteeringMessage.fromJson(Map<String, dynamic> json) {
+    String requireString(String key) {
+      final value = json[key];
+      if (value is! String) {
+        throw ArgumentError.value(value, key, 'SteeringMessage.$key must be a non-null string');
+      }
+      return value;
+    }
+
+    final injectedRaw = json['injectedAt'];
+    if (injectedRaw is! String) {
+      throw ArgumentError.value(injectedRaw, 'injectedAt', 'SteeringMessage.injectedAt must be an ISO-8601 string');
+    }
+    final injectedAt = DateTime.tryParse(injectedRaw);
+    if (injectedAt == null) {
+      throw ArgumentError.value(injectedRaw, 'injectedAt', 'SteeringMessage.injectedAt is not a parseable ISO-8601 timestamp');
+    }
+
+    return SteeringMessage(
+      id: requireString('id'),
+      content: requireString('content'),
+      injectedAt: injectedAt,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

@@ -8,6 +8,7 @@ environment:
 dependencies:
   hive_ce: ^2.19.0
   json_annotation: ^4.12.0
+  uuid: ^4.6.0
   zorphy_annotation: ^2.0.0
   zuraffa:
     git:

@@ -19,6 +19,16 @@
 // compiles without running build_runner. When zfa ships a session-aware
 // generator, this file may be regenerated with @Zorphy; until then it is
 // the canonical source for the AgentSession surface.
+//
+// Refined under specs/032-agent-session-root (TDD): the aggregate
+// transitions the task names — appendEntry (cursor advance + updatedAt
+// stamp) and fork (branch linked via parentSessionId at the current head,
+// root-anchor fallback for fresh sessions) — plus the persistence
+// contract (toJson/fromJson round-tripping all seven fields with
+// absent-never-fabricated optionals and typed ArgumentErrors). The
+// scaffold described the cursor advance and the branch link in doc
+// comments but shipped no transition API; the refinement closes that gap
+// with pure snapshot transitions mirroring CircuitBreaker's style.
 
 /// AgentSession root entity.
 ///
@@ -84,6 +94,120 @@ class AgentSession {
   /// ([currentEntryId] is non-null, i.e. the cursor has moved off the
   /// initial null state).
   bool get isHead => currentEntryId != null;
+
+  /// Appends an entry to the session tree: returns a NEW snapshot whose
+  /// cursor ([currentEntryId]) points at [entryId] and whose [updatedAt]
+  /// is stamped [at] (default: now). The first append moves the cursor
+  /// off its initial null state (see [isHead]).
+  ///
+  /// Pure transition — `this` is never mutated (the aggregate is an
+  /// immutable snapshot; the engine owns tree validity and entry
+  /// ordering, the root only tracks the cursor). Throws [ArgumentError]
+  /// when [entryId] is empty.
+  AgentSession appendEntry(String entryId, {DateTime? at}) {
+    if (entryId.isEmpty) {
+      throw ArgumentError.value(entryId, 'entryId', 'entry id must not be empty');
+    }
+    final ts = at ?? DateTime.now();
+    return AgentSession(
+      id: id,
+      missionId: missionId,
+      rootEntryId: rootEntryId,
+      currentEntryId: entryId,
+      parentSessionId: parentSessionId,
+      createdAt: createdAt,
+      updatedAt: ts,
+    );
+  }
+
+  /// Forks this session at its current head: returns a NEW child session
+  /// linked to this one via [AgentSession.parentSessionId] (R2.1
+  /// "branching" + R2.2 "branch/fork/resume first-class").
+  ///
+  /// The child keeps the same entry tree ([rootEntryId] preserved — the
+  /// branch grows inside the parent's tree, it does not copy it), starts
+  /// its cursor at the fork point (`currentEntryId ?? rootEntryId` — a
+  /// fresh session forks at its root anchor), inherits [missionId], and
+  /// is stamped [at] (default: now) for both [createdAt] and [updatedAt].
+  ///
+  /// Pure transition — `this` is never mutated.
+  AgentSession fork({required String sessionId, DateTime? at}) {
+    final ts = at ?? DateTime.now();
+    return AgentSession(
+      id: sessionId,
+      missionId: missionId,
+      rootEntryId: rootEntryId,
+      currentEntryId: currentEntryId ?? rootEntryId,
+      parentSessionId: id,
+      createdAt: ts,
+      updatedAt: ts,
+    );
+  }
+
+  /// Serializes the session root to a JSON map (persistence contract):
+  /// `id`, `rootEntryId`, `createdAt`, `updatedAt` always;
+  /// `missionId`, `currentEntryId`, `parentSessionId` only when present
+  /// (absent-never-fabricated). Timestamps are ISO-8601 strings; a
+  /// non-UTC [DateTime] serializes as its UTC instant (the stores keep
+  /// instants, not zones).
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      'id': id,
+      'rootEntryId': rootEntryId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+    if (missionId != null) json['missionId'] = missionId;
+    if (currentEntryId != null) json['currentEntryId'] = currentEntryId;
+    if (parentSessionId != null) json['parentSessionId'] = parentSessionId;
+    return json;
+  }
+
+  /// Parses an [AgentSession] from its JSON shape (see [toJson]).
+  /// Round-trips all seven fields exactly: absent optionals stay null,
+  /// timestamps restore as UTC instants. Throws [ArgumentError] naming
+  /// the offending key when a required field is missing or ill-typed —
+  /// never fabricates a default.
+  factory AgentSession.fromJson(Map<String, dynamic> json) {
+    String requireString(String key) {
+      final value = json[key];
+      if (value is! String) {
+        throw ArgumentError.value(value, key, 'AgentSession.$key must be a non-null string');
+      }
+      return value;
+    }
+
+    DateTime requireTimestamp(String key) {
+      final value = json[key];
+      if (value is! String) {
+        throw ArgumentError.value(value, key, 'AgentSession.$key must be an ISO-8601 string');
+      }
+      final parsed = DateTime.tryParse(value);
+      if (parsed == null) {
+        throw ArgumentError.value(value, key, 'AgentSession.$key is not a parseable ISO-8601 timestamp');
+      }
+      return parsed;
+    }
+
+    String? optionalString(String key) {
+      final value = json[key];
+      if (value == null) return null;
+      if (value is! String) {
+        throw ArgumentError.value(value, key, 'AgentSession.$key must be a string when present');
+      }
+      return value;
+    }
+
+    return AgentSession(
+      id: requireString('id'),
+      rootEntryId: requireString('rootEntryId'),
+      createdAt: requireTimestamp('createdAt'),
+      updatedAt: requireTimestamp('updatedAt'),
+      missionId: optionalString('missionId'),
+      currentEntryId: optionalString('currentEntryId'),
+      parentSessionId: optionalString('parentSessionId'),
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

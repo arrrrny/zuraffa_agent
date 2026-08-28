@@ -17,6 +17,17 @@
 // Pattern: plain Dart value object (no @Zorphy annotation) so the file
 // compiles without running build_runner, same as AgentSession (PR #50),
 // ToolResult (PR #49), AgentTool (PR #52), and StopPolicy (PR #47).
+//
+// Refined under specs/035-circuit-breaker (TDD): the recovery semantics
+// the task names — shouldProbe(now), the read-only recovery-readiness
+// predicate (the coordinator's "is the half-open probe due" question,
+// with the same inclusive elapsed >= cooldown boundary tryHalfOpen
+// uses), and the persistence contract (toJson/fromJson round-tripping
+// all nine fields exactly: state as its name, Duration as microseconds,
+// absent-never-fabricated timestamps, parse-time threshold validation —
+// a restored open breaker continues its cooldown from the original
+// openedAt, a mid-probe breaker resumes with partial counters). The
+// transitions and reads above are unchanged.
 
 /// State of a [CircuitBreaker] in the fallback chain.
 ///
@@ -111,6 +122,24 @@ class CircuitBreaker {
   /// True when the breaker is in [CircuitBreakerState.halfOpen] —
   /// probing with limited trial requests.
   bool get isHalfOpen => state == CircuitBreakerState.halfOpen;
+
+  /// Recovery readiness (read-only): true iff the breaker is [open],
+  /// has an [openedAt] anchor, and [now] is at or past the cooldown
+  /// boundary (`now - openedAt >= cooldown`, inclusive — the same
+  /// boundary [tryHalfOpen] transitions on). False in closed (nothing
+  /// to recover), halfOpen (the probe is in flight, not due), and for
+  /// an open breaker without an [openedAt] anchor (defensive).
+  ///
+  /// This is the read side of the scaffold's "the engine... is
+  /// responsible for calling the right transition at the right time"
+  /// contract: the coordinator asks shouldProbe, then calls
+  /// [tryHalfOpen] itself. It never transitions the breaker.
+  bool shouldProbe(DateTime now) {
+    if (state != CircuitBreakerState.open || openedAt == null) {
+      return false;
+    }
+    return now.difference(openedAt!) >= cooldown;
+  }
 
   /// Record a failure observed at [at] (default: now). Returns a new
   /// immutable snapshot:
@@ -258,6 +287,99 @@ class CircuitBreaker {
       openedAt: openedAt,
       halfOpenSuccesses: 0,
       lastFailureAt: lastFailureAt,
+    );
+  }
+
+  /// Serializes the breaker snapshot to a JSON map (persistence
+  /// contract): `id`, `state` (state name), `failureCount`,
+  /// `failureThreshold`, `cooldown` (exact microseconds),
+  /// `halfOpenSuccesses`, `halfOpenThreshold` always; `openedAt`,
+  /// `lastFailureAt` only when present (absent-never-fabricated,
+  /// ISO-8601). A restored snapshot continues its cooldown from the
+  /// original [openedAt].
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      'id': id,
+      'state': state.name,
+      'failureCount': failureCount,
+      'failureThreshold': failureThreshold,
+      'cooldown': cooldown.inMicroseconds,
+      'halfOpenSuccesses': halfOpenSuccesses,
+      'halfOpenThreshold': halfOpenThreshold,
+    };
+    if (openedAt != null) json['openedAt'] = openedAt!.toIso8601String();
+    if (lastFailureAt != null) json['lastFailureAt'] = lastFailureAt!.toIso8601String();
+    return json;
+  }
+
+  /// Parses a [CircuitBreaker] from its JSON shape (see [toJson]).
+  /// Round-trips every state exactly (closed with counters, open with
+  /// timestamps, mid-probe halfOpen with partial successes). Throws
+  /// [ArgumentError] naming the field on: missing/ill-typed required
+  /// fields, an unknown state string, negative counters, thresholds
+  /// below 1, a non-positive cooldown, or unparseable timestamps —
+  /// never a silent default (a defaulted threshold would silently
+  /// change trip behavior).
+  factory CircuitBreaker.fromJson(Map<String, dynamic> json) {
+    final idRaw = json['id'];
+    if (idRaw is! String || idRaw.isEmpty) {
+      throw ArgumentError.value(idRaw, 'id', 'CircuitBreaker.id must be a non-empty string');
+    }
+
+    int requireInt(String key, {int min = 0}) {
+      final value = json[key];
+      if (value is! int || value < min) {
+        throw ArgumentError.value(value, key, 'CircuitBreaker.$key must be an int >= $min');
+      }
+      return value;
+    }
+
+    final failureThreshold = requireInt('failureThreshold', min: 1);
+    final halfOpenThreshold = requireInt('halfOpenThreshold', min: 1);
+    final failureCount = requireInt('failureCount');
+    final halfOpenSuccesses = requireInt('halfOpenSuccesses');
+
+    final cooldownRaw = json['cooldown'];
+    if (cooldownRaw is! int || cooldownRaw <= 0) {
+      throw ArgumentError.value(cooldownRaw, 'cooldown', 'CircuitBreaker.cooldown must be positive microseconds');
+    }
+    final cooldown = Duration(microseconds: cooldownRaw);
+
+    final stateRaw = json['state'] ?? 'closed';
+    if (stateRaw is! String) {
+      throw ArgumentError.value(stateRaw, 'state', 'CircuitBreaker.state must be a state-name string');
+    }
+    final state = switch (stateRaw) {
+      'closed' => CircuitBreakerState.closed,
+      'open' => CircuitBreakerState.open,
+      'halfOpen' => CircuitBreakerState.halfOpen,
+      _ => throw ArgumentError.value(
+          stateRaw, 'state', 'unknown CircuitBreakerState — expected closed, open or halfOpen'),
+    };
+
+    DateTime? optionalTimestamp(String key) {
+      final value = json[key];
+      if (value == null) return null;
+      if (value is! String) {
+        throw ArgumentError.value(value, key, 'CircuitBreaker.$key must be an ISO-8601 string when present');
+      }
+      final parsed = DateTime.tryParse(value);
+      if (parsed == null) {
+        throw ArgumentError.value(value, key, 'CircuitBreaker.$key is not a parseable ISO-8601 timestamp');
+      }
+      return parsed;
+    }
+
+    return CircuitBreaker(
+      id: idRaw,
+      failureThreshold: failureThreshold,
+      cooldown: cooldown,
+      halfOpenThreshold: halfOpenThreshold,
+      state: state,
+      failureCount: failureCount,
+      openedAt: optionalTimestamp('openedAt'),
+      halfOpenSuccesses: halfOpenSuccesses,
+      lastFailureAt: optionalTimestamp('lastFailureAt'),
     );
   }
 
