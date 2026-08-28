@@ -33,7 +33,7 @@ typed event stream / outcome.
 | A6  | An enqueued steering message is injected before the next LLM call during a running mission                                            | FR-003       | example | DONE    | test/engine/mission_runner_test.dart :: "steering queue drains at turn start in FIFO order" |
 | A7  | Follow-up messages queued at mission end cause the loop to continue with them instead of exiting                                       | FR-003       | example | BLOCKED |      |
 | A8  | With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5                                    | FR-004       | example | DONE    | test/engine/mission_runner_002_a8_test.dart :: "A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after turn 5" |
-| A9  | Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly                                  | FR-004       | example | BLOCKED |      |
+| A9  | Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly                                  | FR-004       | example | DONE    | test/engine/mission_runner_002_a9_test.dart :: "A9: maxCalls=3 with a repeating tool call ends in loopDetected after the 3rd" |
 | A10 | During any mission, consumers receive events in order with monotonic turn/sequence identifiers                                         | FR-005       | example | DONE    | test/engine/mission_runner_test.dart :: "natural single-turn mission emits the full ordered event sequence" |
 
 ## Coverage analysis (after merging `feat/spec-069-mission-runner` @ `c4805d5`)
@@ -55,7 +55,7 @@ passing test → verify, mark DONE" rule.
 | A4 | BLOCKED | `ThinkingDelta` is emitted by the loop but explicitly documented "Streamed; not persisted" (`lib/src/engine/events/thinking_delta.dart`); the assistant message carries no thinking blocks at turn completion. Requires persisting thinking into the transcript — a net-new engine feature, out of scope for an acceptance-cycle test. |
 | A5 | BLOCKED | same root cause as A4: cross-turn thinking-block-in-context needs persisted thinking blocks (not built). |
 | A7 | BLOCKED | `MissionRunner` drains the steering queue at turn start but has no follow-up-at-end continuation path; the loop exits when the planner returns no tool calls. Requires a follow-up queue + re-entry — net-new engine feature. |
-| A9 | BLOCKED | no repetition/`LoopDetected` wiring in `MissionRunner`; loop detection is spec 011 (`repetition_tracker`), not yet integrated into the engine entry point. |
+| A9 | DONE | resolved: `MissionRunner` now takes an optional `repetitionTracker` datasource and ends with `MissionStatus.loopDetected` when a dispatched signature trips the threshold. |
 
 ## Inner loop: deferred — plan.md absent
 

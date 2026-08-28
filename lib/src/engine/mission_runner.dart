@@ -36,6 +36,7 @@
 
 import 'dart:math' as math;
 
+import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
 import '../data/providers/engine_loop/engine_loop_executor.dart';
 import '../domain/entities/llm_client/chat_completion.dart';
 import '../domain/entities/llm_client/chat_message.dart';
@@ -58,6 +59,10 @@ enum MissionStatus {
 
   /// The provider failed terminally mid-mission.
   providerFailed,
+
+  /// The same tool call repeated up to the repetition threshold — a typed
+  /// LoopDetected outcome distinct from the turn cap (spec 002 A9).
+  loopDetected,
 }
 
 /// Outcome of one mission run: id, terminal [status], turns consumed, the
@@ -145,12 +150,14 @@ class MissionRunner {
     required ToolDispatcher toolDispatcher,
     required StopPolicy stopPolicy,
     SteeringQueue? steeringQueue,
+    RepetitionTrackerDatasource? repetitionTracker,
     required void Function(EngineEvent) onEvent,
     DateTime Function()? clock,
   })  : _executor = executor,
         _toolDispatcher = toolDispatcher,
         _stopPolicy = stopPolicy,
         _queue = steeringQueue,
+        _repetition = repetitionTracker,
         _onEvent = onEvent,
         _clock = clock ?? DateTime.now;
 
@@ -158,6 +165,7 @@ class MissionRunner {
   final ToolDispatcher _toolDispatcher;
   final StopPolicy _stopPolicy;
   SteeringQueue? _queue;
+  final RepetitionTrackerDatasource? _repetition;
   final void Function(EngineEvent) _onEvent;
   final DateTime Function() _clock;
 
@@ -251,6 +259,7 @@ class MissionRunner {
       // dispatched sequentially, its result (or error) joins the transcript
       // as a tool-role message, and the Started/Completed pair correlates
       // via callId. A failed tool does NOT abort the mission.
+      var looping = false;
       for (var i = 0; i < calls.length; i++) {
         final call = calls[i];
         final callId = '$missionId-call-$turnsUsed-$i';
@@ -274,6 +283,26 @@ class MissionRunner {
           callId: callId,
           ok: result.success,
         ));
+
+        // Repetition guard: the dispatched call's signature is recorded and
+        // re-evaluated against the tracker's threshold. Hitting it ends the
+        // mission with the typed loopDetected outcome rather than burning the
+        // remaining turn budget on the same call (spec 002 A9).
+        final tracker = _repetition;
+        if (tracker != null) {
+          final signature = '${call.toolName}|${call.arguments}';
+          await tracker.record(signature, at: _clock());
+          if (await tracker.isLooping(signature, now: _clock())) {
+            looping = true;
+            break;
+          }
+        }
+      }
+
+      if (looping) {
+        status = MissionStatus.loopDetected;
+        _onEvent(TurnCompleted(emittedAt: _clock()));
+        break;
       }
 
       _onEvent(TurnCompleted(emittedAt: _clock()));

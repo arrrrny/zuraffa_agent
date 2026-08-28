@@ -79,3 +79,21 @@ plan is being recorded before any change.
   A8 failed (`budgetExhausted` != `maxTurnsExceeded`). Restored.
 - No refactor needed.
 - commit: (this cycle)
+
+## Cycle: A9 — LoopDetected on repeated identical tool calls
+
+- test: `test/engine/mission_runner_002_a9_test.dart` :: "A9: maxCalls=3 with a
+  repeating tool call ends in loopDetected after the 3rd"
+- RED: `dart test test/engine/mission_runner_002_a9_test.dart` ->
+  `Error: No named parameter with the name 'repetitionTracker'.` — the engine had
+  no repetition seam at all, so the mission could only end on the turn cap.
+- GREEN: added `MissionStatus.loopDetected`; `MissionRunner` now accepts an
+  optional `RepetitionTrackerDatasource` and, after each dispatched call, records
+  `'<toolName>|<arguments>'` and re-evaluates `isLooping`. Tripping the threshold
+  breaks the dispatch loop, emits `TurnCompleted`, and ends the mission with
+  `loopDetected`. Test passes; full suite green (940 passed, 2 skipped, 57s).
+- Deliberate mutant: `looping = true` -> `looping = false` at the trip site ->
+  A9 failed. Restored.
+- No refactor needed: the guard is 10 lines inside the existing dispatch loop and
+  reuses spec 011's datasource contract unchanged.
+- commit: (this cycle)
