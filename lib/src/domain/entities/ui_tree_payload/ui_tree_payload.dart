@@ -82,6 +82,155 @@ class UiTreePayload {
     }
   }
 
+  /// Serialize to the ui/tree+json contract map (spec 038 FR-001): exactly
+  /// `mimeType`, `vocabularyId`, `schemaVersion`, `tree`. Callers own
+  /// jsonEncode when crossing a string wire.
+  Map<String, dynamic> toJson() => {
+        'mimeType': mimeType,
+        'vocabularyId': vocabularyId,
+        'schemaVersion': schemaVersion,
+        'tree': tree,
+      };
+
+  /// Parse a ui/tree+json contract map (spec 038 FR-002). The mimeType is
+  /// part of the contract, not a hint: absent or different throws
+  /// [ArgumentError] naming `mimeType`. Empty pinning fields and a non-map
+  /// tree throw naming the offending field. Unknown top-level keys are
+  /// ignored (forward compatibility). Constructs through the standard
+  /// constructor so validation and depth/nodeCount precomputation apply —
+  /// `fromJson(toJson(p)) == p`.
+  factory UiTreePayload.fromJson(Map<String, dynamic> json) {
+    final parsedMime = json['mimeType'];
+    if (parsedMime is! String || parsedMime != mimeType) {
+      throw ArgumentError.value(parsedMime, 'mimeType',
+          'must be present and equal to "$mimeType"');
+    }
+    final parsedVocab = json['vocabularyId'];
+    if (parsedVocab is! String) {
+      throw ArgumentError.value(
+          parsedVocab, 'vocabularyId', 'must be a non-empty string');
+    }
+    final parsedSchema = json['schemaVersion'];
+    if (parsedSchema is! String) {
+      throw ArgumentError.value(
+          parsedSchema, 'schemaVersion', 'must be a non-empty string');
+    }
+    final parsedTree = json['tree'];
+    if (parsedTree is! Map<String, dynamic>) {
+      throw ArgumentError.value(
+          parsedTree, 'tree', 'must be a Map<String, dynamic>');
+    }
+    return UiTreePayload(
+      vocabularyId: parsedVocab,
+      schemaVersion: parsedSchema,
+      tree: parsedTree,
+    );
+  }
+
+  /// Structural diff against [other] (spec 038 FR-003): a path-keyed delta
+  /// plus pinning-drift flags. Children are compared POSITIONALLY (child-list
+  /// index paths like `root/0/1`); a node difference at a shared path is a
+  /// change, not an add+remove pair. See [UiTreeDiff].
+  UiTreeDiff diff(UiTreePayload other) {
+    final added = <String>[];
+    final removed = <String>[];
+    final changed = <String>[];
+    _diffNodes('root', tree, other.tree, added, removed, changed);
+    // Emit lexically-sorted path lists so diffs are deterministic and stable
+    // for replay artifacts (per UiTreePayload/UiTreeDiff contract), independent
+    // of the positional traversal order produced by _diffNodes.
+    added.sort();
+    removed.sort();
+    changed.sort();
+    return UiTreeDiff(
+      addedPaths: added,
+      removedPaths: removed,
+      changedPaths: changed,
+      vocabularyChanged: vocabularyId != other.vocabularyId,
+      schemaChanged: schemaVersion != other.schemaVersion,
+    );
+  }
+
+  static void _diffNodes(
+    String path,
+    Map<String, dynamic>? a,
+    Map<String, dynamic>? b,
+    List<String> added,
+    List<String> removed,
+    List<String> changed,
+  ) {
+    if (a == null && b == null) return;
+    if (a == null) {
+      added.add(path);
+      _collectPaths(path, b!, added);
+      return;
+    }
+    if (b == null) {
+      removed.add(path);
+      _collectPaths(path, a, removed);
+      return;
+    }
+    // Minimal-anchor semantics: a node is "changed" only when its OWN
+    // payload (everything except the `children` key) differs. Descendant
+    // changes are reported at their own paths and never bubble up to
+    // ancestors — the diff's path set stays the smallest set of anchors
+    // that explains the whole delta.
+    if (!_ownPayloadEq(a, b)) {
+      changed.add(path);
+    }
+    final childrenA = _childrenOf(a);
+    final childrenB = _childrenOf(b);
+    final max =
+        childrenA.length > childrenB.length ? childrenA.length : childrenB.length;
+    for (var i = 0; i < max; i++) {
+      final childA = i < childrenA.length ? childrenA[i] : null;
+      final childB = i < childrenB.length ? childrenB[i] : null;
+      if (childA == null && childB == null) continue;
+      _diffNodes('$path/$i', childA, childB, added, removed, changed);
+    }
+  }
+
+  static List<Map<String, dynamic>> _childrenOf(Map<String, dynamic> node) {
+    final children = node['children'];
+    if (children is! List) return const [];
+    return [
+      for (final child in children)
+        if (child is Map<String, dynamic>) child
+    ];
+  }
+
+  /// Deep equality of a node's own payload — every key except `children`.
+  static bool _ownPayloadEq(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final keysA = [
+      for (final k in a.keys)
+        if (k != 'children') k
+    ]..sort();
+    final keysB = [
+      for (final k in b.keys)
+        if (k != 'children') k
+    ]..sort();
+    if (keysA.length != keysB.length) return false;
+    for (var i = 0; i < keysA.length; i++) {
+      final key = keysA[i];
+      if (key != keysB[i]) return false;
+      if (!_deepEq(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  static void _collectPaths(
+    String path,
+    Map<String, dynamic> node,
+    List<String> into,
+  ) {
+    final children = _childrenOf(node);
+    for (var i = 0; i < children.length; i++) {
+      final childPath = '$path/$i';
+      into.add(childPath);
+      _collectPaths(childPath, children[i], into);
+    }
+  }
+
   /// Compute the max depth of a tree node. A leaf node (no `children`
   /// key or empty children list) has depth 1. The recursive walk uses
   /// the conventional `children` key (a `List` of `Map<String, dynamic>`).
@@ -166,4 +315,82 @@ class UiTreePayload {
   String toString() =>
       'UiTreePayload(vocabularyId: $vocabularyId, schemaVersion: $schemaVersion, '
       'depth: $depth, nodeCount: $nodeCount, mimeType: $mimeType)';
+}
+
+/// Path-keyed structural delta between two [UiTreePayload]s (spec 038
+/// FR-004). Produced by [UiTreePayload.diff]; never constructed by hand
+/// outside tests.
+///
+/// Paths are child-index chains: `'root'` for the tree root, `'root/0/1'`
+/// for the second child of the first child. Children are compared
+/// positionally — an add at the end of a child list shifts nothing, but an
+/// insert in the middle surfaces as a run of changed paths (recorded here
+/// as changes, not add/remove pairs; a future keyed-by-id diff can build
+/// on the same walk if node ids enter the vocabulary contract).
+class UiTreeDiff {
+  /// Paths present in the other payload's tree, absent in this one.
+  final List<String> addedPaths;
+
+  /// Paths present in this payload's tree, absent in the other one.
+  final List<String> removedPaths;
+
+  /// Paths present in both trees whose node maps are deep-unequal.
+  final List<String> changedPaths;
+
+  /// True when the two payloads pin different vocabularies.
+  final bool vocabularyChanged;
+
+  /// True when the two payloads carry different schema versions.
+  final bool schemaChanged;
+
+  const UiTreeDiff({
+    required this.addedPaths,
+    required this.removedPaths,
+    required this.changedPaths,
+    required this.vocabularyChanged,
+    required this.schemaChanged,
+  });
+
+  /// Any structural or pinning difference at all.
+  bool get hasChanges =>
+      addedPaths.isNotEmpty ||
+      removedPaths.isNotEmpty ||
+      changedPaths.isNotEmpty ||
+      vocabularyChanged ||
+      schemaChanged;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UiTreeDiff &&
+          runtimeType == other.runtimeType &&
+          _listEq(addedPaths, other.addedPaths) &&
+          _listEq(removedPaths, other.removedPaths) &&
+          _listEq(changedPaths, other.changedPaths) &&
+          vocabularyChanged == other.vocabularyChanged &&
+          schemaChanged == other.schemaChanged);
+
+  static bool _listEq(List<String> a, List<String> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        Object.hashAll(addedPaths),
+        Object.hashAll(removedPaths),
+        Object.hashAll(changedPaths),
+        vocabularyChanged,
+        schemaChanged,
+      );
+
+  @override
+  String toString() =>
+      'UiTreeDiff(+${addedPaths.length}, -${removedPaths.length}, '
+      '~${changedPaths.length}, vocab: $vocabularyChanged, '
+      'schema: $schemaChanged)';
 }

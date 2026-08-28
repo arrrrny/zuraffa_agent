@@ -84,7 +84,7 @@ class SubAgentSpec {
   /// Null means inherit from parent spec (or use the engine default).
   final int? contextWindowTokens;
 
-  const SubAgentSpec({
+  SubAgentSpec({
     required this.name,
     required this.description,
     required this.systemPrompt,
@@ -95,7 +95,52 @@ class SubAgentSpec {
     this.maxTurns,
     this.wallClockTimeout,
     this.contextWindowTokens,
-  });
+  }) {
+    // Construction-time validation (spec 036, FR-001): identity fields
+    // must be non-empty. Invalid specs fail fast at load time instead of
+    // misbehaving at dispatch time.
+    if (name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be empty');
+    }
+    if (description.isEmpty) {
+      throw ArgumentError.value(description, 'description', 'must not be empty');
+    }
+    if (systemPrompt.isEmpty) {
+      throw ArgumentError.value(
+          systemPrompt, 'systemPrompt', 'must not be empty');
+    }
+    // FR-002 (spec 036): allowlist ids must be non-blank — a blank id in a
+    // YAML-loaded allowlist is loader drift that would silently widen or
+    // corrupt dispatch checks.
+    if (tools.any((id) => id.isEmpty)) {
+      throw ArgumentError.value(tools, 'tools',
+          'must not contain blank tool ids');
+    }
+    if (subAgents.any((id) => id.isEmpty)) {
+      throw ArgumentError.value(subAgents, 'subAgents',
+          'must not contain blank sub-agent ids');
+    }
+    // FR-003 (spec 036): budgets, when supplied, must be positive.
+    // Duration.zero stays valid — it is the documented "no wall-clock
+    // limit" sentinel; null always means "inherit from parent".
+    if (maxTurns != null && maxTurns! < 1) {
+      throw ArgumentError.value(maxTurns, 'maxTurns', 'must be >= 1 when set');
+    }
+    if (contextWindowTokens != null && contextWindowTokens! < 1) {
+      throw ArgumentError.value(contextWindowTokens, 'contextWindowTokens',
+          'must be >= 1 when set');
+    }
+    if (wallClockTimeout != null && wallClockTimeout!.isNegative) {
+      throw ArgumentError.value(wallClockTimeout, 'wallClockTimeout',
+          'must not be negative');
+    }
+    // FR-004 (spec 036): the extendsSpec == name 1-cycle is ill-formed.
+    // Deeper cycles and unknown parents are the loader's concern.
+    if (extendsSpec == name) {
+      throw ArgumentError.value(extendsSpec, 'extendsSpec',
+          'must not equal name (self-inheritance cycle)');
+    }
+  }
 
   /// True for a leaf agent — cannot dispatch sub-agents ([subAgents]
   /// is empty).
