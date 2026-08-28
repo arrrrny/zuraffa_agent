@@ -165,6 +165,50 @@ void main() {
           throwsA(isA<StateError>()));
     });
 
+    test('graph restore skips malformed links and fails loud on a corrupt file',
+        () {
+      final good = MemoryLink(
+        fromRecordId: 'g-1',
+        toRecordId: 'g-2',
+        type: MemoryLinkType.supports,
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+
+      // File with two good links and one corrupt entry between them.
+      final mixed = <dynamic>[
+        MemoryJsonCodec.linkToJson(MemoryLink(
+          fromRecordId: 'g-0',
+          toRecordId: 'g-1',
+          type: MemoryLinkType.supports,
+          createdAt: DateTime.utc(2026, 1, 1),
+        )),
+        {
+          'fromRecordId': 'x',
+          'toRecordId': 'y',
+          'type': 'notARealType', // unknown link type → ArgumentError
+          'createdAt': '2026-01-01T00:00:00.000Z',
+        },
+        MemoryJsonCodec.linkToJson(good),
+      ];
+      final mixedFile = File('${tmp.path}/graph_mixed.json');
+      mixedFile
+          .writeAsStringSync(jsonEncode({'version': 1, 'links': mixed}));
+
+      final graph = PersistentMemoryGraph(file: mixedFile);
+      graph.restore();
+      expect(graph.links, hasLength(2), reason: 'corrupt link skipped');
+      expect(graph.neighborsOf('g-0'), hasLength(1));
+      expect(graph.neighborsOf('g-1'), hasLength(2),
+          reason: 'g-1 appears as target of g-0→g-1 and source of g-1→g-2');
+      expect(graph.neighborsOf('g-2'), hasLength(1));
+
+      // Wholly unparseable file → loud StateError.
+      final corrupt = File('${tmp.path}/graph_corrupt.json');
+      corrupt.writeAsStringSync('{this is not json');
+      expect(() => PersistentMemoryGraph(file: corrupt).restore(),
+          throwsA(isA<StateError>()));
+    });
+
     test('restore on a missing file starts empty', () {
       final store =
           PersistentLongTermMemoryStore(file: File('${tmp.path}/absent.json'));

@@ -141,7 +141,7 @@ class PersistentLongTermMemoryStore extends LongTermMemoryStore {
   /// - Missing file → empty store, no throw (first boot).
   /// - Malformed individual entries → skipped, the rest still load.
   /// - Unparseable whole file → [StateError] (external damage is loud).
-  Future<void> restore() async {
+  void restore() {
     if (!file.existsSync()) return;
     final Map<String, dynamic> doc;
     try {
@@ -239,7 +239,7 @@ class PersistentMemoryGraph extends MemoryGraph {
   /// Rebuilds the graph from the file — same semantics as
   /// [PersistentLongTermMemoryStore.restore] (missing file → empty;
   /// malformed entry → skipped; corrupt file → [StateError]).
-  Future<void> restore() async {
+  void restore() {
     if (!file.existsSync()) return;
     final Map<String, dynamic> doc;
     try {
