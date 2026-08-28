@@ -28,12 +28,12 @@ typed event stream / outcome.
 | A1  | A mission with tools available dispatches each `tool_calls` result, appends results, and re-invokes the LLM until a non-tool finish reason | FR-001, FR-005 | example | DONE    | test/engine/mission_runner_test.dart :: "tool dispatch round-trip emits correlated events and feeds results back" |
 | A2  | A scripted 200-call mission completes without state corruption or event loss                                                          | FR-001       | example | DONE    | test/engine/mission_runner_002_a2_test.dart :: "A2: a 200-call mission completes with no event loss or state corruption" |
 | A3  | Identical inputs + a recorded LLM re-run 10× produce a byte-identical event stream (determinism)                                      | FR-001       | example | DONE    | test/engine/mission_runner_002_a3_test.dart :: "A3: 10 identical runs produce a byte-identical event stream" |
-| A4  | A provider streaming thinking deltas leaves the assistant message carrying thinking blocks next to tool calls at turn completion       | FR-002       | example | PENDING |      |
-| A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | PENDING |      |
+| A4  | A provider streaming thinking deltas leaves the assistant message carrying thinking blocks next to tool calls at turn completion       | FR-002       | example | BLOCKED |      |
+| A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | BLOCKED |      |
 | A6  | An enqueued steering message is injected before the next LLM call during a running mission                                            | FR-003       | example | DONE    | test/engine/mission_runner_test.dart :: "steering queue drains at turn start in FIFO order" |
-| A7  | Follow-up messages queued at mission end cause the loop to continue with them instead of exiting                                       | FR-003       | example | PENDING |      |
+| A7  | Follow-up messages queued at mission end cause the loop to continue with them instead of exiting                                       | FR-003       | example | BLOCKED |      |
 | A8  | With maxTurns=5 and a model that never stops, the mission ends with `MaxTurnsExceeded` after turn 5                                    | FR-004       | example | DONE    | test/engine/mission_runner_002_a8_test.dart :: "A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after turn 5" |
-| A9  | Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly                                  | FR-004       | example | PENDING |      |
+| A9  | Identical repeated tool calls hitting the threshold fire `LoopDetected` and abort the mission cleanly                                  | FR-004       | example | BLOCKED |      |
 | A10 | During any mission, consumers receive events in order with monotonic turn/sequence identifiers                                         | FR-005       | example | DONE    | test/engine/mission_runner_test.dart :: "natural single-turn mission emits the full ordered event sequence" |
 
 ## Coverage analysis (after merging `feat/spec-069-mission-runner` @ `c4805d5`)
@@ -52,10 +52,10 @@ passing test → verify, mark DONE" rule.
 | A8 | DONE | `MissionRunner` now emits `MissionStatus.maxTurnsExceeded` (distinct from wall-clock `budgetExhausted`) at the turn cap; `test/engine/mission_runner_002_a8_test.dart` drives maxTurns=5 with a non-stopping model and asserts the typed outcome + event status |
 | A2 | DONE | `test/engine/mission_runner_002_a2_test.dart` — 200-call stress, no event loss/state corruption (cycle b498e44) |
 | A3 | DONE | `test/engine/mission_runner_002_a3_test.dart` — 10× byte-identical stream (cycle 503ca33) |
-| A4 | GAP | no thinking/`reasoning` block persistence assertion |
-| A5 | GAP | no cross-turn thinking-block-in-context assertion |
-| A7 | GAP | queue drains at turn start; no follow-up-at-end continuation |
-| A9 | GAP | no repetition/`LoopDetected` wiring (loop detection is spec 011) |
+| A4 | BLOCKED | `ThinkingDelta` is emitted by the loop but explicitly documented "Streamed; not persisted" (`lib/src/engine/events/thinking_delta.dart`); the assistant message carries no thinking blocks at turn completion. Requires persisting thinking into the transcript — a net-new engine feature, out of scope for an acceptance-cycle test. |
+| A5 | BLOCKED | same root cause as A4: cross-turn thinking-block-in-context needs persisted thinking blocks (not built). |
+| A7 | BLOCKED | `MissionRunner` drains the steering queue at turn start but has no follow-up-at-end continuation path; the loop exits when the planner returns no tool calls. Requires a follow-up queue + re-entry — net-new engine feature. |
+| A9 | BLOCKED | no repetition/`LoopDetected` wiring in `MissionRunner`; loop detection is spec 011 (`repetition_tracker`), not yet integrated into the engine entry point. |
 
 ## Inner loop: deferred — plan.md absent
 
