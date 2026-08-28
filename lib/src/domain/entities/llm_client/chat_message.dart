@@ -10,9 +10,30 @@ class ChatMessage {
   final String role;
   final String content;
 
-  const ChatMessage({required this.role, required this.content});
+  /// The assistant's thinking/reasoning block for this message, when the
+  /// provider produced one.
+  ///
+  /// Spec 002 FR-002: assistant messages carry thinking blocks alongside tool
+  /// calls and context assembly preserves them across turns, so a thinking
+  /// model's reasoning is never silently stripped between turns. Null on every
+  /// non-assistant message and on assistant turns with no reasoning.
+  final String? thinking;
 
-  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+  const ChatMessage({
+    required this.role,
+    required this.content,
+    this.thinking,
+  });
+
+  /// Wire form for the gateway request.
+  ///
+  /// `thinking` is emitted only when present, so a message without reasoning
+  /// serializes byte-identically to how it did before the field existed.
+  Map<String, dynamic> toJson() => {
+        'role': role,
+        'content': content,
+        if (thinking != null) 'thinking': thinking,
+      };
 
   @override
   bool operator ==(Object other) =>
@@ -20,10 +41,11 @@ class ChatMessage {
       (other is ChatMessage &&
           runtimeType == other.runtimeType &&
           role == other.role &&
-          content == other.content);
+          content == other.content &&
+          thinking == other.thinking);
 
   @override
-  int get hashCode => Object.hash(role, content);
+  int get hashCode => Object.hash(role, content, thinking);
 
   @override
   String toString() => 'ChatMessage(role: $role, content: "${content.length > 24 ? "${content.substring(0, 24)}…" : content}")';

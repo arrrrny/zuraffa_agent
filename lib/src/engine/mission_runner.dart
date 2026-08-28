@@ -246,7 +246,14 @@ class MissionRunner {
         break;
       }
 
-      transcript.add(ChatMessage(role: 'assistant', content: completion.content));
+      // The assistant message carries this turn's thinking block alongside the
+      // tool-role results that follow it, so a thinking model's reasoning is
+      // still in context when turn N+1 is assembled (spec 002 FR-002).
+      transcript.add(ChatMessage(
+        role: 'assistant',
+        content: completion.content,
+        thinking: completion.reasoning,
+      ));
 
       final calls = (planner == null)
           ? const <ToolCall>[]

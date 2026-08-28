@@ -97,3 +97,21 @@ plan is being recorded before any change.
 - No refactor needed: the guard is 10 lines inside the existing dispatch loop and
   reuses spec 011's datasource contract unchanged.
 - commit: (this cycle)
+
+## Cycle: A4 — assistant message carries its thinking block
+
+- test: `test/engine/mission_runner_002_a4_test.dart` :: "A4: a completed turn
+  leaves the assistant message carrying its thinking block next to the tool result"
+- RED: `dart test test/engine/mission_runner_002_a4_test.dart` ->
+  `Error: The getter 'thinking' isn't defined for the type 'ChatMessage'.` — the
+  transcript's assistant message had no place to hold reasoning, so a thinking
+  model's blocks were dropped at turn completion.
+- GREEN: added the nullable `thinking` field to `ChatMessage` (in `==`, `hashCode`,
+  and emitted from `toJson` only when present, so messages without reasoning
+  serialize exactly as before) and populated it in `MissionRunner` from
+  `ChatCompletion.reasoning`, which already carried the provider's thinking text.
+  Full suite green (943 passed, 2 skipped, 52s).
+- Deliberate mutant: `thinking: completion.reasoning` -> `thinking: null` ->
+  A4 failed (`Expected: '...' Actual: <null>`). Restored.
+- No refactor needed.
+- commit: (this cycle)
