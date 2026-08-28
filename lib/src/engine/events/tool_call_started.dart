@@ -13,4 +13,20 @@ final class ToolCallStarted extends EngineEvent {
     required this.toolName,
     required this.callId,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ToolCallStarted &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          toolName == other.toolName &&
+          callId == other.callId);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, toolName, callId);
+
+  @override
+  String toString() =>
+      'ToolCallStarted(emittedAt: $emittedAt, toolName: $toolName, callId: $callId)';
 }

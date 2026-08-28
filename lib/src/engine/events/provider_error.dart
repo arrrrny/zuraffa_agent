@@ -7,4 +7,20 @@ final class ProviderError extends EngineEvent {
   final String error;
 
   const ProviderError({required this.emittedAt, required this.providerName, required this.error});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProviderError &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          providerName == other.providerName &&
+          error == other.error);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, providerName, error);
+
+  @override
+  String toString() =>
+      'ProviderError(emittedAt: $emittedAt, providerName: $providerName, error: $error)';
 }

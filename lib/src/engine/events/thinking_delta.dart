@@ -6,4 +6,18 @@ final class ThinkingDelta extends EngineEvent {
   final String delta;
 
   const ThinkingDelta({required this.emittedAt, required this.delta});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ThinkingDelta &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          delta == other.delta);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, delta);
+
+  @override
+  String toString() => 'ThinkingDelta(emittedAt: $emittedAt, delta: $delta)';
 }

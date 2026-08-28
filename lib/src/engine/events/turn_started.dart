@@ -11,4 +11,18 @@ final class TurnStarted extends EngineEvent {
   final String? turnId;
 
   const TurnStarted({required this.emittedAt, this.turnId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TurnStarted &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          turnId == other.turnId);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, turnId);
+
+  @override
+  String toString() => 'TurnStarted(emittedAt: $emittedAt, turnId: $turnId)';
 }

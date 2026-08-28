@@ -8,4 +8,21 @@ final class MissionCompleted extends EngineEvent {
   final String? summary;
 
   const MissionCompleted({required this.emittedAt, required this.missionId, required this.status, required this.summary});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MissionCompleted &&
+          runtimeType == other.runtimeType &&
+          emittedAt == other.emittedAt &&
+          missionId == other.missionId &&
+          status == other.status &&
+          summary == other.summary);
+
+  @override
+  int get hashCode => Object.hash(emittedAt, missionId, status, summary);
+
+  @override
+  String toString() =>
+      'MissionCompleted(emittedAt: $emittedAt, missionId: $missionId, status: $status, summary: $summary)';
 }
