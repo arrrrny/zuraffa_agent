@@ -153,11 +153,37 @@ void main() {
     });
 
     test('ProviderError carries payload fields', () {
-      final event = ProviderError(emittedAt: fixedTime, providerName: 'sample', error: 'sample');
+      final event = ProviderError(
+        emittedAt: fixedTime,
+        providerName: 'openai',
+        error: '401 unauthorized (terminal)',
+      );
       expect(event.emittedAt, fixedTime);
-      expect(event.providerName, 'sample');
-      expect(event.error, 'sample');
-    });  });
+      expect(event.providerName, 'openai');
+      expect(event.error, '401 unauthorized (terminal)');
+    });
+
+    test('describe(EngineEvent) switch routes ProviderError to provider_error(providerName)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+      };
+
+      final event = ProviderError(
+        emittedAt: fixedTime,
+        providerName: 'openai',
+        error: '401 unauthorized (terminal)',
+      );
+      expect(describe(event), 'provider_error(openai)');
+    });
+  });
   group('arrarrny/zuraffa_agent#17 — EngineEvent.MissionStarted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
     final startedTime = DateTime.utc(2026, 8, 24, 7, 45, 0);
