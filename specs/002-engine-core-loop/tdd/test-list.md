@@ -26,7 +26,7 @@ typed event stream / outcome.
 | id  | behavior                                                                                                                              | traces       | kind    | state   | test |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------- | ---- |
 | A1  | A mission with tools available dispatches each `tool_calls` result, appends results, and re-invokes the LLM until a non-tool finish reason | FR-001, FR-005 | example | DONE    | test/engine/mission_runner_test.dart :: "tool dispatch round-trip emits correlated events and feeds results back" |
-| A2  | A scripted 200-call mission completes without state corruption or event loss                                                          | FR-001       | example | PENDING |      |
+| A2  | A scripted 200-call mission completes without state corruption or event loss                                                          | FR-001       | example | DONE    | test/engine/mission_runner_002_a2_test.dart :: "A2: a 200-call mission completes with no event loss or state corruption" |
 | A3  | Identical inputs + a recorded LLM re-run 10× produce a byte-identical event stream (determinism)                                      | FR-001       | example | PENDING |      |
 | A4  | A provider streaming thinking deltas leaves the assistant message carrying thinking blocks next to tool calls at turn completion       | FR-002       | example | PENDING |      |
 | A5  | In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled                                  | FR-002       | example | PENDING |      |

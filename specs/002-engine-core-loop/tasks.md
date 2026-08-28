@@ -9,7 +9,7 @@
 ## Acceptance (outer loop)
 
 - [X] [A1] A mission with tools available dispatches each `tool_calls` result, appends results, and re-invokes the LLM until a non-tool finish reason. (covered by test/engine/mission_runner_test.dart)
-- [ ] [A2] A scripted 200-call mission completes without state corruption or event loss.
+- [X] [A2] A scripted 200-call mission completes without state corruption or event loss. (test/engine/mission_runner_002_a2_test.dart)
 - [ ] [A3] Identical inputs + a recorded LLM re-run 10× produce a byte-identical event stream (determinism).
 - [ ] [A4] A provider streaming thinking deltas leaves the assistant message carrying thinking blocks next to tool calls at turn completion.
 - [ ] [A5] In a multi-turn mission, prior turns' thinking blocks are present when turn N+1 context is assembled.
