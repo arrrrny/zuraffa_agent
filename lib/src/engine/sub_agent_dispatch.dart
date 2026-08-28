@@ -107,9 +107,6 @@ enum SubAgentDispatchStatus {
   /// The child mission's provider failed terminally.
   providerFailed,
 
-  /// The child mission hit its turn cap (loop.maxTurns / policy.maxTurns).
-  maxTurnsExceeded,
-
   /// The child mission repeated the same tool call up to the threshold.
   loopDetected,
 
@@ -269,7 +266,9 @@ class SubAgentDispatchService {
       MissionStatus.completed => SubAgentDispatchStatus.completed,
       MissionStatus.budgetExhausted => SubAgentDispatchStatus.budgetExhausted,
       MissionStatus.providerFailed => SubAgentDispatchStatus.providerFailed,
-      MissionStatus.maxTurnsExceeded => SubAgentDispatchStatus.maxTurnsExceeded,
+      // The turn cap is reported as budget exhaustion: spec 070 conflates the
+      // child's loop.maxTurns / policy.maxTurns cap with its wall-clock budget.
+      MissionStatus.maxTurnsExceeded => SubAgentDispatchStatus.budgetExhausted,
       MissionStatus.loopDetected => SubAgentDispatchStatus.loopDetected,
       MissionStatus.goalAchieved => SubAgentDispatchStatus.goalAchieved,
     };

@@ -299,7 +299,7 @@ void main() {
         goalEvaluator: evaluator,
       );
 
-      expect(result.status, MissionStatus.budgetExhausted);
+      expect(result.status, MissionStatus.maxTurnsExceeded);
       expect(result.goalAchieved, isFalse);
       expect(result.turnsUsed, 2);
       expect(evaluator.invocations, 2);
