@@ -17,6 +17,7 @@ export 'src/providers.dart';
 export 'src/tools.dart';
 export 'src/skills.dart';
 export 'src/engine/events/engine_event.dart';
+export 'src/engine/events/engine_event_log.dart';
 
 // MCP client runtime (spec 015-mcp-client).
 // Pure surface — IO-segregated adapters (io_sse_mcp_transport.dart,

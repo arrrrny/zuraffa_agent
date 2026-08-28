@@ -6,6 +6,7 @@ part of 'engine_event.dart';
 /// (`cancelled`, `max-tokens-reached`, `tool-error-limit`, etc.) when the
 /// turn terminated early.
 final class TurnCompleted extends EngineEvent {
+  @override
   final DateTime emittedAt;
   final String? reason;
 
