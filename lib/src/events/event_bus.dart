@@ -61,13 +61,34 @@ class EventBus {
   }
 }
 
-/// Convenience wrapper over [EventBus] (spec 013, FR-004). `publish`/`listen`
-/// delegate to `emit`/`on`.
+/// Convenience wrapper over [EventBus] (spec 013 FR-004, completed by
+/// spec 078): `publish`/`listen`/`on` for the pub/sub side,
+/// `request` for the request/response side, and [bus] so the wrap stays
+/// transparent — handler registration (`registerHandler`) lives on the
+/// bus and must be reachable through a default-constructed controller.
 class AgentController {
   final EventBus _bus;
   AgentController([EventBus? bus]) : _bus = bus ?? EventBus();
 
-  // Stub: no delivery until implemented.
+  /// The wrapped bus — the handler-registration surface for
+  /// request/response (spec 078 FR-003).
+  EventBus get bus => _bus;
+
+  /// Publishes [event] to all subscribers of its type (delegates to
+  /// [EventBus.emit]).
   void publish<T>(T event) => _bus.emit<T>(event);
+
+  /// Subscribes [listener] to events of type [T] (delegates to
+  /// [EventBus.on]).
   void listen<T>(void Function(T) listener) => _bus.on<T>(listener);
+
+  /// Alias for [listen] — the spec 013 Key Entities surface (spec 078
+  /// FR-002).
+  void on<T>(void Function(T) listener) => _bus.on<T>(listener);
+
+  /// Typed request/response through the wrapped bus (spec 078 FR-001):
+  /// dispatches [event] to the most recently registered handler for its
+  /// type and returns its typed response. Identical behavior to
+  /// [EventBus.request].
+  Future<R> request<R>(Object event) => _bus.request<R>(event);
 }
