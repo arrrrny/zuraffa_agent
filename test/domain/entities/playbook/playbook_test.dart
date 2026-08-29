@@ -140,4 +140,89 @@ void main() {
       expect(text, isNot(contains('Greet in German.')));
     });
   });
+
+  group('spec 104 — Playbook schema validation', () {
+    test('U3: blank identity fields are rejected', () {
+      Matcher rejectsNamed(String field) => throwsA(isA<ArgumentError>()
+          .having((e) => e.name, 'name', contains(field)));
+
+      expect(
+        () => Playbook(
+          id: '',
+          name: 'germany',
+          description: 'desc',
+          steering: _steering,
+          toolGate: _gate,
+          response: _response,
+        ),
+        rejectsNamed('id'),
+      );
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: '',
+          description: 'desc',
+          steering: _steering,
+          toolGate: _gate,
+          response: _response,
+        ),
+        rejectsNamed('name'),
+      );
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: '',
+          steering: _steering,
+          toolGate: _gate,
+          response: _response,
+        ),
+        rejectsNamed('description'),
+      );
+      // Optional metadata: null is fine (U1 pins that), empty is not.
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          domain: '',
+          steering: _steering,
+          toolGate: _gate,
+          response: _response,
+        ),
+        rejectsNamed('domain'),
+      );
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          country: '',
+          steering: _steering,
+          toolGate: _gate,
+          response: _response,
+        ),
+        rejectsNamed('country'),
+      );
+    });
+
+    test('U4: blank steering content is rejected', () {
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          steering: [PlaybookSteering(content: '')],
+          toolGate: _gate,
+          response: _response,
+        ),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('content'))),
+      );
+    });
+  });
 }
+
+const _steering = [PlaybookSteering(content: 'Focus on the market.')];
+const _gate = PlaybookToolGate(mode: PlaybookGateMode.off);
+const _response = PlaybookResponse();

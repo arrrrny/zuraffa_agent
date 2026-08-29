@@ -186,7 +186,38 @@ class Playbook {
     List<PlaybookSteering> steering = const [],
     this.toolGate = const PlaybookToolGate(mode: PlaybookGateMode.off),
     this.response = const PlaybookResponse(),
-  }) : steering = List.unmodifiable(steering);
+  }) : steering = List.unmodifiable(steering) {
+    // Construction-time validation (FR-001/FR-002): identity fields are
+    // required non-empty; optional metadata is non-empty when present.
+    // Invalid playbooks fail fast at construction/load time instead of
+    // misbehaving at dispatch time (SubAgentSpec precedent, spec 036).
+    if (id.isEmpty) {
+      throw ArgumentError.value(id, 'id', 'Playbook.id must not be empty');
+    }
+    if (name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Playbook.name must not be empty');
+    }
+    if (description.isEmpty) {
+      throw ArgumentError.value(
+          description, 'description', 'Playbook.description must not be empty');
+    }
+    if (domain != null && domain!.isEmpty) {
+      throw ArgumentError.value(
+          domain, 'domain', 'Playbook.domain must be non-empty when present');
+    }
+    if (country != null && country!.isEmpty) {
+      throw ArgumentError.value(
+          country, 'country', 'Playbook.country must be non-empty when present');
+    }
+    // Steering entries carry the text the engine will inject — a blank
+    // entry would fabricate an empty steering message at mission start.
+    for (final entry in this.steering) {
+      if (entry.content.isEmpty) {
+        throw ArgumentError.value(entry.content, 'content',
+            'Playbook.steering entries must have non-empty content');
+      }
+    }
+  }
 
   @override
   bool operator ==(Object other) =>
