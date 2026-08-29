@@ -72,6 +72,8 @@ class GateDecision {
     required this.passed,
     required this.breakdown,
     required this.report,
+    required this.incomplete,
+    required this.incompleteTaskIds,
   });
 
   /// The suite that was gated.
@@ -93,6 +95,14 @@ class GateDecision {
   /// The CI-log rendering: the verdict line followed by the per-task breakdown.
   final String report;
 
+  /// True when any declared task was missing from the samples or recorded
+  /// zero runs (spec 085 FR-006) — the machine-readable release veto.
+  final bool incomplete;
+
+  /// The tasks that triggered the veto (missing or zero-run), in the
+  /// suite's declared order (spec 085 FR-006).
+  final List<String> incompleteTaskIds;
+
   /// The process exit code a CI runner should use: 0 on pass, 1 on fail.
   int get exitCode => passed ? 0 : 1;
 }
@@ -112,15 +122,21 @@ class SuiteGate {
     required Map<String, TaskSamples> samples,
   }) {
     final rows = <TaskGateResult>[];
+    final incompleteIds = <String>[];
     for (final taskId in suite.tasks) {
       final s = samples[taskId];
-      if (s == null) {
+      // Spec 085 FR-005: a task with no samples entry OR with zero recorded
+      // runs is an INCOMPLETE run — it scores 0.0 and vetoes the gate.
+      // (Zero-run entries previously reached PassAtK.compute with k=0 and
+      // crashed; an incomplete run must veto, not throw.)
+      if (s == null || s.n == 0) {
         rows.add(TaskGateResult(
           taskId: taskId,
           passAtK: 0.0,
           passed: false,
-          detail: 'no samples recorded',
+          detail: s == null ? 'no samples recorded' : 'zero runs recorded',
         ));
+        incompleteIds.add(taskId);
         continue;
       }
       final k = suite.k <= s.n ? suite.k : s.n;
@@ -140,8 +156,12 @@ class SuiteGate {
     // and scoring it 0.0 into the mean is not enough on its own: a suite of
     // easy tasks could still clear the threshold while its hardest mission was
     // never run. Missing samples therefore veto the gate outright.
-    final incomplete = suite.tasks.any((t) => !samples.containsKey(t));
-    final passed = score >= suite.gateThreshold && !incomplete;
+    //
+    // Spec 085 FR-007: a suite with ZERO declared tasks also fails — a
+    // gate over nothing is not evidence (previously 0.0 >= 0.0 passed).
+    final incomplete = incompleteIds.isNotEmpty;
+    final passed =
+        rows.isNotEmpty && score >= suite.gateThreshold && !incomplete;
 
     final lines = <String>[
       '${passed ? 'PASS' : 'FAIL'} suite ${suite.id}: '
@@ -153,6 +173,14 @@ class SuiteGate {
             '${r.passAtK.toStringAsFixed(2)} (${r.detail})',
     ];
 
+    // Spec 085 FR-007: a gate over zero tasks is not evidence — fail
+    // closed, and say so.
+    if (rows.isEmpty) {
+      lines.add('  no tasks declared — nothing to gate (fail-closed)');
+    }
+
+    final incompleteTaskIds = List<String>.unmodifiable(incompleteIds);
+
     return GateDecision(
       suiteId: suite.id,
       score: score,
@@ -160,6 +188,8 @@ class SuiteGate {
       passed: passed,
       breakdown: List.unmodifiable(rows),
       report: lines.join('\n'),
+      incomplete: incompleteTaskIds.isNotEmpty,
+      incompleteTaskIds: incompleteTaskIds,
     );
   }
 }
