@@ -72,4 +72,93 @@ class AgentMessageHistory {
         messages: messages,
         episodicMemories: [...episodicMemories, memory],
       );
+
+  // --------------------------------------------------------------
+  // Equality (FR-001 / FR-002) — full-field equality over messages
+  // and episodicMemories. Identity short-circuits.
+  // --------------------------------------------------------------
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AgentMessageHistory &&
+        runtimeType == other.runtimeType &&
+        _listEquals(messages, other.messages) &&
+        _listEquals(episodicMemories, other.episodicMemories);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        Object.hashAll(messages),
+        Object.hashAll(episodicMemories),
+      );
+
+  // --------------------------------------------------------------
+  // JSON contract (FR-003 / FR-004 / FR-005) — `toJson` produces
+  // {messages: [...], episodicMemories: [...]}; `fromJson` round-trips
+  // to an equal history and throws typed ArgumentError on every
+  // malformed-input variant. Parity with `EpisodicMemory.fromJson`
+  // and `SteeringMessage.fromJson`.
+  // --------------------------------------------------------------
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'messages': [for (final m in messages) m.toJson()],
+        'episodicMemories': [for (final em in episodicMemories) em.toJson()],
+      };
+
+  factory AgentMessageHistory.fromJson(Map<String, dynamic> json) {
+    List<dynamic> requireList(String key) {
+      final value = json[key];
+      if (value is! List) {
+        throw ArgumentError.value(
+            value, key, 'AgentMessageHistory.$key must be a list');
+      }
+      return value;
+    }
+
+    final rawMessages = requireList('messages');
+    final rawMemories = requireList('episodicMemories');
+
+    final messages = <AgentMessage>[];
+    for (var i = 0; i < rawMessages.length; i++) {
+      final raw = rawMessages[i];
+      if (raw is! Map<String, dynamic>) {
+        throw ArgumentError.value(
+            raw, 'messages[$i]', 'must be a Map<String, dynamic>');
+      }
+      try {
+        messages.add(AgentMessage.fromJson(raw));
+      } catch (e) {
+        throw ArgumentError.value(
+            raw, 'messages[$i]', 'AgentMessage.fromJson failed: $e');
+      }
+    }
+
+    final memories = <EpisodicMemory>[];
+    for (var i = 0; i < rawMemories.length; i++) {
+      final raw = rawMemories[i];
+      if (raw is! Map<String, dynamic>) {
+        throw ArgumentError.value(
+            raw, 'episodicMemories[$i]', 'must be a Map<String, dynamic>');
+      }
+      try {
+        memories.add(EpisodicMemory.fromJson(raw));
+      } catch (e) {
+        throw ArgumentError.value(
+            raw, 'episodicMemories[$i]', 'EpisodicMemory.fromJson failed: $e');
+      }
+    }
+
+    return AgentMessageHistory(
+      messages: messages,
+      episodicMemories: memories,
+    );
+  }
+}
+
+/// Order-sensitive list equality (delegates to each element's `==`).
+bool _listEquals<T>(List<T> a, List<T> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }
