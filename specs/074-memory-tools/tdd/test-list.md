@@ -32,6 +32,21 @@ suite_baseline: green # 925 passed / 2 skipped at 4dd76e2
 | U3  | recall happy path: line format `<layer> \| <id> \| salience <s> \| <content>`, ranking order from the system, limit honored | FR-004 | example | PASSING | `…::recall renders ranked layer-attributed lines` |
 | U4  | link happy path: valid type string maps to MemoryLinkType; note flows; success result names from→to; self-link failure result | FR-005 | example | PASSING | `…::link validates and delegates to the system` |
 | U5  | validateSchema: missing required key per tool reported; complete args valid; checkRiskTier true for any input | FR-007 | example | PASSING | `…::schema validation and risk tier` |
+| U6  | An auto id skips any `mem-<n>` an explicit-id call already stored — an auto remember never overwrites a stored record | FR-002 | example | PASSING | `…::an auto id never overwrites a memory stored under that id` |
+| U7  | A NaN salience is rejected as out of range (NaN comparisons are false, so the range guard alone lets it through) | FR-002 | example | PASSING | `…::a NaN salience is rejected as out of range` |
+| U8  | validateSchema rejects an explicit null for a required argument, agreeing with `dispatch` | FR-007 | example | PASSING | `…::validateSchema rejects an explicit null for a required argument` |
+| U9  | `renderWithSession` applies `limit` per layer, so it emits up to `2 * limit` lines | FR-006 | example | PASSING | `…::renderWithSession applies limit per layer` |
+
+> **U6–U9 (review round, HEAD `27371ab`)** — added after the spec-074 code
+> review. Each was driven test-first and observed red against the unfixed
+> implementation before the fix landed:
+>
+> | id | red command | decisive failure |
+> | -- | ----------- | ---------------- |
+> | U6 | `dart test test/engine/memory_tools_test.dart` | `Expected: not contains 'mem-1'` — the auto id collided and the pinned record was replaced in place |
+> | U7 | same | the NaN write returned `success: true` and recall rendered `salience NaN` |
+> | U8 | same | `validateSchema` returned `[]` for `{'content': null}` while `dispatch` rejected it |
+> | U9 | same | characterization only — pins the documented per-layer `limit`; the fix was the doc comment, so no red |
 
 ## Invariants and edge cases
 

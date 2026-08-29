@@ -298,5 +298,69 @@ void main() {
       expect(restored.byId('d-1')!.salience, equals(0.5));
       expect(restored.byId('d-1'), equals(store.byId('d-1')));
     });
+
+    test('write-through creates missing parent directories', () {
+      final file = File('${tmp.path}/nested/deeper/long_term.json');
+      PersistentLongTermMemoryStore(file: file)
+          .remember(rec('lt-1', 'nested write'));
+
+      expect(file.existsSync(), isTrue);
+    });
+
+    test('restore fails loud on a JSON document of the wrong shape', () {
+      final notAnObject = File('${tmp.path}/array.json')
+        ..writeAsStringSync('[]');
+      expect(() => PersistentLongTermMemoryStore(file: notAnObject).restore(),
+          throwsA(isA<StateError>()));
+
+      final noRecords = File('${tmp.path}/no_records.json')
+        ..writeAsStringSync('{"version":1}');
+      expect(() => PersistentLongTermMemoryStore(file: noRecords).restore(),
+          throwsA(isA<StateError>()));
+
+      final noLinks = File('${tmp.path}/no_links.json')
+        ..writeAsStringSync('{"version":1}');
+      expect(() => PersistentMemoryGraph(file: noLinks).restore(),
+          throwsA(isA<StateError>()));
+    });
+
+    test('restore fails loud on an unsupported snapshot version', () {
+      // A future v2 file must not load as a silently truncated v1 store.
+      final futureRecords = File('${tmp.path}/v2_records.json')
+        ..writeAsStringSync('{"version":2,"records":[]}');
+      expect(() => PersistentLongTermMemoryStore(file: futureRecords).restore(),
+          throwsA(isA<StateError>()));
+
+      final futureLinks = File('${tmp.path}/v2_links.json')
+        ..writeAsStringSync('{"version":2,"links":[]}');
+      expect(() => PersistentMemoryGraph(file: futureLinks).restore(),
+          throwsA(isA<StateError>()));
+    });
+
+    test('restore skips a record whose tags are not a list', () {
+      // Loading it with its tags silently dropped would let the next
+      // write-through make that loss permanent on disk.
+      final file = File('${tmp.path}/bad_tags.json')
+        ..writeAsStringSync(jsonEncode({
+          'version': 1,
+          'records': [
+            {
+              'id': 'bad-1',
+              'content': 'tags are a bare string',
+              'tags': 'preference',
+              // A valid source, so the tags are the only reason to reject.
+              'source': const {'agentName': 'test-agent'},
+              'createdAt': '2026-01-01T00:00:00.000Z',
+              'salience': 0.5,
+            },
+            MemoryJsonCodec.recordToJson(rec('good-1', 'survives')),
+          ],
+        }));
+
+      final store = PersistentLongTermMemoryStore(file: file)..restore();
+
+      expect(store.contains('bad-1'), isFalse);
+      expect(store.byId('good-1')!.content, equals('survives'));
+    });
   });
 }

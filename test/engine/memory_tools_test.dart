@@ -269,8 +269,9 @@ void main() {
       );
 
       expect(results, hasLength(3));
-      expect(results[0].success && results[1].success && results[2].success,
-          isTrue);
+      for (var i = 0; i < results.length; i++) {
+        expect(results[i].success, isTrue, reason: results[i].error);
+      }
       expect(results[2].result.split('\n'), hasLength(2));
       expect(memory.longTermMemory.all, hasLength(2));
     });
@@ -420,6 +421,86 @@ void main() {
       // The projection surfaces the strongest preference.
       final projection = MemoryPromptProjection(memory: memory);
       expect(projection.render(limit: 1).single, contains('dart over kotlin'));
+    });
+
+    test('an auto id never overwrites a memory stored under that id',
+        () async {
+      final memory = AgentMemorySystem();
+      final dispatcher = MemoryToolDispatcher(memory: memory);
+
+      // The model learns the `mem-<n>` shape from a previous success and
+      // passes it explicitly; the next auto id must skip past it.
+      final explicit = await dispatcher.dispatch(
+        toolName: 'memory_remember',
+        arguments: const {'id': 'mem-1', 'content': 'pinned fact'},
+        isInternalMission: false,
+      );
+      expect(explicit.result, contains('mem-1'));
+
+      final auto = await dispatcher.dispatch(
+        toolName: 'memory_remember',
+        arguments: const {'content': 'auto note'},
+        isInternalMission: false,
+      );
+      expect(auto.success, isTrue, reason: auto.error);
+      expect(auto.result, isNot(contains('mem-1')));
+
+      expect(memory.longTermMemory.all, hasLength(2));
+      expect(memory.longTermMemory.byId('mem-1')!.content, 'pinned fact');
+    });
+
+    test('a NaN salience is rejected as out of range', () async {
+      final dispatcher = MemoryToolDispatcher(memory: AgentMemorySystem());
+
+      final result = await dispatcher.dispatch(
+        toolName: 'memory_remember',
+        arguments: {'content': 'nan note', 'salience': double.nan},
+        isInternalMission: false,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('0.0..1.0'));
+    });
+
+    test('validateSchema rejects an explicit null for a required argument',
+        () {
+      final dispatcher = MemoryToolDispatcher(memory: AgentMemorySystem());
+
+      // A JSON-shaped arg map yields null for an absent field, and dispatch
+      // rejects it — so the pre-flight must not call it valid.
+      expect(
+        dispatcher.validateSchema(
+          schema: MemoryTools.rememberTool.paramsSchema!,
+          arguments: const {'content': null},
+        ),
+        isNotEmpty,
+      );
+    });
+
+    test('renderWithSession applies limit per layer', () async {
+      final memory = AgentMemorySystem();
+      const sessionId = 's1';
+      final dispatcher = MemoryToolDispatcher(memory: memory);
+      for (final content in ['lt one', 'lt two']) {
+        await dispatcher.dispatch(
+          toolName: 'memory_remember',
+          arguments: {'content': content},
+          isInternalMission: false,
+        );
+      }
+      for (final content in ['s one', 's two']) {
+        await dispatcher.dispatch(
+          toolName: 'memory_remember',
+          arguments: {'content': content, 'session_id': sessionId},
+          isInternalMission: false,
+        );
+      }
+
+      final lines = MemoryPromptProjection(memory: memory)
+          .renderWithSession(sessionId, limit: 2);
+
+      expect(lines, hasLength(4));
+      expect(lines.where((l) => l.contains('[session]')), hasLength(2));
     });
   });
 }

@@ -31,6 +31,20 @@ suite_baseline: green # 925 passed / 2 skipped at 4dd76e2 (073 branch tip)
 | U3  | Same-id replace: file ends with one record carrying the new content | FR-005 | unit | PASSING | `…::same-id replace writes through without duplication` |
 | U4  | Missing file → restore leaves the store empty, no throw | FR-003 | unit | PASSING | `…::restore on a missing file starts empty` |
 | U5  | Graph write-through + restore: type, note, createdAt survive; idempotent re-link replaces in the snapshot | FR-006 | unit | PASSING | `…::PersistentMemoryGraph round-trips links and replaces idempotently` |
+| U6  | Write-through creates missing parent directories | FR-007 | unit | PASSING | `…::write-through creates missing parent directories` |
+| U7  | A JSON document of the wrong shape (top-level array, missing `records`/`links`) → `StateError` | FR-004 | unit | PASSING | `…::restore fails loud on a JSON document of the wrong shape` |
+| U8  | An unsupported snapshot `version` → `StateError`, not a silently truncated load | FR-004 | unit | PASSING | `…::restore fails loud on an unsupported snapshot version` |
+| U9  | A record whose `tags` is not a list is skipped, not loaded with its tags dropped | FR-004 | unit | PASSING | `…::restore skips a record whose tags are not a list` |
+
+> **U6–U9 (review round, HEAD `27371ab`)** — added after the spec-076 code
+> review, each driven test-first against the unfixed implementation:
+>
+> | id | red command | decisive failure |
+> | -- | ----------- | ---------------- |
+> | U6 | `dart test test/engine/persistent_agent_memory_test.dart` | `Expected: true / Actual: <false>` with `file.parent.createSync` removed — the branch was previously untested |
+> | U7 | same | characterization only — pins the two `StateError` branches no test reached; no production change |
+> | U8 | same | a `{"version":2}` file loaded as an empty v1 store instead of throwing |
+> | U9 | same | `Expected: false / Actual: <true>` — the bad-tags record loaded with its tags silently dropped, which the next write-through would make permanent |
 
 ## Edge cases & invariants
 

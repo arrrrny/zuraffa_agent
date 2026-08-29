@@ -167,7 +167,9 @@ class MemoryToolDispatcher implements ToolDispatcher {
     final required = schema['required'];
     if (required is List) {
       for (final key in required) {
-        if (!arguments.containsKey(key)) {
+        // An explicit null is what a JSON-shaped arg map yields for an absent
+        // field, and dispatch() rejects it — so the pre-flight must too.
+        if (arguments[key] == null) {
           violations.add('missing required argument: $key');
         }
       }
@@ -194,6 +196,7 @@ class MemoryToolDispatcher implements ToolDispatcher {
     var salience = 0.5;
     if (salienceArg != null) {
       if (salienceArg is! num ||
+          salienceArg.isNaN ||
           salienceArg.toDouble() < 0.0 ||
           salienceArg.toDouble() > 1.0) {
         return _failure(
@@ -307,9 +310,17 @@ class MemoryToolDispatcher implements ToolDispatcher {
     );
   }
 
+  /// The next unused auto id. Skips any `mem-<n>` an explicit-id call already
+  /// took, so an auto remember can never overwrite a stored record.
   String _nextId() {
-    _counter++;
-    return 'mem-$_counter';
+    while (true) {
+      _counter++;
+      final candidate = 'mem-$_counter';
+      if (!memory.longTermMemory.contains(candidate) &&
+          !memory.sessionMemory.contains(candidate)) {
+        return candidate;
+      }
+    }
   }
 
   ToolDispatchResult _failure(String error) => ToolDispatchResult(
@@ -345,6 +356,8 @@ class MemoryPromptProjection {
 
   /// [render] with the session's notes (insertion order, capped by
   /// [limit]) prepended, each marked `[session] `.
+  ///
+  /// [limit] applies per layer, so this can emit up to `2 * limit` lines.
   List<String> renderWithSession(String sessionId, {int limit = 10}) {
     final sessionLines = [
       for (final record in memory.sessionMemory.forSession(sessionId).take(limit))

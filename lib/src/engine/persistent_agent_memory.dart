@@ -61,12 +61,18 @@ class MemoryJsonCodec {
     if (sourceJson is! Map) {
       throw const FormatException('record source must be a map');
     }
+    final tagsJson = json['tags'];
+    if (tagsJson != null && tagsJson is! List) {
+      // Skip the entry rather than silently loading it with its tags lost —
+      // a write-through would then make that loss permanent on disk.
+      throw const FormatException('record tags must be a list');
+    }
     return MemoryRecord(
       id: json['id'] as String,
       content: json['content'] as String,
       tags: {
-        if (json['tags'] is List)
-          for (final tag in json['tags'] as List) tag as String,
+        if (tagsJson is List)
+          for (final tag in tagsJson) tag as String,
       },
       source: MemorySource(
         sessionId: sourceJson['sessionId'] as String?,
@@ -98,6 +104,21 @@ class MemoryJsonCodec {
 /// Writes [contents] to [file] atomically: land in a `*.tmp` sibling first,
 /// then rename over the target (FR-007). Rename-replace is atomic on POSIX
 /// and NTFS, so a reader (or a crash) never observes a partial snapshot.
+/// The only snapshot format this library reads and writes.
+const int _snapshotVersion = 1;
+
+/// Rejects a snapshot written by a different format version. Without this, a
+/// future v2 file would load as a silently truncated v1 store — the per-entry
+/// skips swallow every unrecognised shape — which is exactly what the loud
+/// [StateError] policy exists to prevent.
+void _checkVersion(Map<String, dynamic> doc, File file) {
+  final version = doc['version'];
+  if (version != _snapshotVersion) {
+    throw StateError('unsupported memory file version $version '
+        '(expected $_snapshotVersion): ${file.path}');
+  }
+}
+
 void _atomicWrite(File file, String contents) {
   file.parent.createSync(recursive: true);
   final tmp = File('${file.path}.tmp');
@@ -129,18 +150,25 @@ class PersistentLongTermMemoryStore extends LongTermMemoryStore {
     _atomicWrite(
       file,
       jsonEncode({
-        'version': 1,
+        'version': _snapshotVersion,
         'records': [for (final r in all) MemoryJsonCodec.recordToJson(r)],
       }),
     );
   }
 
-  /// Rebuilds the store from the file — the "engine restart" path
+  /// Loads the file into the store — the "engine restart" path
   /// (FR-003 / FR-004).
   ///
-  /// - Missing file → empty store, no throw (first boot).
+  /// - Missing file → no-op, no throw (first boot).
   /// - Malformed individual entries → skipped, the rest still load.
-  /// - Unparseable whole file → [StateError] (external damage is loud).
+  /// - Unparseable whole file, or an unsupported `version` → [StateError]
+  ///   (external damage is loud).
+  ///
+  /// Records are merged into the current in-memory state rather than
+  /// replacing it: same-id records are replaced (so repeated calls are
+  /// idempotent), but records held in memory and absent from the file
+  /// survive. The restart path starts from an empty store, where merge and
+  /// rebuild coincide.
   void restore() {
     if (!file.existsSync()) return;
     final Map<String, dynamic> doc;
@@ -151,6 +179,7 @@ class PersistentLongTermMemoryStore extends LongTermMemoryStore {
     } on TypeError {
       throw StateError('memory file is corrupt (not an object): ${file.path}');
     }
+    _checkVersion(doc, file);
     final entries = doc['records'];
     if (entries is! List) {
       throw StateError(
@@ -215,7 +244,7 @@ class PersistentMemoryGraph extends MemoryGraph {
     _atomicWrite(
       file,
       jsonEncode({
-        'version': 1,
+        'version': _snapshotVersion,
         'links': [for (final l in _links) MemoryJsonCodec.linkToJson(l)],
       }),
     );
@@ -236,9 +265,10 @@ class PersistentMemoryGraph extends MemoryGraph {
           if (l.type == type) l,
       ]);
 
-  /// Rebuilds the graph from the file — same semantics as
-  /// [PersistentLongTermMemoryStore.restore] (missing file → empty;
-  /// malformed entry → skipped; corrupt file → [StateError]).
+  /// Loads the file into the graph — same semantics as
+  /// [PersistentLongTermMemoryStore.restore] (missing file → no-op;
+  /// malformed entry → skipped; corrupt file or unsupported `version` →
+  /// [StateError]; links merged into current state, re-links replaced).
   void restore() {
     if (!file.existsSync()) return;
     final Map<String, dynamic> doc;
@@ -249,6 +279,7 @@ class PersistentMemoryGraph extends MemoryGraph {
     } on TypeError {
       throw StateError('memory file is corrupt (not an object): ${file.path}');
     }
+    _checkVersion(doc, file);
     final entries = doc['links'];
     if (entries is! List) {
       throw StateError(
