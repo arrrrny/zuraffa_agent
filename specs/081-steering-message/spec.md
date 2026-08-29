@@ -1,75 +1,199 @@
-# Feature Specification: Steering Message value object
+# Feature Specification: R1 — Steering Message value object (JSON contract & equality)
 
-**Feature Branch**: `081-steering-message`
+**Branch**: `081-steering-message` (off master `29b7fef`) | **Date**: 2026-08-29
 
-**Created**: 2026-08-29
+## Summary
 
-**Status**: Draft
+The engine needs a value object representing mid-mission user input
+injected between turns: a typed carrier for the message that sits in
+the `SteeringQueue` waiting to be drained by the engine loop. The
+repo already ships `lib/src/domain/entities/steering_message/steering_message.dart`
+— a hand-curated value object (PR #19 / spec 033's persistence
+contract refinement) that:
 
-**Input**: User description: "Well-defined spec for the Steering Message value object — mid-mission user input that sits in the steering queue — including its JSON contract and equality, that is not yet covered by an existing spec (R1)."
+- declares three required fields: `id` (UUID or equivalent),
+  `content` (the text appended to the running turn's user-role
+  context), and `injectedAt` (when the message entered the queue);
+- serializes to JSON via `toJson()` (`{id, content, injectedAt}` with
+  ISO-8601 timestamp);
+- deserializes via `fromJson()` factory with typed `ArgumentError`
+  on every malformed-input variant (missing key, wrong type,
+  unparseable timestamp);
+- overrides `==` and `hashCode` for full-field equality across all
+  three fields.
 
-## User Scenarios & Testing *(mandatory)*
+What this spec closes is the **test coverage gap**: the file ships
+without a dedicated test file. There is no test that pins the
+lossless round-trip, the typed error contract, or the equality
+contract on edge cases (empty content, unicode, off UTC boundaries).
+A single refactor of this value object could silently break the
+queue's persistence boundary or the session tree's reconstruction
+of the steering timeline, and CI would not catch it.
 
-### User Story 1 - Capture mid-mission user input (Priority: P1)
+This spec:
 
-While the engine loop runs, the user can inject follow-up input. That input is captured as a `SteeringMessage` (id, content, injectedAt) and placed on the steering queue; the engine pops it FIFO and emits a `SteeringInjected` event per message.
+1. **Authors the spec-kit artifacts** (`spec.md`, `plan.md`,
+   `tasks.md`, `tdd/test-list.md`, `tdd/verification.md`) for the
+   value object — closing the documentation gap so the contract is
+   explicit and reviewable.
+2. **Adds a comprehensive test file** `test/domain/entities/steering_message/steering_message_test.dart`
+   covering: lossless JSON round-trip (the persistence contract);
+   every typed-error variant; equality on all three fields; edge
+   cases (empty content, unicode in id and content, non-UTC timestamps,
+   microsecond precision, large payloads).
+3. **Does NOT change the implementation.** The value object is
+   already spec-exact; this spec's contribution is the test suite
+   and the spec-kit artifacts that pin its behavior.
 
-**Why this priority**: The value object is the atomic unit of mid-mission steering; correctness of its fields and serialization underpins the whole steering flow (spec 033 covers the queue, not this object).
+**Out of scope, documented deviation**: the `SteeringQueue` itself
+(spec 033's behavior, including FIFO ordering and the
+`SteeringInjected` event emission) is not re-tested here — the queue
+has its own test file (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+This spec only covers the atomic `SteeringMessage` value object.
 
-**Independent Test**: Can be fully tested by constructing a `SteeringMessage`, round-tripping through `toJson`/`fromJson`, and asserting field equality.
+## Files
 
-**Acceptance Scenarios**:
+- `lib/src/domain/entities/steering_message/steering_message.dart` —
+  UNCHANGED. The file already implements every FR in this spec; this
+  spec's contribution is the test suite and the spec-kit artifacts.
+  Listed here for traceability.
+- `test/domain/entities/steering_message/steering_message_test.dart` —
+  NEW: comprehensive coverage for the value object — round-trip,
+  typed errors, equality, edge cases. Lives in the conventional
+  `test/domain/entities/<entity>/` mirror of `lib/src/domain/entities/<entity>/`,
+  matching the existing `steering_queue/steering_queue_test.dart`
+  pattern.
+- `specs/081-steering-message/spec.md`,
+  `specs/081-steering-message/plan.md`,
+  `specs/081-steering-message/tasks.md`,
+  `specs/081-steering-message/tdd/test-list.md`,
+  `specs/081-steering-message/tdd/verification.md` — NEW.
 
-1. **Given** a steering message with id `u1`, content `"do X"`, time `T`, **When** serialized and parsed back, **Then** the result equals the original with identical id/content/injectedAt.
-2. **Given** a JSON map missing `content`, **When** parsed, **Then** an `ArgumentError` is thrown naming `content`.
+## User scenarios
 
----
+### US1 — A steering message round-trips through JSON (P1)
 
-### User Story 2 - Survive the store boundary (Priority: P2)
+As an engine-integration author, I serialize a `SteeringMessage`
+with `toJson` and parse it back with `fromJson`; the result equals
+the original (lossless round-trip). The JSON shape is exactly
+`{id, content, injectedAt}` — no extra keys, no omitted fields.
 
-Steering messages persist between turns via the session store. The serialization contract must round-trip exactly: ISO-8601 UTC timestamps, no fabricated defaults, and a typed error on malformed input.
+**Independent test**: a message with id `msg-1`, content `please focus`,
+and a UTC timestamp → `toJson` → `fromJson` → equals the original.
 
-**Why this priority**: A dropped or mutated field would corrupt the steering timeline in the session tree.
+### US2 — Malformed input throws typed ArgumentError (P1)
 
-**Independent Test**: Can be fully tested by asserting `fromJson` rejects missing fields, non-string types, and unparseable timestamps, and that `toJson` never omits a required field.
+As an engine-integration author, when `fromJson` is given a map
+missing a required field, with a field of the wrong type, or with
+an unparseable timestamp, it throws `ArgumentError` whose `.name`
+property identifies the offending key — never a generic
+`FormatException` or `TypeError`, never a silent default.
 
-**Acceptance Scenarios**:
+**Independent test**: each malformed-input variant (missing `id`,
+missing `content`, missing `injectedAt`, `id` not a string,
+`content` not a string, `injectedAt` not a string, `injectedAt`
+unparseable) throws `ArgumentError` with the right `.name`.
 
-1. **Given** a JSON map where `injectedAt` is `"not-a-date"`, **When** parsed, **Then** an `ArgumentError` is thrown naming `injectedAt`.
-2. **Given** a valid message, **When** `toJson` is called, **Then** all three fields (`id`, `content`, `injectedAt`) are present and `injectedAt` is an ISO-8601 string.
+### US3 — Equality compares all three fields (P2)
 
----
+As an engine-loop author, two `SteeringMessage`s are equal iff
+their `id`, `content`, AND `injectedAt` fields are all equal. Any
+field differing breaks equality; `hashCode` agrees with `==`.
 
-### Edge Cases
+**Independent test**: two messages with the same id+content+timestamp
+compare equal; mutating any one field breaks equality; `hashCode`
+matches.
 
-- `id`/`content` must be non-null strings; a null or wrong-typed value throws `ArgumentError` naming the key.
-- `injectedAt` must be a parseable ISO-8601 string; `DateTime.tryParse` failure throws with a clear message.
-- `fromJson` never fabricates defaults — every required field is enforced.
-- Equality and `hashCode` cover all three fields so two messages differing in any field are distinct.
+### US4 — Edge cases survive the round-trip (P2)
 
-## Requirements *(mandatory)*
+As an engine-integration author, edge cases that occur in real
+steering input — empty content (a steering message with no text,
+useful as a heartbeat), unicode in id and content (Chinese,
+emoji, RTL text), non-UTC timestamps, and microsecond precision —
+all round-trip losslessly.
 
-### Functional Requirements
+**Independent test**: each edge case variant round-trips to an
+equal `SteeringMessage`.
 
-- **FR-001**: `SteeringMessage` MUST carry three required fields: `id` (String), `content` (String), `injectedAt` (DateTime).
-- **FR-002**: `toJson` MUST serialize all three fields; `injectedAt` MUST be an ISO-8601 string (UTC instants round-trip exactly); no field is ever omitted.
-- **FR-003**: `fromJson` MUST parse exactly and MUST throw `ArgumentError` naming the offending key when a required field is missing, ill-typed, or (for `injectedAt`) unparseable; it MUST NOT fabricate a default.
-- **FR-004**: `operator ==` and `hashCode` MUST consider all three fields.
+## Requirements
 
-### Key Entities
+### Functional requirements
 
-- **SteeringMessage**: `{ id, content, injectedAt }` — a single piece of mid-mission user input awaiting draining by the engine.
+- **FR-001**: `SteeringMessage` MUST be a value object with three
+  required fields: `String id`, `String content`, `DateTime injectedAt`.
+  All three are required at construction; none has a default.
+- **FR-002**: `SteeringMessage.toJson()` MUST return a
+  `Map<String, dynamic>` of shape `{id: <string>, content: <string>,
+  injectedAt: <ISO-8601 string>}` — exactly three keys, no extras,
+  no omissions. The timestamp MUST be `DateTime.toIso8601String()`
+  output (UTC instants round-trip exactly).
+- **FR-003**: `SteeringMessage.fromJson(Map<String, dynamic> json)`
+  MUST produce a `SteeringMessage` equal (by FR-005) to the original
+  that was serialized with `toJson` — lossless round-trip.
+- **FR-004**: `SteeringMessage.fromJson` MUST throw `ArgumentError`
+  (via `ArgumentError.value` with the offending value, name, and
+  message) when:
+  - `id` is missing or not a `String` — `.name = 'id'`;
+  - `content` is missing or not a `String` — `.name = 'content'`;
+  - `injectedAt` is missing or not a `String` — `.name = 'injectedAt'`;
+  - `injectedAt` is a `String` but cannot be parsed by
+    `DateTime.tryParse` — `.name = 'injectedAt'` (message indicates
+    "not a parseable ISO-8601 timestamp").
+- **FR-005**: `SteeringMessage.==` MUST return `true` iff both
+  objects are `SteeringMessage` instances AND their `id`, `content`,
+  and `injectedAt` fields are all equal. Identity short-circuits to
+  `true`. `hashCode` MUST agree with `==` (two equal messages
+  produce equal hashCodes).
+- **FR-006**: Edge cases that MUST round-trip losslessly:
+  - empty `content` (length 0);
+  - unicode in `id` and `content` (Chinese, emoji, RTL text);
+  - non-UTC `injectedAt` (with explicit timezone offset);
+  - microsecond precision in `injectedAt`;
+  - large `content` (>= 10 KB).
+- **FR-007**: `SteeringMessage.toString()` MUST return a human-readable
+  string naming the type and the three fields (with content truncated
+  to 40 characters to avoid log bloat for long messages).
+- **FR-008** (gates): `dart analyze --fatal-infos` exit 0 on the
+  changed files; full `dart test` green (baseline + new).
 
-## Success Criteria *(mandatory)*
+### Key entities
 
-### Measurable Outcomes
+- `SteeringMessage` — value object: `id`, `content`, `injectedAt`,
+  `toJson()`, `fromJson()` factory, `==`, `hashCode`, `toString()`.
+  Plain Dart class (constitution IX exemption — same precedent as
+  `AgentSession` PR #50, `ToolResult` PR #49, `StopPolicy` PR #47,
+  `EpisodicMemory` — the file already ships hand-curated without
+  `@Zorphy`).
 
-- **SC-001**: A round-trip `toJson` → `fromJson` preserves `id`, `content`, and `injectedAt` exactly (byte-equal timestamps).
-- **SC-002**: Malformed JSON (missing field, wrong type, bad timestamp) always throws `ArgumentError` and never returns a partial object.
-- **SC-003**: Two messages differing in any single field are not equal and have distinct hash codes.
+## Success criteria
 
-## Assumptions
+- **SC-001**: A `SteeringMessage` with arbitrary id + content + UTC
+  timestamp round-trips through `toJson` → `fromJson` to an equal
+  message (US1 / FR-002 / FR-003).
+- **SC-002**: Every malformed-input variant (missing key, wrong type,
+  unparseable timestamp) throws `ArgumentError` with `.name` matching
+  the offending key (US2 / FR-004).
+- **SC-003**: Two messages with the same id+content+timestamp compare
+  equal via `==`; mutating any one field breaks equality; `hashCode`
+  agrees (US3 / FR-005).
+- **SC-004**: Every edge case variant (empty content, unicode,
+  non-UTC, microsecond precision, large payload) round-trips
+  losslessly (US4 / FR-006).
+- **SC-005**: Every pinned behavior (FR-001..FR-007) is guarded by a
+  test that a deliberate mutant kills (mutation evidence in
+  `tdd/verification.md`).
 
-- Steering is text-only for now; multimodal parts are a later R2 concern.
-- The companion `SteeringQueue` and `SteeringInjected` event are owned by spec 033; this spec owns only the message value object and its contract.
-- This feature maps to **R1 (engine core, issue #2)** — steering & follow-up queues.
+## Dependencies
+
+- Builds on: master `29b7fef` — `lib/src/domain/entities/steering_message/steering_message.dart`
+  already implements every FR in this spec (PR #19 + spec 033's
+  refinement). This spec's contribution is the test suite + spec-kit
+  artifacts that pin the behavior.
+- Independent of: every other spec in flight — different file,
+  different tests. Specs 079 (skill system) and 080 (agent message
+  history) land on master separately; this spec branches from
+  `29b7fef` so the three are independent.
+- Related but out of scope: `SteeringQueue` (spec 033), the
+  `SteeringInjected` event (PR #19), the engine loop's steering
+  drain (spec 002). All consume `SteeringMessage`; none are changed
+  by this spec.
