@@ -55,6 +55,8 @@ class SseMcpClient implements McpClient {
   StreamSubscription<McpWireNotification>? _notifSub;
   final StreamController<void> _toolsChangedController =
       StreamController<void>.broadcast();
+  final StreamController<void> _reconnectedController =
+      StreamController<void>.broadcast();
   McpClientState _state = McpClientState.disconnected;
   DateTime? _lastStateChangeAt;
 
@@ -113,6 +115,7 @@ class SseMcpClient implements McpClient {
     await _wire?.close();
     _wire = null;
     await _toolsChangedController.close();
+    await _reconnectedController.close();
   }
 
   @override
@@ -193,12 +196,21 @@ class SseMcpClient implements McpClient {
         await _reconnect.nextBackoff();
         await _wire!.open();
         _setState(McpClientState.connected);
+        // Recovery signal — spec 082 FR-004: fire AFTER the state
+        // transition so listeners inspecting `state` see `connected`.
+        // Lets [ToolListingCache] drop listings that predate the
+        // disconnect (the severed transport may have missed a
+        // tools-changed notification).
+        _reconnectedController.add(null);
       }
     }
   }
 
   @override
   Stream<void> get onToolsChanged => _toolsChangedController.stream;
+
+  @override
+  Stream<void> get onReconnected => _reconnectedController.stream;
 
   @override
   McpClientState get state => _state;
