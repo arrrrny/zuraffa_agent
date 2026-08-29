@@ -20,6 +20,7 @@
 import '../domain/entities/playbook/playbook.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'tool_dispatcher.dart';
 
 /// Applies a loaded [Playbook] as the active steering/behavior context.
@@ -88,11 +89,97 @@ class PlaybookRuntime {
     return seeded;
   }
 
-  ToolDispatcher gateDispatcher(ToolDispatcher inner) {
-    throw UnimplementedError();
-  }
+  /// Wraps [inner] with the playbook's tool gate (FR-004): the returned
+  /// dispatcher refuses calls the playbook's gate blocks — the inner
+  /// dispatcher never sees them — and delegates everything else unchanged.
+  /// An `off` (or absent) gate wraps without refusing anything.
+  ToolDispatcher gateDispatcher(ToolDispatcher inner) =>
+      PlaybookToolGateDispatcher(
+        inner: inner,
+        gate: _playbook.toolGate,
+      );
 
   String constrainResponse(String content) {
     throw UnimplementedError();
   }
+}
+
+/// Decorator enforcing a playbook's [PlaybookToolGate] at the dispatch
+/// boundary (FR-004).
+///
+/// Mirrors the spec 070 `AllowlistToolDispatcher` contract exactly: a
+/// refused call yields a typed failure (`success: false`, `result: ''`,
+/// `error: 'tool not allowed: <name>'`, no artifact refs) so the mission
+/// records the refusal as a failed tool call and continues — the wrapped
+/// dispatcher is never invoked for it. `allowlist` admits only `allowed`
+/// (an empty list locks down every tool); `blocklist` refuses exactly
+/// `blocked`; `off` refuses nothing.
+class PlaybookToolGateDispatcher implements ToolDispatcher {
+  PlaybookToolGateDispatcher({
+    required ToolDispatcher inner,
+    required PlaybookToolGate gate,
+  })  : _inner = inner,
+        _gate = gate;
+
+  final ToolDispatcher _inner;
+  final PlaybookToolGate _gate;
+
+  bool _refuses(String toolName) {
+    switch (_gate.mode) {
+      case PlaybookGateMode.off:
+        return false;
+      case PlaybookGateMode.allowlist:
+        return !_gate.allowed.contains(toolName);
+      case PlaybookGateMode.blocklist:
+        return _gate.blocked.contains(toolName);
+    }
+  }
+
+  @override
+  Future<ToolDispatchResult> dispatch({
+    required String toolName,
+    required Map<String, dynamic> arguments,
+    required bool isInternalMission,
+  }) async {
+    if (_refuses(toolName)) {
+      return ToolDispatchResult(
+        success: false,
+        result: '',
+        error: 'tool not allowed: $toolName',
+        artifactRefs: const [],
+      );
+    }
+    return _inner.dispatch(
+      toolName: toolName,
+      arguments: arguments,
+      isInternalMission: isInternalMission,
+    );
+  }
+
+  @override
+  Future<List<ToolDispatchResult>> dispatchBatch({
+    required List<ToolCall> calls,
+    required bool isInternalMission,
+  }) async => [
+        for (final call in calls)
+          await dispatch(
+            toolName: call.toolName,
+            arguments: call.arguments,
+            isInternalMission: isInternalMission,
+          ),
+      ];
+
+  @override
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) =>
+      _inner.validateSchema(schema: schema, arguments: arguments);
+
+  @override
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) =>
+      _inner.checkRiskTier(riskTier: riskTier, isInternalMission: isInternalMission);
 }

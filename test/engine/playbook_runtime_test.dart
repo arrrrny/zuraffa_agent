@@ -14,7 +14,62 @@ import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
+import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/playbook_runtime.dart';
+import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
+
+/// Records every dispatch; returns scripted results by tool name (spec 069
+/// exemplar — the gate asserts against what the INNER dispatcher saw).
+class FakeToolDispatcher implements ToolDispatcher {
+  FakeToolDispatcher([this.resultsByTool = const {}]);
+
+  final Map<String, ToolDispatchResult> resultsByTool;
+  final List<({String toolName, Map<String, dynamic> arguments, bool isInternalMission})>
+      calls = [];
+
+  @override
+  Future<ToolDispatchResult> dispatch({
+    required String toolName,
+    required Map<String, dynamic> arguments,
+    required bool isInternalMission,
+  }) async {
+    calls.add((
+      toolName: toolName,
+      arguments: arguments,
+      isInternalMission: isInternalMission,
+    ));
+    return resultsByTool[toolName] ??
+        ToolDispatchResult(
+          success: true,
+          result: 'ok:$toolName',
+          error: '',
+          artifactRefs: const [],
+        );
+  }
+
+  @override
+  Future<List<ToolDispatchResult>> dispatchBatch({
+    required List<ToolCall> calls,
+    required bool isInternalMission,
+  }) async => [
+        for (final call in calls)
+          await dispatch(
+            toolName: call.toolName,
+            arguments: call.arguments,
+            isInternalMission: isInternalMission,
+          ),
+      ];
+
+  @override
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) =>
+      const [];
+
+  @override
+  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+}
 
 void main() {
   var fakeNow = DateTime.utc(2026, 1, 1);
@@ -137,6 +192,91 @@ void main() {
       expect(seeded, equals(input));
       expect(seeded.pending, isEmpty);
       expect(seeded.processedCount, 7);
+    });
+  });
+
+  group('spec 104 — PlaybookRuntime tool gate', () {
+    test('U23: off gate delegates everything', () async {
+      final playbook = Playbook(id: 'de-001', name: 'x', description: 'd');
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final inner = FakeToolDispatcher();
+      final gated = runtime.gateDispatcher(inner);
+
+      final result = await gated.dispatch(
+        toolName: 'shell',
+        arguments: {'cmd': 'ls'},
+        isInternalMission: true,
+      );
+
+      // The call reached the inner dispatcher untouched — toolName,
+      // arguments, and mission context all preserved.
+      expect(result.success, isTrue);
+      expect(inner.calls, hasLength(1));
+      expect(inner.calls.single.toolName, 'shell');
+      expect(inner.calls.single.arguments, {'cmd': 'ls'});
+      expect(inner.calls.single.isInternalMission, isTrue);
+    });
+
+    test('U24: allowlist gate refuses unlisted tools', () async {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        toolGate: const PlaybookToolGate(
+          mode: PlaybookGateMode.allowlist,
+          allowed: ['search', 'fetch'],
+        ),
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final inner = FakeToolDispatcher();
+      final gated = runtime.gateDispatcher(inner);
+
+      final refused = await gated.dispatch(
+        toolName: 'shell',
+        arguments: {'cmd': 'ls'},
+        isInternalMission: false,
+      );
+
+      // Typed refusal — the spec 070 AllowlistToolDispatcher contract.
+      expect(refused.success, isFalse);
+      expect(refused.result, isEmpty);
+      expect(refused.error, 'tool not allowed: shell');
+      expect(refused.artifactRefs, isEmpty);
+      // The inner dispatcher NEVER saw the refused call.
+      expect(inner.calls, isEmpty);
+
+      // An allowlisted tool delegates with its arguments preserved.
+      final allowed = await gated.dispatch(
+        toolName: 'search',
+        arguments: {'q': 'markets'},
+        isInternalMission: false,
+      );
+      expect(allowed.success, isTrue);
+      expect(inner.calls, hasLength(1));
+      expect(inner.calls.single.toolName, 'search');
+      expect(inner.calls.single.arguments, {'q': 'markets'});
+    });
+
+    test('U25: empty allowlist locks down all tools', () async {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        toolGate: const PlaybookToolGate(mode: PlaybookGateMode.allowlist),
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final inner = FakeToolDispatcher();
+      final gated = runtime.gateDispatcher(inner);
+
+      final refused = await gated.dispatch(
+        toolName: 'search',
+        arguments: {},
+        isInternalMission: false,
+      );
+
+      expect(refused.success, isFalse);
+      expect(refused.error, 'tool not allowed: search');
+      expect(inner.calls, isEmpty);
     });
   });
 }
