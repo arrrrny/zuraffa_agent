@@ -76,8 +76,16 @@ class PlaybookRuntime {
     return messages;
   }
 
+  /// Seeds [queue] with [steeringMessages]: returns a NEW snapshot with the
+  /// playbook's messages enqueued FIFO (appended after anything already
+  /// pending), the input queue never mutated (FR-007). A playbook with no
+  /// steering returns the queue unchanged.
   SteeringQueue seedSteering(SteeringQueue queue) {
-    throw UnimplementedError();
+    var seeded = queue;
+    for (final message in steeringMessages()) {
+      seeded = seeded.enqueue(message);
+    }
+    return seeded;
   }
 
   ToolDispatcher gateDispatcher(ToolDispatcher inner) {

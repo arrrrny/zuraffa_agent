@@ -13,6 +13,7 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
+import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
 import 'package:zuraffa_agent/src/engine/playbook_runtime.dart';
 
 void main() {
@@ -76,6 +77,66 @@ void main() {
       final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
 
       expect(runtime.steeringMessages(), isEmpty);
+    });
+
+    test('U21: seedSteering returns a new FIFO-seeded queue', () {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        steering: const [
+          PlaybookSteering(content: 'First.'),
+          PlaybookSteering(content: 'Second.'),
+        ],
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final preexisting = SteeringMessage(
+        id: 'user-1',
+        content: 'queued by the user before the playbook',
+        injectedAt: DateTime.utc(2025, 12, 31),
+      );
+      final input = SteeringQueue(
+        id: 'q-104',
+        pending: [preexisting],
+        processedCount: 3,
+      );
+
+      final seeded = runtime.seedSteering(input);
+
+      // FIFO: playbook messages are appended AFTER the pre-existing pending
+      // message — document order preserved head -> tail.
+      expect(
+        seeded.pending.map((m) => m.content),
+        [
+          'queued by the user before the playbook',
+          'First.',
+          'Second.',
+        ],
+      );
+      // The input queue is unmutated (value semantics — FR-007).
+      expect(input.pending, hasLength(1));
+      expect(input.pending.single, preexisting);
+      expect(input.processedCount, 3);
+      // The seeded snapshot preserves the drained count and stamps the
+      // newest injection.
+      expect(seeded.processedCount, 3);
+      expect(seeded.lastInjectedAt, DateTime.utc(2026, 1, 1));
+    });
+
+    test('U22: seeding nothing is a no-op', () {
+      final playbook = Playbook(id: 'de-001', name: 'x', description: 'd');
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final input = SteeringQueue(
+        id: 'q-104',
+        pending: const [],
+        processedCount: 7,
+      );
+
+      final seeded = runtime.seedSteering(input);
+
+      expect(seeded, equals(input));
+      expect(seeded.pending, isEmpty);
+      expect(seeded.processedCount, 7);
     });
   });
 }
