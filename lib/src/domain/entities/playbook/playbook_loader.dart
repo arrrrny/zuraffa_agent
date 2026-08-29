@@ -110,31 +110,77 @@ class PlaybookLoader {
     return entries;
   }
 
-  // NOTE: _gate/_response are still in their minimal (cast-based) state —
-  // their diagnostics land with U14/U15/U17's own reds (cycle 6).
-
   PlaybookToolGate _gate(Object? raw) {
-    final gateRaw = raw as Map?;
-    if (gateRaw == null) return const PlaybookToolGate(mode: PlaybookGateMode.off);
+    if (raw == null) return const PlaybookToolGate(mode: PlaybookGateMode.off);
+    if (raw is! Map) {
+      throw ArgumentError.value(
+          raw, 'toolGating', 'playbook.toolGating must be a mapping');
+    }
+    final modeRaw = raw['mode'];
+    if (modeRaw != null && modeRaw is! String) {
+      throw ArgumentError.value(
+          modeRaw, 'mode', 'toolGating.mode must be a string');
+    }
+    final PlaybookGateMode mode;
+    switch (modeRaw as String?) {
+      case null:
+      case 'off':
+        mode = PlaybookGateMode.off;
+      case 'allowlist':
+        mode = PlaybookGateMode.allowlist;
+      case 'blocklist':
+        mode = PlaybookGateMode.blocklist;
+      default:
+        throw ArgumentError.value(modeRaw, 'mode',
+            'toolGating.mode must be one of: off, allowlist, blocklist');
+    }
     return PlaybookToolGate(
-      mode: PlaybookGateMode.values
-          .byName(gateRaw['mode'] as String? ?? 'off'),
-      allowed: [
-        for (final tool in (gateRaw['allowed'] as List? ?? const []))
-          tool as String,
-      ],
-      blocked: [
-        for (final tool in (gateRaw['blocked'] as List? ?? const []))
-          tool as String,
-      ],
+      mode: mode,
+      allowed: _toolList(raw['allowed'], 'allowed'),
+      blocked: _toolList(raw['blocked'], 'blocked'),
     );
   }
 
+  List<String> _toolList(Object? raw, String key) {
+    if (raw == null) return const [];
+    if (raw is! List) {
+      throw ArgumentError.value(
+          raw, key, 'toolGating.$key must be a list of tool names');
+    }
+    final tools = <String>[];
+    for (final tool in raw) {
+      if (tool is! String) {
+        throw ArgumentError.value(
+            tool, key, 'toolGating.$key entries must be strings');
+      }
+      if (tool.isEmpty) {
+        throw ArgumentError.value(
+            tool, key, 'toolGating.$key must not contain blank tool ids');
+      }
+      tools.add(tool);
+    }
+    return tools;
+  }
+
   PlaybookResponse _response(Object? raw) {
-    final responseRaw = raw as Map?;
+    if (raw == null) return const PlaybookResponse();
+    if (raw is! Map) {
+      throw ArgumentError.value(
+          raw, 'response', 'playbook.response must be a mapping');
+    }
+    final language = raw['language'];
+    if (language != null && (language is! String || language.isEmpty)) {
+      throw ArgumentError.value(language, 'language',
+          'response.language must be a non-empty string when present');
+    }
+    final maxChars = raw['maxChars'];
+    if (maxChars != null && (maxChars is! int || maxChars < 1)) {
+      throw ArgumentError.value(
+          maxChars, 'maxChars', 'response.maxChars must be a positive integer');
+    }
     return PlaybookResponse(
-      language: responseRaw?['language'] as String?,
-      maxChars: responseRaw?['maxChars'] as int?,
+      language: language as String?,
+      maxChars: maxChars as int?,
     );
   }
 }

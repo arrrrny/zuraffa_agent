@@ -174,6 +174,106 @@ description: Just identity.
             ])),
             rejectsNamed('content'));
       });
+
+      test('U14: malformed toolGating section is rejected', () {
+        Map<String, dynamic> withGate(Map<String, dynamic> gate) => {
+              'id': 'pb-1',
+              'name': 'germany',
+              'description': 'desc',
+              'toolGating': gate,
+            };
+
+        // mode vocabulary is closed: off | allowlist | blocklist.
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'whitelist',
+            'allowed': ['search'],
+          })),
+          rejectsNamed('mode'),
+        );
+        // gate lists must be lists...
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'allowlist',
+            'allowed': 'oops',
+          })),
+          rejectsNamed('allowed'),
+        );
+        // ...of tool names (strings)...
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'allowlist',
+            'allowed': [42],
+          })),
+          rejectsNamed('allowed'),
+        );
+        // ...never blank (blank tool id through the document path — the
+        // aggregate's U5 rule pinned end-to-end).
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'blocklist',
+            'blocked': [''],
+          })),
+          rejectsNamed('blocked'),
+        );
+      });
+
+      test('U15: malformed response section is rejected', () {
+        Map<String, dynamic> withResponse(Map<String, dynamic> response) => {
+              'id': 'pb-1',
+              'name': 'germany',
+              'description': 'desc',
+              'response': response,
+            };
+
+        // maxChars must be an integer...
+        expect(
+          () => loader.loadJson(withResponse({'maxChars': '2000'})),
+          rejectsNamed('maxChars'),
+        );
+        // ...and a positive one (aggregate's U8 rule, end-to-end).
+        expect(
+          () => loader.loadJson(withResponse({'maxChars': 0})),
+          rejectsNamed('maxChars'),
+        );
+        // language must be a non-empty string...
+        expect(
+          () => loader.loadJson(withResponse({'language': 123})),
+          rejectsNamed('language'),
+        );
+        // ...when present (blank through the document path — U8's rule).
+        expect(
+          () => loader.loadJson(withResponse({'language': ''})),
+          rejectsNamed('language'),
+        );
+      });
+
+      test('U17: inconsistent gate documents are rejected at load', () {
+        Map<String, dynamic> withGate(Map<String, dynamic> gate) => {
+              'id': 'pb-1',
+              'name': 'germany',
+              'description': 'desc',
+              'toolGating': gate,
+            };
+
+        // A non-empty irrelevant list is loader drift — the value-object's
+        // U6 rule, surfaced through the loader (end-to-end observable).
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'allowlist',
+            'allowed': ['search'],
+            'blocked': ['shell'],
+          })),
+          rejectsNamed('blocked'),
+        );
+        expect(
+          () => loader.loadJson(withGate({
+            'mode': 'off',
+            'allowed': ['search'],
+          })),
+          rejectsNamed('allowed'),
+        );
+      });
     });
   });
 }
