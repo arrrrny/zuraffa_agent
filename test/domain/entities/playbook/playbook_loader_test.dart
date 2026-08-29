@@ -104,5 +104,76 @@ description: Just identity.
         expect(pb.response.maxChars, isNull);
       });
     });
+
+    group('rejects', () {
+      Matcher rejectsNamed(String field) => throwsA(isA<ArgumentError>()
+          .having((e) => e.name, 'name', contains(field)));
+
+      test('U12: non-map top level and bad identity are rejected', () {
+        // Top level must be a mapping — a list or a scalar is not a
+        // playbook document.
+        expect(() => loader.loadYaml('- one\n- two\n'),
+            rejectsNamed('document'));
+        expect(() => loader.loadYaml('42'), rejectsNamed('document'));
+
+        // Identity keys are required strings.
+        expect(
+          () => loader.loadJson({
+            'name': 'germany',
+            'description': 'desc',
+          }),
+          rejectsNamed('id'),
+        );
+        expect(
+          () => loader.loadJson({
+            'id': 123,
+            'name': 'germany',
+            'description': 'desc',
+          }),
+          rejectsNamed('id'),
+        );
+        expect(
+          () => loader.loadJson({
+            'id': 'pb-1',
+            'description': 'desc',
+          }),
+          rejectsNamed('name'),
+        );
+        expect(
+          () => loader.loadJson({
+            'id': 'pb-1',
+            'name': 'germany',
+          }),
+          rejectsNamed('description'),
+        );
+      });
+
+      test('U13: malformed steering section is rejected', () {
+        Map<String, dynamic> withSteering(Object? steering) => {
+              'id': 'pb-1',
+              'name': 'germany',
+              'description': 'desc',
+              'steering': steering,
+            };
+
+        // steering must be a list of entries...
+        expect(() => loader.loadJson(withSteering('not-a-list')),
+            rejectsNamed('steering'));
+        // ...and each entry must be a mapping...
+        expect(() => loader.loadJson(withSteering([42])),
+            rejectsNamed('steering'));
+        // ...carrying non-empty content (missing key)...
+        expect(() => loader.loadJson(withSteering([
+              {'id': 's1'},
+            ])),
+            rejectsNamed('content'));
+        // ...and non-empty content (blank value) — pinned end-to-end through
+        // the aggregate constructor (cycle 2's U4 red proved that rule).
+        expect(() => loader.loadJson(withSteering([
+              {'content': ''},
+            ])),
+            rejectsNamed('content'));
+      });
+    });
   });
 }
