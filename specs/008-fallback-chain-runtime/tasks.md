@@ -73,6 +73,6 @@
 
 ---
 
-## Phase 7: TDD remediation (from tdd/verification.md — verdict: PASS_WITH_GAPS)
+## Phase 7: TDD remediation (from tdd/verification.md — verdict: FAIL)
 
 - [ ] T034 [MED] Run single-test commands without piping through `tail` (or check `${PIPESTATUS[0]}`) so a red can never be committed silently — two such commits (657ff3d, 7793f36) were caught only by the next full-suite run. Proven by: no commit lands while its cycle test is red.

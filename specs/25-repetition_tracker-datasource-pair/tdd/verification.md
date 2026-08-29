@@ -1,102 +1,103 @@
 ---
 feature: 25-repetition_tracker-datasource-pair
-verdict: PASS
-verified_at: 25c0285
-behaviors_total: 18
-behaviors_done: 18
-test_first: 17 PROVEN, 1 NOT_APPLICABLE (U7 baseline)
-mutation: 3/4 killed, 1 equivalent (deliberate hand-mutants, no tool configured)
-criteria_covered: 7/7 acceptance criteria, 8/8 FRs
-suite: 544 passed, 0 failed
-analyze: 5 pre-existing issues, 0 new
+verdict: PASS_WITH_GAPS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited
+behaviors: 18 # A1-A7 (7) + U1-U11 (11); U7 is NOT_APPLICABLE baseline (compile parity) and excluded from proven/test_after counts
+proven: 17
+likely: 0
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 7 # spec.md SC-001..SC-005 + 2 window ACs = 7 acceptance behaviors per test-list spec_criteria
+criteria_covered: 7
+mutation_score: 100 # deliberate-mutant sample: 3 of 3 killed (scope: changed source files only; no mutation tool in lockfile)
+mutants_survived: 0
+suite: 18 passed (entity 6 + datasource 12) at HEAD 01618f3; full suite green
 ---
 
 # TDD Verification: RepetitionTracker datasource + mock pair
 
-## Verdict
-
-**PASS** — every acceptance criterion and functional requirement is traced to a
-passing test through the datasource public API, every behavioral change landed
-test-first with recorded red evidence, and the deliberate-mutant sampling killed
-every non-equivalent mutant.
+**Verdict: PASS_WITH_GAPS.** Test-first discipline is corroborated by git history
+(real test-before-impl commits `3d5faba`→`8dd6fef`, `d450559`→`2902db8`,
+`96faf48`→`97e5528`, `3374554`→`34026a2` for the entity/datasource/repository
+slices) and by a `cycle-log.md` that records a red per cycle. No HIGH smells and
+every acceptance criterion has an end-to-end test through the datasource public
+API; all sampled deliberate mutants were killed. Gaps: coverage was not measured
+(no `package:coverage`), and the `cycle-log.md` cites commit SHAs that do not
+resolve at HEAD (finding #1).
 
 ## Test-first evidence
 
-Git history on `feat/specs-025-027-029-031` shows the expected per-cycle shape:
-test-only commits (red) followed by implementation commits (green), corroborating
-the cycle log.
-
-| class          | behaviors                                       | evidence |
-| -------------- | ----------------------------------------------- | -------- |
-| PROVEN         | U1..U6 (cycle 1), A1..A3+U8+U9 (cycle 2), A4+A5+U10+U11 (cycle 3), A6+A7 (cycle 4) | cycle-log red blocks + git ordering (`bbb06fe`→`76feab6`, `c75a3f5`→`0279256`, `f9cc640`→`30ae986`, `47c45a8`→`25c0285`) |
-| NOT_APPLICABLE | U7 (compile-parity characterization of pre-existing code) | green against untouched code by definition |
-
-Red-phase failure modes, as recorded: compile errors (`No named parameter with
-the name 'maxCalls'` / `'config'`) for missing surface; assertion failures
-(`Expected: <0> Actual: <2>` etc.) for missing pruning and missing reset —
-each is a failure for the right reason, not a broken harness.
-
-Changes to pre-existing tests: the three `UnimplementedError` stub assertions
-were **replaced** by behavior tests. This is a documented spec refinement
-(spec.md Assumptions: "Existing regression tests asserting UnimplementedError
-stubs are superseded by this refinement"), not a weakening — the replacement
-tests strictly strengthen the contract from compile-only to behavior. U7 was
-kept unchanged in intent.
-
-## Mutation results (deliberate hand-mutants)
-
-No mutation tool is configured for this stack (see tdd-profile.md); the
-surrogate per `/speckit.tdd.verify` Phase 4 was applied to the highest-risk
-behaviors: the threshold the safety rail depends on, the window boundary, the
-per-signature keying, and the reset contract.
-
-| mutant | change | run | result |
-| ------ | ------ | --- | ------ |
-| M1 threshold | `isRepetition`: `>=` → `>` | U4 | KILLED — `Expected: true, Actual: <false>` |
-| M2 window boundary | `_prune`: `>=` → `>` | A5 | KILLED — `Expected: <0>, Actual: <1>` |
-| M3 per-signature keying | `putIfAbsent(signature)` → `putIfAbsent("constant")` | A3 | KILLED — `Expected: <2>, Actual: <0>` |
-| M4a stale empty key | `reset()` adds `_events['x'] = []` | A6 | SURVIVED — judged **equivalent**: an empty occurrence list is observationally identical to an absent key for every spec-25 behavior (`count` returns 0 either way) |
-| M4b no-op reset | `reset()` body dropped | A6 | KILLED — `Expected: <0>, Actual: <2>` |
-
-Deviation honestly recorded: M3's first application silently did not apply
-(stale sed pattern against refactored code) and the test passed — a false
-mutant, not a surviving one. It was detected by inspecting the diff,
-re-applied against the real code, and killed. The empty-diff check
-(`git diff --stat lib/` = 0 lines) is now part of the restore procedure for
-every mutant.
-
-## Acceptance-criteria coverage
-
-| criterion | behaviors | status |
-| --------- | --------- | ------ |
-| AC US1-1 below threshold | A1 (+U4 boundary) | PROVED — test passes at `maxCalls-1` |
-| AC US1-2 threshold trips | A2 (+U4) | PROVED — inclusive boundary pinned both sides; mutant M1 killed |
-| AC US1-3 per-signature isolation | A3 | PROVED — mutant M3 killed |
-| AC US2-1 window expiry | A4 | PROVED — count 0 + signal reverted after window |
-| AC US2-2 boundary semantics | A5 | PROVED — mutant M2 killed |
-| AC US3-1 reset contract | A6 | PROVED — mutant M4b killed |
-| AC US3-2 read-after-write | A7 | PROVED — green-on-arrival confirmation of semantics driven red in cycle 3 (U10/U11) |
-
-Functional requirements FR-001..FR-008 all trace to at least one passing test
-(see test-list.md traces column). Success criteria SC-001..SC-005: PROVED via
-the A/U tests and the final gates below.
-
-## Final gates
-
-- `dart test` -> **544 passed, 0 failed** (baseline 529; net +15: 18 new spec-25
-  tests, 3 superseded stub tests removed)
-- `dart analyze` -> 5 issues, all pre-existing and unrelated (4
-  `unnecessary_non_null_assertion` warnings in `test/domain/entities/golden_mission_test.dart`,
-  1 `depend_on_referenced_packages` info in `lib/src/artifact/in_memory_artifact_store.dart`).
-  Zero new issues introduced.
+| Behavior | Class     | Evidence |
+| -------- | --------- | -------- |
+| A1 maxCalls-1 keeps false / count tracks | PROVEN | red recorded (cycle 2); `d450559` (test) precedes `2902db8` (green) |
+| A2 maxCalls-th trips isLooping (inclusive) | PROVEN | red recorded (cycle 2); same commits |
+| A3 per-signature independence | PROVEN | red recorded (cycle 2); same commits |
+| A4 window expiry reverts | PROVEN | red recorded (cycle 3); `96faf48` precedes `97e5528` |
+| A5 boundary (exactly window-old expired) | PROVEN | red recorded (cycle 3); `Expected: <0> Actual: <2>` etc. |
+| A6 reset() zeroes + preserves config | PROVEN | red recorded (cycle 4); `3374554` precedes `34026a2` |
+| A7 record() returns post-record count | PROVEN | red recorded (cycle 4) |
+| U1..U6 entity parity | PROVEN | red recorded (cycle 1); `3d5faba` precedes `8dd6fef` |
+| U7 mock compile parity | NOT_APPLICABLE | baseline `isA` check; green by definition against shipped interface |
+| U8 injectable clock | PROVEN | red recorded (cycle 2) |
+| U9 isLooping == isRepetition(count) | PROVEN | red recorded (cycle 2) |
+| U10 explicit at-timestamp pruning | PROVEN | red recorded (cycle 3) |
+| U11 late record pruned on eval | PROVEN | red recorded (cycle 3) |
 
 ## Findings
 
-- **LOW** — M4a equivalent mutant survives by design (empty vs absent key is
-  observationally equivalent across the spec-25 contract). No remediation
-  needed; noted for a future backend whose persistence shape distinguishes
-  empty from absent.
-- **LOW** — A7 was green-on-arrival (behavior already pinned by U10/U11's red
-  cycles). Acceptance-level confirmation, not a fresh red; recorded as such.
+| #   | Severity | Finding | Evidence |
+| --- | -------- | ------- | -------- |
+| 1   | MED | `cycle-log.md` cites commit SHAs (`bbb06fe`, `76feab6`, `c75a3f5`, `0279256`, `f9cc640`, `30ae986`, `47c45a8`, `25c0285`, `ccca224`) that **do not exist** in git history at HEAD. The real commits (`3d5faba`, `8dd6fef`, `d450559`, `2902db8`, `96faf48`, `97e5528`, `3374554`, `34026a2`, `88d0353`) confirm test-before-impl ordering and the reds, so test-first is corroborated — but the cycle-log as written is not reproducible (an auditor following the cited SHAs hits dead ends). | `specs/25-*/tdd/cycle-log.md` vs `git log` |
+| 2   | LOW | `U9` computes its expected value via the production predicate: `expect(isLooping, equals(config.isRepetition(count)))` — a re-implemented expectation. If `isLooping` diverged from `isRepetition(count)` (e.g. a sticky signal), this test would not catch it because it re-derives with the same logic. The actual threshold/boundary is independently pinned by A1/A2, so the risk is contained. | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart:69-78` |
+| 3   | LOW | `tasks.md` leaves every task `[ ]` while `test-list.md` marks all behaviors DONE — artifacts disagree on completion status (not the rubric's HIGH `[X]` rule). | `specs/25-*/tasks.md` vs `test-list.md` |
 
-No HIGH findings. No criteria without tests. No tests tracing to nothing.
+No HIGH smells. No existing test was weakened or skipped.
+
+## Mutation results
+
+No mutation tool is installed, so test strength was measured by deliberate
+mutants — one at a time, each restored and the suite re-run green afterwards.
+3 sampled (highest-risk: loop-signal threshold, window boundary, reset/data-loss),
+all killed:
+
+| Mutant | Behavior | Survived | Judgment |
+| ------ | -------- | -------- | -------- |
+| `_prune` boundary `>=` → `>` (`repetition_tracker_mock_datasource.dart:73`) | A5 | No | caught — `Expected: <0> Actual: <1>` (boundary record now survives) |
+| `isRepetition` `>=` → `>` (`repetition_tracker.dart:45`) | A2 | No | caught — inclusive-threshold test fails (A2 still expects isLooping true at maxCalls) |
+| `reset()` no-op (drop `_events.clear()`) (`repetition_tracker_mock_datasource.dart:63`) | A6 | No | caught — A6 expects count 0 after reset |
+
+Sampling, not exhaustive: mutants targeted the acceptance-criterion safety paths
+(loop signal, window boundary, persistence reset). The working tree was verified
+clean (`git diff` on these files) and the targeted suite re-ran green (18 passed)
+after restore.
+
+## Traceability
+
+| Criterion | Tests | End to end |
+| --------- | ----- | ---------- |
+| AC US1-1 (below threshold false) | A1 | Yes — real `RepetitionTrackerMockDatasource` |
+| AC US1-2 (threshold trips) | A2 | Yes |
+| AC US1-3 (per-signature) | A3 | Yes |
+| AC US2-1 (window expiry) | A4 | Yes |
+| AC US2-2 (boundary) | A5 | Yes |
+| AC US3-1 (reset zeroes + preserves) | A6 | Yes |
+| AC US3-2 (read-after-write count) | A7 | Yes |
+| SC-001 (loop at maxCalls) | A1, A2 | Yes |
+| SC-002 (window expiry) | A4, A5 | Yes |
+| SC-003 (reset) | A6, A7 | Yes |
+| SC-004 (entity parity) | U1-U3 | Yes |
+| SC-005 (analyze + suite green) | A3, A4 | Yes (gate) |
+
+Untested criteria: none. Tests tracing to nothing: none (U7 baseline is a
+deliberate compile-parity check, not a behavioral criterion).
+
+## What was not audited
+
+- Coverage: `package:coverage` not installed; not measured (corroboration only).
+- The cycle-log commit citations are stale/fabricated (finding #1) — test-first
+  re-confirmed via `git log`, not via the cited SHAs.
+- A Hive/remote-backed datasource implementation: interface contract only (the
+  mock is the reference); out of scope per spec Assumptions.
+- ToolCallSignature integration (key format owned by spec 29): out of scope.

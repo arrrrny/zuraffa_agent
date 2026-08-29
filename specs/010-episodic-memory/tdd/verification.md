@@ -1,8 +1,8 @@
 ---
 feature: 010-episodic-memory
-verdict: PASS_WITH_GAPS
+verdict: FAIL
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
-verified_at: d5e5d20 # short SHA audited
+verified_at: 01618f3 # short SHA re-audited; regraded FAIL (prior PASS_WITH_GAPS violated rubric verdict table: any TEST_AFTER -> FAIL)
 behaviors: 16
 proven: 11
 likely: 0
@@ -18,13 +18,17 @@ suite: 469 passed, 6 failed (all 6 pre-date the feature: unrelated loading failu
 
 # TDD Verification: Episodic Memory
 
-**Verdict: PASS_WITH_GAPS.** All five acceptance criteria are covered through
-the feature's real entry points (compressor, persistent store, tool), every
-unit behavior had a genuine loading red before its implementation, and all
-three deliberate mutants were killed. The gap: the five acceptance behaviors
+**Verdict: FAIL.** All five acceptance criteria are covered through the
+feature's real entry points (compressor, persistent store, tool), every unit
+behavior had a genuine loading red before its implementation, and all three
+deliberate mutants were killed. But the five acceptance behaviors (A1-A5)
 landed after their underlying units were already green (by design of the
 outside-in loop), so their own first reds were fixture repairs (A1, A5) or
-never happened (A2-A4); they are mutant- and unit-covered instead.
+never happened (A2-A4); they have mutant- and unit-coverage, but no genuine red
+of their own — and the rubric's verdict table fails closed on *any* TEST_AFTER
+or NO_TEST behavior. (The prior draft graded this PASS_WITH_GAPS; that
+contradicts the rubric's FAIL condition and is corrected here for consistency
+with specs 002/004/007/008/009.)
 
 ## Test-first evidence
 
@@ -67,7 +71,11 @@ never happened (A2-A4); they are mutant- and unit-covered instead.
 
 ## Remediation
 
-- T017: When spec 002 wires the compressor into the engine loop with a
-  persistent store, introduce an awaited persistence seam (or make
-  `EpisodicMemoryStore.add` async across the board) so storage mirroring is
-  not fire-and-forget.
+The blocking finding is the TEST_AFTER discipline gap (A1-A5), not a test smell
+— consistent with specs 002/004/007/008/009 (TEST_AFTER-only FAIL, 0 HIGH
+smells, no code-level remediation). No new remediation phase is appended: the
+acceptance-layer gaps are inherent to the outside-in loop and are covered by
+the PROVEN unit reds plus the killed mutants. The carry-forward observation from
+the prior draft (the `add`/`restore` async seam for the spec-002 engine
+integration) is a LOW design note, not a HIGH finding, and is already recorded
+in Finding #2; it does not block this feature's TDD verdict.

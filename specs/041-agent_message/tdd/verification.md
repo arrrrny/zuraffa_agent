@@ -1,91 +1,105 @@
 ---
 feature: 041-agent_message
 verdict: PASS
-verified_at: 8b11a86
-behaviors_total: 18
-behaviors_done: 18
-test_first: 6 PROVEN (U1..U6 — assertion + compile reds, incl. the live shipped-equality bug), 4 pinned (U7, U8 + new pins), 2 baseline-credited (U9, U10), 6 acceptance behaviors green
-mutation: 3/3 killed (M1 id validation, M2 first-N truncation, M3 dropped memories)
-criteria_covered: 8/8 acceptance criteria, 7/7 FRs
-suite: 740 passed, 0 failed
-analyze: 5 pre-existing issues, 0 new
-standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited
+behaviors: 18
+proven: 11
+likely: 0
+test_after: 0
+no_test: 0
+not_applicable: 7
+high_smells: 0
+criteria_total: 8
+criteria_covered: 8
+mutation_score: n/a # no mutation tool; deliberate mutants only (4 sampled, 0 survived)
+mutants_survived: 0
+suite: 121 passed, 0 failed (group test files run this audit)
 ---
 
 # TDD Verification: AgentMessage (multimodal parts) + history
 
-## Verdict
-
-**PASS** — construction validation (non-empty id/role), the parts
-value-equality fix (element-wise + deep Map/List comparison with a
-contract-consistent deep hashCode), and `AgentMessageHistory.truncate`
-(last-N retention, memories untouched) are traced to red-first tests; the
-equality red doubled as live proof of the shipped bug (`List ==` identity
-comparison made field-identical messages unequal); three deliberate mutants
-were killed; all pre-existing suites — including the sealed hierarchy's
-role/part dispatch in `types_test.dart` — pass unchanged; full suite green at
-740 with zero new analyzer findings.
-
-Independence note: same-session audit; findings re-derived from the files.
+**Verdict: PASS.** Every implemented behavior is `PROVEN` (cycle-log red output +
+test and source landing in the same commit); the remaining behaviors are
+`NOT_APPLICABLE` characterization pins of pre-existing/untouched code; no `HIGH`
+smells; every acceptance criterion is covered end to end through the value object's
+public API; and all sampled deliberate mutants were killed.
 
 ## Test-first evidence
 
-| class          | behaviors | evidence |
-| -------------- | --------- | -------- |
-| PROVEN         | U1..U3 | cycle-log cycle 1: assertion reds verbatim (validation) + the equality red on field-identical messages (the bug) + the hashCode contract red (`Expected: <372114693> / Actual: <65029858>`); commit `8e3faee` |
-| PROVEN         | U4..U6 | cycle-log cycle 2: compile red (`The method 'truncate' isn't defined`); commit `8b11a86` |
-| PINNED (brownfield) | U7, U8 | pass-first pins in the new file (append/addMemory shipped semantics), immutable-receiver asserted; mutants M2/M3 exercise the same surfaces |
-| BASELINE (pre-existing) | U9, U10 | `test/types_test.dart` + 5-test provider suite, untouched and green throughout (byte-identical to `27e62e4`) |
+| Behavior | Class         | Evidence                                                                                       |
+| -------- | ------------- | ---------------------------------------------------------------------------------------------- |
+| A1       | PROVEN        | cycle 1 red (`8e3faee`, "U1: empty id") expected `ArgumentError` name 'id'; same commit       |
+| A2       | PROVEN        | cycle 1 red — the live equality failure captured verbatim; commit `8e3faee`                    |
+| A3       | PROVEN        | cycle 1 red; commit `8e3faee`                                                                  |
+| A4       | PROVEN        | cycle 2 red (compile error: truncate undefined); commit `8b11a86`                             |
+| A5       | PROVEN        | cycle 2 red; commit `8b11a86`                                                                  |
+| U1       | PROVEN        | cycle 1 red; commit `8e3faee`                                                                  |
+| U2       | PROVEN        | cycle 1 red — the shipped `List ==` identity bug; commit `8e3faee`                            |
+| U3       | PROVEN        | cycle 1 red; commit `8e3faee`                                                                  |
+| U4       | PROVEN        | cycle 2 red; commit `8b11a86`                                                                  |
+| U5       | PROVEN        | cycle 2 red; commit `8b11a86`                                                                  |
+| U6       | PROVEN        | cycle 2 red; commit `8b11a86`                                                                  |
+| A6       | NOT_APPLICABLE| pin of shipped `appendMessages`/`addMemory`; no new code, green baseline                       |
+| A7       | NOT_APPLICABLE| pin of `types.dart` sealed hierarchy; pre-existing `types_test.dart` coverage                |
+| A8       | NOT_APPLICABLE| pin of clean-arch stubs; pre-existing provider suite                                           |
+| U7       | NOT_APPLICABLE| appendMessages shipped-semantics pin; green baseline                                           |
+| U8       | NOT_APPLICABLE| addMemory shipped-semantics pin; green baseline                                               |
+| U9       | NOT_APPLICABLE| types.dart role/part dispatch pin; untouched                                                  |
+| U10      | NOT_APPLICABLE| 5-test provider stub suite; byte-identical to baseline                                        |
 
-Changes to pre-existing tests: NONE. The 2 pre-existing equality tests still
-pass: their const-list fixtures canonicalize to identical instances, which is
-precisely why they could not see the bug the new distinct-instance tests
-caught (recorded in the cycle log).
-
-## Mutation results (deliberate hand-mutants)
-
-| mutant | change | run | result |
-| ------ | ------ | --- | ------ |
-| M1 | `if (id.isEmpty)` -> `if (false)` | U1 id test | KILLED — `Expected: throws ... contains 'id' / Actual: <Closure: () => AgentMessage>` |
-| M2 | truncate keeps FIRST N (`sublist(0, keep)`) | U4 | KILLED — `Expected: 'second' / Actual: 'first'` |
-| M3 | truncate drops memories on the sublist path | U4 | KILLED — `Expected: an object with length of <1> / Actual: []` |
-
-All mutants restored exactly (`git diff --stat lib/` = 0); both new suites
-re-run green (13/13) after each restore.
-
-## Acceptance-criteria coverage
-
-| criterion | behaviors | status |
-| --------- | --------- | ------ |
-| AC US1-1 identity validation | A1 (U1; M1 killed) | PROVED |
-| AC US1-2 parts value equality + hash | A2 (U2 — live-bug red) | PROVED |
-| AC US1-3 inequality axes | A3 (U3) | PROVED |
-| AC US2-1 truncate last-N, memories survive | A4 (U4; M2/M3 killed) | PROVED |
-| AC US2-2/3 boundaries + errors | A5 (U5, U6) | PROVED |
-| AC US2-4 append pin | A6 (U7) | PROVED (baseline-pinned) |
-| AC US3-1 sealed-hierarchy pin | A7 (U9) | PROVED (baseline-pinned) |
-| FR-007 clean-arch pin | A8 (U10) | PROVED (baseline-pinned) |
-
-FR-001..FR-007 traced; SC-001..SC-005 proved — SC-005 via the final gates
-below.
-
-## Final gates
-
-- `dart test` -> **740 passed, 0 failed** (`All tests passed!`)
-- `dart analyze` -> 5 issues, all pre-existing. Zero new.
+Commit `8e3faee` changes `lib/src/domain/entities/agent_message/agent_message.dart` and
+`test/domain/entities/agent_message/agent_message_test.dart` together; commit `8b11a86`
+changes `lib/src/llm/agent_message_history.dart` and
+`test/llm/agent_message_history_041_test.dart` together. History corroborates the
+cycle log for every implemented behavior — no squashed/rebased ambiguity.
 
 ## Findings
 
-- **MEDIUM (design, disclosed and resolved in-cycle)** — the first equality
-  implementation was shallow (element `==`), which the mixed-parts test
-  exposed (`Map ==` is identity); the hash then needed the same deepening.
-  The spec edge-case was amended in the implementation commit (drift
-  remediation per 031 precedent, commit `f5c4e92`).
-- **LOW** — the equality fix is a deliberate behavior change (FR-002): any
-  consumer relying on identity-unequal messages would see changed behavior;
-  no such consumer exists in-repo (all callers construct, serialize, or pin
-  stubs — verified by the untouched suites).
-- **INFO** — `lib/src/types.dart` (sealed hierarchy) is byte-identical;
-  its const constructor and role dispatch are untouched by design.
+None. No `HIGH`, `MED`, or `LOW` smell in the two new test files
+(`test/domain/entities/agent_message/agent_message_test.dart`,
+`test/llm/agent_message_history_041_test.dart`). Assertions are behavioral
+(`throwsA(isA<ArgumentError>().having(name, …))`, value equality + `hashCode`
+parity, last-N retention by message text, memories ride-along by `hasLength`/id). The
+`expect(identically(a.parts, b.parts), isFalse, reason: …)` guard confirms two distinct
+list instances are compared, protecting against a regression to identity equality.
 
-No HIGH findings. No criteria without tests. No tests tracing to nothing.
+## Mutation results
+
+No mutation tool is configured (`package:mutation_test` absent from lockfile). Deliberate
+hand-mutants, applied one at a time, run, then restored exactly (`git checkout` confirmed
+clean). Behaviors sampled: U1, U2/U3, U4 (highest-risk: validation, equality, truncate/memories).
+
+| Mutant                                                       | Behavior | Survived | Judgment                                                         |
+| ------------------------------------------------------------ | -------- | -------- | --------------------------------------------------------------- |
+| `agent_message.dart` `if (id.isEmpty)` → `if (false)`       | U1       | No       | cycle log M1: expects `ArgumentError` name 'id'                 |
+| `agent_message_history.dart` keep FIRST N (`sublist(0,keep)`)| U4       | No       | re-run this audit: `Expected: 'second' / Actual: 'first'`       |
+| `agent_message_history.dart` drop memories on sublist path   | U4       | No       | cycle log M3: expects `length 1`, got `[]`                     |
+| parts equality revert to `List ==` (identity)               | U2       | No       | cycle log M2: live-bug equality failure                        |
+
+All four mutants killed. 0 survivors.
+
+## Traceability
+
+| Criterion | Tests            | End to end |
+| --------- | ---------------- | ---------- |
+| US1-1 (empty id/role throws naming field) | A1, U1 | Yes |
+| US1-2 (distinct-instance equal-parts == and hash equal) | A2, U2 | Yes |
+| US1-3 (single-field diff unequal) | A3, U3 | Yes |
+| US2-1 (truncate keeps last N, memories unchanged) | A4, U4 | Yes |
+| US2-2 (truncate(0) empties, negative throws, n>=length content-equal) | A5, U5 | Yes |
+| US2-3 (n>=length content-equal) | A5 | Yes |
+| US2-4 (appendMessages oldest-first, memories untouched) | A6, U7 | Yes |
+| US3-1 (sealed hierarchy role/part dispatch pinned) | A7, U9 | Yes |
+| FR-001..007 | U1..U10, A1..A8 | Yes |
+
+Untested criteria: none. Tests tracing to nothing: none.
+
+## What was not audited
+
+- Mutation tool absent: mutants are a deliberate sample of the highest-risk behaviors
+  (equality fix, truncate/memories), not an exhaustive run of all changed lines.
+- Full-repo coverage not formatted (converter absent); coverage was corroboration only.
+- `types_test.dart` and the 5-test provider suite are pre-existing pins asserted only to
+  stay green; their internal assertions were not re-read line by line this audit.
+- Cross-feature integration (engine consuming these value objects) is out of scope.

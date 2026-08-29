@@ -2,7 +2,7 @@
 feature: 007-llm-provider-clients
 verdict: FAIL
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
-verified_at: 9117fa2 # short SHA audited
+verified_at: 01618f3 # short SHA re-audited (independent smell-pass confirmed; 0 HIGH smells)
 behaviors: 30
 proven: 13
 likely: 0

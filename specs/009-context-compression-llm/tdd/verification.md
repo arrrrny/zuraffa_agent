@@ -1,8 +1,8 @@
 ---
 feature: 009-context-compression-llm
-verdict: PASS_WITH_GAPS
+verdict: FAIL
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
-verified_at: d660dca # short SHA audited
+verified_at: 01618f3 # short SHA re-audited; regraded FAIL (prior PASS_WITH_GAPS violated rubric verdict table: any TEST_AFTER -> FAIL)
 behaviors: 16
 proven: 7
 likely: 0
@@ -18,13 +18,16 @@ suite: 453 passed, 6 failed (all 6 pre-date the feature: unrelated loading failu
 
 # TDD Verification: Context Compression (LLM-based)
 
-**Verdict: PASS_WITH_GAPS.** All five acceptance criteria are covered through
-the compressor's public API, the SC-001 token budget and the SC-003 fallback
-are pinned, and all six deliberate mutants were killed. The gap: nine of
-sixteen behaviors landed as first-run passes over implementations that arrived
-with sibling cycles (the compressor core was built in three big greens: U3
-gate, U4 path, U6 fallback), so their dedicated tests have mutant evidence but
-no genuine reds.
+**Verdict: FAIL.** All five acceptance criteria are covered through the
+compressor's public API, the SC-001 token budget and the SC-003 fallback are
+pinned, and all six deliberate mutants were killed. But nine of sixteen
+behaviors landed as first-run passes over implementations that arrived with
+sibling cycles (the compressor core was built in three big greens: U3 gate, U4
+path, U6 fallback), so their dedicated tests have mutant evidence but no genuine
+reds — and the rubric's verdict table fails closed on *any* TEST_AFTER or
+NO_TEST behavior. (The prior draft graded this PASS_WITH_GAPS; that contradicts
+the rubric's FAIL condition and is corrected here for consistency with
+specs 002/004/007/008.)
 
 ## Test-first evidence
 
@@ -91,5 +94,7 @@ beyond the section contract has no criterion (documented out of scope).
 
 ## Remediation tasks
 
-Appended to `tasks.md` as Phase 5. The MED finding is process-level (carried
-into future specs); the two code-level items are LOW.
+Appended to `tasks.md` as Phase 5. The blocking finding is the TEST_AFTER
+discipline gap (9 behaviors), not a test smell — consistent with specs 002/004/007/008
+(TEST_AFTER-only FAIL, 0 HIGH smells, no code-level remediation). The MED finding
+is process-level (carried into future specs); the code-level items are LOW.

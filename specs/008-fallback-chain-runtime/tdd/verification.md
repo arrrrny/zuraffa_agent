@@ -1,12 +1,12 @@
 ---
 feature: 008-fallback-chain-runtime
-verdict: PASS_WITH_GAPS
+verdict: FAIL
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
-verified_at: 40b749a # short SHA audited
+verified_at: 01618f3 # short SHA re-audited; regraded FAIL (prior PASS_WITH_GAPS violated rubric verdict table: any TEST_AFTER -> FAIL)
 behaviors: 25
-proven: 23
+proven: 24
 likely: 0
-test_after: 2
+test_after: 1
 no_test: 0
 high_smells: 0
 criteria_total: 7
@@ -18,13 +18,16 @@ suite: 442 passed, 6 failed (all 6 pre-date the feature: unrelated loading failu
 
 # TDD Verification: Fallback Chain Runtime
 
-**Verdict: PASS_WITH_GAPS.** Every acceptance criterion is covered end to end
-through `FallbackChainClient`'s public API, 23 of 25 behaviors have genuine
-recorded reds (including the two entity behaviors whose tests predate the
-implementation in git history), and all 6 deliberate mutants were killed —
-including one surviving mutant that forced a test rewrite. The gaps: two
-behaviors are first-run passes verified by mutants rather than reds, and no
-mutation tool exists for this stack so strength is sampled, not exhaustive.
+**Verdict: FAIL.** Every acceptance criterion is covered end to end through
+`FallbackChainClient`'s public API, 24 of 25 behaviors have genuine recorded
+reds (including the two entity behaviors whose tests predate the implementation
+in git history), and all 6 deliberate mutants were killed — including one
+surviving mutant that forced a test rewrite. The single TEST_AFTER behavior
+(U15: half-open probe routing) passed on first run with no red recorded, and the
+rubric's verdict table fails closed on *any* TEST_AFTER or NO_TEST behavior, so
+the verdict is FAIL despite the otherwise strong net. (The prior draft graded
+this PASS_WITH_GAPS; that contradicts the rubric's FAIL condition and is
+corrected here for consistency with specs 002/004/007.)
 
 ## Test-first evidence
 
@@ -103,6 +106,9 @@ U17 skip).
 
 ## Remediation tasks
 
-Appended to `tasks.md` as Phase 7. No blocking findings: the two LOW/MED items
-are process notes already compensated by the next-suite discipline and the
-full-suite gate.
+Appended to `tasks.md` as Phase 7. The blocking finding is the TEST_AFTER
+discipline gap (U15), not a test smell — consistent with specs 002/004/007
+(TEST_AFTER-only FAIL, 0 HIGH smells, no code-level remediation). The two
+LOW/MED items are process notes already compensated by the next-suite discipline
+and the full-suite gate. Phase 7 keeps one MED process task (T034: never pipe a
+single-test run through `tail` so a red cannot be committed silently).

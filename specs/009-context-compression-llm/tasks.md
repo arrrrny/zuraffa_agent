@@ -45,7 +45,7 @@
 
 ---
 
-## Phase 5: TDD remediation (from tdd/verification.md — verdict: PASS_WITH_GAPS)
+## Phase 5: TDD remediation (from tdd/verification.md — verdict: FAIL)
 
 - [ ] T026 [MED, process] For future compressor work, isolate one behavior per red — the bundled greens (U3/U4/U6) left nine tests without their own reds. Proven by: cycle logs with a red per behavior.
 - [ ] T027 [LOW] Always assert a deliberate mutant actually applied before reading its test result (one silent no-op was initially read as a survivor). Proven by: mutant scripts asserting the pattern matched.

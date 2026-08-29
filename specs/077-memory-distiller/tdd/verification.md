@@ -1,94 +1,87 @@
-# Verification: Memory distiller (spec 077)
-
 ---
 feature: 077-memory-distiller
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-executed_at: feat/spec-077-memory-distiller (off feat/spec-076-memory-persistence fdc9f89)
-gates:
-  analyze: "dart analyze --fatal-infos → No issues found! (exit 0)"
-  tests: "dart test → 945 passed / 0 failed / 2 skipped (baseline 935/2 at fdc9f89, +10 new)"
+verdict: PASS_WITH_GAPS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited (working tree HEAD)
+behaviors: 10
+proven: 0
+likely: 10
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 11
+criteria_covered: 11
+mutation_score: 100 # deliberate sample only (no mutation tool): 5/5 highest-risk behaviors killed
+mutants_survived: 0
+suite: 10 passed, 0 failed # test/engine/memory_distiller_test.dart at 01618f3
 ---
 
-## Cycle integrity
+# TDD Verification: Memory distiller (spec 077)
 
-- **RED (genuine)**: `test/engine/memory_distiller_test.dart` written first
-  and run against a missing library —
-  `Error when reading 'lib/src/engine/memory_distiller.dart': No such file
-  or directory`, then `DistillationPolicy` / `MemoryDistiller` /
-  `SkipReason` not-found errors, exit 1.
-- **GREEN**: implementation landed; target file 10/10 on the first full
-  run, `dart analyze` clean throughout.
-- Two test-side design fixes BEFORE the first run (process finding #1):
-  (a) `mid` in the cap test needed a distinct `createdAt` — with the
-  default it tied `tie-old` exactly, making the expected order
-  ambiguous under any sort; (b) a self-contradictory double assertion in
-  the report test (`isNot(equals)` followed by `equals` on identical
-  content) was replaced by a positive + negative pair. Neither change
-  weakened a pin — both strengthened determinism.
-- All mutation runs executed in this session with outputs captured
-  verbatim; every mutant cp-restored and re-verified 10/10 green before
-  the next.
+**Verdict: PASS_WITH_GAPS.** No `cycle-log.md` exists and the branch history is
+squashed/stacked; every behavior graded `LIKELY`. No HIGH smells, no untested
+criteria, and all 5 sampled deliberate mutants (highest-risk: duplicate guard)
+were killed.
 
-## Acceptance criteria → tests (all FRs traced)
+## Test-first evidence
 
-| FR | Test (test/engine/memory_distiller_test.dart) | Result |
-| --- | --- | --- |
-| FR-001 policy value semantics + validation | `DistillationPolicy defaults and validation` | PASS |
-| FR-002 gate + identity-preserving promotion | `distills a mixed-salience session — gate, identity, residue` | PASS |
-| FR-003 boundary == threshold promotes (default 0.7) | `boundary salience equal to threshold promotes; default is 0.7` | PASS |
-| FR-004 duplicate guard (normalized, live store) | `duplicate guard skips content already known to long-term` + `same-content session siblings dedupe within one run` | PASS |
-| FR-005 cap + ranking (salience desc, older first) | `cap promotes the best N — salience desc, older first among equals` | PASS |
-| FR-006 below-threshold skipped + stays | `distills a mixed-salience session…` (weak-1/weak-2) | PASS |
-| FR-007 idempotency | `distill is idempotent — no double promotion, no duplicates` | PASS |
-| FR-008 unknown session → empty report | `unknown session distills to an empty report` | PASS |
-| FR-009 report full accounting + value semantics | `DistillationReport accounts for every record` | PASS |
-| FR-010 durability over 076 stores | `distilled knowledge is durable across a store rebuild` | PASS |
-| FR-011 gates | analyze clean; 945/2 | PASS |
+`specs/077-memory-distiller/tdd/cycle-log.md` does not exist; commits squashed on
+the stacked branch. Every behavior graded `LIKELY`.
 
-## Mutation results (deliberate, one at a time, cp-restored)
-
-| id | mutant | result | evidence (test file run) |
-| -- | ------ | ------ | ------------------------ |
-| M1 | salience gate inverted (`<` instead of `>=`) | **KILLED** | +2 −8: `Expected: ['good-1','good-2'] Actual: ['weak-2','weak-1']` — the weak records get promoted instead |
-| M2 | duplicate guard dropped (`if (false)`) | **KILLED** | +8 −2: `Expected: ['fresh-1'] Actual: ['dup-1','fresh-1']` (known content re-promoted); sibling dedup `Expected: ['first'] Actual: ['first','second']` |
-| M3 | cap not enforced (check + budget decrement removed) | **KILLED** | +8 −2: `Expected: ['top','tie-old'] Actual: ['top','tie-old','mid','tie-new','low']` — all five promoted under cap 2 |
-| M4 | ranking inverted (salience asc, newer first) | **KILLED** | +6 −4: promotion-order assertions fail across the suite (`Expected: ['good-1','good-2'] Actual: ['good-2','good-1']`) |
-| M5 | promote never called (report fabricated) | **KILLED** | +3 −7: long-term assertions fail (`Expected: length <2>` — store never grew); the never-growing store also breaks sibling dedup (`Actual: ['first','second']`) |
-
-**5/5 killed.**
-
-## Gates (actual runs at branch HEAD)
-
-- `dart analyze --fatal-infos` → **No issues found!** (exit 0)
-- `dart test` → **945 passed / 0 failed / 2 skipped** (2 pre-existing
-  KIMI_API_KEY skips, unrelated)
+| Behavior | Class  | Evidence |
+| -------- | ------ | -------- |
+| A1 mixed-salience distill (gate, identity, residue) | LIKELY | no cycle-log.md; squashed history; passes at HEAD |
+| A2 duplicate guard | LIKELY | same |
+| A3 cap (best N, older-first tie-break) | LIKELY | same |
+| A4 idempotency | LIKELY | same |
+| A5 durability over 076 stores | LIKELY | same |
+| A6 gates | LIKELY | same |
+| U1 policy value semantics | LIKELY | same |
+| U2 boundary == threshold (default 0.7) | LIKELY | same |
+| U3 report accounting | LIKELY | same |
+| U4 unknown/empty session → empty report | LIKELY | same |
 
 ## Findings
 
-1. **Test-side determinism fixes before first run (process, minor).** The
-   cap test originally gave `mid` the default `createdAt`, tying
-   `tie-old` exactly — the expected promotion order was then ambiguous.
-   Fixed by giving `mid` its own timestamp (Feb), which also makes the
-   age tie-break meaningfully tested (older record wins despite being
-   remembered later). The report test's contradictory assertion pair was
-   replaced with a proper positive/negative equality pair.
-2. **Duplicate check runs against the LIVE long-term store** (design).
-   No separate seen-set: each promotion lands in long-term immediately,
-   so same-content session siblings dedupe against each other mid-run —
-   pinned by the sibling test, and re-proven by mutant M5's side effect
-   (never-promoting broke sibling dedup too).
-3. **Duplicate reason outranks cap reason** (design). When a record is
-   both a duplicate and out of budget, `duplicateOfLongTerm` is reported:
-   a duplicate is not promotable even with budget left, so the more
-   informative reason wins.
-4. **Total, deterministic ranking** (design). Salience desc → createdAt
-   asc → session insertion order. Dart's `List.sort` is not guaranteed
-   stable, so insertion index is an explicit final tie-break — FIFO among
-   full ties.
+No HIGH smells. Gap is the missing cycle log (drives `LIKELY`). Repo-wide analyze
+gate red at HEAD (3 issues) but all in out-of-scope files.
 
-## Verdict
+## Mutation results
 
-**PASS.** All 11 FRs traced to passing tests; RED was genuine (missing
-library); 5/5 mutants killed with verbatim evidence; gates clean at 945/2
-(baseline 935/2 + 10).
+Deliberate mutants on the highest-risk behaviors (gate, duplicate guard, cap,
+ranking). One change each, observed fail, restored, green. All 5 killed:
+
+| Mutant | Behavior | Survived | Judgment |
+| ------ | -------- | -------- | -------- |
+| M1 salience gate inverted (`<` vs `>=`) | A1 | No | Killed: weak records promoted |
+| M2 duplicate guard dropped | A2 | No | Killed: known content re-promoted |
+| M3 cap not enforced | A3 | No | Killed: all five promoted |
+| M4 ranking inverted (salience asc, newer first) | A1 | No | Killed: promotion-order assert |
+| M5 promote never called (report fabricated) | A1, A2, A5 | No | Killed: long-term never grows |
+
+Scope: 5 of 10 behaviors sampled (gate + dedup + cap + ranking). Not exhaustive.
+
+## Traceability
+
+| Criterion | Tests | End to end |
+| --------- | ----- | ---------- |
+| FR-001 policy value semantics + validation | U1 | Yes |
+| FR-002 gate + identity-preserving promotion | A1 | Yes |
+| FR-003 boundary == threshold (default 0.7) | U2 | Yes |
+| FR-004 duplicate guard | A2 | Yes |
+| FR-005 cap + ranking | A3 | Yes |
+| FR-006 below-threshold skipped + stays | A1 | Yes |
+| FR-007 idempotency | A4 | Yes |
+| FR-008 unknown session → empty report | U4 | Yes |
+| FR-009 report full accounting | U3 | Yes |
+| FR-010 durability over 076 stores | A5 | Yes |
+| FR-011 gates | A6 | Yes |
+
+Untested criteria: none. Tests tracing to nothing: none.
+
+## What was not audited
+
+- `cycle-log.md` absent → ordering unverified (`LIKELY`).
+- Mutation scoped to a 5-behavior sample; not exhaustive (no mutation tool).
+- Coverage not measured (`package:coverage` not installed).
+- Repo-wide analyze gate red (3 issues) in files outside this spec.

@@ -1,97 +1,84 @@
-# Verification: Agent memory persistence (spec 076)
-
 ---
 feature: 076-memory-persistence
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-executed_at: feat/spec-076-memory-persistence (off feat/spec-073-agent-memory 4dd76e2)
-gates:
-  analyze: "dart analyze --fatal-infos → No issues found! (exit 0)"
-  tests: "dart test → 935 passed / 0 failed / 2 skipped (baseline 925/2 at 4dd76e2, +10 new)"
+verdict: PASS_WITH_GAPS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited (working tree HEAD)
+behaviors: 14
+proven: 0
+likely: 14
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 10
+criteria_covered: 10
+mutation_score: 100 # deliberate sample only (no mutation tool): 5/5 highest-risk behaviors killed
+mutants_survived: 0
+suite: 15 passed, 0 failed # test/engine/persistent_agent_memory_test.dart at 01618f3
 ---
 
-## Cycle integrity
+# TDD Verification: Agent memory persistence (spec 076)
 
-- **RED (genuine)**: `test/engine/persistent_agent_memory_test.dart`
-  written first and run against a missing library —
-  `Error: Method not found: 'PersistentLongTermMemoryStore'` (+ further
-  `MemoryJsonCodec` / `PersistentMemoryGraph` not-found errors), exit 1,
-  loading failure. The implementation did not exist.
-- **GREEN**: implementation landed; target file 10/10 first full run.
-  One honest compile-fix iteration during GREEN (process finding #1):
-  the test initially wrapped the codec's Map return values in
-  `jsonDecode(...)` (which takes a String) — 5 analyze errors, fixed in the
-  TEST by calling the codec directly and proving the wire format via
-  `jsonDecode(jsonEncode(...))` in the round-trip test. No production code
-  was changed by this fix.
-- All mutation runs executed in this session with outputs captured
-  verbatim; every mutant cp-restored and re-verified 10/10 green before the
-  next.
+**Verdict: PASS_WITH_GAPS.** No `cycle-log.md` exists and the branch history is
+squashed/stacked; every behavior graded `LIKELY`. No HIGH smells, no untested
+criteria, and all 5 sampled deliberate mutants (highest-risk: write-through /
+atomicity, the behaviors the mutant plan skipped but which the suite pins
+directly) were killed.
 
-## Acceptance criteria → tests (all FRs traced)
+## Test-first evidence
 
-| FR | Test (test/engine/persistent_agent_memory_test.dart) | Result |
-| --- | --- | --- |
-| FR-001 codec lossless round-trip | `MemoryJsonCodec round-trips records and links` (incl. wire-format jsonEncode/Decode) | PASS |
-| FR-002 LT write-through | `PersistentLongTermMemoryStore write-through persists to disk` | PASS |
-| FR-003 restore + missing file | `restore round-trips records and links with full fidelity`; `restore on a missing file starts empty` | PASS |
-| FR-004 malformed skip / corrupt loud | `restore skips malformed entries and fails loud on a corrupt file` | PASS |
-| FR-005 same-id replace no duplication | `same-id replace writes through without duplication` | PASS |
-| FR-006 graph write-through + restore | `PersistentMemoryGraph round-trips links and replaces idempotently` | PASS |
-| FR-007 atomic writes | `atomic writes leave no temp files and always-valid JSON` (checked after EVERY mutation step) | PASS |
-| FR-008 facade composition incl. promote | `full system persistence — promote survives a restart` | PASS |
-| FR-009 session store not persisted | design decision documented in spec.md; pinned by A4's session note only surviving via promotion | PASS |
-| FR-010 gates | analyze clean; 935/2 | PASS |
+`specs/076-memory-persistence/tdd/cycle-log.md` does not exist; commits squashed
+on the stacked branch. Every behavior graded `LIKELY`.
 
-## Mutation results (deliberate, one at a time, cp-restored)
-
-| id | mutant | result | evidence (test file run) |
-| -- | ------ | ------ | ------------------------ |
-| M1 | `remember` drops the write-through call (in-memory only) | **KILLED** | +4 −6: write-through `Expected: true` (file must exist); round-trip / replace / atomic / full-system / default-salience all fail on missing or stale file |
-| M2 | `restore` returns before loading (no-op) | **KILLED** | +5 −5: `Expected: an object with length of <1> Actual: []` — restored records vanished (graph + codec tests unaffected, correctly) |
-| M3 | per-entry malformed-skip removed (errors propagate) | **KILLED** | +9 −1: exactly the skip test fails — corrupt entry throws instead of being skipped (`Expected: length <2>`, reason `corrupt entry skipped`) |
-| M4 | atomic write stops at `*.tmp` (rename skipped) | **KILLED** | +3 −7: `Expected: true` (file exists), `Expected: false` (no tmp sibling), length failures — snapshot never lands |
-| M5 | codec drops `tags` on decode | **KILLED** | +8 −2: value-equality diffs `tags: [preference, style]` vs `tags: []` in codec round-trip and restore fidelity tests |
-
-**5/5 killed.**
-
-## Gates (actual runs at branch HEAD)
-
-- `dart analyze --fatal-infos` → **No issues found!** (exit 0)
-- `dart test` → **935 passed / 0 failed / 2 skipped** (2 pre-existing
-  KIMI_API_KEY skips, unrelated)
+| Behavior | Class  | Evidence |
+| -------- | ------ | -------- |
+| A1 restart round-trip | LIKELY | no cycle-log.md; squashed history; passes at HEAD |
+| A2 crash-safety (no `.tmp`, valid JSON) | LIKELY | same |
+| A3 corrupt-entry skip / corrupt-file loud | LIKELY | same |
+| A4 full-system promote survives restart | LIKELY | same |
+| A5 gates | LIKELY | same |
+| U1–U9 codec, write-through, same-id replace, restore, graph, dir creation, shape/version/tags guards | LIKELY | same |
 
 ## Findings
 
-1. **GREEN-phase test compile fix (process, minor).** The first test run
-   failed analyze 5× — the tests wrapped `MemoryJsonCodec.recordToJson`
-   (returns `Map<String, dynamic>`) in `jsonDecode` (takes `String`).
-   Fixed in the tests by calling the codec directly; the wire-format
-   concern is retained via `jsonDecode(jsonEncode(...))` in the round-trip
-   test. No production code changed.
-2. **PersistentMemoryGraph shadows the base link list (design).** The
-   073 `MemoryGraph.link()` stamps `createdAt: DateTime.now()` internally,
-   so replaying restored links through `super.link()` would silently lose
-   the persisted timestamps (FR-001 fidelity broken). The subclass
-   therefore owns its link list, replicates the base semantics exactly
-   (self-link ArgumentError, idempotent (from,to,type) replace), and
-   overrides the read paths (`links` / `neighborsOf` / `linksOf`;
-   `contradictions()` dispatches virtually). The long-term store needs no
-   shadowing — `remember()` is its only mutation, super-delegation
-   round-trips cleanly.
-3. **Promotion persists for free (the payoff of the store-subclass
-   pattern).** The facade's `promote()` routes through
-   `longTermMemory.remember(...)`, so the persistent override fires without
-   any facade change — pinned by the full-system restart test (the
-   session note re-appears as long-term after the rebuild).
-4. **Corrupt-file policy is asymmetric by design.** A malformed ENTRY is
-   skipped (010 precedent — one bad record must not lose the rest); a
-   malformed FILE throws `StateError` loudly. Atomic writes make torn
-   files structurally impossible, so a wholly unparseable file means
-   external damage — swallowing it would hide data loss.
+No HIGH smells. Gap is the missing cycle log (drives `LIKELY`). Repo-wide analyze
+gate red at HEAD (3 issues) but all in out-of-scope files.
 
-## Verdict
+## Mutation results
 
-**PASS.** All 10 FRs traced to passing tests; RED was genuine (missing
-library); 5/5 mutants killed with verbatim evidence; gates clean at 935/2
-(baseline 925/2 + 10).
+Deliberate mutants on the highest-risk behaviors (write-through + atomicity — the
+persistence correctness surface). One change each, observed fail, restored,
+green. All 5 killed:
+
+| Mutant | Behavior | Survived | Judgment |
+| ------ | -------- | -------- | -------- |
+| M1 `remember` drops the write-through call | U2, A1 | No | Killed: file must exist / round-trip stale |
+| M2 `restore` returns before loading (no-op) | A1, A4 | No | Killed: `Expected: length <1>` |
+| M3 per-entry malformed-skip removed | A3 | No | Killed: skip test fails |
+| M4 atomic write stops at `*.tmp` (rename skipped) | A2 | No | Killed: file never lands |
+| M5 codec drops `tags` on decode | U1, A1 | No | Killed: value-equality diff |
+
+Scope: 5 of 14 behaviors sampled (persistence + atomicity). Not exhaustive.
+
+## Traceability
+
+| Criterion | Tests | End to end |
+| --------- | ----- | ---------- |
+| FR-001 codec lossless round-trip | U1 | Yes |
+| FR-002 long-term write-through | U2, A1 | Yes |
+| FR-003 restore + missing file | A1, U4 | Yes |
+| FR-004 malformed skip / corrupt loud | A3, U7, U8, U9 | Yes |
+| FR-005 same-id replace no duplication | U3 | Yes |
+| FR-006 graph write-through + restore | U5 | Yes |
+| FR-007 atomic writes | A2, U6 | Yes |
+| FR-008 facade composition incl. promote | A4 | Yes |
+| FR-009 session store not persisted | A4 (session note survives via promotion) | Yes |
+| FR-010 gates | A5 | Yes |
+
+Untested criteria: none. Tests tracing to nothing: none.
+
+## What was not audited
+
+- `cycle-log.md` absent → ordering unverified (`LIKELY`).
+- Mutation scoped to a 5-behavior sample; not exhaustive (no mutation tool).
+- Coverage not measured (`package:coverage` not installed).
+- Repo-wide analyze gate red (3 issues) in files outside this spec.

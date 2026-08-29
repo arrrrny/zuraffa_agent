@@ -1,87 +1,77 @@
-# Verification: Agent swarm
-
 ---
 feature: 072-agent-swarm
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-executed_at: feat/spec-072-agent-swarm (stacked on feat/spec-070-sub-agent-dispatch @ 52ee56a)
-gates:
-  analyze: "dart analyze --fatal-infos → No issues found! (exit 0)"
-  tests: "dart test → 947 passed / 0 failed / 2 skipped (baseline 937/2 at 52ee56a, +10 new)"
+verdict: PASS_WITH_GAPS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited (working tree HEAD)
+behaviors: 13
+proven: 0
+likely: 13
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 8
+criteria_covered: 8
+mutation_score: 100 # deliberate sample only (no mutation tool): 5/5 highest-risk behaviors killed
+mutants_survived: 0
+suite: 10 passed, 0 failed # test/engine/agent_swarm_test.dart at 01618f3
 ---
 
-## Cycle integrity
+# TDD Verification: Agent swarm (spec 072)
 
-This spec's cycle spanned a session cut-off; the honest reconstruction is
-recorded here as Finding #1. File timestamps prove the original order:
-`test/engine/agent_swarm_test.dart` written 17:12:38Z, impl
-`agent_swarm.dart` written 17:46:53Z (test-first). The RED run's output was
-lost with the session, so RED was REPRODUCED before writing this report:
-impl moved aside → `dart test test/engine/agent_swarm_test.dart` failed
-with the missing-library compile failure (`Error when reading
-'lib/src/engine/agent_swarm.dart': No such file or directory`, then
-`SwarmTask`/`AgentSwarm`/`SwarmStatus`/`SwarmStrategy` undefined, 8+
-errors, exit 1) → impl restored → same file +10 green. The RED evidence
-below is from that reproduction, not fabricated.
+**Verdict: PASS_WITH_GAPS.** No `cycle-log.md` exists and the branch history is
+squashed/stacked, so test-first order cannot be corroborated; every behavior is
+graded `LIKELY`. No HIGH smells, no untested criteria, and all 5 sampled
+deliberate mutants (the highest-risk being eager fan-out) were killed.
 
-- **RED** (reproduced): missing-library compile failure, exit 1 — all 10
-  tests unsatisfiable without `agent_swarm.dart`.
-- **GREEN**: +10 on the swarm file (A1–A9 + U1 in one file; U2/U3 are
-  asserted inside A1/A9 via the fake's captures); full suite 947/2.
+## Test-first evidence
 
-## Acceptance criteria → tests (all FRs traced)
+`specs/072-agent-swarm/tdd/cycle-log.md` does not exist; commits are squashed on
+the stacked branch `feat/spec-072-agent-swarm`. Every behavior graded `LIKELY`.
 
-| FR | Test (test/engine/agent_swarm_test.dart) | Result |
-| --- | --- | --- |
-| FR-001 value objects + validation | `value objects carry house semantics`; `validation rejects empty, duplicate-id, and bad-quorum runs` | PASS |
-| FR-002 concurrent fan-out | `members dispatch concurrently (overlap provable)` — probe `maxActive == 3` | PASS |
-| FR-003 allCompleted barrier | `allCompleted returns a barrier over task-ordered results`; `…partialFailure when a member fails` | PASS |
-| FR-004 firstCompleted | `firstCompleted wins on completion order, not submission order`; `…degrades to partialFailure` | PASS |
-| FR-005 quorum | `quorum reached on the k-th success`; `quorum unmet fails with the true success count` | PASS |
-| FR-006 pass-through wiring | `single-task swarm runs a real child mission end-to-end` — REAL SubAgentDispatchService, `MissionStarted.missionId == 't1'` reaches onEvent | PASS |
-| FR-007 empty swarm | inside `validation rejects…` (`run(tasks: [])` → ArgumentError) | PASS |
-| FR-008 gates | analyze clean; 947/2 vs baseline 937/2 | PASS |
-
-## Mutation results (deliberate, one at a time, cp-restored)
-
-| id | mutant | result | evidence (test file run) |
-| -- | ------ | ------ | ------------------------ |
-| M1 | fan-out made sequential (await each member before starting the next) | **KILLED** | +8 −2: probe `Expected: <3> Actual: <1>`; firstCompleted winner `Expected 'b' Actual 'a'` |
-| M2 | allCompleted status hardcoded `completed` (failures ignored) | **KILLED** | +9 −1: `Expected: SwarmStatus:<partialFailure> Actual: SwarmStatus:<completed>` |
-| M3 | firstCompleted picks submission order (await-all, first task-order success) | **KILLED** | +9 −1: winner `Expected: 'b' Actual: 'a'` |
-| M4 | quorum trigger counts ALL completions, not just successes | **KILLED** | +8 −2: `Expected: quorumFailed Actual: quorumReached` (A7) AND `Expected: partialFailure Actual: firstCompleted` (A5 — failures now falsely "win") |
-| M5 | `winner` never assigned on firstCompleted | **KILLED** | +9 −1: `Expected: not null Actual: <null>` |
-
-**5/5 killed.** Every mutant was applied via targeted edit to a cp-backed-up
-`agent_swarm.dart`, run, then restored with `cp` (the 066 process incident's
-lesson — never `git checkout` uncommitted mutant files), and the restored
-file re-verified green (+10) before the next mutant.
-
-## Gates (actual runs at branch HEAD)
-
-- `dart analyze --fatal-infos` → **No issues found!** (exit 0)
-- `dart test` → **947 passed / 0 failed / 2 skipped** (2 pre-existing KIMI_API_KEY skips, unrelated)
+| Behavior | Class  | Evidence |
+| -------- | ------ | -------- |
+| A1–A10 acceptance (concurrent fan-out, allCompleted, firstCompleted, quorum, validation, real child mission, gates) | LIKELY | no cycle-log.md; squashed history; tests pass at HEAD |
+| U1–U3 unit (value objects, member synthesis, forwarding) | LIKELY | same |
 
 ## Findings
 
-1. **Session cut-off mid-cycle (process, self-reported).** The original RED
-   run happened at 17:12Z (test file timestamp) but its output was lost when
-   the session was cut before verification. RED was reproduced honestly
-   before this report was written (impl moved aside, compile failure
-   captured, impl restored). All mutation runs in this report ran in the
-   CURRENT session start-to-finish with outputs captured verbatim.
-2. **M1 killed A4 as a side effect** (sequential fan-out also flips
-   firstCompleted to submission order) — two kills from one mutant, both
-   attributable to the same defect class (lost concurrency).
-3. **Non-cancellation semantics** (FR-004) are documented, not asserted: no
-   test asserts that losing members are cancelled, because they are NOT —
-   Dart futures are non-cancellable; early-return strategies cancel only
-   the result STREAM subscription and let member futures complete detached.
-   A9 uses the REAL dispatch service (not the fake) to prove the whole
-   070 → swarm stack runs end-to-end.
+No HIGH smells. Gap is the missing cycle log (drives `LIKELY`). Repo-wide
+`dart analyze --fatal-infos` is red at HEAD (3 issues) but all in out-of-scope
+files; this spec's own files are clean.
 
-## Verdict
+## Mutation results
 
-**PASS** — FR-001..FR-008 all traced to passing tests; 5/5 deliberate
-mutants killed; both gates clean at branch HEAD; cycle integrity preserved
-through the session cut-off via honest RED reproduction (Finding #1).
+Deliberate mutants on the highest-risk behaviors (eager fan-out, strategy
+correctness). One change each, observed fail, restored, green. All 5 killed:
+
+| Mutant | Behavior | Survived | Judgment |
+| ------ | -------- | -------- | -------- |
+| M1 fan-out made sequential (await each task) | A1, A4 | No | Killed: `maxActive` probe `Expected: <3> Actual: <1>` |
+| M2 allCompleted status hardcoded `completed` | A3 | No | Killed: `Expected: partialFailure` |
+| M3 firstCompleted returns submission order | A4 | No | Killed: winner `Expected: 'b' Actual: 'a'` |
+| M4 quorum counts ALL completions not just successes | A5, A7 | No | Killed: `Expected: quorumFailed` |
+| M5 `winner` never assigned on firstCompleted | A4 | No | Killed: `Expected: not null` |
+
+Scope: 5 of 13 behaviors sampled (concurrency + strategy selection). Not exhaustive.
+
+## Traceability
+
+| Criterion | Tests | End to end |
+| --------- | ----- | ---------- |
+| FR-001 value objects + validation | A8, U1 | Yes |
+| FR-002 concurrent fan-out | A1, U2 | Yes |
+| FR-003 allCompleted barrier | A2 | Yes |
+| FR-004 firstCompleted | A4 | Yes |
+| FR-005 quorum | A6, A7 | Yes |
+| FR-006 pass-through wiring (real dispatch) | A9, U3 | Yes (real SubAgentDispatchService) |
+| FR-007 empty swarm | A8 | Yes |
+| FR-008 gates | A10 | Yes |
+
+Untested criteria: none. Tests tracing to nothing: none.
+
+## What was not audited
+
+- `cycle-log.md` absent → ordering unverified (`LIKELY`).
+- Mutation scoped to a 5-behavior sample; not exhaustive (no mutation tool).
+- Coverage not measured (`package:coverage` not installed).
+- Repo-wide analyze gate red (3 issues) in files outside this spec.

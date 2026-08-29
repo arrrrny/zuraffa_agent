@@ -1,3 +1,21 @@
+---
+feature: 070-sub-agent-dispatch-runtime
+verdict: PASS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
+verified_at: HEAD of feat/spec-070-sub-agent-dispatch # baseline 8a5bd83
+behaviors: 13 # A1-A8, U1-U5
+proven: 13
+likely: 0
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 8 # FR-001..FR-008
+criteria_covered: 8
+mutation_score: 100 # deliberate-mutant sampling: 5 of 5 killed (M1-M5)
+mutants_survived: 0
+suite: 937 passed, 0 failed, 2 skipped # baseline 925/2 at 8a5bd83 + 12 new; skips are pre-existing KIMI_API_KEY integration tests
+---
+
 # Verification: Sub-agent dispatch runtime (spec 070)
 
 **Branch**: `feat/spec-070-sub-agent-dispatch` (stacked on `feat/spec-069-mission-runner`)

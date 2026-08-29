@@ -15,3 +15,9 @@
 - T5 Upload spec/plan/tasks.
 - T6 `dart pub get && dart analyze --fatal-infos && dart test` all green.
 - T7 Commit + push + PR + merge + pull + re-test.
+
+## Phase N: TDD remediation
+
+Feature is not done until the blocking finding below is cleared (verification.md F1, HIGH).
+
+- [ ] T8 Pin the inclusive upper bound of `EngineLoopExecutor.runTurn`: add a test asserting `turnNumber == loop.maxTurns` does NOT throw StateError (only `> maxTurns` throws). Proof: `dart test test/data/providers/engine_loop/engine_loop_executor_test.dart --plain-name "runTurn does not throw at turnNumber == maxTurns"` exits 0, AND a `>`→`>=` mutant at `lib/src/data/providers/engine_loop/engine_loop_executor.dart:34` then fails that test (currently it survives — 3/3 pass).

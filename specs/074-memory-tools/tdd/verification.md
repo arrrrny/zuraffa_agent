@@ -1,76 +1,77 @@
-# Verification: Memory tools — the agent-facing surface
-
 ---
 feature: 074-memory-tools
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-executed_at: feat/spec-074-memory-tools (stacked on feat/spec-073-agent-memory @ 4dd76e2)
-gates:
-  analyze: "dart analyze --fatal-infos → No issues found! (exit 0)"
-  tests: "dart test → 935 passed / 0 failed / 2 skipped (baseline 925/2 at 4dd76e2, +10 new)"
+verdict: PASS_WITH_GAPS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited (working tree HEAD)
+behaviors: 15
+proven: 0
+likely: 15
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 9
+criteria_covered: 9
+mutation_score: 100 # deliberate sample only (no mutation tool): 5/5 highest-risk behaviors killed
+mutants_survived: 0
+suite: 14 passed, 0 failed # test/engine/memory_tools_test.dart at 01618f3
 ---
 
-## Cycle integrity
+# TDD Verification: Memory tools — agent-facing surface (spec 074)
 
-- **RED (genuine)**: `test/engine/memory_tools_test.dart` written first and
-  run against a missing library — `Error when reading
-  'lib/src/engine/memory_tools.dart': No such file or directory`, then
-  `MemoryTools`/`MemoryToolDispatcher` undefined, exit 1.
-- **GREEN**: implementation landed; file +10 ALL PASSING on the first
-  full run (no compile iterations this cycle); analyze clean first try.
-- All mutation runs executed in this session with outputs captured
-  verbatim; every mutant cp-restored and re-verified green before the
-  next.
+**Verdict: PASS_WITH_GAPS.** No `cycle-log.md` exists and the branch history is
+squashed/stacked; every behavior graded `LIKELY`. No HIGH smells, no untested
+criteria, and all 5 sampled deliberate mutants (highest-risk: `session_id`
+routing + write-through) were killed.
 
-## Acceptance criteria → tests (all FRs traced)
+## Test-first evidence
 
-| FR | Test (test/engine/memory_tools_test.dart) | Result |
-| --- | --- | --- |
-| FR-001 declarations | `declarations are safe-tier typed tools` | PASS |
-| FR-002 remember dispatch + routing | `remember generates ids and flows arguments`; `remember routes by session_id argument` | PASS |
-| FR-003 failure results not exceptions | `model-shaped failures come back as failure results` (7 cases) | PASS |
-| FR-004 recall lines + limit | `recall renders ranked layer-attributed lines` | PASS |
-| FR-005 link dispatch | `link validates and delegates to the system` | PASS |
-| FR-006 dispatchBatch | `dispatchBatch maps every call in order` | PASS |
-| FR-007 validateSchema + checkRiskTier | `schema validation and risk tier` | PASS |
-| FR-008 prompt projection | `projection ranks by salience and marks session notes` | PASS |
-| FR-009 gates | analyze clean; 935/2 | PASS |
-| (story) end-to-end through the tool surface | `agent story: remember, link, recall, project` | PASS |
+`specs/074-memory-tools/tdd/cycle-log.md` does not exist; commits squashed on the
+stacked branch `feat/spec-074-memory-tools`. Every behavior graded `LIKELY`.
 
-## Mutation results (deliberate, one at a time, cp-restored)
-
-| id | mutant | result | evidence (test file run) |
-| -- | ------ | ------ | ------------------------ |
-| M1 | remember returns success but never writes to the memory system | **KILLED** | +3 −7: store-empty assertions, recall `no memories match`, projection and story tests all fail — the write path is heavily pinned |
-| M2 | recall limit parsed but ignored | **KILLED** | +9 −1: `Expected: length 1` (two lines returned) |
-| M3 | link type hardcoded `relatesTo` after validation | **KILLED** | +9 −1: `graph.linksOf(MemoryLinkType.supports)` empty — the typed assertion catches the swap |
-| M4 | projection renders insertion order, not salience desc | **KILLED** | +9 −1: top-2 `Expected: contains 'high note'` — 'low note' ranked first |
-| M5 | session_id argument ignored (everything long-term) | **KILLED** | +7 −3: session store empty after session-scoped write; renderWithSession length 4 vs 2; story recall lines wrong |
-
-**5/5 killed.**
-
-## Gates (actual runs at branch HEAD)
-
-- `dart analyze --fatal-infos` → **No issues found!** (exit 0)
-- `dart test` → **935 passed / 0 failed / 2 skipped** (2 pre-existing KIMI_API_KEY skips, unrelated)
+| Behavior | Class  | Evidence |
+| -------- | ------ | -------- |
+| A1–A6 acceptance (agent story, session routing, failure results, dispatchBatch, projection, gates) | LIKELY | no cycle-log.md; squashed history; passes at HEAD |
+| U1–U9 unit (declarations, remember, recall, link, schema, auto-id, NaN salience, null arg, per-layer limit) | LIKELY | same |
 
 ## Findings
 
-1. **M1's blast radius** (+3 −7) is the healthiest signal of the cycle:
-   the write path is asserted by store-count, recall, projection, batch,
-   and story tests — a silent no-op write cannot survive.
-2. **Failure results, not exceptions** (FR-003) is a deliberate contract:
-   model-generated arguments are untrusted input; `ArgumentError`s from
-   the memory system (spec 073's validation) are caught at the dispatcher
-   boundary and converted to `success: false` results so the LLM can
-   read the reason and retry. Programmer errors still throw.
-3. **Auto-id discipline**: `mem-<n>` ids are per-DISPATCHER counter state;
-   cross-referencing memories across dispatchers requires explicit `id`
-   arguments (documented in plan.md; the link tool tests use explicit
-   ids for exactly this reason).
+No HIGH smells. Gap is the missing cycle log (drives `LIKELY`). Repo-wide
+analyze gate red at HEAD (3 issues) but all in out-of-scope files.
 
-## Verdict
+## Mutation results
 
-**PASS** — FR-001..FR-009 all traced to passing tests; 5/5 deliberate
-mutants killed; both gates clean at branch HEAD; genuine RED first;
-GREEN on first full run.
+Deliberate mutants on the highest-risk behaviors (write path + `session_id`
+routing). One change each, observed fail, restored, green. All 5 killed:
+
+| Mutant | Behavior | Survived | Judgment |
+| ------ | -------- | -------- | -------- |
+| M1 remember returns success but never writes | A1, A2 | No | Killed: store-empty / recall assertions |
+| M2 recall limit ignored | U3 | No | Killed: `Expected: length 1` |
+| M3 link type hardcoded `relatesTo` | U4 | No | Killed: typed assertion via `linksOf` |
+| M4 projection renders insertion order, not salience desc | A5 | No | Killed: top-2 wrong order |
+| M5 `session_id` argument ignored (everything long-term) | A2 | No | Killed: session store empty after scoped write |
+
+Scope: 5 of 15 behaviors sampled (routing + persistence boundary). Not exhaustive.
+
+## Traceability
+
+| Criterion | Tests | End to end |
+| --------- | ----- | ---------- |
+| FR-001 declarations (safe-tier typed tools) | U1 | Yes |
+| FR-002 remember dispatch + routing | U2, A2 | Yes |
+| FR-003 failure results, not exceptions | A3 | Yes |
+| FR-004 recall lines + limit | U3 | Yes |
+| FR-005 link dispatch | U4 | Yes |
+| FR-006 dispatchBatch | A4 | Yes |
+| FR-007 validateSchema + checkRiskTier | U5, U8 | Yes |
+| FR-008 prompt projection | A5, U9 | Yes |
+| FR-009 gates | A6 | Yes |
+
+Untested criteria: none. Tests tracing to nothing: none.
+
+## What was not audited
+
+- `cycle-log.md` absent → ordering unverified (`LIKELY`).
+- Mutation scoped to a 5-behavior sample; not exhaustive (no mutation tool).
+- Coverage not measured (`package:coverage` not installed).
+- Repo-wide analyze gate red (3 issues) in files outside this spec.

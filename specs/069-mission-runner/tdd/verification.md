@@ -1,3 +1,21 @@
+---
+feature: 069-mission-runner
+verdict: PASS
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
+verified_at: HEAD of feat/spec-069-mission-runner # baseline master fec7889
+behaviors: 11 # A1-A9, U1-U2
+proven: 11
+likely: 0
+test_after: 0
+no_test: 0
+high_smells: 0
+criteria_total: 8 # FR-001..FR-008
+criteria_covered: 8
+mutation_score: 100 # deliberate-mutant sampling: 5 of 5 killed (M1-M5)
+mutants_survived: 0
+suite: 925 passed, 0 failed, 2 skipped # baseline 915/2 at fec7889 + 10 new; skips are pre-existing KIMI_API_KEY integration tests
+---
+
 # Verification: MissionRunner (spec 069)
 
 **Branch**: `feat/spec-069-mission-runner` | **Verified at**: branch HEAD

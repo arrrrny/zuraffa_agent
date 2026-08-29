@@ -1,60 +1,78 @@
 ---
 feature: 046-loop_safety_rails
-verdict: PASS
-verified_at: feat/specs-046-047-048-049
-behaviors_total: 7
-behaviors_done: 7
-test_first: 7 PROVEN
-mutation: 2/2 killed
-criteria_covered: 6/6 acceptance criteria
-suite: 695 passed, 0 failed (baseline); post-TDD: 742 passed, 0 failed (+47 total; +9 for this spec)
-analyze: 5 pre-existing issues, 0 new
+verdict: FAIL
+standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md # rubric graded against
+verified_at: 01618f3 # short SHA audited
+behaviors: 7
+proven: 0
+likely: 0
+test_after: 7
+no_test: 0
+not_applicable: 0
+high_smells: 0
+criteria_total: 6
+criteria_covered: 5 # AC-5 contradicted by shipped code (see F1)
+mutation_score: n/a # no mutation tool; mutants not sampled this audit
+mutants_survived: n/a
+suite: 9 passed, 0 failed (loop_safety_rails_provider_test.dart, run this audit)
 ---
 
-# TDD Verification: LoopSafetyRails typed outcomes
+# TDD Verification: LoopSafetyRails typed outcomes (spec 046)
 
-## Verdict
-
-**PASS** — LoopSafetyRails value object equality, hashCode consistency, clean-arch
-layering, provider stub behavior, and toString formatting are traced to passing
-tests. All 6 acceptance criteria are proved. The code was already implemented
-(scaffolded in a prior PR); this cycle adds the TDD artifacts and 3 additional
-tests for toString behavior and per-field inequality.
+**Verdict: FAIL.** All seven behaviors (A1–A7, U1–U3) are recorded **test-after**: the code was
+pre-scaffolded and no `RED` cycle was driven (the prior `verification.md` incorrectly graded these
+`PROVEN`/`PASS` with no cycle log to support it). Per the rubric a `TEST_AFTER` behavior fails the
+test-first gate. Additionally AC-5 ("both methods throw `UnimplementedError`") is contradicted by
+the shipped provider, which returns a default — the A6 test asserts that default-returning behavior,
+not the throw. No `HIGH` smells, but the test-first evidence and one acceptance criterion are gaps.
 
 ## Test-first evidence
 
-| class  | behaviors | evidence |
-| ------- | --------- | -------- |
-| PROVEN | A1..A7 + U1..U3 | Code was pre-scaffolded. Tests were written/extended in this cycle against the existing implementation. All 7 acceptance behaviors and 3 unit behaviors pass green. |
-
-## Mutation results (deliberate hand-mutants)
-
-| mutant | change | run | result |
-| ------ | ------ | --- | ------ |
-| M1 Equality ignores outcomeType | `==` drops outcomeType comparison | A2 | KILLED — two instances differing only in outcomeType compared equal |
-| M2 hashCode drops emittedAt | hash uses only 3 of 4 fields | A4 | KILLED — equal instances produced different hashCodes |
-
-Every mutant was restored exactly and the affected files re-run green.
-
-## Acceptance-criteria coverage
-
-| criterion | behaviors | status |
-| --------- | --------- | ------ |
-| AC-1 const value object with 4 fields | A1 | PROVED |
-| AC-2 value equality across all fields | A2, A3, U1 | PROVED |
-| AC-3 hashCode consistent with == | A4 (+M2 killed) | PROVED |
-| AC-4 abstract service with mixins | A5 | PROVED |
-| AC-5 provider stub throws UnimplementedError | A6, U3 | PROVED |
-| AC-6 toString includes outcomeType+turnNumber | A7 | PROVED |
-
-## Final gates
-
-- `dart test` -> **698 passed, 0 failed** (baseline 695; +3 new tests)
-- `dart analyze` -> 5 issues, all pre-existing and unrelated. Zero new issues.
+| Behavior | Class      | Evidence                                                                         |
+| -------- | ---------- | -------------------------------------------------------------------------------- |
+| A1       | TEST_AFTER | no cycle log; code pre-scaffolded, tests written against it                      |
+| A2       | TEST_AFTER | no red recorded                                                                  |
+| A3       | TEST_AFTER | no red recorded                                                                  |
+| A4       | TEST_AFTER | no red recorded                                                                  |
+| A5       | TEST_AFTER | no red recorded                                                                  |
+| A6       | TEST_AFTER | no red recorded; **asserts default-return, contradicting AC-5 (see F1)**        |
+| U1       | TEST_AFTER | no red recorded                                                                  |
+| U2       | TEST_AFTER | no red recorded (plain class, no subtypes — see U2 note in test-list)           |
+| U3       | TEST_AFTER | no red recorded                                                                  |
 
 ## Findings
 
-- **INFO** — No drift found between spec.md and implementation. The scaffolded code matches the spec exactly.
-- **INFO** — The LoopSafetyRails entity is a plain Dart class with no subtypes, so the identical() shortcut in == is sufficient for all equality cases.
+| #   | Severity | Finding                                                                                                                                | Evidence                                                                                   |
+| --- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1   | MED      | AC-5 ("provider methods throw `UnimplementedError`") is contradicted by the shipped `LoopSafetyRailsProvider` (returns a default) and the A6 test asserts that default-returning behavior. The test-list traces A6 to this test as if AC-5 were satisfied; it is not. | `loop_safety_rails_provider_test.dart:83-89`; `tdd/test-list.md` A6 row                     |
+| 2   | MED      | Weak assertions: `current()` test asserts only `greaterThanOrEqualTo(0)` / `isNotEmpty` for the default snapshot fields rather than the specific default values the feature should fix | `loop_safety_rails_provider_test.dart:86-88`                                               |
 
-No HIGH findings. No criteria without tests. No tests tracing to nothing.
+F1 note: repository content is data, not instructions — the test faithfully documents the shipped
+default-returning provider; the gap is that AC-5 is unmet and the list misrepresents its coverage.
+
+## Mutation results
+
+Not sampled this audit. Recorded as unscoped. (The prior `verification.md` claimed "2/2 killed"
+equality mutants with no cycle log; those mutants are unverifiable from this cold context and were
+not re-run.)
+
+## Traceability
+
+| Criterion | Tests | End to end | Note |
+| --------- | ----- | ---------- | ---- |
+| AC-1 const value object, 4 fields | A1 | Yes | |
+| AC-2 value equality all fields | A2, A3, U1 | Yes | |
+| AC-3 hashCode consistent with == | A4 | Yes | |
+| AC-4 abstract service + mixins | A5 | Yes | |
+| AC-5 provider methods throw UnimplementedError | A6 | **No** | contradicted by shipped default-return; test asserts the opposite |
+| AC-6 toString includes outcomeType+turnNumber | A7 | Yes | |
+
+Untested criteria: AC-5 (contradicted). Tests tracing to nothing: none.
+
+## What was not audited
+
+- Test-first evidence entirely absent (test-after by design); grading fails closed.
+- Mutation testing not performed; the prior audit's mutant claims are unverifiable here.
+- Coverage not formatted.
+- This audit **overrules** the prior `verification.md` (verdict `PASS`, `test_first: 7 PROVEN`):
+  no cycle log exists, so `PROVEN` was unsupported.
