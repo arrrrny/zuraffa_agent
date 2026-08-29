@@ -96,9 +96,10 @@ void main() {
             domain: p.domain,
             country: p.country,
             steering: p.steering,
-            toolGate: PlaybookToolGate(
+            // Legal gate variant: blocklist with its own blocked list (the
+            // reference is an allowlist gate — mode + lists differ).
+            toolGate: const PlaybookToolGate(
               mode: PlaybookGateMode.blocklist,
-              allowed: p.toolGate.allowed,
               blocked: ['shell'],
             ),
             response: p.response,
@@ -219,6 +220,156 @@ void main() {
         throwsA(isA<ArgumentError>()
             .having((e) => e.name, 'name', contains('content'))),
       );
+    });
+
+    test('U5: blank tool ids in a gate list are rejected', () {
+      Playbook withGate(PlaybookToolGate gate) => Playbook(
+            id: 'pb-1',
+            name: 'germany',
+            description: 'desc',
+            steering: _steering,
+            toolGate: gate,
+            response: _response,
+          );
+
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.allowlist,
+          allowed: ['search', ''],
+          blocked: [],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('allowed'))),
+      );
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.blocklist,
+          allowed: [],
+          blocked: ['shell', ''],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('blocked'))),
+      );
+    });
+
+    test('U6: non-empty irrelevant gate lists are rejected', () {
+      Playbook withGate(PlaybookToolGate gate) => Playbook(
+            id: 'pb-1',
+            name: 'germany',
+            description: 'desc',
+            steering: _steering,
+            toolGate: gate,
+            response: _response,
+          );
+
+      // blocked has no effect on an allowlist gate — loader drift.
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.allowlist,
+          allowed: ['search'],
+          blocked: ['shell'],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('blocked'))),
+      );
+      // allowed has no effect on a blocklist gate.
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.blocklist,
+          allowed: ['search'],
+          blocked: ['shell'],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('allowed'))),
+      );
+      // an off gate carries no lists at all.
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.off,
+          allowed: ['search'],
+          blocked: [],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('allowed'))),
+      );
+      expect(
+        () => withGate(const PlaybookToolGate(
+          mode: PlaybookGateMode.off,
+          allowed: [],
+          blocked: ['shell'],
+        )),
+        throwsA(isA<ArgumentError>()
+            .having((e) => e.name, 'name', contains('blocked'))),
+      );
+    });
+
+    test('U7: legal gate boundaries construct (lock-down, empty, off)', () {
+      // Empty allowlist locks down every tool — valid and meaningful.
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          steering: _steering,
+          toolGate: const PlaybookToolGate(
+              mode: PlaybookGateMode.allowlist, allowed: [], blocked: []),
+          response: _response,
+        ),
+        returnsNormally,
+      );
+      // Empty blocklist refuses nothing — valid.
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          steering: _steering,
+          toolGate: const PlaybookToolGate(
+              mode: PlaybookGateMode.blocklist, allowed: [], blocked: []),
+          response: _response,
+        ),
+        returnsNormally,
+      );
+      // Off with both lists empty — the default no-op gate.
+      expect(
+        () => Playbook(
+          id: 'pb-1',
+          name: 'germany',
+          description: 'desc',
+          steering: _steering,
+          toolGate:
+              const PlaybookToolGate(mode: PlaybookGateMode.off),
+          response: _response,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('U8: response constraint boundaries (maxChars 0/1, blank language)',
+        () {
+      Playbook withResponse(PlaybookResponse response) => Playbook(
+            id: 'pb-1',
+            name: 'germany',
+            description: 'desc',
+            steering: _steering,
+            toolGate: _gate,
+            response: response,
+          );
+
+      expect(() => withResponse(const PlaybookResponse(maxChars: 0)),
+          throwsA(isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('maxChars'))));
+      expect(() => withResponse(const PlaybookResponse(maxChars: -5)),
+          throwsA(isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('maxChars'))));
+      // maxChars == 1 is the smallest legal cap.
+      expect(() => withResponse(const PlaybookResponse(maxChars: 1)),
+          returnsNormally);
+      expect(() => withResponse(const PlaybookResponse(language: '')),
+          throwsA(isA<ArgumentError>()
+              .having((e) => e.name, 'name', contains('language'))));
+      // Both null: no constraints — the default response.
+      expect(() => withResponse(const PlaybookResponse()), returnsNormally);
     });
   });
 }

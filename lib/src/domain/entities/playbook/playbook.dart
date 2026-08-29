@@ -217,6 +217,53 @@ class Playbook {
             'Playbook.steering entries must have non-empty content');
       }
     }
+    // Gate invariants (FR-002): blank-free lists, and each mode carries
+    // exactly the lists that apply to it — a non-empty irrelevant list is
+    // loader drift that would silently widen or corrupt gating (same
+    // rationale as spec 036 FR-002's blank-id rule). Empty lists are
+    // inert and always legal: an empty `allowed` locks down every tool,
+    // an empty `blocked` refuses nothing.
+    final gate = toolGate;
+    if (gate.allowed.any((t) => t.isEmpty)) {
+      throw ArgumentError.value(gate.allowed, 'allowed',
+          'PlaybookToolGate.allowed must not contain blank tool ids');
+    }
+    if (gate.blocked.any((t) => t.isEmpty)) {
+      throw ArgumentError.value(gate.blocked, 'blocked',
+          'PlaybookToolGate.blocked must not contain blank tool ids');
+    }
+    switch (gate.mode) {
+      case PlaybookGateMode.off:
+        if (gate.allowed.isNotEmpty) {
+          throw ArgumentError.value(gate.allowed, 'allowed',
+              'an off gate carries no allowed list — remove it or set mode');
+        }
+        if (gate.blocked.isNotEmpty) {
+          throw ArgumentError.value(gate.blocked, 'blocked',
+              'an off gate carries no blocked list — remove it or set mode');
+        }
+      case PlaybookGateMode.allowlist:
+        if (gate.blocked.isNotEmpty) {
+          throw ArgumentError.value(gate.blocked, 'blocked',
+              'a blocklist has no effect on an allowlist gate — remove it');
+        }
+      case PlaybookGateMode.blocklist:
+        if (gate.allowed.isNotEmpty) {
+          throw ArgumentError.value(gate.allowed, 'allowed',
+              'an allowlist has no effect on a blocklist gate — remove it');
+        }
+    }
+    // Response invariants (FR-002): the cap, when set, is a positive int;
+    // the language directive, when set, is non-empty.
+    final response = this.response;
+    if (response.maxChars != null && response.maxChars! < 1) {
+      throw ArgumentError.value(response.maxChars, 'maxChars',
+          'PlaybookResponse.maxChars must be >= 1 when set');
+    }
+    if (response.language != null && response.language!.isEmpty) {
+      throw ArgumentError.value(response.language, 'language',
+          'PlaybookResponse.language must be non-empty when set');
+    }
   }
 
   @override
