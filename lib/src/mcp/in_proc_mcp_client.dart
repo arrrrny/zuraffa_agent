@@ -136,6 +136,9 @@ class InProcMcpClient implements McpClient {
   Stream<void> get onToolsChanged => _toolsChangedController.stream;
 
   @override
+  Stream<void> get onReconnected => const Stream.empty();
+
+  @override
   McpClientState get state => _state;
 }
 

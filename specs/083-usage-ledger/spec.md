@@ -1,76 +1,159 @@
-# Feature Specification: Usage Ledger (token accounting projection)
+# Feature Specification: R4: Usage Ledger — token accounting projection
 
-**Feature Branch**: `083-usage-ledger`
+**Branch**: `083-usage-ledger` (off master `29b7fef`) | **Date**: 2026-08-29
 
-**Created**: 2026-08-29
+**Status**: Draft → implemented on this branch
 
-**Status**: Draft
+**Input**: User description: "R4: Usage Ledger — token accounting projection.
+A read-only aggregate projection over usage entries (input / output / cache
+tokens) with byTurn and byModel sub-ledgers for budget tracking. Parent
+epic: R4 providers & fallback (issue #5). Scope: the ledger aggregates token
+usage entries into a read-only projection. It exposes totals plus per-turn
+(byTurn) and per-model (byModel) sub-ledgers so budget/tracking logic can
+query spend. All operations are pure projections over immutable entries;
+define equality and serialization for engine/provider consumption."
 
-**Input**: User description: "Well-defined spec for the Usage Ledger — an aggregate token-accounting read projection over usage entries for budget tracking — that is not yet covered by an existing spec (R4)."
+## Summary
 
-## User Scenarios & Testing *(mandatory)*
+`UsageLedger` (lib/src/usage_ledger.dart, from T009) already aggregates
+`UsageEntry` records into totals (`totalInputTokens`, `totalOutputTokens`,
+`totalTokens`, `totalCacheReadTokens`, `totalCacheWriteTokens`) and
+`byTurn(int)` / `byModel(String)` sub-ledgers, and is covered by
+`test/usage_ledger_test.dart`. What the R4 contract (issue #94) asks for
+that the class does not yet satisfy:
 
-### User Story 1 - Aggregate token cost across a run (Priority: P1)
+1. **It is not actually read-only.** The constructor aliases the caller's
+   list (`const UsageLedger(this._entries)`), so a later mutation of the
+   source list silently changes every previously-computed total — a
+   projection over mutable state is not a projection.
+2. **No equality.** Two ledgers over structurally-identical entries are
+   unequal (identity `==`), so engine/provider code cannot compare budget
+   snapshots, and sub-ledgers cannot be diffed.
+3. **No serialization.** There is no `toJson`/`fromJson` on the ledger, so
+   a budget snapshot cannot cross the engine/provider boundary (event
+   payloads, persistence, logs).
 
-The engine records per-call `UsageEntry` records (input/output/cache tokens). The `UsageLedger` projection sums these into total input/output/cache-read/cache-write token counts so a budget tracker can decide whether the run is within its allowance.
+This spec closes all three: the constructor defensively copies into a
+`List.unmodifiable`, the ledger exposes an unmodifiable `entries` view,
+equality is ordered-sequence equality defined through the serialized form
+(so equality and serialization can never disagree), and `toJson`/`fromJson`
+round-trip. All existing getters and sub-ledger semantics stay
+byte-compatible.
 
-**Why this priority**: Token accounting is the only signal a budget guard has; incorrect aggregates either over-block or let runs blow the limit.
+**Out of scope**: changing `UsageEntry`/`UsageLedgerEntry`/`Model`
+(their `toJson`/`fromJson` already exist and are reused); cost/price
+projection (currencies are not part of the R4 seed); persistence wiring
+(datasource/repo layers already exist under `lib/src/data/`).
 
-**Independent Test**: Can be fully tested by constructing a ledger over a known list of `UsageEntry` records and asserting each aggregate equals the hand-computed sum.
+## Files
 
-**Acceptance Scenarios**:
+- `lib/src/usage_ledger.dart` — EDIT: unmodifiable copy + `entries` getter +
+  `toJson`/`fromJson` + `==`/`hashCode` (additive; existing getters and
+  `byTurn`/`byModel` unchanged in behavior).
+- `test/usage_ledger_083_test.dart` — NEW: equality, serialization
+  round-trip, immutability, sub-ledger projections, chaining pin.
+- `specs/083-usage-ledger/` — this artifact set.
 
-1. **Given** entries with input tokens `[10, 20]` and output tokens `[5, 15]`, **When** the ledger totals are read, **Then** `totalInputTokens == 30`, `totalOutputTokens == 20`, `totalTokens == 50`.
-2. **Given** an empty ledger, **When** totals are read, **Then** every total is 0 and `isEmpty` is true.
+## User scenarios
 
----
+### US1 — Compare budget snapshots (P1)
 
-### User Story 2 - Slice the ledger by turn or model (Priority: P2)
+As budget-tracking logic in the engine, I can compare two `UsageLedger`
+snapshots for equality (and use them as map keys / in sets), where equality
+means: same entries, in the same order, with structurally identical
+contents — regardless of instance identity.
 
-A budget guard may want to inspect cost for a single turn or a single model. The ledger produces sub-ledgers scoped by `turnNumber` or `modelId` without mutating the source.
+**Why this priority**: equality is the primitive every downstream consumer
+(diffing, caching, assertions, dedup) needs; without it the projection
+cannot be consumed safely.
 
-**Why this priority**: Per-turn / per-model attribution is needed to localize cost spikes.
+**Independent test**: two ledgers built from separately-constructed but
+structurally-identical entry lists are `==` and hash-equal; a ledger with
+one different token count is not.
 
-**Independent Test**: Can be fully tested by building a multi-turn, multi-model ledger and asserting the sub-ledger contains exactly the matching entries and that the source ledger is unchanged.
+### US2 — Ship a snapshot across the boundary (P1)
 
-**Acceptance Scenarios**:
+As a provider/engine consumer, I can serialize a ledger (`toJson`) and
+rebuild an equal one (`fromJson`) — totals, sub-ledgers, and equality all
+survive the round trip, including cache tokens and the `null`-model case.
 
-1. **Given** entries across turns 1 and 2, **When** `byTurn(2)` is called, **Then** the sub-ledger contains only turn-2 entries (counts preserved).
-2. **Given** entries for models `a` and `b`, **When** `byModel('a')` is called, **Then** the sub-ledger contains only model-`a` entries.
+**Why this priority**: the ledger crosses process/layer boundaries
+(events, persistence); without serialization it is trapped in memory.
 
----
+**Independent test**: `UsageLedger.fromJson(ledger.toJson()) == ledger`,
+and all five totals are identical after the round trip.
 
-### Edge Cases
+### US3 — Trust the projection (P2)
 
-- A ledger over zero entries reports all totals as 0 and `isEmpty == true`.
-- `byTurn`/`byModel` return a fresh ledger; the source ledger is never mutated.
-- Entries with `null` model are excluded from `byModel` results (no match on `modelId`).
-- Aggregation is a pure fold — no side effects, no external I/O.
+As any consumer, the ledger is immutable: mutating the list I constructed
+it from changes nothing, and mutating `ledger.entries` throws. Sub-ledgers
+(`byTurn`, `byModel`) are themselves read-only projections that chain.
 
-## Requirements *(mandatory)*
+**Why this priority**: a projection over mutable state produces
+inconsistent totals; the read-only guarantee is what makes the aggregate
+trustworthy.
 
-### Functional Requirements
+**Independent test**: source-list mutation after construction leaves the
+ledger's `length`/totals unchanged; `entries.add` throws
+`UnsupportedError`; `byModel(...).byTurn(...)` totals equal the
+intersection.
 
-- **FR-001**: `UsageLedger` MUST aggregate over its entries: `totalInputTokens`, `totalOutputTokens`, `totalTokens` (input+output), `totalCacheReadTokens`, `totalCacheWriteTokens`.
-- **FR-002**: `byTurn(turnNumber)` MUST return a sub-ledger containing only entries whose `turnNumber` matches.
-- **FR-003**: `byModel(modelId)` MUST return a sub-ledger containing only entries whose `model.modelId` matches.
-- **FR-004**: `length`, `isEmpty`, `isNotEmpty` MUST reflect the entry count of the (sub-)ledger.
+## Requirements
 
-### Key Entities
+### Functional requirements
 
-- **UsageLedger**: a read-only projection over `List<UsageEntry>` providing aggregate token metrics and filtered sub-ledgers.
-- **UsageEntry / UsageLedgerEntry**: the raw per-call record (entity + usecase/repository owned elsewhere) — this spec consumes it, does not redefine it.
+- **FR-001**: `UsageLedger` is constructed by defensive copy into an
+  unmodifiable list; the caller's later mutations of the source list do
+  not affect any previously-computed total, `length`, or sub-ledger.
+- **FR-002**: `UsageLedger.entries` exposes the (unmodifiable) entry
+  sequence for inspection; mutation attempts throw `UnsupportedError`.
+- **FR-003**: `UsageLedger.toJson()` serializes the projection as
+  `{'entries': [<UsageEntry.toJson>...]}`; `UsageLedger.fromJson` rebuilds
+  an equal ledger. Round-trip preserves all five totals, sub-ledgers, and
+  the `null`-model case.
+- **FR-004**: Equality is ordered-sequence equality over structurally
+  identical entries, defined via the serialized form (equal ledgers have
+  equal `toJson`); `hashCode` is consistent with `==`.
+- **FR-005**: Existing aggregate surface is unchanged:
+  `totalInputTokens`, `totalOutputTokens`, `totalTokens`,
+  `totalCacheReadTokens`, `totalCacheWriteTokens`, `byTurn(int)`,
+  `byModel(String)`, `length`, `isEmpty`, `isNotEmpty` behave exactly as
+  the T009 tests pinned (regression: the pre-existing
+  `test/usage_ledger_test.dart` stays green unmodified).
+- **FR-006**: Sub-ledgers are themselves full projections: `byTurn` /
+  `byModel` results support equality, serialization, and chaining
+  (`ledger.byModel(m).byTurn(t)` totals equal the entries matching both
+  filters).
+- **FR-007**: Edge cases: an empty ledger equals every other empty ledger,
+  serializes/round-trips, and reports all totals as 0; `byTurn`/`byModel`
+  with no matches return an empty ledger (not an error).
+- **FR-008**: Gates — `dart analyze` reports no new issues relative to the
+  master baseline (3 pre-existing, out of scope); the full `dart test`
+  suite is green.
 
-## Success Criteria *(mandatory)*
+### Key entities
 
-### Measurable Outcomes
+- `UsageLedger` — gains `entries`, `toJson`, `fromJson`, `==`, `hashCode`;
+  constructor becomes defensively copying.
+- `UsageEntry` / `UsageLedgerEntry` / `Model` — unchanged; their existing
+  JSON forms are the ledger's serialization substrate.
 
-- **SC-001**: Each aggregate total equals the exact hand-computed sum across all entries (no off-by-one, no dropped field).
-- **SC-002**: `byTurn`/`byModel` partition entries correctly and leave the source ledger unchanged.
-- **SC-003**: An empty ledger yields zeroed totals and `isEmpty == true`.
+## Success criteria
 
-## Assumptions
+- **SC-001**: Structurally-identical ledgers are `==` (and hash-equal);
+  any content difference breaks equality (US1).
+- **SC-002**: `fromJson(toJson()) == ledger` with all totals and sub-ledger
+  semantics preserved, including cache tokens and the `null`-model entry
+  (US2).
+- **SC-003**: Source-list mutation after construction and `entries`
+  mutation both fail to alter the projection; chained sub-ledger totals
+  are exact (US3).
+- **SC-004**: Gates green (FR-008); the pre-existing
+  `test/usage_ledger_test.dart` passes unmodified (FR-005).
 
-- The underlying `UsageEntry` records are produced by the LLM client layer (spec 007/051) and persisted via the usage-ledger usecases/repository; this spec owns only the aggregation/projection.
-- "Budget tracking" is a consumer of these aggregates, not part of this feature.
-- This feature maps to **R4 (providers & fallback, issue #5)** — provider usage accounting.
+## Dependencies
+
+- Builds on: the T009 UsageLedger projection (master `29b7fef`) and the
+  zfa-generated `UsageLedgerEntry` entity's existing JSON forms.
+- Independent of: every other subsystem (the file is standalone under
+  `lib/src/`, exported from `lib/zuraffa_agent.dart`).

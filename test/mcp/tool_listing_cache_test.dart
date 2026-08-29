@@ -48,6 +48,11 @@ class _CountingClient implements McpClient {
   @override
   Stream<void> get onToolsChanged => _toolsChangedController.stream;
 
+  // Spec 082: the cache now subscribes to onReconnected — this fake never
+  // recovers (no transport), so the signal never fires.
+  @override
+  Stream<void> get onReconnected => const Stream.empty();
+
   @override
   McpClientState get state => McpClientState.connected;
 }

@@ -1,100 +1,180 @@
-# Feature Specification: MCP Transport Resilience
+# Feature Specification: R3: MCP Transport Resilience — wire seam, reconnect, adapter, cache
 
-**Feature Branch**: `082-mcp-transport-resilience`
+**Branch**: `082-mcp-transport-resilience` (off master `29b7fef`) | **Date**: 2026-08-29
 
-**Created**: 2026-08-29
+**Status**: Draft → implemented on this branch
 
-**Status**: Draft
+**Input**: User description: "R3: MCP Transport Resilience — wire seam, reconnect,
+adapter, cache. Stateless McpWire seam, exponential-backoff reconnect policy, a tool
+descriptor, a registry adapter using the `mcp:<server>:<tool>` namespace, a sealed
+call-result, and a TTL listing cache. Parent epic: R3 tools & MCP client (issue #4).
+Scope: make the MCP transport resilient to transient failures… Cover backoff caps,
+reconnect storms, and cache invalidation."
 
-**Input**: User description: "Well-defined spec for MCP transport resilience — the wire seam, reconnect policy, tool descriptor, registry adapter, call-result union, and listing cache — that is not yet covered by an existing spec (R3)."
+## Summary
 
-## User Scenarios & Testing *(mandatory)*
+The R3 transport components already exist from specs 015 (mcp-client) and 049
+(mcp_transport): the stateless `McpWire` seam, `McpReconnectPolicy`
+(exponential backoff + cap + maxAttempts), `McpToolDescriptor`, `McpToolAdapter`
+(registering tools under `mcp:<serverId>:<toolName>`), the sealed `McpCallResult`
+union, and the TTL `ToolListingCache`. What R3 issue #93 asks for that the tree
+does not yet guarantee:
 
-### User Story 1 - A stateless wire seam for MCP clients (Priority: P1)
+1. **A recovered transport can serve a stale tool listing.** The cache
+   invalidates on TTL expiry, on `onToolsChanged`, and on explicit
+   `invalidate()` — but NOT when the client recovers from a drop. While the
+   transport was severed the server may have added/removed tools; the missed
+   `tools_changed` notification is gone with the old connection, so the cache
+   would keep serving the pre-drop listing for up to the full TTL
+   (default 60s). There is also no client surface on which a consumer could
+   react to a recovery at all.
+2. **The resilience semantics are unguarded at the edges.** Three behaviors
+   hold in the code but have no test pinning them, so a refactor could break
+   them silently: (a) jitter never pushes a backoff delay past the cap — the
+   existing jitter test only asserts the looser `cap * (1 + jitter)` bound;
+   (b) a reconnect storm is terminal — after `maxAttempts` the client is
+   `failed` and never schedules another delay (no zombie reconnect loop), and
+   a post-failure `callTool` adds no further delays; (c) the TTL boundary is
+   exact — an entry aged exactly `maxAge` is already stale (freshness is
+   `age < maxAge`).
 
-The SSE and stdio MCP clients share a minimal transport seam (`McpWire`) so they can be unit-tested against a fake wire with no network or subprocess. The seam exposes `open`/`close` (idempotent), `send` (request/response RPC), and a `notifications` stream that carries `ToolsChanged`.
+This spec closes both: it adds `McpClient.onReconnected` (fired once per
+successful recovery; empty for the in-proc client which cannot drop), wires
+`ToolListingCache` to invalidate on it, and pins the three edge semantics with
+tests guarded by deliberate mutants.
 
-**Why this priority**: The seam is the foundation that makes every other resilience piece testable and keeps IO adapters isolated (constitution purity allowlist).
+**Out of scope**: changing the backoff formula or configs themselves
+(`McpReconnectPolicyConfig.sse/.stdio` stay as 015 shipped them); auth-token
+rotation semantics (015 FR-003, already tested); the `io_*` transport adapters
+(purity-allowlisted, unchanged).
 
-**Independent Test**: Can be fully tested with a fake `McpWire` asserting `open`/`close` are idempotent, `send` returns a typed response, and `notifications` emits `McpWireNotificationToolsChanged`.
+## Files
 
-**Acceptance Scenarios**:
+- `lib/src/mcp/mcp_client.dart` — EDIT: interface gains `onReconnected`
+  (additive; the three in-tree implementors follow).
+- `lib/src/mcp/sse_mcp_client.dart` — EDIT: broadcast controller; emit after
+  each recovery-`connected` transition in `_callWithReconnect`; close on
+  `disconnect`.
+- `lib/src/mcp/stdio_mcp_client.dart` — EDIT: same wiring.
+- `lib/src/mcp/in_proc_mcp_client.dart` — EDIT: `onReconnected` is a never-
+  emitting stream (no transport to drop).
+- `lib/src/mcp/tool_listing_cache.dart` — EDIT: subscribe
+  `client.onReconnected` → `invalidate()`; cancel in `dispose()`.
+- `test/mcp/mcp_082_resilience_test.dart` — NEW: the RED behaviors (reconnect
+  emission + cache invalidation, unit and end-to-end) and the pins (jitter
+  clamp, storm terminality, TTL boundary).
+- `test/mcp/tool_listing_cache_test.dart`, `test/mcp/mcp_tool_adapter_test.dart`
+  — EDIT: their `McpClient` fakes grow `onReconnected` (compile fix, no
+  semantic change).
+- `specs/082-mcp-transport-resilience/` — this artifact set.
 
-1. **Given** a wire, **When** `open` is called twice then `close` twice, **Then** no error is raised and `isOpen` transitions correctly.
-2. **Given** a request, **When** `send` is called, **Then** a `McpWireResponseOk` (payload map) or `McpWireResponseError` (code/message) is returned.
+## User scenarios
 
----
+### US1 — Survive a transient drop and learn about it (P1)
 
-### User Story 2 - Reconnect with exponential backoff (Priority: P1)
+As the engine loop, I issue an MCP tool call; the wire drops mid-call; the
+client recovers behind capped exponential backoff and — new — tells me it
+recovered by firing `onReconnected` once, so my caches and diagnostics can
+react instead of assuming continuity.
 
-When the SSE/stdio transport drops, the client reconnects using an injected `McpReconnectPolicy` (exponential backoff, factor, cap, maxAttempts, optional deterministic jitter). The policy tracks attempts, applies each delay via an injected `McpDelay`, and reports exhaustion.
+**Why this priority**: the recovery itself already exists (015 SC-002/003);
+the missing half is the observability of the recovery, which US2 builds on.
 
-**Why this priority**: Reconnect reliability is the headline resilience property (spec 015 SC-002/003: SSE within 5s, stdio within 10s).
+**Independent test**: `FakeMcpWire` programmed to drop once then answer → the
+call returns its real result AND `onReconnected` fired exactly once, with the
+backoff delay sequence observed.
 
-**Independent Test**: Can be fully tested with a recording `McpDelay` and fixed seed, asserting the delay sequence and that `nextBackoff` returns false (and no further delay) once `exhausted`.
+### US2 — Never serve a pre-drop tool listing after a reconnect (P1)
 
-**Acceptance Scenarios**:
+As a registry consumer (`McpToolAdapter` + `ToolListingCache`), when the
+client recovers from a drop I want the cached listing invalidated, because the
+server may have changed its tool set while I was disconnected; the next
+`getOrRefresh()` re-lists even though the TTL had not expired.
 
-1. **Given** a policy with `initial=100ms, factor=2, cap=1s, maxAttempts=8`, **When** `nextBackoff` is called repeatedly, **Then** delays follow 100→200→400→... capped at 1s, total wall-time under 5s for SSE.
-2. **Given** an exhausted policy, **When** `nextBackoff` is called, **Then** a `StateError` is thrown (callers must check `exhausted` first).
-3. **Given** a successful reconnect, **When** `reset` is called, **Then** the next drop restarts backoff from `initial`.
+**Why this priority**: stale registrations are silent wrongness — the engine
+would dispatch to tools that no longer exist (or miss new ones) for up to a
+full TTL window after every drop.
 
----
+**Independent test**: cache primed and served within TTL → recovery fires
+`onReconnected` → next `getOrRefresh()` hits the client again
+(`listToolsCallCount` increments) despite a fresh TTL entry.
 
-### User Story 3 - Surface MCP tools into the engine registry (Priority: P2)
+### US3 — Reason about storms and boundaries (P2)
 
-`McpToolAdapter` lists tools via `ToolListingCache`, registers each into the engine `ToolRegistry` under the `mcp:<serverId>:<name>` namespace, and keeps the registry in sync on `onToolsChanged` notifications (register new, unregister gone). `McpToolDescriptor` carries the static metadata; `McpCallResult` is the sealed ok/error outcome so failures never throw across the boundary.
+As an operator, I rely on three pinned invariants: jitter never pushes a
+backoff delay past the configured cap; a persistent storm stops after
+`maxAttempts` delays leaving the client `failed` with no further delays
+scheduled (a post-failure call adds none); a cache entry aged exactly
+`maxAge` is stale.
 
-**Why this priority**: Tool surfacing is what makes a remote MCP server useful to the engine; drift between server and registry must self-heal.
+**Why this priority**: these are the guard-rails that keep transient-failure
+handling predictable; they hold today but are one refactor away from silent
+breakage.
 
-**Independent Test**: Can be fully tested with a fake client + fake registry, asserting initial sync registers namespaced tools and a tools-changed notification re-lists and diffs correctly.
+**Independent test**: each invariant pinned by a dedicated test guarded by a
+killer mutant.
 
-**Acceptance Scenarios**:
+## Requirements
 
-1. **Given** a client advertising tools `fs.read`, `fs.write`, **When** the adapter syncs with `serverId=raptorr`, **Then** the registry contains `mcp:raptorr:fs.read` and `mcp:raptorr:fs.write`.
-2. **Given** a synced adapter, **When** the server drops `fs.write`, **Then** on the next notification `mcp:raptorr:fs.write` is unregistered while `fs.read` remains.
+### Functional requirements
 
----
+- **FR-001**: `McpWire` remains a stateless transport seam — `open` / `close`
+  / `send` / `notifications` / `isOpen` only; reconnection state lives in the
+  client, never on the wire (015 architecture, pinned by the existing wire /
+  A6 tests; no new wire members).
+- **FR-002**: Reconnect backoff is exponential with a hard cap, and with
+  jitter enabled no applied delay exceeds `config.cap` (the jitter scale is
+  clamped to the cap).
+- **FR-003**: A reconnect storm is bounded: one failure episode schedules at
+  most `config.maxAttempts` backoff delays; on exhaustion the client
+  transitions to `McpClientState.failed`; after that transition no further
+  delays are scheduled (a subsequent `callTool` returns
+  `McpCallError('client-not-connected')` and the recorded delay count is
+  unchanged).
+- **FR-004** (new): `McpClient` exposes `Stream<void> onReconnected`. SSE and
+  stdio clients fire it exactly once per successful recovery (the
+  reconnecting → connected transition inside `_callWithReconnect`), never on
+  the initial `connect()`, and close it on `disconnect()`. `InProcMcpClient`
+  exposes a never-emitting stream.
+- **FR-005** (new): `ToolListingCache` subscribes to
+  `client.onReconnected` and invalidates its entry when that fires; the
+  subscription is cancelled by `dispose()`.
+- **FR-006**: Cache freshness is `age < maxAge` — an entry aged exactly
+  `maxAge` is stale and the next `getOrRefresh()` re-lists.
+- **FR-007**: Tool calls resolve through `McpToolAdapter` under the
+  `mcp:<serverId>:<toolName>` namespace and surface as the sealed
+  `McpCallResult` union (`McpCallOk` / `McpCallError`) — never as a thrown
+  exception from the client surface (015 FR; pinned by existing adapter /
+  client tests cited in the test list).
+- **FR-008**: Gates — `dart analyze` reports no new issues relative to the
+  master baseline (3 pre-existing, all out of scope); the full `dart test`
+  suite is green.
 
-### Edge Cases
+### Key entities
 
-- `McpWire.send` of an unknown method maps to `McpWireResponseError`, never an untyped throw.
-- `McpReconnectPolicy.nextBackoff` after exhaustion throws `StateError` (programmer error guard).
-- `McpToolDescriptor` equality deep-compares `paramsSchema` (null-safe); two descriptors differ if schemas differ.
-- `McpToolAdapter.sync` after `dispose` throws `StateError`; auto-sync failures are swallowed (next notification retries), manual `sync` re-throws.
-- `ToolListingCache` returns an unmodifiable list; TTL expiry (default 60s) and explicit `invalidate()` both force a re-list; `dispose` cancels the subscription.
+- `McpClient` — gains `onReconnected` (the recovery signal).
+- `SseMcpClient` / `StdioMcpClient` — emit `onReconnected` per recovery.
+- `InProcMcpClient` — `onReconnected` never emits.
+- `ToolListingCache` — invalidation set = { TTL expiry, `onToolsChanged`,
+  `onReconnected`, explicit `invalidate()` }.
+- `McpReconnectPolicy` — unchanged formula; pinned clamp + exhaustion
+  semantics.
 
-## Requirements *(mandatory)*
+## Success criteria
 
-### Functional Requirements
+- **SC-001**: Mid-call drop → recovery → the call returns its real result and
+  `onReconnected` fired exactly once (US1).
+- **SC-002**: Recovery invalidates the cache: the next `getOrRefresh()`
+  re-lists despite a fresh TTL entry, end-to-end through a real
+  `SseMcpClient` + `ToolListingCache` pair (US2).
+- **SC-003**: Storm terminality, jitter-cap clamp, and the exact TTL boundary
+  each pinned by a test that a deliberate mutant kills (US3).
+- **SC-004**: Gates green (FR-008).
 
-- **FR-001**: `McpWire` MUST provide `open`/`close` (idempotent), `send(McpWireRequest)→McpWireResponse`, a `notifications` stream (incl. `ToolsChanged`), and `isOpen`.
-- **FR-002**: `McpReconnectPolicy` MUST compute exponential backoff (`initial * factor^(attempt-1)`, clamped to `cap`) with optional deterministic jitter; `nextBackoff` applies the delay (via injected `McpDelay`) and returns `true` until `exhausted`; MUST throw `StateError` if called after exhaustion; `reset()` restarts the counter.
-- **FR-003**: `McpToolDescriptor` MUST hold `name`, `description`, optional `paramsSchema`, with equality deep-comparing `paramsSchema`.
-- **FR-004**: `McpToolAdapter` MUST surface tools into `ToolRegistry` under `mcp:<serverId>:<name>`, initial-sync list+cache, and on `onToolsChanged` re-list and diff (register new, unregister gone); `startAutoSync` MUST be idempotent; `dispose` MUST tear down.
-- **FR-005**: `McpCallResult` MUST be a sealed union of `McpCallOk(result map)` / `McpCallError(code, message)`; `McpClient.callTool` MUST NOT throw — failures surface as `McpCallError`.
-- **FR-006**: `ToolListingCache` MUST cache `listTools` with TTL `maxAge` (default 60s), invalidate on `onToolsChanged` and explicit `invalidate()`, return an unmodifiable cached list when fresh, and `dispose` MUST cancel the subscription.
+## Dependencies
 
-### Key Entities
-
-- **McpWire / McpWireRequest / McpWireResponse / McpWireNotification**: the transport seam and its sealed message families.
-- **McpReconnectPolicy / McpReconnectPolicyConfig**: backoff policy with injected clock/delay/seed.
-- **McpToolDescriptor**: static per-tool metadata advertised by a server.
-- **McpToolAdapter**: bridges an `McpClient` to the engine `ToolRegistry`.
-- **McpCallResult**: sealed ok/error outcome of a tool invocation.
-- **ToolListingCache**: TTL cache over `listTools`.
-
-## Success Criteria *(mandatory)*
-
-### Measurable Outcomes
-
-- **SC-001** (spec 015 SC-002/003): SSE reconnects after a drop within 5s; stdio restarts after a crash within 10s.
-- **SC-002**: A `tools-changed` notification updates the registry set without dropping unrelated tools.
-- **SC-003**: `ToolListingCache` honors both TTL expiry and explicit/invalidation-triggered re-list; no redundant `listTools` within the TTL.
-- **SC-004**: `McpClient.callTool` never throws across the boundary — every failure is a typed `McpCallError`.
-
-## Assumptions
-
-- The IO adapters (`IoSseMcpTransport`, `IoStdioMcpTransport`) live in sibling `io_*.dart` files on the pipeline purity allowlist; this spec owns the pure seam + logic only.
-- Reconnect/auth-callback rotation lives on the MCP client, not on `McpWire` (the wire is stateless).
-- This feature maps to **R3 (tools & MCP client, issue #4)** as the resilience layer over spec 015's client.
+- Builds on: spec 015 (mcp-client: wire, clients, cache, adapter), spec 049
+  (mcp_transport entity), spec 003 A6 (drop-resume acceptance) — all on
+  master `29b7fef`.
+- Independent of: the 075–078 event/memory arc and every other subsystem
+  (different files, no shared edits beyond the `mcp/` directory).
