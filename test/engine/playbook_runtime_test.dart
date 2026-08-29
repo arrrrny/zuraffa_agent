@@ -15,6 +15,16 @@ import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
+import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
+import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
+import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
+import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
+import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
+import 'package:zuraffa_agent/src/domain/entities/playbook/playbook_loader.dart';
+import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
+import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
+import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/playbook_runtime.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
@@ -120,6 +130,138 @@ class DelegationSpy implements ToolDispatcher {
     riskCalls++;
     return true;
   }
+}
+
+/// LLM client returning a FIFO script of completions (spec 069 exemplar).
+class ScriptedLlmClient extends LlmClientProvider {
+  ScriptedLlmClient({required this.completions})
+      : super(
+          config: const ProviderConfig(
+            id: 'kilo',
+            providerKind: 'openai',
+            baseUrl: 'https://example.invalid/v1',
+            models: ['tencent/hy3:free'],
+            timeoutMs: 1,
+          ),
+          apiKey: 'test-key',
+        );
+
+  final List<ChatCompletion> completions;
+  int callCount = 0;
+
+  @override
+  Future<ChatCompletion> complete(List<ChatMessage> messages) async {
+    callCount++;
+    return completions[callCount - 1];
+  }
+}
+
+/// Plans tool calls by 1-based completion index (069 exemplar).
+class ScriptedPlanner implements ToolCallPlanner {
+  ScriptedPlanner(this.planByCall);
+
+  final Map<int, List<ToolCall>> planByCall;
+  int _count = 0;
+
+  @override
+  Future<List<ToolCall>> plan(
+      ChatCompletion completion, List<ChatMessage> transcript) async {
+    _count++;
+    return planByCall[_count] ?? const [];
+  }
+}
+
+ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
+    ChatCompletion(
+      content: content,
+      finishReason: finish,
+      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+    );
+
+const loop10 = EngineLoop(
+  id: 'loop-104',
+  sessionId: 's104',
+  maxTurns: 10,
+  wallClockTimeoutMs: 60000,
+  repetitionThreshold: 5,
+);
+/// The Germany country playbook document (allowlist gate).
+const _deYaml = '''
+id: pb-de-001
+name: germany
+description: Country playbook for Germany market missions
+domain: country
+country: DE
+steering:
+  - content: Greet in German.
+  - content: Cite GDPR for personal data.
+toolGating:
+  mode: allowlist
+  allowed: [search, fetch]
+response:
+  language: de
+  maxChars: 120
+''';
+
+/// The Japan country playbook document (blocklist gate — search refused,
+/// shell admitted: the opposite of Germany on the same tools).
+const _jpYaml = '''
+id: pb-jp-001
+name: japan
+description: Country playbook for Japan market missions
+domain: country
+country: JP
+steering:
+  - content: Greet in Japanese.
+toolGating:
+  mode: blocklist
+  blocked: [search]
+response:
+  language: jp
+  maxChars: 80
+''';
+
+/// A third, novel playbook document — nothing in the engine knows about
+/// France; loading it proves adding a playbook requires only the document
+/// (FR-006).
+const _frYaml = '''
+id: pb-fr-001
+name: france
+description: Country playbook for France market missions
+steering:
+  - content: Answer in French market idiom.
+toolGating:
+  mode: allowlist
+  allowed: [translate]
+response:
+  maxChars: 200
+''';
+
+/// What one run under a playbook observes: the engine event stream, the
+/// mission result, what the wrapped dispatcher actually saw, and the
+/// response after the playbook's constraints.
+class RunObservation {
+  RunObservation({
+    required this.events,
+    required this.result,
+    required this.dispatcher,
+    required this.constrainedResponse,
+  });
+
+  final List<EngineEvent> events;
+  final MissionResult result;
+  final FakeToolDispatcher dispatcher;
+  final String constrainedResponse;
+
+  List<SteeringInjected> get steeringEvents => [
+        for (final e in events)
+          if (e is SteeringInjected) e,
+      ];
+
+  List<ToolCallCompleted> get toolEvents => [
+        for (final e in events)
+          if (e is ToolCallCompleted) e,
+      ];
 }
 
 void main() {
@@ -485,6 +627,189 @@ void main() {
       final second = runtime.steeringMessages().single.injectedAt;
       expect(second, DateTime.utc(2026, 1, 2));
       expect(second.isAfter(first), isTrue);
+    });
+  });
+  // The single composition under test — the IDENTICAL code path every
+  // playbook runs through (FR-006: no branch on playbook identity or
+  // content anywhere). [withToolCalls] plans the same tool calls for
+  // whichever playbook is loaded.
+  Future<RunObservation> runUnderPlaybook(
+    String yamlDocument, {
+    List<ToolCall> plannedCalls = const [],
+  }) async {
+    final playbook = PlaybookLoader().loadYaml(yamlDocument);
+    final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+    final events = <EngineEvent>[];
+    final inner = FakeToolDispatcher();
+    final queue = runtime.seedSteering(SteeringQueue(
+      id: 'q-104',
+      pending: const [],
+      processedCount: 0,
+    ));
+    final runner = MissionRunner(
+      executor: EngineLoopExecutor(
+        loop10,
+        ScriptedLlmClient(completions: [
+          completionOf('need tools', finish: 'tool_calls'),
+          completionOf('x' * 500),
+        ]),
+      ),
+      toolDispatcher: runtime.gateDispatcher(inner),
+      stopPolicy: const StopPolicy(
+        id: 'test-104',
+        maxTurns: 100,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 5,
+      ),
+      steeringQueue: queue,
+      onEvent: events.add,
+      clock: fakeClock,
+    );
+    final result = await runner.run(
+      missionId: 'm-104',
+      messages: const [ChatMessage(role: 'user', content: 'go')],
+      planner: ScriptedPlanner({1: plannedCalls}),
+    );
+    return RunObservation(
+      events: events,
+      result: result,
+      dispatcher: inner,
+      constrainedResponse: runtime.constrainResponse(result.summary ?? ''),
+    );
+  }
+
+  group('spec 104 — R5#4 acceptance', () {
+    test('A3: playbook steering drains through the mission loop', () async {
+      final run = await runUnderPlaybook(_deYaml);
+
+      // One SteeringInjected event per steering entry, in document order...
+      final contents = [for (final e in run.steeringEvents) e.content];
+      expect(contents, [
+        'Greet in German.',
+        'Cite GDPR for personal data.',
+        // ...plus the response-language directive (FR-005, pinned by U19).
+        "[playbook:pb-de-001] Respond in language 'de'.",
+      ]);
+      // ...and each entry's content is in the transcript as a user message.
+      final userContents = [
+        for (final m in run.result.transcript)
+          if (m.role == 'user') m.content,
+      ];
+      expect(userContents, containsAll(contents));
+    });
+
+    test('A4: playbook tool gating refuses the blocked tool in a mission',
+        () async {
+      final run = await runUnderPlaybook(
+        _deYaml,
+        plannedCalls: [
+          ToolCall(
+              toolName: 'shell',
+              arguments: {'cmd': 'ls'},
+              executionMode: 'sequential'),
+          ToolCall(
+              toolName: 'search',
+              arguments: {'q': 'markets'},
+              executionMode: 'sequential'),
+        ],
+      );
+
+      // The allowlist gate refuses shell with the typed failure...
+      final shellEvent = run.toolEvents
+          .firstWhere((e) => e.toolName == 'shell');
+      expect(shellEvent.ok, isFalse);
+      // ...the refusal lands in the transcript as the tool message...
+      expect(
+        run.result.transcript
+            .where((m) => m.role == 'tool')
+            .map((m) => m.content)
+            .contains('tool not allowed: shell'),
+        isTrue,
+      );
+      // ...the inner dispatcher NEVER saw it...
+      expect(
+        run.dispatcher.calls.map((c) => c.toolName),
+        isNot(contains('shell')),
+      );
+      // ...while the allowlisted search dispatched with its arguments.
+      expect(
+        run.dispatcher.calls.map((c) => c.toolName),
+        contains('search'),
+      );
+      final searchCall = run.dispatcher.calls
+          .firstWhere((c) => c.toolName == 'search');
+      expect(searchCall.arguments, {'q': 'markets'});
+      final searchEvent = run.toolEvents
+          .firstWhere((e) => e.toolName == 'search');
+      expect(searchEvent.ok, isTrue);
+    });
+
+    test('A5: response constraints shape the mission response', () async {
+      final run = await runUnderPlaybook(_deYaml);
+
+      // The language directive is injected as playbook steering...
+      expect(
+        run.steeringEvents.map((e) => e.content),
+        contains("[playbook:pb-de-001] Respond in language 'de'."),
+      );
+      // ...and the 500-char response is capped at maxChars: 120 — exactly
+      // the first 120 characters plus the truncation marker.
+      expect(run.result.summary, hasLength(500));
+      const deMarker =
+          '[playbook:pb-de-001] response truncated at 120 characters';
+      expect(run.constrainedResponse, 'x' * 120 + deMarker);
+    });
+
+    test('A6: three documents, one code path — behavior follows the document (R5#4)',
+        () async {
+      const planned = <ToolCall>[
+        ToolCall(
+            toolName: 'shell',
+            arguments: {'cmd': 'ls'},
+            executionMode: 'sequential'),
+        ToolCall(
+            toolName: 'search',
+            arguments: {'q': 'markets'},
+            executionMode: 'sequential'),
+      ];
+      // The SAME composition, three different documents.
+      final de = await runUnderPlaybook(_deYaml, plannedCalls: planned);
+      final jp = await runUnderPlaybook(_jpYaml, plannedCalls: planned);
+      final fr = await runUnderPlaybook(_frYaml, plannedCalls: planned);
+
+      // Germany: allowlist [search, fetch] — search dispatched, shell
+      // refused; 2 entries + de directive injected; capped at 120.
+      expect(de.dispatcher.calls.map((c) => c.toolName), ['search']);
+      expect(de.steeringEvents, hasLength(3));
+      expect(
+          de.constrainedResponse,
+          'x' * 120 +
+              '[playbook:pb-de-001] response truncated at 120 characters');
+
+      // Japan: blocklist [search] — search REFUSED (the opposite of
+      // Germany on the same code), shell dispatched; 1 entry + jp
+      // directive; capped at 80.
+      expect(jp.dispatcher.calls.map((c) => c.toolName), ['shell']);
+      expect(jp.steeringEvents, hasLength(2));
+      expect(
+          jp.constrainedResponse,
+          'x' * 80 +
+              '[playbook:pb-jp-001] response truncated at 80 characters');
+
+      // France (novel document): allowlist [translate] — both planned
+      // tools refused; no language directive (none declared); capped at 200.
+      expect(fr.dispatcher.calls, isEmpty);
+      expect(fr.steeringEvents, hasLength(1));
+      expect(
+          fr.constrainedResponse,
+          'x' * 200 +
+              '[playbook:pb-fr-001] response truncated at 200 characters');
+
+      // The observable behavior differs per document on every surface —
+      // steering, gating, and response constraints — through one code path.
+      expect(de.steeringEvents.first.content, 'Greet in German.');
+      expect(jp.steeringEvents.first.content, 'Greet in Japanese.');
+      expect(fr.steeringEvents.first.content, 'Answer in French market idiom.');
     });
   });
 }
