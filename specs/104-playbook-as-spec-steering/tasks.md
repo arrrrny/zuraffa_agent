@@ -213,13 +213,13 @@ produce document-specific observable behavior.
 
 ## Phase 7: Gates & Polish
 
-- [ ] T015 Run `/speckit.tdd.verify` → `tdd/verification.md` committed
+- [x] T015 Run `/speckit.tdd.verify` → `tdd/verification.md` committed
   (audits all behaviors incl. [A1]–[A7] coverage; deliberate mutants on the
   highest-risk behaviors).
-- [ ] T016 Gate [A7]: `dart analyze --fatal-infos` — zero findings on changed
+- [x] T016 Gate [A7]: `dart analyze --fatal-infos` — zero findings on changed
   files (constitution X); pre-existing baseline findings (3, unrelated
   files) flagged, not touched.
-- [ ] T017 Gate [A7]: full `dart test` green — baseline 1163 passed + new
+- [x] T017 Gate [A7]: full `dart test` green — baseline 1163 passed + new
   tests; purity gate: no `dart:io` imports in new files.
 - [ ] T018 Commit spec-kit artifacts (spec.md, plan.md, tasks.md,
   tdd/test-list.md, tdd/verification.md) per the repo's `spec(104):` /
@@ -289,16 +289,16 @@ loads against, even before the engine applies it.
 
 *Verdict was FAIL — the feature is not done until finding 1 is cleared.*
 
-- [ ] T019 [P] Re-establish red-first evidence for [U17]/[U26]/[U27]/[U30]
+- [x] T019 [P] Re-establish red-first evidence for [U17]/[U26]/[U27]/[U30]
   (HIGH finding 1): for each behavior, revert the behavior in the
   implementation, run the existing test and record the verbatim red, restore
   exactly, re-run green — recorded as remediation cycles in
   `tdd/cycle-log.md`. Proves each test fails against absent behavior (the
   write-order history cannot change; the red evidence can).
-- [ ] T020 [P] Pin the at-limit truncation boundary at the acceptance level
+- [x] T020 [P] Pin the at-limit truncation boundary at the acceptance level
   (MED finding 2): extend A5 with a mission whose final response is exactly
   `maxChars` characters and assert it passes through unconstrained — the
   audit's off-by-one mutant escaped A5 (U28 caught it).
-- [ ] T021 Re-run `/speckit.tdd.verify` after T019/T020 — the final audit
+- [x] T021 Re-run `/speckit.tdd.verify` after T019/T020 — the final audit
   must show zero TEST_AFTER classifications and zero HIGH findings before
   the PR.

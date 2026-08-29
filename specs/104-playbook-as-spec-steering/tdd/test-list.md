@@ -6,7 +6,7 @@ loop: outside-in # new feature: acceptance tests staged red before the runtime u
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 6 # SC-001..SC-006 in spec.md
 planned_at: 9d0b341
-updated_at: ff0fc90
+updated_at: a354c15
 suite_baseline: green # 1163 passed / 2 skipped at 9d0b341 (master), ~49s
 ---
 
@@ -23,7 +23,7 @@ end to end through its real entry point.
 | A4  | The playbook's tool gate refuses/allows dispatch per its mode through a running mission: a refused tool yields `ToolCallCompleted(ok: false)` and the typed `tool not allowed: <name>` error in the transcript; an allowed tool dispatches | SC-003, US3, FR-004 | example | DONE | `…::A4: playbook tool gating refuses the blocked tool in a mission` |
 | A5  | Response constraints shape the response end to end: the `language` directive is injected as playbook steering and an over-long final response is capped to its first `maxChars` characters plus the truncation marker | SC-004, US4, FR-005 | example | DONE | `…::A5: response constraints shape the mission response` |
 | A6  | Three different playbook documents (Germany, Japan, and a third novel one) driven through the IDENTICAL engine code produce document-specific observable behavior — different steering emitted, different tools refused, different constraints — with zero code change between runs | SC-005, US5, FR-006 (R5#4) | example | DONE | `…::A6: three documents, one code path — behavior follows the document (R5#4)` |
-| A7  | Gates: `dart analyze --fatal-infos` zero findings on the changed files; full `dart test` green (baseline 1163/2 + new); purity gate — no `dart:io` imports in the new files | SC-006, FR-008 | gate | PENDING | gates at branch HEAD (counts recorded in `tdd/verification.md`) |
+| A7  | Gates: `dart analyze --fatal-infos` zero findings on the changed files; full `dart test` green (baseline 1163/2 + new); purity gate — no `dart:io` imports in the new files | SC-006, FR-008 | gate | DONE | gates at branch HEAD (counts recorded in `tdd/verification.md`) |
 
 ## Inner loop: unit behaviors
 
