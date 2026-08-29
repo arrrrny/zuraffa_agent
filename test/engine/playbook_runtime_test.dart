@@ -636,6 +636,7 @@ void main() {
   Future<RunObservation> runUnderPlaybook(
     String yamlDocument, {
     List<ToolCall> plannedCalls = const [],
+    int finalResponseLength = 500,
   }) async {
     final playbook = PlaybookLoader().loadYaml(yamlDocument);
     final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
@@ -651,7 +652,7 @@ void main() {
         loop10,
         ScriptedLlmClient(completions: [
           completionOf('need tools', finish: 'tool_calls'),
-          completionOf('x' * 500),
+          completionOf('x' * finalResponseLength),
         ]),
       ),
       toolDispatcher: runtime.gateDispatcher(inner),
@@ -758,6 +759,14 @@ void main() {
       const deMarker =
           '[playbook:pb-de-001] response truncated at 120 characters';
       expect(run.constrainedResponse, 'x' * 120 + deMarker);
+
+      // At the limit: a response of exactly maxChars characters passes
+      // through unconstrained (remediation T020 — the audit's off-by-one
+      // mutant escaped this acceptance test; U28 caught it at unit level).
+      final atLimit =
+          await runUnderPlaybook(_deYaml, finalResponseLength: 120);
+      expect(atLimit.result.summary, hasLength(120));
+      expect(atLimit.constrainedResponse, 'x' * 120);
     });
 
     test('A6: three documents, one code path — behavior follows the document (R5#4)',
