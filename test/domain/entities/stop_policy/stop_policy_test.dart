@@ -59,5 +59,67 @@ void main() {
       );
       expect(a, isNot(equals(other)));
     });
+
+    test('U4: inequality is detected per field (equality is not silently dropped)', () {
+      // Each pair differs in exactly one field; if `operator ==` ever stops
+      // comparing that field, the corresponding `isNot(equals(...))` fails.
+      const base = StopPolicy(
+        id: 'p1',
+        maxTurns: 10,
+        wallClockTimeout: Duration(seconds: 30),
+        repetitionThreshold: 3,
+        enabled: true,
+      );
+      expect(
+        base,
+        isNot(equals(const StopPolicy(
+          id: 'p2',
+          maxTurns: 10,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 3,
+          enabled: true,
+        ))),
+      );
+      expect(
+        base,
+        isNot(equals(const StopPolicy(
+          id: 'p1',
+          maxTurns: 11,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 3,
+          enabled: true,
+        ))),
+      );
+      expect(
+        base,
+        isNot(equals(const StopPolicy(
+          id: 'p1',
+          maxTurns: 10,
+          wallClockTimeout: Duration(seconds: 31),
+          repetitionThreshold: 3,
+          enabled: true,
+        ))),
+      );
+      expect(
+        base,
+        isNot(equals(const StopPolicy(
+          id: 'p1',
+          maxTurns: 10,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 4,
+          enabled: true,
+        ))),
+      );
+      expect(
+        base,
+        isNot(equals(const StopPolicy(
+          id: 'p1',
+          maxTurns: 10,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 3,
+          enabled: false,
+        ))),
+      );
+    });
   });
 }

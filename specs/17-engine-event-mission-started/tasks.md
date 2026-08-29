@@ -7,4 +7,4 @@
 
 ## Phase N: TDD remediation
 
-- R1 Make `MissionStarted.operator ==` compare `missionId` (it currently omits it while `hashCode`/`toString` include it), restoring the `==`/`hashCode` equality contract. Proof: `dart test test/engine/events/engine_event_test.dart --name "MissionStarted equality"` passes and the full `dart analyze --fatal-infos && dart test` is green. (HIGH finding #1 in tdd/verification.md — feature is not done until this is cleared.)
+- R1 RETRACTED (2026-08-29, false positive). The prior claim that `MissionStarted.operator ==` omits `missionId` is false at HEAD — the field *is* compared (`mission_started.dart:18`). It was graded against an uncommitted WIP regression that has since been reverted. No source change required; the suite is green. See `tdd/verification.md` correction note.

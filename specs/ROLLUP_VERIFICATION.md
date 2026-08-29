@@ -94,5 +94,12 @@ These are recorded in each spec's `verification.md` with `file:line` and a remed
 
 ## Per-spec verdicts
 
-See the `verdict:` line in each `specs/<dir>/tdd/verification.md`. Summary counts:
+See the `verdict:` line in each `specs/<dir>/tdd/verification.md`. Summary counts (as of 2026-08-29, before corrections below):
 45 FAIL / 16 PASS / 3 PASS_WITH_FINDINGS / 13 PASS_WITH_GAPS.
+
+## Corrections (2026-08-29)
+
+- **Specs 16 / 17 false positive retracted.** The earlier audit reported these FAIL on a live `missionId` equality defect and a red suite. That was graded against an *uncommitted* WIP regression (a `missionId` line deleted from `operator ==`) that was never in HEAD and has been reverted. At the committed HEAD, `MissionStarted`/`MissionCompleted.operator ==` *do* compare `missionId`, `hashCode`/`toString` include it, and the suite is green (1073 passed / 2 skipped). Both specs are re-graded **PASS_WITH_GAPS** (the only gap is squashed-history test-first evidence). The R1 remediation tasks are retracted — no source change required.
+- **Two R6 surviving mutants cleared (real fixes).** `013-event-bus` A3 and `013-stop-policy` U2 had vacuous assertions that let a mutant survive. The source was already correct; the tests were strengthened (A3 now pins the caller's args round-trip + a non-default `approved` flag; U4 pins per-field inequality across all five fields incl. `enabled`). Both mutants were re-applied and now fail as expected, then source restored to green. Remediation tasks T1 (event-bus) and T6 (stop-policy) are marked cleared. These two specs remain FAIL on the test-after discipline, but their genuine HIGH vacuous-assertion findings are resolved.
+
+Net effect on the rollup: specs 16/17 move FAIL → PASS_WITH_GAPS; the genuine surviving-mutant count drops from 2 to 0.

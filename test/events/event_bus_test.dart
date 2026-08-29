@@ -22,15 +22,32 @@ void main() {
       expect(order, ['s1:x', 's2:x', 's3:x']);
     });
 
-    test('A3: a registered BeforeToolCallRequest handler response is used', () async {
-      final bus = EventBus();
-      bus.registerHandler<BeforeToolCallRequest, BeforeToolCallResponse>((req) async {
+    test('A3: a registered BeforeToolCallRequest handler receives the caller\'s args and its response is used', () async {
+      // Case 1: the handler echoes the caller's payload and appends its own
+      // decision. The assertion pins both directions of the round-trip: the
+      // caller's `url` reached the handler, and the handler's merged map came
+      // back. A bus that silently dropped the caller's event would fail this.
+      final approveBus = EventBus();
+      approveBus.registerHandler<BeforeToolCallRequest, BeforeToolCallResponse>((req) async {
         return BeforeToolCallResponse({...req.args, 'approved': true});
       });
-      final resp = await bus.request<BeforeToolCallResponse>(
+      final approved = await approveBus.request<BeforeToolCallResponse>(
         BeforeToolCallRequest('web', {'url': 'x'}),
       );
-      expect(resp.approved, isTrue);
+      expect(approved.args, equals({'url': 'x', 'approved': true}));
+      expect(approved.approved, isTrue);
+
+      // Case 2: the `approved` flag is the handler's value, not a free default —
+      // a declining handler must be reflected in the response.
+      final denyBus = EventBus();
+      denyBus.registerHandler<BeforeToolCallRequest, BeforeToolCallResponse>((req) async {
+        return BeforeToolCallResponse({...req.args}, approved: false);
+      });
+      final denied = await denyBus.request<BeforeToolCallResponse>(
+        BeforeToolCallRequest('web', {'url': 'y'}),
+      );
+      expect(denied.args, equals({'url': 'y'}));
+      expect(denied.approved, isFalse);
     });
 
     test('A4: AgentController.publish delivers to all listeners like EventBus', () {
