@@ -236,17 +236,25 @@ class LlmHttpException implements Exception {
   final String body;
   final Map<String, String> headers;
 
+  /// How many attempts were made when this error surfaced (spec 084
+  /// FR-005). Defaults to 1 — single-shot constructions keep their
+  /// meaning; the retry loop sets it to the attempt count on exhaustion
+  /// so a blip (1) and an outage (maxAttempts) are distinguishable.
+  final int attempts;
+
   const LlmHttpException({
     required this.provider,
     required this.statusCode,
     required this.body,
     this.headers = const {},
+    this.attempts = 1,
   });
 
   @override
-  @override
-  String toString() =>
-      'LlmHttpException: $provider returned HTTP $statusCode: $body';
+  String toString() => attempts > 1
+      ? 'LlmHttpException: $provider returned HTTP $statusCode: $body '
+          '(after $attempts attempts)'
+      : 'LlmHttpException: $provider returned HTTP $statusCode: $body';
 }
 
 /// Connection-level failure (no HTTP status arrived) — retryable class.
@@ -254,8 +262,20 @@ class LlmNetworkException implements Exception {
   final String provider;
   final Object cause;
 
-  const LlmNetworkException({required this.provider, required this.cause});
+  /// How many attempts were made when this error surfaced (spec 084
+  /// FR-005). Defaults to 1 outside the retry loop; the retry loop sets
+  /// it on the terminal throw so exhaustion is visible without counting
+  /// logs.
+  final int attempts;
+
+  const LlmNetworkException({
+    required this.provider,
+    required this.cause,
+    this.attempts = 1,
+  });
 
   @override
-  String toString() => 'LlmNetworkException: $provider: $cause';
+  String toString() => attempts > 1
+      ? 'LlmNetworkException: $provider: $cause (after $attempts attempts)'
+      : 'LlmNetworkException: $provider: $cause';
 }
