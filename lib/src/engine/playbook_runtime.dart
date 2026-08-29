@@ -99,8 +99,20 @@ class PlaybookRuntime {
         gate: _playbook.toolGate,
       );
 
+  /// Applies the playbook's mechanical response constraint to a final
+  /// response (FR-005): with `maxChars` set, a response longer than the cap
+  /// becomes exactly its first `maxChars` characters followed by a
+  /// truncation marker naming the playbook —
+  /// `[playbook:<id>] response truncated at <maxChars> characters`. A
+  /// response at or under the cap (or a playbook with no constraint)
+  /// passes through unchanged.
   String constrainResponse(String content) {
-    throw UnimplementedError();
+    final maxChars = _playbook.response.maxChars;
+    if (maxChars == null || content.length <= maxChars) {
+      return content;
+    }
+    return '${content.substring(0, maxChars)}'
+        '[playbook:${_playbook.id}] response truncated at $maxChars characters';
   }
 }
 

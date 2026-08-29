@@ -433,4 +433,58 @@ void main() {
       expect(spy.riskCalls, 1);
     });
   });
+
+  group('spec 104 — PlaybookRuntime response', () {
+    test('U28: maxChars truncation boundaries', () {
+      PlaybookRuntime runtimeWith(int? maxChars) => PlaybookRuntime(
+            playbook: Playbook(
+              id: 'de-001',
+              name: 'x',
+              description: 'd',
+              response: PlaybookResponse(maxChars: maxChars),
+            ),
+            clock: fakeClock,
+          );
+      const marker = '[playbook:de-001] response truncated at 5 characters';
+
+      // No cap: unchanged.
+      expect(runtimeWith(null).constrainResponse('x' * 500), 'x' * 500);
+      // At the limit: unchanged (boundary — exactly maxChars passes).
+      expect(runtimeWith(5).constrainResponse('abcde'), 'abcde');
+      // One over the limit: truncated (boundary — the other side).
+      expect(runtimeWith(5).constrainResponse('abcdef'), 'abcde$marker');
+      // Far over: exactly the first maxChars characters plus the marker.
+      expect(runtimeWith(5).constrainResponse('x' * 500), 'xxxxx$marker');
+    });
+
+    test('U29: no constraints means no change', () {
+      final runtime = PlaybookRuntime(
+        playbook: Playbook(id: 'de-001', name: 'x', description: 'd'),
+        clock: fakeClock,
+      );
+
+      expect(runtime.constrainResponse('short'), 'short');
+      expect(runtime.constrainResponse('x' * 10000), 'x' * 10000);
+    });
+
+    test('U30: steering timestamps come from the injected clock', () {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        steering: const [PlaybookSteering(content: 'First.')],
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+
+      final first = runtime.steeringMessages().single.injectedAt;
+      expect(first, DateTime.utc(2026, 1, 1));
+
+      // The clock is READ at generation time — advancing it advances the
+      // stamp (not captured once at construction).
+      fakeNow = DateTime.utc(2026, 1, 2);
+      final second = runtime.steeringMessages().single.injectedAt;
+      expect(second, DateTime.utc(2026, 1, 2));
+      expect(second.isAfter(first), isTrue);
+    });
+  });
 }
