@@ -81,6 +81,19 @@ abstract class McpClient {
   /// re-surface into the engine ToolRegistry.
   Stream<void> get onToolsChanged;
 
+  /// Stream that fires once after each successful recovery from a
+  /// transport drop (the reconnecting → connected transition inside the
+  /// client's send-retry loop). Never fires on the initial `connect()`.
+  ///
+  /// Consumers use it to react to continuity breaks — above all
+  /// [ToolListingCache], which invalidates its entry because the severed
+  /// transport may have missed a server-side tools-changed notification.
+  ///
+  /// The default implementation never emits: implementors without a
+  /// droppable transport (e.g. [InProcMcpClient]) inherit it, while the
+  /// wire-backed clients (SSE, stdio) override it with a real controller.
+  Stream<void> get onReconnected => const Stream.empty();
+
   /// Current client state — observed by the engine for diagnostics
   /// and by [McpToolAdapter] to skip registry mutations while the
   /// client is [McpClientState.reconnecting].
