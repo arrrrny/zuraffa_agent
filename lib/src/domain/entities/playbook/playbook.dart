@@ -1,0 +1,230 @@
+// HAND-CURATED — DO NOT REGENERATE VIA zfa.
+// See issue arrrrny/zuraffa_agent#104 (R5#4 — playbook-as-spec behavior
+// steering).
+//
+// The Playbook value object — the playbook-as-spec schema from issue #104's
+// proposed scope: "Define the playbook-as-spec schema (steering messages,
+// tool gating, response constraints)". A playbook is a declarative,
+// spec-shaped document (spec 005 US3: "ZikZak per-country playbooks become
+// instances of agent specs — one mechanism, two uses") that the engine loads
+// and applies as the active steering/behavior context — no code change per
+// playbook (FR-006).
+//
+// Pattern: plain Dart value object (no @Zorphy annotation) so the file
+// compiles without running build_runner — the documented constitution IX
+// exemption precedent: SteeringMessage (spec 081), SubAgentSpec (036),
+// MissionRunner (069), SubAgentDispatchService (070), AgentSession (PR #50),
+// ToolResult (PR #49), StopPolicy (PR #47).
+//
+// Validation: the aggregate constructor is the single source of truth for
+// value invariants (spec 104 FR-001/FR-002) — identity fields non-blank,
+// steering entries non-blank, gate lists blank-free and mode-consistent,
+// response constraints positive. Sub-values are pure const data; the
+// constructor validates the whole aggregate and throws ArgumentError.value
+// naming the offending field (house pattern: SteeringMessage.fromJson,
+// SubAgentSpec's constructor).
+
+/// Element-wise string-list equality (private helper for the value
+/// objects in this file — same pattern as SteeringQueue's `_listEq`).
+bool _listEq(List<String> a, List<String> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+/// Gate mode of a playbook's tool-gating section (FR-001).
+///
+/// [off] gates nothing — every tool call delegates. [allowlist] admits only
+/// the tools in `allowed` (an empty `allowed` list locks down every tool).
+/// [blocklist] refuses exactly the tools in `blocked`.
+enum PlaybookGateMode { off, allowlist, blocklist }
+
+/// One steering entry of a playbook (FR-001): the text the engine injects
+/// as a [SteeringMessage] when the playbook is applied. Ordered narrative,
+/// not a set — duplicates are preserved verbatim (spec edge case).
+class PlaybookSteering {
+  /// Optional entry id. When present it becomes the injected steering
+  /// message's id; otherwise the runtime derives one
+  /// (`pb-<playbookId>-steer-<index>`).
+  final String? id;
+
+  /// The steering text. Required non-empty (validated by the aggregate).
+  final String content;
+
+  const PlaybookSteering({this.id, required this.content});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybookSteering &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          content == other.content);
+
+  @override
+  int get hashCode => Object.hash(id, content);
+
+  @override
+  String toString() =>
+      'PlaybookSteering(id: $id, content: ${content.length > 40 ? '${content.substring(0, 40)}…' : content})';
+}
+
+/// The tool-gating section of a playbook (FR-001 / FR-004).
+///
+/// Pure data — mode/list consistency and blank-free lists are invariants
+/// the aggregate [Playbook] constructor enforces: an `allowlist` gate
+/// carries (possibly empty) `allowed` and an EMPTY `blocked`; a
+/// `blocklist` gate carries (possibly empty) `blocked` and an EMPTY
+/// `allowed`; an `off` gate carries both lists empty. A non-empty
+/// irrelevant list is loader drift and is rejected.
+class PlaybookToolGate {
+  final PlaybookGateMode mode;
+  final List<String> allowed;
+  final List<String> blocked;
+
+  const PlaybookToolGate({
+    this.mode = PlaybookGateMode.off,
+    this.allowed = const [],
+    this.blocked = const [],
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybookToolGate &&
+          runtimeType == other.runtimeType &&
+          mode == other.mode &&
+          _listEq(allowed, other.allowed) &&
+          _listEq(blocked, other.blocked));
+
+  @override
+  int get hashCode => Object.hash(mode, Object.hashAll(allowed), Object.hashAll(blocked));
+
+  @override
+  String toString() =>
+      'PlaybookToolGate(mode: ${mode.name}, allowed: ${allowed.length}, blocked: ${blocked.length})';
+}
+
+/// The response-constraint section of a playbook (FR-001 / FR-005).
+///
+/// [language] becomes a playbook-attributable steering directive; [maxChars]
+/// mechanically caps the final response (first `maxChars` characters plus a
+/// truncation marker naming the playbook).
+class PlaybookResponse {
+  /// Response language directive (e.g. `'de'`). Null = no directive.
+  final String? language;
+
+  /// Maximum characters of the final response. Null = unconstrained.
+  final int? maxChars;
+
+  const PlaybookResponse({this.language, this.maxChars});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybookResponse &&
+          runtimeType == other.runtimeType &&
+          language == other.language &&
+          maxChars == other.maxChars);
+
+  @override
+  int get hashCode => Object.hash(language, maxChars);
+
+  @override
+  String toString() => 'PlaybookResponse(language: $language, maxChars: $maxChars)';
+}
+
+/// The playbook-as-spec value object (FR-001).
+///
+/// A declarative, spec-shaped document: identity ([id], [name],
+/// [description], optional [domain]/[country] metadata) plus the three
+/// behavior sections the engine applies at runtime — [steering] (messages
+/// injected through the SteeringQueue), [toolGate] (wraps the mission's
+/// ToolDispatcher), and [response] (language directive + mechanical length
+/// cap). Loaded from YAML/JSON by `PlaybookLoader`; applied by
+/// `PlaybookRuntime`. Adding a playbook requires only a new document —
+/// no engine file branches on playbook identity or content (FR-006).
+class Playbook {
+  /// Unique playbook id (e.g. `'pb-de-001'`). Attributed into steering
+  /// message ids and the response truncation marker so observers can trace
+  /// behavior back to the loaded document.
+  final String id;
+
+  /// Short playbook name (e.g. `'germany'`).
+  final String name;
+
+  /// Human-readable description of what the playbook steers.
+  final String description;
+
+  /// Optional domain tag (e.g. `'country'`) — a playbook is domain-agnostic
+  /// by design; this is preserved metadata, not a behavioral switch.
+  final String? domain;
+
+  /// Optional country code (e.g. `'DE'`) for country playbooks. Preserved
+  /// metadata, not a behavioral switch.
+  final String? country;
+
+  /// Ordered steering entries, document order preserved (duplicates
+  /// included). Defensively copied into an unmodifiable view.
+  final List<PlaybookSteering> steering;
+
+  /// The tool gate. Defaults to `off` (no gating).
+  final PlaybookToolGate toolGate;
+
+  /// The response constraints. Defaults to none.
+  final PlaybookResponse response;
+
+  Playbook({
+    required this.id,
+    required this.name,
+    required this.description,
+    this.domain,
+    this.country,
+    List<PlaybookSteering> steering = const [],
+    this.toolGate = const PlaybookToolGate(mode: PlaybookGateMode.off),
+    this.response = const PlaybookResponse(),
+  }) : steering = List.unmodifiable(steering);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Playbook &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          description == other.description &&
+          domain == other.domain &&
+          country == other.country &&
+          _steeringEq(steering, other.steering) &&
+          toolGate == other.toolGate &&
+          response == other.response);
+
+  static bool _steeringEq(List<PlaybookSteering> a, List<PlaybookSteering> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        name,
+        description,
+        domain,
+        country,
+        Object.hashAll(steering),
+        toolGate,
+        response,
+      );
+
+  @override
+  String toString() =>
+      'Playbook(id: $id, name: $name, domain: $domain, country: $country, '
+      'steering: ${steering.length}, toolGate: $toolGate, response: $response)';
+}
