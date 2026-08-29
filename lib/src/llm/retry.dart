@@ -45,8 +45,13 @@ Future<LlmHttpResponse> sendWithRetry({
     final LlmHttpResponse response;
     try {
       response = await transport.send(request);
-    } on LlmNetworkException {
-      if (attempt >= config.maxAttempts) rethrow;
+    } on LlmNetworkException catch (e) {
+      if (attempt >= config.maxAttempts) {
+        // Spec 084 FR-005: terminal, attempt-annotated — same type and
+        // cause as the underlying failure, plus the count.
+        throw LlmNetworkException(
+            provider: provider, cause: e.cause, attempts: attempt);
+      }
       await clock.sleep(_delayFor(attempt, config, jitter));
       continue;
     }
@@ -58,6 +63,7 @@ Future<LlmHttpResponse> sendWithRetry({
         statusCode: response.statusCode,
         body: response.body,
         headers: response.headers,
+        attempts: attempt,
       );
     }
     await clock.sleep(
@@ -67,14 +73,15 @@ Future<LlmHttpResponse> sendWithRetry({
 }
 
 /// Parses a `Retry-After` header (seconds form). A server directive is
-/// honored as-is: it is NOT clamped by [RetryConfig.maxDelayMs].
+/// honored as-is (spec 084 FR-003): it is NOT clamped by
+/// [RetryConfig.maxDelayMs] nor by any fixed ceiling — the previous
+/// 3600-second cap silently disobeyed long directives.
 int? _retryAfterMs(Map<String, String> headers) {
   final raw = headers['retry-after'] ?? headers['Retry-After'];
   if (raw == null) return null;
   final seconds = int.tryParse(raw.trim());
   if (seconds == null) return null;
   if (seconds < 0) return 0;
-  if (seconds > 3600) return 3600000;
   return seconds * 1000;
 }
 
@@ -106,8 +113,12 @@ Future<LlmStreamResponse> openStreamWithRetry({
     final LlmStreamResponse response;
     try {
       response = await transport.openStream(request);
-    } on LlmNetworkException {
-      if (attempt >= config.maxAttempts) rethrow;
+    } on LlmNetworkException catch (e) {
+      if (attempt >= config.maxAttempts) {
+        // Spec 084 FR-005: terminal, attempt-annotated (stream parity).
+        throw LlmNetworkException(
+            provider: provider, cause: e.cause, attempts: attempt);
+      }
       await clock.sleep(_delayFor(attempt, config, jitter));
       continue;
     }
@@ -119,6 +130,7 @@ Future<LlmStreamResponse> openStreamWithRetry({
         statusCode: response.statusCode,
         body: '',
         headers: response.headers,
+        attempts: attempt,
       );
     }
     await clock.sleep(
