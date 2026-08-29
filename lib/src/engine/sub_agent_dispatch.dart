@@ -16,8 +16,11 @@
 // Not exported from lib/zuraffa_agent.dart — consistent with the sibling
 // engine runtimes (mission_runner.dart, tool_dispatcher.dart).
 
+import '../artifact/artifact_service.dart';
+import '../artifact/in_memory_artifact_store.dart';
 import '../data/providers/engine_loop/engine_loop_executor.dart';
 import '../data/providers/llm_client/llm_client_provider.dart';
+import '../data/providers/oversized_result_policy/oversized_result_policy_provider.dart';
 import '../domain/entities/agent_tool/agent_tool.dart' show RiskTier;
 import '../domain/entities/engine_loop/engine_loop.dart';
 import '../domain/entities/llm_client/chat_message.dart';
@@ -26,8 +29,10 @@ import '../domain/entities/sub_agent_context/sub_agent_context.dart';
 import '../domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import '../domain/entities/sub_agent_spec/sub_agent_spec.dart';
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import '../domain/services/oversized_result_policy_service.dart';
 import 'events/engine_event.dart';
 import 'mission_runner.dart';
+import 'oversized_result_policy_dispatcher.dart';
 import 'tool_dispatcher.dart';
 
 /// Decorator enforcing a tool allowlist at the dispatch boundary.
@@ -176,14 +181,26 @@ class SubAgentDispatchService {
   SubAgentDispatchService({
     required ToolDispatcher toolDispatcher,
     required LlmClientProvider llmClient,
+    ArtifactService? artifactService,
+    OversizedResultPolicyService? policyService,
     int fallbackMaxTurns = 10,
   })  : _toolDispatcher = toolDispatcher,
         _llmClient = llmClient,
-        _fallbackMaxTurns = fallbackMaxTurns;
+        _fallbackMaxTurns = fallbackMaxTurns,
+        artifactService = artifactService ?? InMemoryArtifactStore(),
+        policyService = policyService ?? OversizedResultPolicyProvider();
 
   final ToolDispatcher _toolDispatcher;
   final LlmClientProvider _llmClient;
   final int _fallbackMaxTurns;
+
+  /// Sink for oversized tool results; defaults to an in-memory store. Wired into
+  /// the child mission's dispatcher so large tool bodies are summarized + ref'd
+  /// before reaching model context (spec-003 §4.3, FR-005 / R3#3 / SC-003).
+  final ArtifactService artifactService;
+
+  /// Active oversized-result policy; defaults to the shipped provider.
+  final OversizedResultPolicyService policyService;
 
   /// Dispatches [instance] (of [spec]) with [mission] and returns the
   /// result-only summary of the child run.
@@ -244,9 +261,13 @@ class SubAgentDispatchService {
     );
     final runner = MissionRunner(
       executor: EngineLoopExecutor(childLoop, _llmClient),
-      toolDispatcher: AllowlistToolDispatcher(
-        inner: _toolDispatcher,
-        allowlist: spec.tools.toSet(),
+      toolDispatcher: OversizedResultPolicyDispatcher(
+        inner: AllowlistToolDispatcher(
+          inner: _toolDispatcher,
+          allowlist: spec.tools.toSet(),
+        ),
+        policyService: policyService,
+        artifactService: artifactService,
       ),
       stopPolicy: childPolicy,
       onEvent: onEvent ?? (_) {},

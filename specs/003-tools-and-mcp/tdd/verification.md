@@ -88,6 +88,16 @@ tracing to nothing: none — but four `traces` values point at tests that do not
 the behavior they claim (F1–F4), which is the rubric's "list is lying about coverage"
 condition.
 
+## Post-audit correction (2026-08-29)
+
+Finding #8 (A9 mis-cited) is now resolved. The oversized-result discipline is no
+longer only an entity/value-object assertion — it is exercised end-to-end through
+the real mission loop:
+
+- New `OversizedResultPolicyDispatcher` (a `ToolDispatcher` decorator, `lib/src/engine/oversized_result_policy_dispatcher.dart`) enforces the active `OversizedResultPolicy` on every dispatched result; `SubAgentDispatchService` now wraps its child-mission dispatcher with it (`lib/src/engine/sub_agent_dispatch.dart`), so large tool bodies are summarized + artifactRef'd before reaching model context (spec-003 §4.3, FR-005 / SC-003 / R3#3).
+- `test/engine/oversized_result_policy_dispatcher_test.dart` covers both the per-result converter (`enforceOversizedResultPolicyOnDispatch`) and an integration case that runs a 2 MB tool result through `MissionRunner` and asserts the model-facing transcript carries the summary only (never the full 2 MB body) with the artifactRef recorded, and the full body is retrievable from the store.
+- `tdd/test-list.md` A9 trace and `tasks.md` A9 are updated accordingly; A9 remains DONE with real end-to-end coverage.
+
 ## What was not audited
 
 - The full suite was not re-run end to end; only A6's mutant test was executed (re-run

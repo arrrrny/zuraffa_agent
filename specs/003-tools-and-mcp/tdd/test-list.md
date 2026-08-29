@@ -33,7 +33,7 @@ entry points and asserted.
 | A6  | An SSE connection dropping mid-mission reconnects (backoff) and resumes tool listing/calls                                | FR-004 | example | DONE    | test/mcp/mcp_003_a6_reconnect_test.dart :: "A6: a mid-mission SSE drop reconnects with backoff and resumes both tool listing and tool calls" |
 | A7  | An expiring token rotated by the auth callback keeps calls flowing without a manager rebuild                              | FR-004 | example | DONE    | test/data/providers/mcp_transport/mcp_transport_provider_test.dart ||
 | A8  | In-proc tools called in a tight loop cross no serialization boundary (pass-by-reference with defensive arg copy)           | FR-004 | example | DONE    | test/data/providers/tool_dispatch_mode/tool_dispatch_mode_provider_test.dart ||
-| A9  | An oversized tool result returned to the loop shows the model summary + artifactRef only                                   | FR-005 | example | DONE    | test/data/providers/oversized_result_policy/oversized_result_policy_provider_test.dart ||
+| A9  | An oversized tool result returned to the loop shows the model summary + artifactRef only                                   | FR-005 | example | DONE    | test/engine/oversized_result_policy_dispatcher_test.dart :: "OversizedResultPolicyDispatcher (integration through MissionRunner): a 2 MB tool result reaches the model transcript as a summary only, with artifactRef recorded" |
 
 ## Inner loop: deferred — plan.md absent
 

@@ -16,7 +16,7 @@
 - [ ] [A6] An SSE connection dropping mid-mission reconnects (backoff) and resumes tool listing/calls.
 - [ ] [A7] An expiring token rotated by the auth callback keeps calls flowing without a manager rebuild.
 - [ ] [A8] In-proc tools called in a tight loop cross no serialization boundary (pass-by-reference with defensive arg copy).
-- [ ] [A9] An oversized tool result returned to the loop shows the model summary + artifactRef only.
+- [X] [A9] An oversized tool result returned to the loop shows the model summary + artifactRef only.
 
 ## Phase 2: TDD remediation
 
