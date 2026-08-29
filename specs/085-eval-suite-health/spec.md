@@ -1,80 +1,161 @@
-# Feature Specification: Eval Suite Health & Release Gate
+# Feature Specification: R6: Eval Suite Health & Release Gate — pass@k gating
 
-**Feature Branch**: `085-eval-suite-health`
+**Branch**: `085-eval-suite-health` (off master `29b7fef`) | **Date**: 2026-08-29
 
-**Created**: 2026-08-29
+**Status**: Draft → implemented on this branch
 
-**Status**: Draft
+**Input**: User description: "R6: Eval Suite Health & Release Gate —
+pass@k gating. Per-task unbiased pass@k, suite score, threshold decision
+(>= boundary), and an incomplete-run veto so a missing task fails the
+gate. Parent epic: R6 eval harness (issue #7). Scope: compute an unbiased
+per-task pass@k, aggregate a suite score, decide pass/fail against a
+configurable threshold (>= boundary), and veto the release if any task run
+is incomplete (missing task fails the gate). Pure, deterministic
+computation; define the aggregation and edge cases (zero tasks,
+all-incomplete)."
 
-**Input**: User description: "Well-defined spec for the Eval Suite release gate — per-task pass@k scoring, suite score, threshold decision, and incomplete-run veto — that is not yet covered by an existing spec (R6)."
+## Summary
 
-## User Scenarios & Testing *(mandatory)*
+`SuiteGate` (lib/src/eval/suite_gate.dart, spec 006 FR-002/AC-2) already
+computes the unbiased per-task pass@k (Chen et al., via the `PassAtK`
+value object), the suite score (mean over declared tasks), the `>=`
+threshold decision, and vetoes a gate when a declared task has no samples
+entry — all pinned by `test/eval/suite_gate_006_a4_test.dart`. What the
+R6 contract (issue #96) asks for that the tree does not yet satisfy:
 
-### User Story 1 - Turn sample counts into a CI verdict (Priority: P1)
+1. **A zero-task suite is fail-open.** With no declared tasks the score is
+   0.0 and no task is "missing", so `passed = 0.0 >= threshold` — at
+   `gateThreshold: 0.0` an empty suite SHIPS. A gate over nothing is not
+   evidence; the contract must define the edge: zero tasks → fail, closed.
+2. **A present-but-empty run crashes the gate.** `TaskSamples(n: 0, c: 0)`
+   (task listed, harness recorded zero runs — a crashed worker, a
+   misconfigured filter) reaches `PassAtK.compute` with `k = 0` and throws
+   `ArgumentError`. An incomplete run must be a veto, not a crash: the
+   task scores 0.0, is named as incomplete, and fails the gate.
+3. **The veto is not machine-readable.** Whether the gate was vetoed (and
+   by which tasks) lives only in the human-readable `report` string.
+   Fallback/CI logic must not parse prose: `GateDecision` needs an
+   `incomplete` flag and the `incompleteTaskIds` that triggered it.
 
-A suite declares tasks and a `gateThreshold`. Given per-task sample counts (`n` runs, `c` correct), the gate computes the unbiased pass@k per task (Chen et al. estimator), the suite score (mean of per-task pass@k), and a pass/fail decision. Missing a task is a gate failure, never a silent skip.
+This spec closes all three and pins the seed's remaining edges
+(all-incomplete, extra sample ids, the `>=` boundary, unbiased per-task
+values) alongside the existing 006-A4 tests, which stay unmodified.
 
-**Why this priority**: This is the release gate that decides whether an eval suite is green; a wrong or lenient decision ships broken agents.
+**Out of scope**: how samples are produced (the harness/runner — specs
+006/061), pass@k estimator changes (spec 037 owns the formula), suite
+configuration schema, report formatting beyond the new reason lines.
 
-**Independent Test**: Can be fully tested by constructing a `Suite` and a `samples` map and asserting the `GateDecision` score, per-task rows, and `passed` flag.
+## Files
 
-**Acceptance Scenarios**:
+- `lib/src/eval/suite_gate.dart` — EDIT: `GateDecision` gains `incomplete`
+  + `incompleteTaskIds`; `evaluate` treats zero-run tasks as incomplete
+  (no crash), fails closed on zero tasks, and records veto reasons.
+- `test/eval/suite_gate_085_test.dart` — NEW: the RED behaviors
+  (zero-task fail-closed, zero-run veto, machine-readable veto) and the
+  pins (all-incomplete, `>=` boundary, unbiased values, extra ids
+  ignored).
+- `specs/085-eval-suite-health/` — this artifact set.
 
-1. **Given** a suite with `gateThreshold=0.8` and a task with `n=4, c=4` (k=1), **When** evaluated, **Then** that task's pass@k is 1.0, the suite score is 1.0, and `passed == true`.
-2. **Given** a suite where one declared task has no entry in `samples`, **When** evaluated, **Then** that task scores 0.0, is reported as "no samples recorded", and the gate `passed == false` (incomplete veto).
+## User scenarios
 
----
+### US1 — Gate a suite with confidence in the verdict (P1)
 
-### User Story 2 - Name the regressing task in a red run (Priority: P2)
+As a release engineer, the gate's verdict is trustworthy in the corners:
+an empty suite fails (nothing was gated — that is not a pass), a task with
+zero recorded runs fails the gate as incomplete rather than crashing or
+being skipped, and every declared task contributes to the score.
 
-When the gate fails, the decision's report must enumerate every task with its pass@k and sample counts so CI output pinpoints the regression instead of just printing "FAIL".
+**Why this priority**: these are exactly the shapes a broken CI produces
+(empty glob, crashed worker) — the moments the gate must NOT say yes.
 
-**Why this priority**: A red CI run that names the culprit task is debuggable; a bare failure is not.
+**Independent test**: zero-task suite at threshold 0.0 → `passed == false`,
+`exitCode == 1`; `TaskSamples(n: 0)` → no throw, task scores 0.0, gate
+fails via veto.
 
-**Independent Test**: Can be fully tested by asserting `breakdown` has one row per declared task in suite order, each with `taskId`, `passAtK`, `passed`, and a human-readable `detail`.
+### US2 — Read the veto programmatically (P1)
 
-**Acceptance Scenarios**:
+As CI/fallback logic, I consume `decision.incomplete` and
+`decision.incompleteTaskIds` to distinguish "scored below threshold" from
+"vetoed — evidence missing", without parsing the report string.
 
-1. **Given** a failing suite, **When** the decision is rendered, **Then** `report` lists `FAIL <taskId>: <pass@k> (n=.. c=.. k=..)` for every task in declared order.
-2. **Given** a score exactly equal to `gateThreshold`, **When** evaluated, **Then** `passed == true` (the `≥` boundary ships at threshold).
+**Why this priority**: the veto is the strongest signal (a vetoed gate
+means the number itself is untrustworthy); hiding it in prose forces
+fragile string matching.
 
----
+**Independent test**: mixed suite with one missing and one zero-run task →
+`incomplete == true`, `incompleteTaskIds == [missing, zero-run]` in suite
+order; complete suite → `incomplete == false`, empty list.
 
-### Edge Cases
+### US3 — Trust the arithmetic (P2)
 
-- A task with `k > n` clamps `k` to `n` for the pass@k computation (cannot sample more than drawn).
-- A suite with zero tasks scores 0.0 and fails (an empty suite cannot pass a gate).
-- A missing task vetoes the gate even if the mean of present tasks clears the threshold — skipping the hardest mission must not let the suite pass.
-- `GateDecision.exitCode` is 0 on pass, 1 on fail (the process owner decides what to do with it).
+As an operator, the numbers are the spec's: per-task unbiased pass@k
+(Chen et al.), suite score = mean over DECLARED tasks, threshold decided
+with `>=`, extra sample ids for tasks the suite never declared are
+ignored, all-incomplete suites fail loudly.
 
-## Requirements *(mandatory)*
+**Why this priority**: deterministic, pure arithmetic is what makes the
+gate auditable; the edges are where aggregation bugs hide.
 
-### Functional Requirements
+**Independent test**: known-value task (`n: 10, c: 4, k: 1` → 0.4) in the
+breakdown; score exactly at threshold passes; samples map with an extra
+id does not move the score.
 
-- **FR-001**: `SuiteGate.evaluate` MUST compute per-task pass@k (unbiased estimator) from `TaskSamples(n, c)` using the suite's `k` (clamped to `n`).
-- **FR-002**: The suite score MUST be the mean of per-task pass@k over all declared tasks.
-- **FR-003**: A task absent from `samples` MUST score 0.0 and be reported (`detail: 'no samples recorded'`); an incomplete suite MUST veto the gate (fail), never silently skip the task.
-- **FR-004**: `GateDecision.passed` MUST be true iff `score >= gateThreshold` AND the suite is complete; `exitCode` MUST be 0 on pass, 1 on fail.
-- **FR-005**: The gate MUST be dart:io-free (pure Dart); it returns the exit code as a value rather than calling `exit()`.
+## Requirements
 
-### Key Entities
+### Functional requirements
 
-- **TaskSamples**: `{ n, c }` — samples drawn and correct for one task.
-- **TaskGateResult**: `{ taskId, passAtK, passed, detail }` — one breakdown row.
-- **GateDecision**: `{ suiteId, score, threshold, passed, breakdown, report, exitCode }` — the verdict.
-- **SuiteGate**: the pure evaluator over a `Suite` + `samples` map.
-- **Suite / PassAtK**: provided by sibling modules (specs 006/037); this spec owns the gating decision.
+- **FR-001**: Each declared task's score is the unbiased pass@k estimator
+  (Chen et al. 2021) computed by the `PassAtK` value object with
+  `k = min(suite.k, n)` (existing; pinned here with a known value and by
+  spec-006/037 tests cited in the test list).
+- **FR-002**: The suite score is the mean of the per-task pass@k values
+  over the suite's DECLARED tasks, in the suite's declared order
+  (existing; pin — including that sample ids not declared by the suite are
+  ignored).
+- **FR-003**: The threshold decision is `>=`: a score exactly equal to
+  `gateThreshold` passes (existing 006-A4 pin; re-pinned here).
+- **FR-004**: A declared task with NO samples entry is INCOMPLETE: it
+  scores 0.0, is reported as having no samples, and VETOES the gate
+  (existing 006-A4 pin).
+- **FR-005** (new): A declared task whose samples entry has `n == 0` (zero
+  runs recorded) is INCOMPLETE: it scores 0.0 with a zero-runs detail,
+  VETOES the gate, and `evaluate` does NOT throw.
+- **FR-006** (new): `GateDecision` exposes `incomplete` (bool) and
+  `incompleteTaskIds` (the veto-triggering tasks in suite order) — the
+  machine-readable veto surface.
+- **FR-007** (new): A suite with ZERO declared tasks FAILS the gate
+  (fail-closed): `passed == false`, `exitCode == 1`, score 0.0, and the
+  report names the reason. (Fixes the fail-open `0.0 >= 0.0` case.)
+- **FR-008** (new): All-incomplete suites (every declared task missing or
+  zero-run) fail with `incomplete == true` and all task ids listed.
+- **FR-009**: The computation stays pure and deterministic: same inputs →
+  same decision (no clock, no randomness, no I/O); invalid sample
+  arithmetic (`c > n`) still throws `ArgumentError` (a programming error,
+  not an incomplete run).
+- **FR-010**: Gates — `dart analyze` reports no new issues relative to the
+  master baseline (3 pre-existing, out of scope); the full `dart test`
+  suite is green, including the unmodified spec-006
+  `suite_gate_006_a4_test.dart`.
 
-## Success Criteria *(mandatory)*
+### Key entities
 
-### Measurable Outcomes
+- `SuiteGate` / `GateDecision` — decision surface; gains the veto fields.
+- `TaskSamples` — `n` runs / `c` correct; `n == 0` now legal (incomplete).
+- `PassAtK` — the estimator (unchanged; still validates `n >= 1`, so the
+  gate short-circuits zero-run tasks before computing).
 
-- **SC-001**: A suite with a missing task always fails the gate, regardless of the present-task mean.
-- **SC-002**: A suite scoring exactly at `gateThreshold` passes (the `≥` boundary).
-- **SC-003**: The breakdown names every declared task in order with its pass@k and sample counts, so a red run is debuggable.
+## Success criteria
 
-## Assumptions
+- **SC-001**: Zero-task suite at threshold 0.0 → `passed == false`,
+  `exitCode == 1`, report names the reason (US1, FR-007).
+- **SC-002**: `TaskSamples(n: 0, c: 0)` → no throw; the task scores 0.0
+  with a zero-runs detail; the gate is vetoed (US1, FR-005).
+- **SC-003**: `incomplete` / `incompleteTaskIds` correctly distinguish
+  vetoed from merely-below-threshold gates, in suite order (US2, FR-006).
+- **SC-004**: Gates green; the 006-A4 suite passes unmodified (FR-010).
 
-- `PassAtK` (unbiased estimator) and `Suite` are provided by specs 037 / 006; this spec owns only the gating/verdict logic.
-- "Calibration / saturation" advanced analytics from the original gap analysis are explicitly out of scope for v1 (noted, not built here).
-- This feature maps to **R6 (eval harness, issue #7)** — the golden-mission release gate.
+## Dependencies
+
+- Builds on: spec 006 (gate core + A4 tests), spec 037 (PassAtK
+  estimator), spec 061 (empirical pass^k — unaffected).
+- Independent of: MCP (082), ledger (083), retry (084) — different files.
