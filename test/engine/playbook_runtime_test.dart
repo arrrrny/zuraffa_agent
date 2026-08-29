@@ -71,6 +71,57 @@ class FakeToolDispatcher implements ToolDispatcher {
   bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
 }
 
+/// Counts validateSchema/checkRiskTier delegations for U27 (the gate must
+/// pass these through to the wrapped dispatcher untouched).
+class DelegationSpy implements ToolDispatcher {
+  final dispatches = <String>[];
+  int schemaCalls = 0;
+  int riskCalls = 0;
+
+  @override
+  Future<ToolDispatchResult> dispatch({
+    required String toolName,
+    required Map<String, dynamic> arguments,
+    required bool isInternalMission,
+  }) async {
+    dispatches.add(toolName);
+    return ToolDispatchResult(
+      success: true,
+      result: 'ok:$toolName',
+      error: '',
+      artifactRefs: const [],
+    );
+  }
+
+  @override
+  Future<List<ToolDispatchResult>> dispatchBatch({
+    required List<ToolCall> calls,
+    required bool isInternalMission,
+  }) async => [
+        for (final call in calls)
+          await dispatch(
+            toolName: call.toolName,
+            arguments: call.arguments,
+            isInternalMission: isInternalMission,
+          ),
+      ];
+
+  @override
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) {
+    schemaCalls++;
+    return const [];
+  }
+
+  @override
+  bool checkRiskTier({required String riskTier, required bool isInternalMission}) {
+    riskCalls++;
+    return true;
+  }
+}
+
 void main() {
   var fakeNow = DateTime.utc(2026, 1, 1);
   DateTime fakeClock() => fakeNow;
@@ -277,6 +328,109 @@ void main() {
       expect(refused.success, isFalse);
       expect(refused.error, 'tool not allowed: search');
       expect(inner.calls, isEmpty);
+    });
+
+    test('U26: blocklist gate refuses only listed tools', () async {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        toolGate: const PlaybookToolGate(
+          mode: PlaybookGateMode.blocklist,
+          blocked: ['shell'],
+        ),
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final inner = FakeToolDispatcher();
+      final gated = runtime.gateDispatcher(inner);
+
+      final refused = await gated.dispatch(
+        toolName: 'shell',
+        arguments: {},
+        isInternalMission: false,
+      );
+      expect(refused.success, isFalse);
+      expect(refused.error, 'tool not allowed: shell');
+      expect(inner.calls, isEmpty);
+
+      // Everything NOT on the blocklist delegates.
+      final allowed = await gated.dispatch(
+        toolName: 'search',
+        arguments: {},
+        isInternalMission: false,
+      );
+      expect(allowed.success, isTrue);
+      expect(inner.calls.map((c) => c.toolName), ['search']);
+
+      // An empty blocked list refuses nothing.
+      final openPlaybook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        toolGate: const PlaybookToolGate(mode: PlaybookGateMode.blocklist),
+      );
+      final openGate = PlaybookRuntime(playbook: openPlaybook, clock: fakeClock)
+          .gateDispatcher(inner);
+      final passed = await openGate.dispatch(
+        toolName: 'shell',
+        arguments: {},
+        isInternalMission: false,
+      );
+      expect(passed.success, isTrue);
+      expect(inner.calls.map((c) => c.toolName), ['search', 'shell']);
+    });
+
+    test('U27: batch dispatch gates per call; schema/risk delegate', () async {
+      final playbook = Playbook(
+        id: 'de-001',
+        name: 'x',
+        description: 'd',
+        toolGate: const PlaybookToolGate(
+          mode: PlaybookGateMode.allowlist,
+          allowed: ['search'],
+        ),
+      );
+      final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      final spy = DelegationSpy();
+      final gated = runtime.gateDispatcher(spy);
+
+      final results = await gated.dispatchBatch(
+        calls: [
+          const ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential'),
+          const ToolCall(
+              toolName: 'shell',
+              arguments: {},
+              executionMode: 'sequential'),
+          const ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential'),
+        ],
+        isInternalMission: false,
+      );
+
+      // Each call is gated independently: search passes, shell is refused,
+      // search passes again.
+      expect(results.map((r) => r.success), [true, false, true]);
+      expect(results[1].error, 'tool not allowed: shell');
+      // The spy saw exactly the admitted calls, in order.
+      expect(spy.dispatches, ['search', 'search']);
+
+      // Schema validation and risk-tier checks delegate to the wrapped
+      // dispatcher untouched.
+      expect(
+        gated.validateSchema(schema: {}, arguments: {}),
+        isEmpty,
+      );
+      expect(spy.schemaCalls, 1);
+      expect(
+        gated.checkRiskTier(riskTier: 'safe', isInternalMission: false),
+        isTrue,
+      );
+      expect(spy.riskCalls, 1);
     });
   });
 }
