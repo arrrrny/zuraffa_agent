@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: EngineLoop (while-loop executor)
 
 **Branch**: `045-engine_loop` | **Date**: 2026-08-24
@@ -18,3 +20,19 @@ The turn-based while-loop executor advancing on LLM finish-reason (epic #2 §R1.
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #2 (Engine Core Loop)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** EngineLoop equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/engine_loop/engine_loop_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** EngineLoop inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/engine_loop/engine_loop_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** EngineLoopProvider is a EngineLoopService **Then** the pinned regression test passes (`test/data/providers/engine_loop/engine_loop_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** EngineLoopProvider.current returns the active loop config **Then** the pinned regression test passes (`test/data/providers/engine_loop/engine_loop_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** EngineLoopProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/engine_loop/engine_loop_provider_test.dart`).
+   **Type**: acceptance

@@ -1,52 +1,62 @@
-# Test List: Goal mode
-
----
-feature: 071-goal-mode
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 7 # FR-001..FR-007 in spec.md
-planned_at: 8a5bd83 # feat/spec-069-mission-runner HEAD (stack base)
-updated_at: HEAD
-suite_baseline: green # 925 passed / 2 skipped at 8a5bd83
----
+# Test List: 071-goal-mode
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Goal met on turn 1 (assistant-present evaluator) stops the mission `goalAchieved` with 1 turn, summary = turn-1 content, terminal event status `'goalAchieved'`, result.goalAchieved true, result.goal set | FR-003, FR-004 | example | DONE | `test/engine/goal_mode_test.dart::spec 071 — goal mode::goal achieved on turn 1 stops the mission early` |
-| A2  | Tool-result-keyed evaluator fires on the SAME turn the tool result lands (post-tool evaluation) — 1-turn mission with a dispatched tool | FR-005(a) | example | DONE | `…::goal evaluation sees tool results within the same turn` |
-| A3  | Goal met on the model's natural-stop turn reports `goalAchieved`, NOT `completed` (evaluation before the natural-stop check) | FR-005(b) | example | DONE | `…::goal met on the natural-stop turn reports goalAchieved` |
-| A4  | Goal never met: evaluator consulted once per completed turn (count == turns), mission ends `completed`, goalAchieved false | FR-005(c), FR-004 | example | DONE | `…::unmet goal leaves the mission to its natural stop, evaluator consulted every turn` |
-| A5  | Budgets still win: unmet goal + maxTurns 2 → `budgetExhausted`, goalAchieved false | FR-005(d) | example | DONE | `…::budget exhaustion overrides goal mode` |
-| A6  | Both-or-neither validation: goal without evaluator and evaluator without goal each throw `ArgumentError` | FR-003 | example | DONE | `…::goal and goalEvaluator must be supplied together` |
-| A7  | `Goal` value semantics (==/hashCode/toString) | FR-001 | example | DONE | `…::Goal value semantics` |
-| A8  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 925/2 + new; spec-069 suite still green) | FR-007 | gate | DONE | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/goal_mode_test.dart`). | AC-9 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/goal_mode.dart` (new) + `mission_runner.dart` edits
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `MissionResult.goal`/`goalAchieved` defaults: null/false without goal mode (spec-069 A9 still constructs equal results) | FR-004 | example | DONE | spec-069 suite re-run + A1/A4 positive/negative asserts |
-| U2  | The transcript handed to the evaluator is unmodifiable (mutating throws) | FR-002 | example | DONE | `…::evaluator receives an unmodifiable transcript view` |
-| U3  | `MissionStatus.goalAchieved` exists and `.name` round-trips onto the terminal event | FR-003, FR-006 | example | DONE | A1 terminal-event assert |
-| U4  | Provider-failed turn is never evaluated (evaluator count 0 on the failure path) | FR-005(c) | example | DONE | `…::provider-failed turn is never goal-evaluated` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: `Goal` is a house-pattern value object: `id` + `description`, | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: `GoalEvaluator` is the injected strategy: | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: `run(goal: g, goalEvaluator: e)` (both or neither — | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: Result surface: `MissionResult.goal` (the goal when goal | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: Ordering guarantees, load-bearing and mutation-tested: | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: No new `EngineEvent` subtypes: goal achievement surfaces | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green | FR-007 | PENDING |
 
-## Invariants and edge cases
+## Routing provenance
 
-- Early-stop-only: goal mode never extends a mission past natural stop or budgets (A3, A5).
-- Terminal-event invariant preserved: goal-achieved missions still emit exactly one `MissionCompleted` with status `'goalAchieved'` (A1).
-- No new EngineEvent subtypes — goal surfaces via terminal status only (FR-006).
-- `MissionResult` equality now includes goal + goalAchieved (spec-069 A9 must stay green — U1).
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Mutation plan (deliberate, one at a time, cp-restored)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | mutant | killed by |
-| --- | ------ | --------- |
-| M1  | evaluation moved BEFORE tool dispatch (post-assistant-append, pre-planner) | A2 (tool-keyed evaluator fires a turn later → turnsUsed 2 vs 1) |
-| M2  | on achievement, status left `completed` (goalAchieved never assigned to status) | A1 (status + terminal event string) |
-| M3  | `MissionResult.goalAchieved` hardcoded false | A1 (flag assert) |
-| M4  | evaluator consulted only on turn 1 | A4 (per-turn count) |
-| M5  | both-or-neither `ArgumentError` removed | A6 |

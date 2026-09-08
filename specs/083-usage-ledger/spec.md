@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R4: Usage Ledger — token accounting projection
 
 **Branch**: `083-usage-ledger` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -102,32 +104,32 @@ intersection.
 
 ### Functional requirements
 
-- **FR-001**: `UsageLedger` is constructed by defensive copy into an
+- **FR-001**: The system MUST satisfy this requirement: `UsageLedger` is constructed by defensive copy into an
   unmodifiable list; the caller's later mutations of the source list do
   not affect any previously-computed total, `length`, or sub-ledger.
-- **FR-002**: `UsageLedger.entries` exposes the (unmodifiable) entry
+- **FR-002**: The system MUST satisfy this requirement: `UsageLedger.entries` exposes the (unmodifiable) entry
   sequence for inspection; mutation attempts throw `UnsupportedError`.
-- **FR-003**: `UsageLedger.toJson()` serializes the projection as
+- **FR-003**: The system MUST satisfy this requirement: `UsageLedger.toJson()` serializes the projection as
   `{'entries': [<UsageEntry.toJson>...]}`; `UsageLedger.fromJson` rebuilds
   an equal ledger. Round-trip preserves all five totals, sub-ledgers, and
   the `null`-model case.
-- **FR-004**: Equality is ordered-sequence equality over structurally
+- **FR-004**: The system MUST satisfy this requirement: Equality is ordered-sequence equality over structurally
   identical entries, defined via the serialized form (equal ledgers have
   equal `toJson`); `hashCode` is consistent with `==`.
-- **FR-005**: Existing aggregate surface is unchanged:
+- **FR-005**: The system MUST satisfy this requirement: Existing aggregate surface is unchanged:
   `totalInputTokens`, `totalOutputTokens`, `totalTokens`,
   `totalCacheReadTokens`, `totalCacheWriteTokens`, `byTurn(int)`,
   `byModel(String)`, `length`, `isEmpty`, `isNotEmpty` behave exactly as
   the T009 tests pinned (regression: the pre-existing
   `test/usage_ledger_test.dart` stays green unmodified).
-- **FR-006**: Sub-ledgers are themselves full projections: `byTurn` /
+- **FR-006**: The system MUST satisfy this requirement: Sub-ledgers are themselves full projections: `byTurn` /
   `byModel` results support equality, serialization, and chaining
   (`ledger.byModel(m).byTurn(t)` totals equal the entries matching both
   filters).
-- **FR-007**: Edge cases: an empty ledger equals every other empty ledger,
+- **FR-007**: The system MUST satisfy this requirement: Edge cases: an empty ledger equals every other empty ledger,
   serializes/round-trips, and reports all totals as 0; `byTurn`/`byModel`
   with no matches return an empty ledger (not an error).
-- **FR-008**: Gates — `dart analyze` reports no new issues relative to the
+- **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green.
 
@@ -157,3 +159,45 @@ intersection.
   zfa-generated `UsageLedgerEntry` entity's existing JSON forms.
 - Independent of: every other subsystem (the file is standalone under
   `lib/src/`, exported from `lib/zuraffa_agent.dart`).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** T1: structurally-identical ledgers are == and hash-equal **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** T2: any content difference breaks equality **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** T3: fromJson(toJson()) == ledger with all five totals preserved **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** T4: empty-ledger edge — equal, round-trips, zero totals **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** T5: source-list mutation after construction changes nothing **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** T6: byTurn(1) round-trips and equals an independent ledger **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** T7 (pin): byModel(m).byTurn(t) totals equal the intersection **Then** the pinned regression test passes (`test/usage_ledger_083_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** totalInputTokens sums all entries **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** totalOutputTokens sums all entries **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** totalTokens is input + output **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** byTurn filters to specific turn **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** byTurn with no matching entries returns empty ledger **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** byModel filters to specific model **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** byModel with no matching entries returns empty ledger **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** empty ledger has zero totals **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+16. **Given** the feature implementation under its clean-architecture seams **When** byTurn preserves cache tokens **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+17. **Given** the feature implementation under its clean-architecture seams **When** length reflects entry count **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance
+18. **Given** the feature implementation under its clean-architecture seams **When** totalCacheWriteTokens sums correctly **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
+   **Type**: acceptance

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: EngineEventLog
 
 **Branch**: `feat/spec-068-engine-event-log` | **Date**: 2026-08-28
@@ -32,11 +34,11 @@ projection over records, no `@Zorphy`, no `dart:io`.
 
 ## FRs
 
-- **FR-001**: `void add(EngineEvent event)` appends one event; `void addAll(Iterable<EngineEvent> events)` appends in iteration order. Order of insertion is preserved exactly on read-back.
-- **FR-002**: `List<EngineEvent> get events` returns an **unmodifiable** copy — mutating the returned list (add/remove/clear/element assignment) throws; mutations never propagate into the log. `int get length`, `bool get isEmpty`, `bool get isNotEmpty` reflect the append count.
-- **FR-003**: `List<T> byType<T extends EngineEvent>()` returns the sub-list of events of exactly type `T`, in insertion order. `T? firstOfType<T extends EngineEvent>()` / `T? lastOfType<T extends EngineEvent>()` return the first/last such event or `null`.
-- **FR-004**: `List<EngineEvent> since(DateTime cutoff, {bool inclusive = true})` returns events with `emittedAt >= cutoff` (or `>` when `inclusive: false`), preserving order; `List<EngineEvent> before(DateTime cutoff, {bool inclusive = false})` mirrors it for `emittedAt <=`/`<` cutoff. Implementation note (design discovery during the red phase): the sealed base `EngineEvent` gains an abstract `DateTime get emittedAt;` — every subtype already carries the field, so all 9 conform without modification, and the temporal projections filter the whole union uniformly.
-- **FR-005**: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests). Engine purity preserved: pure Dart, no `dart:io`, no new dependencies.
+- **FR-001**: The system MUST satisfy this requirement: `void add(EngineEvent event)` appends one event; `void addAll(Iterable<EngineEvent> events)` appends in iteration order. Order of insertion is preserved exactly on read-back.
+- **FR-002**: The system MUST satisfy this requirement: `List<EngineEvent> get events` returns an **unmodifiable** copy — mutating the returned list (add/remove/clear/element assignment) throws; mutations never propagate into the log. `int get length`, `bool get isEmpty`, `bool get isNotEmpty` reflect the append count.
+- **FR-003**: The system MUST satisfy this requirement: `List<T> byType<T extends EngineEvent>()` returns the sub-list of events of exactly type `T`, in insertion order. `T? firstOfType<T extends EngineEvent>()` / `T? lastOfType<T extends EngineEvent>()` return the first/last such event or `null`.
+- **FR-004**: The system MUST satisfy this requirement: `List<EngineEvent> since(DateTime cutoff, {bool inclusive = true})` returns events with `emittedAt >= cutoff` (or `>` when `inclusive: false`), preserving order; `List<EngineEvent> before(DateTime cutoff, {bool inclusive = false})` mirrors it for `emittedAt <=`/`<` cutoff. Implementation note (design discovery during the red phase): the sealed base `EngineEvent` gains an abstract `DateTime get emittedAt;` — every subtype already carries the field, so all 9 conform without modification, and the temporal projections filter the whole union uniformly.
+- **FR-005**: The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests). Engine purity preserved: pure Dart, no `dart:io`, no new dependencies.
 
 ## Verification
 
@@ -50,3 +52,25 @@ projection over records, no `@Zorphy`, no `dart:io`.
 - Streaming/async subscription (`Stream<EngineEvent>`) — deferred to the bus spec.
 - Persistence of the log (session recording specs own storage).
 - A 10th union member `PlanChanged` (spec 067, PR #78) — this spec branches off master and tests against the 9 master events; the log is agnostic to union size.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** add/addAll preserve insertion order **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** events is an unmodifiable snapshot **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** length and emptiness track appends **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** byType filters by exact type, insertion order **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** firstOfType and lastOfType **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** since filters by emission time with inclusive/exclusive boundary **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** before filters by emission time with inclusive/exclusive boundary **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** empty log behaves as empty **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
+   **Type**: acceptance

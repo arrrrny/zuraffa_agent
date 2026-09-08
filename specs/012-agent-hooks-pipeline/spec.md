@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Agent Hooks Pipeline
 
 **Feature Branch**: `012-agent-hooks-pipeline`
@@ -21,8 +23,11 @@ As a plugin developer, I can intercept and modify agent behavior at 9 lifecycle 
 **Acceptance Scenarios**:
 
 1. **Given** a registered hook, **When** the pipeline runs the 9 lifecycle points, **Then** the hook is called at each point with the point's typed context. **[AC-1]**
+   **Type**: acceptance
 2. **Given** a hook that modifies the model call, **When** beforeModelCall fires, **Then** the modified request is what the pipeline hands back to the engine (and the engine's LlmClient receives it). **[AC-2]**
+   **Type**: acceptance
 3. **Given** a hook that denies a tool call, **When** beforeToolCall fires, **Then** a synthetic result is returned without executing the tool. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Hook pipeline chaining (Priority: P1)
 
@@ -34,9 +39,12 @@ As the engine, hooks are chained sequentially; each hook can modify the context 
 
 **Acceptance Scenarios**:
 
-1. **Given** two hooks, **When** the pipeline runs, **Then** both are called in registration order at every point. **[AC-4]**
-2. **Given** a hook that aborts, **When** it fires, **Then** the run stops with a typed error (HookAbortError carrying the hook name and reason) and later hooks are not called. **[AC-5]**
-3. **Given** hook A modifies the context, **When** hook B runs after it, **Then** B observes A's modification (sequential fold). **[AC-6]**
+4. **Given** two hooks, **When** the pipeline runs, **Then** both are called in registration order at every point. **[AC-4]**
+   **Type**: acceptance
+5. **Given** a hook that aborts, **When** it fires, **Then** the run stops with a typed error (HookAbortError carrying the hook name and reason) and later hooks are not called. **[AC-5]**
+   **Type**: acceptance
+6. **Given** hook A modifies the context, **When** hook B runs after it, **Then** B observes A's modification (sequential fold). **[AC-6]**
+   **Type**: acceptance
 
 ### User Story 3 - Hook results (Priority: P2)
 
@@ -48,9 +56,12 @@ As a plugin developer, each hook point has a typed result that controls engine b
 
 **Acceptance Scenarios**:
 
-1. **Given** a beforeToolCall hook returning deny, **When** the tool call reaches the hook, **Then** a synthetic result is returned and the tool is not executed. **[AC-3 — same scenario pinned from the result side]**
-2. **Given** an afterModelCall hook returning retry, **When** the hook fires, **Then** the engine calls the LLM again. **[AC-7]**
-3. **Given** default (un-overridden) hook methods, **When** the pipeline runs, **Then** every point continues with the context unmodified (a bare hook is a no-op). **[AC-8]**
+7. **Given** a beforeToolCall hook returning deny, **When** the tool call reaches the hook, **Then** a synthetic result is returned and the tool is not executed. **[AC-3 — same scenario pinned from the result side]**
+   **Type**: acceptance
+8. **Given** an afterModelCall hook returning retry, **When** the hook fires, **Then** the engine calls the LLM again. **[AC-7]**
+   **Type**: acceptance
+9. **Given** default (un-overridden) hook methods, **When** the pipeline runs, **Then** every point continues with the context unmodified (a bare hook is a no-op). **[AC-8]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

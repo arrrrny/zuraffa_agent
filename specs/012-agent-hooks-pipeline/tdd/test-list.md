@@ -1,61 +1,58 @@
-# Test List: Agent Hooks Pipeline
-
----
-feature: 012-agent-hooks-pipeline
-loop: outside-in
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 8 # acceptance criteria AC-1..AC-8 in spec.md
-planned_at: (011-loop head)
-updated_at: (012 head)
-suite_baseline: red # 6 pre-existing loading failures (unrelated features); green criterion = feature tests pass AND failure delta vs the spec-011-loop baseline (6 loading failures) is zero new
----
+# Test List: 012-agent-hooks-pipeline
 
 ## Outer loop: acceptance behaviors
 
-Driven through a scripted mission driver that plays the engine (drives the 9 pipeline points, calls a FakeLlmClient with the pipeline-returned request, honors deny/retry decisions).
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| A1  | A logging hook captures all 9 lifecycle events during a scripted mission, in mission order | AC-1, SC-001, FR-003 | example | DONE | `agent_hook_pipeline_test.dart::A1` |
-| A2  | A modifier hook changes the model call parameters and the driver's LlmClient receives the modified request | AC-2, SC-002, FR-005 | example | DONE | `agent_hook_pipeline_test.dart::A2` |
-| A3  | An abort hook stops the run with HookAbortError carrying hook name + reason; later hooks not invoked | AC-5, SC-003, FR-004 | example | DONE | `agent_hook_pipeline_test.dart::A3` |
-| A4  | A logging hook and a modifying hook compose: both called in registration order, modifier's changes visible to the engine | AC-4, AC-6, US2 | example | DONE | `agent_hook_pipeline_test.dart::A4` |
-| A5  | A deny hook prevents tool execution; the synthetic result is returned instead | AC-3, US3, FR-005 | example | DONE | `agent_hook_pipeline_test.dart::A5` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the hook is called at each point with the point's typed context. [AC-1] | AC-1 | PENDING |
+| A2 | the modified request is what the pipeline hands back to the engine (and the engine's LlmClient receives it). [AC-2] | AC-2 | PENDING |
+| A3 | a synthetic result is returned without executing the tool. [AC-3] | AC-3 | PENDING |
+| A4 | both are called in registration order at every point. [AC-4] | AC-4 | PENDING |
+| A5 | the run stops with a typed error (HookAbortError carrying the hook name and reason) and later hooks are not called. [AC-5] | AC-5 | PENDING |
+| A6 | B observes A's modification (sequential fold). [AC-6] | AC-6 | PENDING |
+| A7 | a synthetic result is returned and the tool is not executed. [AC-3 — same scenario pinned from the result side] | AC-7 | PENDING |
+| A8 | the engine calls the LLM again. [AC-7] | AC-8 | PENDING |
+| A9 | every point continues with the context unmodified (a bare hook is a no-op). [AC-8] | AC-9 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/agent_hooks.dart` (value layer)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U1  | A bare AgentHook subclass (no overrides) returns continue at all 9 points — a no-op plugin | AC-8, FR-003 | example | DONE | `agent_hooks_test.dart::U1` |
-| U2  | Typed result classes carry their action + payload (modify carries the new value; deny carries the synthetic result; retry flags afterModelCall) | FR-003 | example | DONE | `agent_hooks_test.dart::U2` |
-| U3  | HookAbortError is a typed error carrying hookName + reason | FR-004 | example | DONE | `agent_hooks_test.dart::U3` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The engine MUST support registering multiple hooks per lifecycle point. | FR-001 | PENDING |
+| U2 | Hooks MUST be called in registration order at each lifecycle point. | FR-002 | PENDING |
+| U3 | Each hook point MUST have typed context and result classes. | FR-003 | PENDING |
+| U4 | Any hook MUST be able to abort the run with a typed error. | FR-004 | PENDING |
+| U5 | Hooks MUST be able to modify model calls, tool calls, and tool results. | FR-005 | PENDING |
 
-### `lib/src/engine/agent_hook_pipeline.dart` (chaining)
+## Routing provenance
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U4  | Hooks run in registration order at every lifecycle point | FR-002, AC-4 | example | DONE | `agent_hook_pipeline_test.dart::U4` |
-| U5  | A modify result folds: the next hook observes the previous hook's modification (sequential fold) | AC-6, FR-005 | example | DONE | `agent_hook_pipeline_test.dart::U5` |
-| U6  | An abort result throws HookAbortError at the offending hook; later hooks are not called | AC-5, FR-004 | example | DONE | `agent_hook_pipeline_test.dart::U6` |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### `lib/src/engine/agent_hook_pipeline.dart` (engine-visible effects)
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 43]
+route: A5 -> acceptance lane [declared: type marker, spec line 45]
+route: A6 -> acceptance lane [declared: type marker, spec line 47]
+route: A7 -> acceptance lane [declared: type marker, spec line 60]
+route: A8 -> acceptance lane [declared: type marker, spec line 62]
+route: A9 -> acceptance lane [declared: type marker, spec line 64]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U7  | beforeModelCall modify returns the modified LlmRequest to the engine | AC-2, SC-002 | example | DONE | `agent_hook_pipeline_test.dart::U7` |
-| U8  | beforeToolCall deny returns a ToolCallDecision whose synthetic result replaces execution | AC-3 | example | DONE | `agent_hook_pipeline_test.dart::U8` |
-| U9  | beforeToolCall modify returns the tool call with modified arguments | FR-005 | example | DONE | `agent_hook_pipeline_test.dart::U9` |
-| U10 | afterToolCall modify returns the modified result content/isError | FR-005 | example | DONE | `agent_hook_pipeline_test.dart::U10` |
-| U11 | afterModelCall retry returns ModelCallDecision.retry = true (engine calls the LLM again) | AC-7 | example | DONE | `agent_hook_pipeline_test.dart::U11` |
-| U12 | afterModelCall modify returns the modified LlmResponse | FR-005 | example | DONE | `agent_hook_pipeline_test.dart::U12` |
-
-## Mutation targets (deliberate-mutant sampling)
-
-| target | mutant | killed by |
-| ------ | ------ | --------- |
-| fold update | drop the context update after a modify result | U5 (B sees unmodified context) |
-| abort short-circuit | treat abort as continue | U6/A3 (no throw) |
-| deny branch | drop deny → always allow | U8/A5 (tool executes) |
-| retry flag | invert retry | U11 |

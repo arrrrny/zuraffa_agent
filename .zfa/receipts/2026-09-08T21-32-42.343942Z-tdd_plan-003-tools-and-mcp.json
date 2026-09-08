@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "003-tools-and-mcp",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:32:42.343942Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "003-tools-and-mcp"
+  },
+  "files": [
+    {
+      "path": "specs/003-tools-and-mcp/tdd/test-list.md",
+      "action": "update",
+      "sha256": "0d29694ee9e8783a894155a1ab4e75f3f43ce5363d855a62713e61befbd067f6",
+      "bytes": 4375,
+      "snapshot": "# Test List: 003-tools-and-mcp\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | the registry resolves it regardless of origin. | AC-1 | PENDING |\n| A2 | a validation error returns as the tool result (mission continues). | AC-2 | PENDING |\n| A3 | tools run concurrently with results collected in call order. | AC-3 | PENDING |\n| A4 | execution awaits the approval callback; denial or timeout yields a denied tool result. | AC-4 | PENDING |\n| A5 | it is denied without invoking the implementation. | AC-5 | PENDING |\n| A6 | the client reconnects (backoff) and resumes tool listing/calls. | AC-6 | PENDING |\n| A7 | calls continue without manager rebuild. | AC-7 | PENDING |\n| A8 | no serialization boundary exists (pass-by-reference with defensive arg copy). | AC-8 | PENDING |\n| A9 | the model sees summary + artifactRef only. | AC-9 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | One tool registry MUST serve DDA, generated, and remote-MCP tools in a single namespace. | FR-001 | PENDING |\n| U2 | Tool dispatch MUST validate arguments against JSON Schema and support sequential/parallel modes. | FR-002 | PENDING |\n| U3 | `safe|confirm|admin` risk MUST be first-class tool metadata; dispatch MUST enforce approval/permission semantics. | FR-003 | PENDING |\n| U4 | The MCP client MUST implement in-proc, SSE+Bearer (reconnect, auth callback), and stdio transports. | FR-004 | PENDING |\n| U5 | Oversized results MUST be summarized + artifactRef'd before entering model context. | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| AgentTool |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/003-tools-and-mcp/tdd/traceability.md",
+      "action": "update",
+      "sha256": "867cdd681eb2dc308263facf928101e996f96f94797f8c42459478a7da51e859",
+      "bytes": 2791,
+      "snapshot": "# Traceability: 003-tools-and-mcp\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:0f84dd88fd1c2835a047feedfaf1b3cd16f396602353d1313e53b8310dc1af6e\nstatements: 14\nautomated: 14\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** tools registered from any source, **When** the loop emits a call, **Then** the registry resolves it regardless of origin. | A1 | automated |\n| AC-2 | 26 | 2. **Given** arguments violating a tool's JSON Schema, **When** dispatched, **Then** a validation error returns as the tool result (mission continues). | A2 | automated |\n| AC-3 | 27 | 3. **Given** a parallel-execution batch, **When** dispatched, **Then** tools run concurrently with results collected in call order. | A3 | automated |\n| AC-4 | 39 | 1. **Given** risk `confirm`, **When** dispatched, **Then** execution awaits the approval callback; denial or timeout yields a denied tool result. | A4 | automated |\n| AC-5 | 40 | 2. **Given** risk `admin` on a non-internal mission, **When** dispatched, **Then** it is denied without invoking the implementation. | A5 | automated |\n| AC-6 | 52 | 1. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects (backoff) and resumes tool listing/calls. | A6 | automated |\n| AC-7 | 53 | 2. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without manager rebuild. | A7 | automated |\n| AC-8 | 54 | 3. **Given** in-proc tools, **When** called in a tight loop, **Then** no serialization boundary exists (pass-by-reference with defensive arg copy). | A8 | automated |\n| AC-9 | 66 | 1. **Given** an oversized tool result, **When** returned to the loop, **Then** the model sees summary + artifactRef only. | A9 | automated |\n| FR-001 | 79 | - **FR-001**: One tool registry MUST serve DDA, generated, and remote-MCP tools in a single namespace. | U1 | automated |\n| FR-002 | 80 | - **FR-002**: Tool dispatch MUST validate arguments against JSON Schema and support sequential/parallel modes. | U2 | automated |\n| FR-003 | 81 | - **FR-003**: `safe\\|confirm\\|admin` risk MUST be first-class tool metadata; dispatch MUST enforce approval/permission semantics. | U3 | automated |\n| FR-004 | 82 | - **FR-004**: The MCP client MUST implement in-proc, SSE+Bearer (reconnect, auth callback), and stdio transports. | U4 | automated |\n| FR-005 | 83 | - **FR-005**: Oversized results MUST be summarized + artifactRef'd before entering model context. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/003-tools-and-mcp/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/003-tools-and-mcp/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

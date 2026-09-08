@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Sub-agent dispatch runtime
 
 **Branch**: `feat/spec-070-sub-agent-dispatch` (stacked on `feat/spec-069-mission-runner`, PR #80) | **Date**: 2026-08-29
@@ -34,7 +36,7 @@ but NEVER its transcript.
 
 ## FRs
 
-- **FR-001** — Isolated child context: `dispatch(spec, mission, instance)`
+- **FR-001**: The system MUST satisfy this requirement: Isolated child context: `dispatch(spec, mission, instance)`
   constructs the child transcript as EXACTLY
   `[ChatMessage(role: 'system', content: spec.systemPrompt),
   ChatMessage(role: 'user', content: mission)]` — nothing from any parent
@@ -42,7 +44,7 @@ but NEVER its transcript.
   carries the child's `resultSummary` (final assistant content on natural
   completion, else null) and NEVER the child transcript (the Kimi
   LaborMarket pattern — results, not chatter).
-- **FR-002** — Tool allowlist enforcement: the child's tool dispatch is
+- **FR-002**: The system MUST satisfy this requirement: Tool allowlist enforcement: the child's tool dispatch is
   wrapped in `AllowlistToolDispatcher(inner, allowlist: spec.tools)`. A call
   whose `toolName` is NOT in the allowlist is refused at the boundary — the
   inner dispatcher never sees it — and yields
@@ -51,32 +53,32 @@ but NEVER its transcript.
   continues. Allowlisted calls delegate to the inner dispatcher with
   passthrough results. `dispatchBatch` enforces per-call;
   `validateSchema`/`checkRiskTier` delegate unchanged.
-- **FR-003** — Budgets: the child `EngineLoop`/`StopPolicy` pair is built
+- **FR-003**: The system MUST satisfy this requirement: Budgets: the child `EngineLoop`/`StopPolicy` pair is built
   from the spec — `maxTurns: spec.maxTurns ?? fallbackMaxTurns` (service
   constructor, default 10) and `wallClockTimeout: spec.wallClockTimeout ??
   Duration.zero` — and the child `MissionRunner` enforces them. Terminal
   child statuses map onto the dispatch result.
-- **FR-004** — Instance bookkeeping: a completed dispatch (any run status)
+- **FR-004**: The system MUST satisfy this requirement: Instance bookkeeping: a completed dispatch (any run status)
   returns `result.instance` as a NEW `SubAgentInstance` with
   `totalRuns + 1` and `lastRunOutcome` set to the dispatch status name. The
   input instance is never mutated.
-- **FR-005** — Risk tier gate: when `spec.riskTier == RiskTier.admin` and
+- **FR-005**: The system MUST satisfy this requirement: Risk tier gate: when `spec.riskTier == RiskTier.admin` and
   the caller did not pass `adminGranted: true`, the dispatch is refused
   BEFORE any LLM call: status `refusedRiskTier`, `resultSummary` null,
   LLM call count 0, and the instance returned UNCHANGED (a refused dispatch
   is not a run). `safe`/`confirm` tiers never refuse on this gate (confirm
   flows through the tool-level approval callback — out of scope).
-- **FR-006** — Event forwarding: the child mission's `EngineEvent`s flow to
+- **FR-006**: The system MUST satisfy this requirement: Event forwarding: the child mission's `EngineEvent`s flow to
   the caller's optional `onEvent` sink; the child mission id is
   `instance.id` (so `MissionStarted`/`MissionCompleted` correlate with the
   resumable instance).
-- **FR-007** — `SubAgentDispatchResult` is a house-pattern value object
+- **FR-007**: The system MUST satisfy this requirement: `SubAgentDispatchResult` is a house-pattern value object
   (`==`/`hashCode`/`toString` over all fields) carrying `instanceId`,
   `specName`, `status`, `resultSummary`, `instance`, and `context` — a
   `SubAgentContext` snapshot (`subAgentSpecId: spec.name`,
   `sessionId: instance.id`, `toolAllowlist: spec.tools`, `budgetTurns` =
   the effective turn cap) that documents the isolation envelope.
-- **FR-008** — Gates: `dart analyze --fatal-infos` clean; `dart test` green
+- **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 925/2 at 069-branch HEAD + new tests).
 
 ## Verification
@@ -97,3 +99,35 @@ but NEVER its transcript.
 - Resuming a persisted instance across engine restarts (spec 005 US2 —
   persistence layer concern).
 - Per-sub-agent LLM client resolution (one injected client for now).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** delegates allowlisted calls **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** refuses non-allowlisted calls without touching the inner dispatcher **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** batch enforces the allowlist per call **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** child runs in an isolated context and returns only a summary **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** tool allowlist is enforced at the dispatch boundary **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** spec maxTurns budget caps the child mission **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** completed dispatch updates the instance bookkeeping **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** admin-risk spec is refused without a grant **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** admin-risk spec runs with an explicit grant **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** child events forward with the instance id as mission id **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** spec wallClockTimeout caps the child mission **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** provider failure maps MissionStatus.providerFailed to providerFailed **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** SubAgentDispatchResult value semantics and context snapshot **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
+   **Type**: acceptance

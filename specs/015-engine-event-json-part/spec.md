@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: EngineEvent json_serializable part directive
 
 **Branch**: `015-engine-event-json-part` | **Date**: 2026-08-24
@@ -20,3 +22,8 @@ The hand-curated `engine_event.dart` library shipped by PRs #33–#42 currently 
 - `dart test` — All 156 tests still pass
 
 ## Closes #15
+
+## Acceptance Scenarios
+
+1. **Given** the hand-curated sealed `EngineEvent` library with its `part 'engine_event.g.dart'` placeholder **When** the repository suite compiles and runs **Then** the part directive resolves and every engine-event behavior test passes (compilation is the pin; owner arrrrrny).
+   **Type**: acceptance

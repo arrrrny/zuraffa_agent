@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R6: Eval Suite Health & Release Gate — pass@k gating
 
 **Branch**: `085-eval-suite-health` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -104,35 +106,35 @@ id does not move the score.
 
 ### Functional requirements
 
-- **FR-001**: Each declared task's score is the unbiased pass@k estimator
+- **FR-001**: The system MUST satisfy this requirement: Each declared task's score is the unbiased pass@k estimator
   (Chen et al. 2021) computed by the `PassAtK` value object with
   `k = min(suite.k, n)` (existing; pinned here with a known value and by
   spec-006/037 tests cited in the test list).
-- **FR-002**: The suite score is the mean of the per-task pass@k values
+- **FR-002**: The system MUST satisfy this requirement: The suite score is the mean of the per-task pass@k values
   over the suite's DECLARED tasks, in the suite's declared order
   (existing; pin — including that sample ids not declared by the suite are
   ignored).
-- **FR-003**: The threshold decision is `>=`: a score exactly equal to
+- **FR-003**: The system MUST satisfy this requirement: The threshold decision is `>=`: a score exactly equal to
   `gateThreshold` passes (existing 006-A4 pin; re-pinned here).
-- **FR-004**: A declared task with NO samples entry is INCOMPLETE: it
+- **FR-004**: The system MUST satisfy this requirement: A declared task with NO samples entry is INCOMPLETE: it
   scores 0.0, is reported as having no samples, and VETOES the gate
   (existing 006-A4 pin).
-- **FR-005** (new): A declared task whose samples entry has `n == 0` (zero
+- **FR-005**: The system MUST satisfy this requirement: A declared task whose samples entry has `n == 0` (zero
   runs recorded) is INCOMPLETE: it scores 0.0 with a zero-runs detail,
   VETOES the gate, and `evaluate` does NOT throw.
-- **FR-006** (new): `GateDecision` exposes `incomplete` (bool) and
+- **FR-006**: The system MUST satisfy this requirement: `GateDecision` exposes `incomplete` (bool) and
   `incompleteTaskIds` (the veto-triggering tasks in suite order) — the
   machine-readable veto surface.
-- **FR-007** (new): A suite with ZERO declared tasks FAILS the gate
+- **FR-007**: The system MUST satisfy this requirement: A suite with ZERO declared tasks FAILS the gate
   (fail-closed): `passed == false`, `exitCode == 1`, score 0.0, and the
   report names the reason. (Fixes the fail-open `0.0 >= 0.0` case.)
-- **FR-008** (new): All-incomplete suites (every declared task missing or
+- **FR-008**: The system MUST satisfy this requirement: All-incomplete suites (every declared task missing or
   zero-run) fail with `incomplete == true` and all task ids listed.
-- **FR-009**: The computation stays pure and deterministic: same inputs →
+- **FR-009**: The system MUST satisfy this requirement: The computation stays pure and deterministic: same inputs →
   same decision (no clock, no randomness, no I/O); invalid sample
   arithmetic (`c > n`) still throws `ArgumentError` (a programming error,
   not an incomplete run).
-- **FR-010**: Gates — `dart analyze` reports no new issues relative to the
+- **FR-010**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green, including the unmodified spec-006
   `suite_gate_006_a4_test.dart`.
@@ -159,3 +161,31 @@ id does not move the score.
 - Builds on: spec 006 (gate core + A4 tests), spec 037 (PassAtK
   estimator), spec 061 (empirical pass^k — unaffected).
 - Independent of: MCP (082), ledger (083), retry (084) — different files.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** A4: a suite scoring below the gate threshold fails with a per-task **Then** the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** A4: a suite exactly at the gate threshold passes (>=, not >) **Then** the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** A4: a task with no samples fails the gate loudly instead of being **Then** the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** T1: a zero-task suite fails closed even at threshold 0.0 **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** T2: a zero-run task vetoes instead of crashing **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** T3: the veto is machine-readable and in suite order **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** T4 (pin): all tasks missing → fail with every id listed **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** T5 (pin): a score exactly at the threshold passes (>=, not >) **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** T6 (pin): per-task breakdown carries the unbiased pass@k value **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** T7 (pin): sample ids the suite never declared are ignored **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** T8 (pin): c > n is a programming error, not an incomplete run **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
+   **Type**: acceptance

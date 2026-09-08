@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: StopPolicy datasource + mock pair
 
 **Feature Branch**: `27-stop_policy-datasource-pair`
@@ -21,7 +23,9 @@ As the engine loop, I read the currently active StopPolicy (max turns, wall-cloc
 **Acceptance Scenarios**:
 
 1. **Given** a fresh chain wired over the mock datasource, **When** `current` is called, **Then** the default policy is returned (`maxTurns=100`, `wallClockTimeout=0`, `repetitionThreshold=5`, `enabled=true`, `id='default'`).
+   **Type**: acceptance
 2. **Given** a policy persisted via `update`, **When** `current` is called, **Then** the updated policy is returned — the read always reflects the last write.
+   **Type**: acceptance
 
 ---
 
@@ -35,8 +39,10 @@ As the engine operator, I tighten the policy before a risky mission (lower `maxT
 
 **Acceptance Scenarios**:
 
-1. **Given** any current policy, **When** `update(policy)` completes, **Then** `current()` returns a policy equal to the one written (full replace; value objects are immutable).
-2. **Given** a non-default policy active, **When** `reset()` is called, **Then** `current()` returns the default policy and any subsequent `update` starts again from a clean state.
+3. **Given** any current policy, **When** `update(policy)` completes, **Then** `current()` returns a policy equal to the one written (full replace; value objects are immutable).
+   **Type**: acceptance
+4. **Given** a non-default policy active, **When** `reset()` is called, **Then** `current()` returns the default policy and any subsequent `update` starts again from a clean state.
+   **Type**: acceptance
 
 ---
 
@@ -50,8 +56,10 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 
 **Acceptance Scenarios**:
 
-1. **Given** the provider is constructed over a datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state); the repository consumes the same datasource for id-keyed access.
-2. **Given** `getCurrent` is called with an id that matches no stored policy, **Then** a typed error surfaces (no silent default substitution — a wrong-id read is a wiring bug).
+5. **Given** the provider is constructed over a datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state); the repository consumes the same datasource for id-keyed access.
+   **Type**: acceptance
+6. **Given** `getCurrent` is called with an id that matches no stored policy, **Then** a typed error surfaces (no silent default substitution — a wrong-id read is a wiring bug).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -96,3 +104,10 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 - Enforcement of stop conditions (comparing turn counts against `maxTurns`, firing typed outcomes) belongs to the engine loop (spec 002/046), NOT to the datasource pair — the pair only persists and serves the policy.
 - The default policy values are frozen by the existing `StopPolicyService.defaultPolicy` documentation; this feature makes `StopPolicy.defaultPolicy` the single source of truth for them.
 - Existing tests asserting provider `UnimplementedError` stubs are superseded (drift remediation) — the provider now ships real delegation.
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

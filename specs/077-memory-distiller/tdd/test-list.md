@@ -1,54 +1,72 @@
-# Test List: Memory distiller (spec 077)
-
----
-feature: 077-memory-distiller
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 11 # FR-001..FR-011 in spec.md
-planned_at: feat/spec-076-memory-persistence (fdc9f89)
-updated_at: feat/spec-077-memory-distiller (all A/U behaviors green, 5/5 mutants killed)
-suite_baseline: green # 935 passed / 2 skipped at fdc9f89 (076 branch tip)
----
+# Test List: 077-memory-distiller
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Mixed-salience session distilled: >= threshold promoted into long-term with identity preserved, below stays in session | FR-002, FR-006 | example | PASSING | `test/engine/memory_distiller_test.dart::spec 077 — distiller::distills a mixed-salience session — gate, identity, residue` |
-| A2  | Duplicate guard: content equal (trim + case-fold) to an existing long-term record is skipped duplicateOfLongTerm, not re-promoted; same-content session siblings dedupe within the run | FR-004 | example | PASSING | `…::duplicate guard skips content already known to long-term` |
-| A3  | Cap: maxPerSession 2 with 3 candidates → top-2 by salience promoted, third skipped capReached; ties broken older-first | FR-005 | example | PASSING | `…::cap promotes the best N — salience desc, older first among equals` |
-| A4  | Idempotency: second distill promotes nothing new and long-term is unchanged | FR-007 | example | PASSING | `…::distill is idempotent — no double promotion, no duplicates` |
-| A5  | Durability (076 payoff): distill over persistent stores → rebuild → promoted records still long-term | FR-010 | example | PASSING | `…::distilled knowledge is durable across a store rebuild` |
-| A6  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 935/2 + new) | FR-011 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/memory_distiller_test.dart`). | AC-10 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/memory_distiller.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | Policy value semantics + defaults (threshold 0.7, cap null) + validation | FR-001 | unit | PASSING | `…::DistillationPolicy defaults and validation` |
-| U2  | Boundary: salience == threshold promotes; default threshold pinned at 0.7 (0.69 stays, 0.70 goes) | FR-003 | unit | PASSING | `…::boundary salience equal to threshold promotes; default is 0.7` |
-| U3  | Report accounting: every snapshot record appears in promoted or skipped with the right reason; sessionRemaining reflects the residue | FR-009 | unit | PASSING | `…::DistillationReport accounts for every record` |
-| U4  | Unknown / empty session → empty report, no throw | FR-008 | unit | PASSING | `…::unknown session distills to an empty report` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `DistillationPolicy` MUST expose `salienceThreshold` | FR-001 | PENDING |
+| U2 | `distill(sessionId)` MUST promote exactly the session | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: Boundary: `salience == threshold` promotes. | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: A record whose normalized content (trim + case-fold) already | FR-004 | PENDING |
+| U5 | With `maxPerSession` set, promotions MUST be capped to the | FR-005 | PENDING |
+| U6 | Below-threshold records MUST be skipped with | FR-006 | PENDING |
+| U7 | `distill` MUST be idempotent — a second run on the same | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: Unknown / empty session → empty report, no throw. | FR-008 | PENDING |
+| U9 | `DistillationReport` MUST carry `promoted` (ids, promotion | FR-009 | PENDING |
+| U10 | The system MUST satisfy this requirement: Composed with the 076 persistent stores, distilled records | FR-010 | PENDING |
+| U11 | The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart | FR-011 | PENDING |
 
-## Edge cases & invariants
+## Routing provenance
 
-- Ranking stability: equal salience → createdAt asc (older first, FIFO).
-- Duplicate normalization: trim + toLowerCase; tags/salience NOT part of
-  the duplicate key (content only).
-- Report lists promoted ids in promotion (ranking) order.
-- Promotions route through the facade — links and layer attribution of
-  promoted records follow 073 semantics untouched.
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Out of scope
+route: A1 -> acceptance lane [declared: type marker, spec line 135]
+route: A2 -> acceptance lane [declared: type marker, spec line 137]
+route: A3 -> acceptance lane [declared: type marker, spec line 139]
+route: A4 -> acceptance lane [declared: type marker, spec line 141]
+route: A5 -> acceptance lane [declared: type marker, spec line 143]
+route: A6 -> acceptance lane [declared: type marker, spec line 145]
+route: A7 -> acceptance lane [declared: type marker, spec line 147]
+route: A8 -> acceptance lane [declared: type marker, spec line 149]
+route: A9 -> acceptance lane [declared: type marker, spec line 151]
+route: A10 -> acceptance lane [declared: type marker, spec line 153]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U11 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-- Async/scheduled distillation (no event infra in the memory module).
-- Salience mutation/boosting on promotion (identity is preserved).
-- Cross-session duplicate sweeping beyond the live long-term check.
-
-## Verification commands
-
-- Single test: `dart test {file} -n "{name}"`
-- Full suite: `dart test`
-- Analyze: `dart analyze --fatal-infos`

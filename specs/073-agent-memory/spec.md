@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Agent memory — three layers
 
 **Branch**: `feat/spec-073-agent-memory` (off master `fec7889`) | **Date**: 2026-08-29
@@ -48,29 +50,29 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
 
 ## FRs
 
-- **FR-001** — `MemoryRecord` (house value semantics): `id`, `content`
+- **FR-001**: The system MUST satisfy this requirement: `MemoryRecord` (house value semantics): `id`, `content`
   (non-empty — `ArgumentError` on empty/whitespace), `tags`
   (unordered set, case preserved), `source` (`MemorySource`:
   `sessionId?`, `missionId?`, `agentName?` — at least one must be set),
   `createdAt` (UTC), `salience` (`0.0..1.0`, default `0.5` — out of
   range throws `ArgumentError`).
-- **FR-002** — Long-term store: `remember(MemoryRecord)` (same-id
+- **FR-002**: The system MUST satisfy this requirement: Long-term store: `remember(MemoryRecord)` (same-id
   replaces, insertion order kept), `byId`, `search(String)` —
   case-insensitive substring over content ordered by salience
   (descending), then createdAt (descending), `byTag(String)` — exact
   match, `latest(int)` — most recent by createdAt. Unmodifiable views
   out.
-- **FR-003** — Session store: `remember(sessionId, record)` (a record
+- **FR-003**: The system MUST satisfy this requirement: Session store: `remember(sessionId, record)` (a record
   belongs to exactly one session; same-id replaces within it),
   `forSession(sessionId)` (insertion order), `forgetSession(sessionId)`
   (drops the session's records — the evaporate path), `byId` (searches
   all sessions; a record id is globally unique across the store).
-- **FR-004** — `MemoryLinkType`: `supports`, `contradicts`,
+- **FR-004**: The system MUST satisfy this requirement: `MemoryLinkType`: `supports`, `contradicts`,
   `supersedes`, `derivedFrom`, `relatesTo`. `MemoryLink`:
   `fromRecordId`, `toRecordId`, `type`, `createdAt`, `note?` (house
   value semantics; direction is meaningful — `a supports b` is not
   `b supports a`).
-- **FR-005** — Memory graph: `link(fromId, toId, type)` rejects
+- **FR-005**: The system MUST satisfy this requirement: Memory graph: `link(fromId, toId, type)` rejects
   self-links, duplicate links (same from/to/type — idempotent replace
   instead), and links to unknown record ids (`ArgumentError` each —
   the graph only references memories that exist in layer 1 or 2).
@@ -78,27 +80,27 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
   endpoint, each tagged with `outgoing: bool`.
   `contradictions()` returns all `contradicts` links. `linksOf(type)`
   filters by type. Unmodifiable views out.
-- **FR-006** — `AgentMemorySystem.remember`: with `sessionId: null`
+- **FR-006**: The system MUST satisfy this requirement: `AgentMemorySystem.remember`: with `sessionId: null`
   writes long-term; with a session id writes session memory. Returns
   the stored record.
-- **FR-007** — `AgentMemorySystem.recall(String query, {int? limit})`:
+- **FR-007**: The system MUST satisfy this requirement: `AgentMemorySystem.recall(String query, {int? limit})`:
   searches BOTH stores (content substring, case-insensitive), returns
   `RecallHit` (record + `MemoryLayer.longTerm | .session`) ordered by
   salience desc then createdAt desc, capped by `limit` (default no
   cap); long-term and session hits interleave in one ranking — layer
   is attribution, not partition.
-- **FR-008** — `AgentMemorySystem.link` validates BOTH endpoints
+- **FR-008**: The system MUST satisfy this requirement: `AgentMemorySystem.link` validates BOTH endpoints
   exist in either store first (graph integrity), then delegates to
   the graph. `linked(recordId)` = `neighborsOf` + resolves each
   neighbor's record and layer (records deleted later resolve to
   `null` — hits carry the link plus the record if still alive).
-- **FR-009** — `promote(sessionRecordId)`: moves a record from session
+- **FR-009**: The system MUST satisfy this requirement: `promote(sessionRecordId)`: moves a record from session
   memory to long-term (removed from session store, present in
   long-term store, same id and content; createdAt preserved).
   Promoting an unknown id or an already-long-term record throws
   `ArgumentError`. Links survive untouched (graph references ids, not
   stores).
-- **FR-010** — Gates: `dart analyze --fatal-infos` clean; `dart test`
+- **FR-010**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 915/2 at `fec7889` + new tests).
 
 ## Verification
@@ -118,3 +120,31 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
   own those).
 - Automatic memory formation (write paths here are explicit; a distiller
   that promotes automatically is future work).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** value objects carry house semantics and validation **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** LongTermMemoryStore replaces, ranks, and filters **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** SessionMemoryStore scopes by session with global id uniqueness **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** MemoryGraph traverses both directions and filters by type **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** three-layer story: remember, link, recall, promote **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** recall ranks by salience then recency across both layers **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** recall honors the limit and rejects empty queries **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** link validates endpoints and stays idempotent **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** promote moves a session memory into long-term **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** forgetSession evaporates session memory and leaves honest dangling links **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** remember rejects an id already used in the opposite layer **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
+   **Type**: acceptance

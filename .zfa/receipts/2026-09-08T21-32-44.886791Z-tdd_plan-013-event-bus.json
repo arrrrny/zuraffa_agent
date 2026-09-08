@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "013-event-bus",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:32:44.886791Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "013-event-bus"
+  },
+  "files": [
+    {
+      "path": "specs/013-event-bus/tdd/test-list.md",
+      "action": "update",
+      "sha256": "c55ce5d582a0fd1b4e77a2cf8eb0afdd11f8caf63f6dcc788a714a53ac803e5b",
+      "bytes": 3064,
+      "snapshot": "# Test List: 013-event-bus\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | each chunk event is delivered. | AC-1 | PENDING |\n| A2 | all subscribers receive it. | AC-2 | PENDING |\n| A3 | the handler's response is used. | AC-3 | PENDING |\n| A4 | all listeners receive the event. | AC-4 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | An `EventBus` MUST support typed pub/sub (on<T>, emit<T>). | FR-001 | PENDING |\n| U2 | An `EventBus` MUST support typed request/response (request<R>, registerHandler<T,R>). | FR-002 | PENDING |\n| U3 | Events MUST be delivered synchronously in registration order. | FR-003 | PENDING |\n| U4 | An `AgentController` MUST wrap EventBus with convenience methods. | FR-004 | PENDING |\n| U5 | The engine MUST emit lifecycle events through the bus. | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| EventBus |  |\n| AgentController |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/013-event-bus/tdd/traceability.md",
+      "action": "update",
+      "sha256": "f1f14bba4ecbb6605b1bfff447406113b86c40610c2666a61432d70724971ab5",
+      "bytes": 1655,
+      "snapshot": "# Traceability: 013-event-bus\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:f53ce5c18f36476bc5b3ef95e930db2b0ad99aede019854e3ea287a3faf81d22\nstatements: 9\nautomated: 9\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a subscriber to LLMChunkEvent, **When** the model streams, **Then** each chunk event is delivered. | A1 | automated |\n| AC-2 | 26 | 2. **Given** multiple subscribers, **When** an event fires, **Then** all subscribers receive it. | A2 | automated |\n| AC-3 | 38 | 1. **Given** a registered handler for BeforeToolCallRequest, **When** the event fires, **Then** the handler's response is used. | A3 | automated |\n| AC-4 | 50 | 1. **Given** an AgentController, **When** publish is called, **Then** all listeners receive the event. | A4 | automated |\n| FR-001 | 56 | - **FR-001**: An `EventBus` MUST support typed pub/sub (on<T>, emit<T>). | U1 | automated |\n| FR-002 | 57 | - **FR-002**: An `EventBus` MUST support typed request/response (request<R>, registerHandler<T,R>). | U2 | automated |\n| FR-003 | 58 | - **FR-003**: Events MUST be delivered synchronously in registration order. | U3 | automated |\n| FR-004 | 59 | - **FR-004**: An `AgentController` MUST wrap EventBus with convenience methods. | U4 | automated |\n| FR-005 | 60 | - **FR-005**: The engine MUST emit lifecycle events through the bus. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/013-event-bus/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/013-event-bus/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

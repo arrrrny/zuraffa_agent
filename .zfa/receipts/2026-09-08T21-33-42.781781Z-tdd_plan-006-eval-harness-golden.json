@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "006-eval-harness-golden",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:33:42.781781Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "006-eval-harness-golden"
+  },
+  "files": [
+    {
+      "path": "specs/006-eval-harness-golden/tdd/test-list.md",
+      "action": "update",
+      "sha256": "eaf9c22359435727ca1af36240c5797dc79d89bde2ca608ab19f3a7c72123d21",
+      "bytes": 3700,
+      "snapshot": "# Test List: 006-eval-harness-golden\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | the engine consumes recordings instead of live calls with identical event order. | AC-1 | PENDING |\n| A2 | the harness reports a mismatch loudly — never silently passes. | AC-2 | PENDING |\n| A3 | pass@k matches the analytic value. | AC-3 | PENDING |\n| A4 | CI fails with per-task breakdown. | AC-4 | PENDING |\n| A5 | byte-equality decides. | AC-5 | PENDING |\n| A6 | JSON-Schema validity decides. | AC-6 | PENDING |\n| A7 | the parsed verdict decides, and the judge call is replayed deterministically. | AC-7 | PENDING |\n| A8 | all report and gate correctly. | AC-8 | PENDING |\n| A9 | no dart:io imports exist (CLI/loader layers exempt). | AC-9 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | The harness MUST record LLM + tool traffic and replay deterministically, detecting input drift. | FR-001 | PENDING |\n| U2 | Scoring MUST implement pass@k (unbiased estimator) and pass^k (empirical) with per-task breakdowns. | FR-002 | PENDING |\n| U3 | Graders MUST include exact, schema, and model-judge (recorded) types. | FR-003 | PENDING |\n| U4 | The harness MUST be consumable by `zfa agent replay` (plugin CLI) and dws_playground suites. | FR-004 | PENDING |\n| U5 | The eval runtime MUST be dart:io-free (enforced by static gate). | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| GoldenMission |  |\n| Suite |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 41]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: A5 -> acceptance lane [declared: type marker, spec line 56]\nroute: A6 -> acceptance lane [declared: type marker, spec line 58]\nroute: A7 -> acceptance lane [declared: type marker, spec line 60]\nroute: A8 -> acceptance lane [declared: type marker, spec line 73]\nroute: A9 -> acceptance lane [declared: type marker, spec line 86]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/006-eval-harness-golden/tdd/traceability.md",
+      "action": "update",
+      "sha256": "811a1cca7a73dedc015155eb67b3f97e5ea9bce9ccc58836d22d9015ef60d2ae",
+      "bytes": 2599,
+      "snapshot": "# Traceability: 006-eval-harness-golden\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:a7ed304f346602d522e682edb636d020589f2eb8f32e0ba90f17373ff7c8a6a7\nstatements: 14\nautomated: 14\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a recorded cassette (LLM responses keyed by request, tool results), **When** replayed, **Then** the engine consumes recordings instead of live calls with identical event order. | A1 | automated |\n| AC-2 | 27 | 2. **Given** a replay whose inputs drift from the recording (prompt change), **Then** the harness reports a mismatch loudly — never silently passes. | A2 | automated |\n| AC-3 | 40 | 1. **Given** a suite with k samples per task and known pass counts, **When** scored, **Then** pass@k matches the analytic value. | A3 | automated |\n| AC-4 | 42 | 2. **Given** a release gate of pass@k ≥ threshold, **When** a suite scores below, **Then** CI fails with per-task breakdown. | A4 | automated |\n| AC-5 | 55 | 1. **Given** a task with an exact grader, **Then** byte-equality decides. | A5 | automated |\n| AC-6 | 57 | 2. **Given** a schema grader, **Then** JSON-Schema validity decides. | A6 | automated |\n| AC-7 | 59 | 3. **Given** a model-judge grader (recorded judge), **Then** the parsed verdict decides, and the judge call is replayed deterministically. | A7 | automated |\n| AC-8 | 72 | 1. **Given** GM-1..GM-5 defined as harness suites, **When** CI runs, **Then** all report and gate correctly. | A8 | automated |\n| AC-9 | 85 | 1. **Given** the eval runtime package, **When** scanned, **Then** no dart:io imports exist (CLI/loader layers exempt). | A9 | automated |\n| FR-001 | 99 | - **FR-001**: The harness MUST record LLM + tool traffic and replay deterministically, detecting input drift. | U1 | automated |\n| FR-002 | 100 | - **FR-002**: Scoring MUST implement pass@k (unbiased estimator) and pass^k (empirical) with per-task breakdowns. | U2 | automated |\n| FR-003 | 101 | - **FR-003**: Graders MUST include exact, schema, and model-judge (recorded) types. | U3 | automated |\n| FR-004 | 102 | - **FR-004**: The harness MUST be consumable by `zfa agent replay` (plugin CLI) and dws_playground suites. | U4 | automated |\n| FR-005 | 103 | - **FR-005**: The eval runtime MUST be dart:io-free (enforced by static gate). | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/006-eval-harness-golden/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/006-eval-harness-golden/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

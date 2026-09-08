@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Playbook-as-spec behavior steering (R5#4)
 
 **Branch**: `104-playbook-as-spec-steering` (off master `9d0b341`) | **Date**: 2026-08-29
@@ -66,9 +68,11 @@ inconsistent gating lists) is rejected with a diagnostic naming the field.
 **Acceptance scenarios**:
 
 1. **Given** a valid playbook document, **When** loaded, **Then** the engine
+   **Type**: acceptance
    holds a typed playbook whose identity, steering entries, tool gate, and
    response constraints match the document exactly.
 2. **Given** a malformed playbook document (missing `id`, blank steering
+   **Type**: acceptance
    `content`, gating mode that is not one of `off` / `allowlist` /
    `blocklist`, `maxChars` less than 1, a non-empty irrelevant gate list —
    `blocked` on an `allowlist` gate, `allowed` on a `blocklist` gate, or
@@ -94,10 +98,12 @@ the transcript contains each entry's content as a user-role message.
 
 **Acceptance scenarios**:
 
-1. **Given** a loaded playbook with steering entries `[s1, s2]`, **When** a
+3. **Given** a loaded playbook with steering entries `[s1, s2]`, **When** a
+   **Type**: acceptance
    mission starts, **Then** the steering queue is seeded FIFO with `s1`, `s2`
    and the engine drains both — two `SteeringInjected` events, in order.
-2. **Given** a playbook with an empty steering section, **When** a mission
+4. **Given** a playbook with an empty steering section, **When** a mission
+   **Type**: acceptance
    starts, **Then** no playbook steering is injected (behavior identical to
    no playbook on this surface).
 
@@ -121,14 +127,17 @@ never sees it; an allowlisted call delegates with arguments preserved.
 
 **Acceptance scenarios**:
 
-1. **Given** a playbook gate of mode `allowlist` with `allowed: [search,
+5. **Given** a playbook gate of mode `allowlist` with `allowed: [search,
+   **Type**: acceptance
    fetch]`, **When** the agent dispatches `shell`, **Then** dispatch fails
    with `tool not allowed: shell` and the wrapped dispatcher is never invoked.
-2. **Given** a playbook gate of mode `blocklist` with `blocked: [shell]`,
+6. **Given** a playbook gate of mode `blocklist` with `blocked: [shell]`,
+   **Type**: acceptance
    **When** the agent dispatches `search`, **Then** dispatch delegates to the
    wrapped dispatcher; dispatching `shell` fails with
    `tool not allowed: shell`.
-3. **Given** a playbook with gate mode `off` (or no tool-gating section),
+7. **Given** a playbook with gate mode `off` (or no tool-gating section),
+   **Type**: acceptance
    **When** any tool is dispatched, **Then** the call delegates unchanged —
    the playbook adds no gate.
 
@@ -152,11 +161,13 @@ playbook id.
 
 **Acceptance scenarios**:
 
-1. **Given** a loaded playbook with `response.language: de`, **When** the
+8. **Given** a loaded playbook with `response.language: de`, **When** the
+   **Type**: acceptance
    mission starts, **Then** a steering message carrying the language
    directive (attributable to the playbook) is injected with the other
    playbook steering.
-2. **Given** a loaded playbook with `response.maxChars: 120`, **When** the
+9. **Given** a loaded playbook with `response.maxChars: 120`, **When** the
+   **Type**: acceptance
    final response is longer than 120 characters, **Then** the constrained
    response is exactly the first 120 characters followed by a truncation
    marker naming the playbook; a response at or under 120 characters passes
@@ -182,13 +193,16 @@ and matches each document's declarations.
 
 **Acceptance scenarios**:
 
-1. **Given** the Germany playbook, **When** a mission runs, **Then** its
+10. **Given** the Germany playbook, **When** a mission runs, **Then** its
+   **Type**: acceptance
    steering is emitted, its gated tools are refused, and its response
    constraints hold — as declared by that document.
-2. **Given** the Japan playbook (same engine code), **When** a mission runs,
+11. **Given** the Japan playbook (same engine code), **When** a mission runs,
+   **Type**: acceptance
    **Then** the behavior follows the Japan document instead — different
    steering content, different tool refusals, different constraints.
-3. **Given** a third, previously unseen playbook document, **When** loaded
+12. **Given** a third, previously unseen playbook document, **When** loaded
+   **Type**: acceptance
    and run through the same code, **Then** it also steers/gates/constrains
    per its own declarations — adding a playbook required only the document.
 
@@ -262,7 +276,7 @@ and matches each document's declarations.
   `ToolDispatcher` (spec 003/047), the engine loop's steering drain (spec
   002/069) — and MUST NOT mutate shared state: steering seeding returns new
   queue snapshots; the gate wraps the dispatcher it is given.
-- **FR-008** (gates): `dart analyze --fatal-infos` exit 0 on the changed
+- **FR-008**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the changed
   files; full `dart test` green (baseline 1163 passed + new); the runtime
   purity gate holds (no `dart:io` imports in the new files; constitution
   VII).

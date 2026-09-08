@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R3: MCP Transport Resilience — wire seam, reconnect, adapter, cache
 
 **Branch**: `082-mcp-transport-resilience` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -118,35 +120,35 @@ killer mutant.
 
 ### Functional requirements
 
-- **FR-001**: `McpWire` remains a stateless transport seam — `open` / `close`
+- **FR-001**: The system MUST satisfy this requirement: `McpWire` remains a stateless transport seam — `open` / `close`
   / `send` / `notifications` / `isOpen` only; reconnection state lives in the
   client, never on the wire (015 architecture, pinned by the existing wire /
   A6 tests; no new wire members).
-- **FR-002**: Reconnect backoff is exponential with a hard cap, and with
+- **FR-002**: The system MUST satisfy this requirement: Reconnect backoff is exponential with a hard cap, and with
   jitter enabled no applied delay exceeds `config.cap` (the jitter scale is
   clamped to the cap).
-- **FR-003**: A reconnect storm is bounded: one failure episode schedules at
+- **FR-003**: The system MUST satisfy this requirement: A reconnect storm is bounded: one failure episode schedules at
   most `config.maxAttempts` backoff delays; on exhaustion the client
   transitions to `McpClientState.failed`; after that transition no further
   delays are scheduled (a subsequent `callTool` returns
   `McpCallError('client-not-connected')` and the recorded delay count is
   unchanged).
-- **FR-004** (new): `McpClient` exposes `Stream<void> onReconnected`. SSE and
+- **FR-004**: The system MUST satisfy this requirement: `McpClient` exposes `Stream<void> onReconnected`. SSE and
   stdio clients fire it exactly once per successful recovery (the
   reconnecting → connected transition inside `_callWithReconnect`), never on
   the initial `connect()`, and close it on `disconnect()`. `InProcMcpClient`
   exposes a never-emitting stream.
-- **FR-005** (new): `ToolListingCache` subscribes to
+- **FR-005**: The system MUST satisfy this requirement: `ToolListingCache` subscribes to
   `client.onReconnected` and invalidates its entry when that fires; the
   subscription is cancelled by `dispose()`.
-- **FR-006**: Cache freshness is `age < maxAge` — an entry aged exactly
+- **FR-006**: The system MUST satisfy this requirement: Cache freshness is `age < maxAge` — an entry aged exactly
   `maxAge` is stale and the next `getOrRefresh()` re-lists.
-- **FR-007**: Tool calls resolve through `McpToolAdapter` under the
+- **FR-007**: The system MUST satisfy this requirement: Tool calls resolve through `McpToolAdapter` under the
   `mcp:<serverId>:<toolName>` namespace and surface as the sealed
   `McpCallResult` union (`McpCallOk` / `McpCallError`) — never as a thrown
   exception from the client surface (015 FR; pinned by existing adapter /
   client tests cited in the test list).
-- **FR-008**: Gates — `dart analyze` reports no new issues relative to the
+- **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, all out of scope); the full `dart test`
   suite is green.
 
@@ -178,3 +180,49 @@ killer mutant.
   master `29b7fef`.
 - Independent of: the 075–078 event/memory arc and every other subsystem
   (different files, no shared edits beyond the `mcp/` directory).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** T1: SSE drop mid-call → recovery → onReconnected fires exactly once **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** T2: stdio drop mid-call → recovery → onReconnected fires once **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** T3: onReconnected invalidates a TTL-fresh cache entry **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** T4: end-to-end — drop + recovery → the cache re-lists (SC-002) **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** T8: InProcMcpClient.onReconnected never emits **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** T5: jittered backoff never exceeds the cap (FR-002) **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** T6: storm terminality — bounded delays, failed state, frozen **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** T7: TTL boundary — an entry aged exactly maxAge is stale (FR-006) **Then** the pinned regression test passes (`test/mcp/mcp_082_resilience_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** sync() lists tools via the cache and registers each into the registry **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** names use the mcp:<serverId>:<toolName> convention **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** a subsequent sync() with new tools registers new and unregisters gone **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** startAutoSync() reacts to onToolsChanged: invalidates cache and re-syncs **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** dispose() stops the auto-sync **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** sync() after dispose throws StateError **Then** the pinned regression test passes (`test/mcp/mcp_tool_adapter_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** first call hits the underlying client **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance
+16. **Given** the feature implementation under its clean-architecture seams **When** second call within TTL returns the cached value (no second listTools) **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance
+17. **Given** the feature implementation under its clean-architecture seams **When** after TTL expiry, the next call re-lists **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance
+18. **Given** the feature implementation under its clean-architecture seams **When** explicit invalidate() forces the next call to re-list **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance
+19. **Given** the feature implementation under its clean-architecture seams **When** onToolsChanged from the client invalidates the cache **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance
+20. **Given** the feature implementation under its clean-architecture seams **When** dispose() cancels the onToolsChanged subscription **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
+   **Type**: acceptance

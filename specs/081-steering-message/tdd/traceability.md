@@ -1,0 +1,61 @@
+# Traceability: 081-steering-message
+
+Coverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).
+
+<!-- tdd:traceability
+spec-hash: sha256:7badad6394a08cbe0033e656d50b80681ebceb76581cf5bedcd8cf0fada33980
+statements: 46
+automated: 46
+manual: 0
+open-gaps: 0
+-->
+
+| requirement | line | statement | behavior | status |
+| --- | --- | --- | --- | --- |
+| FR-001 | 124 | - **FR-001**: `SteeringMessage` MUST be a value object with three | U1 | automated |
+| FR-002 | 127 | - **FR-002**: `SteeringMessage.toJson()` MUST return a | U2 | automated |
+| FR-003 | 132 | - **FR-003**: The system MUST satisfy this requirement: `SteeringMessage.fromJson(Map<String, dynamic> json)` | U3 | automated |
+| FR-004 | 135 | - **FR-004**: `SteeringMessage.fromJson` MUST throw `ArgumentError` | U4 | automated |
+| FR-005 | 144 | - **FR-005**: `SteeringMessage.==` MUST return `true` iff both | U5 | automated |
+| FR-006 | 149 | - **FR-006**: Edge cases that MUST round-trip losslessly: | U6 | automated |
+| FR-007 | 155 | - **FR-007**: `SteeringMessage.toString()` MUST return a human-readable | U7 | automated |
+| FR-008 | 158 | - **FR-008**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the | U8 | automated |
+| AC-1 | 208 | 1. **Given** the feature implementation under its clean-architecture seams **When** U1: arbitrary values round-trip losslessly **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A1 | automated |
+| AC-2 | 209 | 2. **Given** the feature implementation under its clean-architecture seams **When** U2: toJson shape has exactly three keys **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A2 | automated |
+| AC-3 | 210 | 3. **Given** the feature implementation under its clean-architecture seams **When** U3: toJson injectedAt is ISO-8601 parseable **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A3 | automated |
+| AC-4 | 211 | 4. **Given** the feature implementation under its clean-architecture seams **When** U4: missing id throws ArgumentError naming id **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A4 | automated |
+| AC-5 | 212 | 5. **Given** the feature implementation under its clean-architecture seams **When** U5: non-string id throws ArgumentError naming id **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A5 | automated |
+| AC-6 | 213 | 6. **Given** the feature implementation under its clean-architecture seams **When** U6: missing content throws ArgumentError naming content **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A6 | automated |
+| AC-7 | 214 | 7. **Given** the feature implementation under its clean-architecture seams **When** U7: non-string content throws ArgumentError naming content **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A7 | automated |
+| AC-8 | 215 | 8. **Given** the feature implementation under its clean-architecture seams **When** U8: missing injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A8 | automated |
+| AC-9 | 216 | 9. **Given** the feature implementation under its clean-architecture seams **When** U9: non-string injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A9 | automated |
+| AC-10 | 217 | 10. **Given** the feature implementation under its clean-architecture seams **When** U10: unparseable injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A10 | automated |
+| AC-11 | 218 | 11. **Given** the feature implementation under its clean-architecture seams **When** U11: equal messages are == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A11 | automated |
+| AC-12 | 219 | 12. **Given** the feature implementation under its clean-architecture seams **When** U12: differing id breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A12 | automated |
+| AC-13 | 220 | 13. **Given** the feature implementation under its clean-architecture seams **When** U13: differing content breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A13 | automated |
+| AC-14 | 221 | 14. **Given** the feature implementation under its clean-architecture seams **When** U14: differing injectedAt breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A14 | automated |
+| AC-15 | 222 | 15. **Given** the feature implementation under its clean-architecture seams **When** U15: hashCode agrees with == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A15 | automated |
+| AC-16 | 223 | 16. **Given** the feature implementation under its clean-architecture seams **When** U16: identity short-circuits **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A16 | automated |
+| AC-17 | 224 | 17. **Given** the feature implementation under its clean-architecture seams **When** U17: empty content round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A17 | automated |
+| AC-18 | 225 | 18. **Given** the feature implementation under its clean-architecture seams **When** U18: unicode id round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A18 | automated |
+| AC-19 | 226 | 19. **Given** the feature implementation under its clean-architecture seams **When** U19: unicode content round-trips (Chinese, emoji, RTL) **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A19 | automated |
+| AC-20 | 227 | 20. **Given** the feature implementation under its clean-architecture seams **When** U20: non-UTC timestamp round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A20 | automated |
+| AC-21 | 228 | 21. **Given** the feature implementation under its clean-architecture seams **When** U21: microsecond precision round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A21 | automated |
+| AC-22 | 229 | 22. **Given** the feature implementation under its clean-architecture seams **When** U22: large content (>= 10 KB) round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A22 | automated |
+| AC-23 | 230 | 23. **Given** the feature implementation under its clean-architecture seams **When** U23: includes type name and id; long content truncated **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`). | A23 | automated |
+| AC-24 | 231 | 24. **Given** the feature implementation under its clean-architecture seams **When** A1: enqueue on an empty queue yields head==message, isEmpty false, lastInjectedAt stamped **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A24 | automated |
+| AC-25 | 232 | 25. **Given** the feature implementation under its clean-architecture seams **When** A2: enqueue on a loaded queue appends FIFO (head stays the first) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A25 | automated |
+| AC-26 | 233 | 26. **Given** the feature implementation under its clean-architecture seams **When** A3: enqueue leaves the source snapshot fully unchanged (no state lost mid-turn) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A26 | automated |
+| AC-27 | 234 | 27. **Given** the feature implementation under its clean-architecture seams **When** U1: mutating the constructor source list after construction does not affect the queue **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A27 | automated |
+| AC-28 | 235 | 28. **Given** the feature implementation under its clean-architecture seams **When** U2: direct writes to queue.pending throw (unmodifiable view) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A28 | automated |
+| AC-29 | 236 | 29. **Given** the feature implementation under its clean-architecture seams **When** U4: enqueue preserves processedCount and id **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A29 | automated |
+| AC-30 | 237 | 30. **Given** the feature implementation under its clean-architecture seams **When** A4: pop returns the head and the drained queue with processedCount + 1 **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A30 | automated |
+| AC-31 | 238 | 31. **Given** the feature implementation under its clean-architecture seams **When** A5: pop on an empty queue throws StateError naming the queue id **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A31 | automated |
+| AC-32 | 239 | 32. **Given** the feature implementation under its clean-architecture seams **When** A6: double-pop drains FIFO and ends empty with processedCount + 2 **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A32 | automated |
+| AC-33 | 240 | 33. **Given** the feature implementation under its clean-architecture seams **When** U3: pop preserves lastInjectedAt on the drained queue **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A33 | automated |
+| AC-34 | 241 | 34. **Given** the feature implementation under its clean-architecture seams **When** A7: a populated queue round-trips JSON incl. FIFO order and processedCount **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A34 | automated |
+| AC-35 | 242 | 35. **Given** the feature implementation under its clean-architecture seams **When** A8: an empty queue serializes lastInjectedAt absent and restores null **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A35 | automated |
+| AC-36 | 243 | 36. **Given** the feature implementation under its clean-architecture seams **When** A9: a steering message round-trips JSON (id, content, injectedAt) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A36 | automated |
+| AC-37 | 244 | 37. **Given** the feature implementation under its clean-architecture seams **When** U5: malformed queue JSON throws ArgumentError (missing id, non-list pending, non-map entry) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A37 | automated |
+| AC-38 | 245 | 38. **Given** the feature implementation under its clean-architecture seams **When** U6: malformed message JSON throws ArgumentError naming the key **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`). | A38 | automated |
+

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: FallbackChain (advance policy + state)
 
 **Branch**: `053-fallback_chain` | **Date**: 2026-08-24
@@ -18,3 +20,19 @@ Fallback chain — advances on connection/timeout/5xx/context-overflow/repeated-
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #5 (Providers & Fallback)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** FallbackChain equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/fallback_chain/fallback_chain_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** FallbackChain inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/fallback_chain/fallback_chain_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** FallbackChainProvider is a FallbackChainService **Then** the pinned regression test passes (`test/data/providers/fallback_chain/fallback_chain_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** FallbackChainProvider.current returns the active chain snapshot **Then** the pinned regression test passes (`test/data/providers/fallback_chain/fallback_chain_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** FallbackChainProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/fallback_chain/fallback_chain_provider_test.dart`).
+   **Type**: acceptance

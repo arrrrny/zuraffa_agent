@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Memory tools — the agent-facing surface
 
 **Branch**: `feat/spec-074-memory-tools` (stacked on `feat/spec-073-agent-memory`, PR #84) | **Date**: 2026-08-29
@@ -38,7 +40,7 @@ sub-agent and swarm stacks.
 
 ## FRs
 
-- **FR-001** — Declarations: `memory_remember` (params: `content`
+- **FR-001**: The system MUST satisfy this requirement: Declarations: `memory_remember` (params: `content`
   required string, `tags` optional string array, `salience` optional
   number, `session_id` optional string), `memory_recall` (`query`
   required string, `limit` optional number), `memory_link` (`from_id`,
@@ -48,7 +50,7 @@ sub-agent and swarm stacks.
   WHEN to use it. `MemoryTools.declarations` returns all three
   (unmodifiable).
 
-- **FR-002** — `memory_remember` dispatch: builds a `MemoryRecord`
+- **FR-002**: The system MUST satisfy this requirement: `memory_remember` dispatch: builds a `MemoryRecord`
   (auto id `mem-<n>` from a per-dispatcher counter when `id` is not
   supplied — explicit `id` also accepted), `MemorySource(sessionId:
   session_id or agentName: 'memory-tool')`, salience clamped to
@@ -56,32 +58,32 @@ sub-agent and swarm stacks.
   (long-term when no `session_id`, session memory otherwise). Success
   result carries the stored id.
 
-- **FR-003** — Model-shaped failures return `ToolDispatchResult(success:
+- **FR-003**: The system MUST satisfy this requirement: Model-shaped failures return `ToolDispatchResult(success:
   false, result: '', error: <reason>, artifactRefs: [])`: missing or
   non-string `content`, whitespace-only content, out-of-range salience,
   unknown tool name. NO exception escapes `dispatch` for argument-shaped
   problems — the agent gets the error text and can retry.
 
-- **FR-004** — `memory_recall` dispatch: returns success with one line
+- **FR-004**: The system MUST satisfy this requirement: `memory_recall` dispatch: returns success with one line
   per hit, `"<layer> | <id> | salience <s> | <content>"`, in the
   system's ranking order, capped by `limit`. Empty/missing query is a
   failure result (not a match-all).
 
-- **FR-005** — `memory_link` dispatch: validates `type` against
+- **FR-005**: The system MUST satisfy this requirement: `memory_link` dispatch: validates `type` against
   `MemoryLinkType` names (unknown → failure result), then delegates to
   `AgentMemorySystem.link`. Endpoint validation comes from the system
   (unknown ids → failure result carrying the ArgumentError message);
   self-links likewise. Happy path returns success naming the link.
 
-- **FR-006** — `dispatchBatch` dispatches every call sequentially and
+- **FR-006**: The system MUST satisfy this requirement: `dispatchBatch` dispatches every call sequentially and
   returns one result per call, in order.
 
-- **FR-007** — `validateSchema` checks the required keys per tool
+- **FR-007**: The system MUST satisfy this requirement: `validateSchema` checks the required keys per tool
   (`content` for remember, `query` for recall, `from_id`/`to_id`/`type`
   for link) and returns the violation strings (empty list = valid);
   `checkRiskTier` is always true (all memory tools are safe-tier).
 
-- **FR-008** — `MemoryPromptProjection.render({int limit = 10})`: the
+- **FR-008**: The system MUST satisfy this requirement: `MemoryPromptProjection.render({int limit = 10})`: the
   top [limit] long-term memories by salience (desc, createdAt desc) as
   prompt lines `"- [id] content"`, highest salience first.
   `renderWithSession(sessionId, {int limit = 10})` prepends the
@@ -89,7 +91,7 @@ sub-agent and swarm stacks.
   `"[session] "`. Empty memory renders an empty list — the caller
   omits the section entirely.
 
-- **FR-009** — Gates: `dart analyze --fatal-infos` clean; `dart test`
+- **FR-009**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 925/2 at `4dd76e2` + new tests).
 
 ## Verification
@@ -107,3 +109,37 @@ sub-agent and swarm stacks.
 - Embedding-based recall (keyword + salience only, per 073).
 - Any new `EngineEvent` subtype (the union grows only from its own
   spec).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** declarations are safe-tier typed tools **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** remember generates ids and flows arguments **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** remember routes by session_id argument **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** recall renders ranked layer-attributed lines **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** link validates and delegates to the system **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** model-shaped failures come back as failure results **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** dispatchBatch maps every call in order **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** schema validation and risk tier **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** projection ranks by salience and marks session notes **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** agent story: remember, link, recall, project **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** an auto id never overwrites a memory stored under that id **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** a NaN salience is rejected as out of range **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** validateSchema rejects an explicit null for a required argument **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** renderWithSession applies limit per layer **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
+   **Type**: acceptance

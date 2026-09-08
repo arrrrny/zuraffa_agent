@@ -1,53 +1,72 @@
-# Test List: Agent memory — three layers
-
----
-feature: 073-agent-memory
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 10 # FR-001..FR-010 in spec.md
-planned_at: fec7889 # master
-updated_at: HEAD
-suite_baseline: green # 915 passed / 2 skipped at fec7889
----
+# Test List: 073-agent-memory
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | The three-layer story end-to-end: remember a long-term fact + a session note about it, link them `supports`, recall finds BOTH with correct layer attribution, promote the session note, recall still finds it (now long-term), the link survives | FR-006, FR-007, FR-008, FR-009 | example | PASSING | `test/engine/agent_memory_test.dart::spec 073 — AgentMemorySystem::three-layer story: remember, link, recall, promote` |
-| A2  | Recall ranking: salience desc then createdAt desc across BOTH layers interleaved (long-term low-salience vs session high-salience → session first) | FR-007 | example | PASSING | `…::recall ranks by salience then recency across both layers` |
-| A3  | Recall limit caps the merged result; empty query returns empty (no accidental match-all) | FR-007 | example | PASSING | `…::recall honors the limit and rejects empty queries` |
-| A4  | Graph integrity at the facade: link with either endpoint missing → ArgumentError; self-link → ArgumentError; re-linking the same from/to/type replaces (no throw) | FR-005, FR-008 | example | PASSING | `…::link validates endpoints and stays idempotent` |
-| A5  | Promote semantics: unknown id → ArgumentError; long-term id → ArgumentError; happy path removes from session store, preserves id/content/createdAt, lands in long-term | FR-009 | example | PASSING | `…::promote moves a session memory into long-term` |
-| A6  | Session evaporate: forgetSession drops the session's records; dangling links resolve with null record in `linked` | FR-003, FR-008 | example | PASSING | `…::forgetSession evaporates session memory and leaves honest dangling links` |
-| A7  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 915/2 + new) | FR-010 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/agent_memory_test.dart`). | AC-11 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/agent_memory.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `MemoryRecord` / `MemorySource` / `MemoryLink` / `RecallHit` value semantics (==, hashCode, toString); salience bounds; empty content; source all-null each validated | FR-001, FR-004 | example | PASSING | `…::value objects carry house semantics and validation` |
-| U2  | Long-term store: same-id replace keeps position; search case-insensitive substring ranked salience/createdAt; byTag exact; latest(n); unmodifiable views | FR-002 | example | PASSING | `…::LongTermMemoryStore replaces, ranks, and filters` |
-| U3  | Session store: records scoped per session (same id in two sessions is a replace within the second… no — id is globally unique, second insert replaces the FIRST occurrence and rescopes it); forSession insertion order; byId across sessions | FR-003 | example | PASSING | `…::SessionMemoryStore scopes by session with global id uniqueness` |
-| U4  | Graph standalone: neighborsOf includes incoming AND outgoing (outgoing flag correct); contradictions(); linksOf(type); direction is meaningful (a supports b ≠ b supports a — different links) | FR-004, FR-005 | example | PASSING | `…::MemoryGraph traverses both directions and filters by type` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: `MemoryRecord` (house value semantics): `id`, `content` | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: Long-term store: `remember(MemoryRecord)` (same-id | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: Session store: `remember(sessionId, record)` (a record | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: `MemoryLinkType`: `supports`, `contradicts`, | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: Memory graph: `link(fromId, toId, type)` rejects | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: `AgentMemorySystem.remember`: with `sessionId: null` | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: `AgentMemorySystem.recall(String query, {int? limit})`: | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: `AgentMemorySystem.link` validates BOTH endpoints | FR-008 | PENDING |
+| U9 | The system MUST satisfy this requirement: `promote(sessionRecordId)`: moves a record from session | FR-009 | PENDING |
+| U10 | The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` | FR-010 | PENDING |
 
-## Invariants and edge cases
+## Routing provenance
 
-- Layer attribution: every RecallHit carries the layer its record came from; interleaved ranking never partitions by layer (A2).
-- Promote preserves identity: id, content, createdAt identical before/after (A5).
-- Dangling links are honest: `linked` returns the link with null record rather than hiding or crashing (A6).
-- Empty query: recall returns empty — no match-all footgun (A3).
-- Graph direction: from/to are NOT interchangeable — the pair (from,to,type) is the identity; (to,from,type) is a different, legitimate link (U4).
-- Session store id uniqueness: an id moves with its record — remembering the same id under a different session relocates it (U3).
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Mutation plan (deliberate, one at a time, cp-restored)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A10 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A11 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | mutant | killed by |
-| --- | ------ | --------- |
-| M1  | recall sorted by insertion order (salience ranking dropped) | A2 (session high-salience must outrank long-term low-salience) |
-| M2  | recall searches long-term store only | A1/A2 (session hits vanish) |
-| M3  | promote copies to long-term but does NOT remove from session store | A5 (forSession must be empty after promote) |
-| M4  | neighborsOf returns outgoing links only | U4 (incoming link invisible) |
-| M5  | duplicate (from,to,type) link throws instead of replacing | A4 (re-link must not throw) |

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: AgentSession root entity (R2 sessions) — aggregate transitions + persistence contract
 
 **Feature Branch**: `feat/specs-032-033-034-035` (spec dir: `032-agent-session-root`)
@@ -21,8 +23,11 @@ As the engine loop, when a turn/tool/usage entry is appended to the session tree
 **Acceptance Scenarios**:
 
 1. **Given** a session whose cursor is null (fresh), **When** `appendEntry('entry-1', at: ts)` is called, **Then** the returned snapshot has `currentEntryId == 'entry-1'`, `updatedAt == ts`, and the source snapshot still has `currentEntryId == null`.
+   **Type**: acceptance
 2. **Given** a session whose cursor is `'entry-2'`, **When** `appendEntry('entry-3')` is called, **Then** the returned snapshot's cursor is `'entry-3'` and `isHead` stays true.
+   **Type**: acceptance
 3. **Given** an empty entry id, **When** `appendEntry('')` is called, **Then** an `ArgumentError` is thrown — the cursor is never silently moved to nothing.
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the engine (R2.2 "branch/fork/resume first-class"), when a mission forks, I d
 
 **Acceptance Scenarios**:
 
-1. **Given** a session with cursor `'entry-3'`, **When** forked, **Then** the child's `currentEntryId == 'entry-3'` (fork point = current head), `parentSessionId` points at the parent, and `isBranch` is true.
-2. **Given** a fresh session (cursor null), **When** forked, **Then** the child's cursor is the parent's `rootEntryId` — the fork point falls back to the root anchor when no entries were written.
-3. **Given** a session with `missionId` set, **When** forked, **Then** the child inherits the same `missionId` (the branch stays inside the mission).
+4. **Given** a session with cursor `'entry-3'`, **When** forked, **Then** the child's `currentEntryId == 'entry-3'` (fork point = current head), `parentSessionId` points at the parent, and `isBranch` is true.
+   **Type**: acceptance
+5. **Given** a fresh session (cursor null), **When** forked, **Then** the child's cursor is the parent's `rootEntryId` — the fork point falls back to the root anchor when no entries were written.
+   **Type**: acceptance
+6. **Given** a session with `missionId` set, **When** forked, **Then** the child inherits the same `missionId` (the branch stays inside the mission).
+   **Type**: acceptance
 
 ---
 
@@ -52,9 +60,12 @@ As the persistence layer (JSONL session storage / Hive session store / session-t
 
 **Acceptance Scenarios**:
 
-1. **Given** a fully-populated session (id, missionId, rootEntryId, currentEntryId, parentSessionId, createdAt, updatedAt), **When** serialized and parsed back, **Then** the parsed value equals the original on every field.
-2. **Given** a minimal session (null missionId/currentEntryId/parentSessionId), **When** serialized, **Then** those keys are absent from the JSON map — never `null`, never empty strings — and the round-trip restores them as null.
-3. **Given** a JSON map missing `id`, `rootEntryId`, `createdAt` or `updatedAt`, **When** parsed, **Then** an `ArgumentError` names the offending key (typed failure, never a silent default).
+7. **Given** a fully-populated session (id, missionId, rootEntryId, currentEntryId, parentSessionId, createdAt, updatedAt), **When** serialized and parsed back, **Then** the parsed value equals the original on every field.
+   **Type**: acceptance
+8. **Given** a minimal session (null missionId/currentEntryId/parentSessionId), **When** serialized, **Then** those keys are absent from the JSON map — never `null`, never empty strings — and the round-trip restores them as null.
+   **Type**: acceptance
+9. **Given** a JSON map missing `id`, `rootEntryId`, `createdAt` or `updatedAt`, **When** parsed, **Then** an `ArgumentError` names the offending key (typed failure, never a silent default).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -99,3 +110,10 @@ As the persistence layer (JSONL session storage / Hive session store / session-t
 - Timestamps in JSON are ISO-8601 strings; zone normalization to UTC is accepted behavior for non-UTC values (the stores keep instants).
 - The provider/service layers stay stubs in this feature (FR-005): wiring them to a store is a separate feature; the existing compile-parity and stub tests keep passing unchanged.
 - The scaffold's `hashCode` (all-scalar fields through `Object.hash`) already satisfies the ==/hashCode contract — no hash remediation needed here (unlike spec 034, where a Map field breaks the contract).
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: UiTreePayload value object (UI/tree+json)
 
 **Feature Branch**: `038-ui-tree-payload`
@@ -21,8 +23,11 @@ As the MCP tool boundary (spec 003 / issue #8), when a tool result or final miss
 **Acceptance Scenarios**:
 
 1. **Given** a payload with a 3-level tree, **When** serialized with `toJson()` and parsed with `fromJson`, **Then** the parsed payload equals the original (fields, tree, depth, nodeCount) and its `toJson()` is deep-equal to the first.
+   **Type**: acceptance
 2. **Given** a JSON map with `mimeType` absent, or set to `"application/json"`, **When** parsed, **Then** `ArgumentError` naming `mimeType` is thrown.
+   **Type**: acceptance
 3. **Given** a JSON map with an empty `vocabularyId`/`schemaVersion` or a `tree` that is not a `Map`, **When** parsed, **Then** `ArgumentError` is thrown naming the offending field.
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the replay/record tooling (specs 059/060 lineage), I compare two ui/tree+json
 
 **Acceptance Scenarios**:
 
-1. **Given** two payloads with identical pinning where b adds a child, removes a child, and modifies a props value, **When** diffed, **Then** exactly those three paths appear in `addedPaths`/`removedPaths`/`changedPaths` and `hasChanges` is true.
-2. **Given** two payloads with identical trees but different `vocabularyId` (or `schemaVersion`), **When** diffed, **Then** the structural paths are empty but `vocabularyChanged` (or `schemaChanged`) is true and `hasChanges` is true.
-3. **Given** two identical payloads, **When** diffed, **Then** all delta collections are empty, both pin flags false, `hasChanges` false.
+4. **Given** two payloads with identical pinning where b adds a child, removes a child, and modifies a props value, **When** diffed, **Then** exactly those three paths appear in `addedPaths`/`removedPaths`/`changedPaths` and `hasChanges` is true.
+   **Type**: acceptance
+5. **Given** two payloads with identical trees but different `vocabularyId` (or `schemaVersion`), **When** diffed, **Then** the structural paths are empty but `vocabularyChanged` (or `schemaChanged`) is true and `hasChanges` is true.
+   **Type**: acceptance
+6. **Given** two identical payloads, **When** diffed, **Then** all delta collections are empty, both pin flags false, `hasChanges` false.
+   **Type**: acceptance
 
 ---
 
@@ -52,8 +60,10 @@ As the emitting tool, I construct the payload once and the cost model (depth/nod
 
 **Acceptance Scenarios**:
 
-1. **Given** nested trees of depth 3 / 5 nodes, **When** constructed, **Then** `depth == 3` and `nodeCount == 5` (pinned by existing tests).
-2. **Given** empty `vocabularyId` or `schemaVersion`, **When** constructed, **Then** `ArgumentError` (pinned by existing tests).
+7. **Given** nested trees of depth 3 / 5 nodes, **When** constructed, **Then** `depth == 3` and `nodeCount == 5` (pinned by existing tests).
+   **Type**: acceptance
+8. **Given** empty `vocabularyId` or `schemaVersion`, **When** constructed, **Then** `ArgumentError` (pinned by existing tests).
+   **Type**: acceptance
 
 ### Edge Cases
 

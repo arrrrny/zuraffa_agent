@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: HealthSnapshot (chain state)
 
 **Branch**: `054-health_snapshot` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Health snapshot API — exposes chain state per provider (open/closed/half-open)
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #5 (Providers & Fallback)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshot equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshot inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshotProvider is a HealthSnapshotService **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshotProvider.current returns the active chain snapshot **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshotProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** HealthSnapshotProvider honours an injected value object **Then** the pinned regression test passes (`test/data/providers/health_snapshot/health_snapshot_provider_test.dart`).
+   **Type**: acceptance

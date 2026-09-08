@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "008-fallback-chain-runtime",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:32:43.514151Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "008-fallback-chain-runtime"
+  },
+  "files": [
+    {
+      "path": "specs/008-fallback-chain-runtime/tdd/test-list.md",
+      "action": "update",
+      "sha256": "fe4a208d047bd8ac8777d412b2b2db955f7c8e0ea342b4a6e6c15c30be711601",
+      "bytes": 3861,
+      "snapshot": "# Test List: 008-fallback-chain-runtime\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | B serves it; the mission observes only latency. [AC-1] | AC-1 | PENDING |\n| A2 | a half-open probe routes real traffic back on success. [AC-2] | AC-2 | PENDING |\n| A3 | the policy restarts on the next provider — never silently truncates. [AC-3] | AC-3 | PENDING |\n| A4 | the breaker opens. [AC-4] | AC-4 | PENDING |\n| A5 | the state transitions to half-open. [AC-5] | AC-5 | PENDING |\n| A6 | the state transitions to closed. [AC-6] | AC-6 | PENDING |\n| A7 | it matches the internal breaker states. [AC-7] | AC-7 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | A `FallbackChainClient` MUST wrap multiple `LlmClient` instances with automatic failover. | FR-001 | PENDING |\n| U2 | Each provider MUST have an independent circuit breaker (open/half-open/closed). | FR-002 | PENDING |\n| U3 | The chain MUST advance on connection error, timeout, 5xx, context overflow, or repeated 429. | FR-003 | PENDING |\n| U4 | Mid-stream failures MUST restart on the next provider (configurable policy). | FR-004 | PENDING |\n| U5 | A health snapshot API MUST expose chain state at any time. | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| FallbackChainClient |  |\n| CircuitBreaker |  |\n| ClientHealth |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/008-fallback-chain-runtime/tdd/traceability.md",
+      "action": "update",
+      "sha256": "42de2db474c96d9846705bf8a81e4419f4e6c3622460f95314a8a057b3bcd020",
+      "bytes": 2289,
+      "snapshot": "# Traceability: 008-fallback-chain-runtime\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:490810befc924484a08487de3fe170f2a55687813318b15ad2511a5b4d1e2712\nstatements: 12\nautomated: 12\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** provider A failing, **When** a call is made, **Then** B serves it; the mission observes only latency. **[AC-1]** | A1 | automated |\n| AC-2 | 26 | 2. **Given** A in open state, **When** the cooldown elapses, **Then** a half-open probe routes real traffic back on success. **[AC-2]** | A2 | automated |\n| AC-3 | 27 | 3. **Given** a mid-stream failure after partial chunks, **Then** the policy restarts on the next provider — never silently truncates. **[AC-3]** | A3 | automated |\n| AC-4 | 39 | 1. **Given** maxConsecutiveFailures=3, **When** 3 consecutive failures occur, **Then** the breaker opens. **[AC-4]** | A4 | automated |\n| AC-5 | 40 | 2. **Given** an open breaker with cooldownMs=60000, **When** 60s elapse, **Then** the state transitions to half-open. **[AC-5]** | A5 | automated |\n| AC-6 | 41 | 3. **Given** a half-open breaker, **When** a call succeeds, **Then** the state transitions to closed. **[AC-6]** | A6 | automated |\n| AC-7 | 53 | 1. **Given** any chain state, **When** the snapshot is read, **Then** it matches the internal breaker states. **[AC-7]** | A7 | automated |\n| FR-001 | 59 | - **FR-001**: A `FallbackChainClient` MUST wrap multiple `LlmClient` instances with automatic failover. | U1 | automated |\n| FR-002 | 60 | - **FR-002**: Each provider MUST have an independent circuit breaker (open/half-open/closed). | U2 | automated |\n| FR-003 | 61 | - **FR-003**: The chain MUST advance on connection error, timeout, 5xx, context overflow, or repeated 429. | U3 | automated |\n| FR-004 | 62 | - **FR-004**: Mid-stream failures MUST restart on the next provider (configurable policy). | U4 | automated |\n| FR-005 | 63 | - **FR-005**: A health snapshot API MUST expose chain state at any time. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/008-fallback-chain-runtime/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/008-fallback-chain-runtime/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: ArtifactProvider.list NoParams override fix
 
 **Feature Branch**: `011-artifact-provider-noparams-list`
@@ -21,8 +23,11 @@ As the build CI, I see `dart analyze --fatal-infos` succeed on `lib/src/data/pro
 **Acceptance Scenarios**:
 
 1. **Given** an `ArtifactService` interface declaring `Future<List<ArtifactRef>> list(NoParams params)`, **When** `ArtifactProvider` is generated to `implement ArtifactService`, **Then** its `list` method declares `Future<List<ArtifactRef>> list(NoParams params)` and `dart analyze` reports no `invalid_override` error.
+   **Type**: acceptance
 2. **Given** the parameterless service method `int thresholdBytes(NoParams params)`, **When** `ArtifactProvider` overrides it, **Then** the override is `int thresholdBytes(NoParams params)` (shared root cause with issue #12; the hand-curated file resolves both — each issue still gets its own PR per the per-issue worktree rule). **[AC-2]**
+   **Type**: acceptance
 3. **Given** any future contributor running `dart test`, **Then** the parameterless-method round-trip test (`list(NoParams())` and `thresholdBytes(NoParams())`) passes against the in-memory stub provider. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Pattern is reproducible for other parameterless services (Priority: P2)
 
@@ -34,7 +39,8 @@ As the next agent fixing a sibling zfa-bug (e.g. #12, #25, #27, #29), I copy the
 
 **Acceptance Scenarios**:
 
-1. **Given** the merged `ArtifactService` / `ArtifactProvider` files, **When** an agent clones them for the next parameterless-service fix, **Then** the cloned files pass `dart analyze` after only the entity-type swap. **[AC-4]**
+4. **Given** the merged `ArtifactService` / `ArtifactProvider` files, **When** an agent clones them for the next parameterless-service fix, **Then** the cloned files pass `dart analyze` after only the entity-type swap. **[AC-4]**
+   **Type**: acceptance
 
 ### Edge Cases
 

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Loop Detection (LLM-based)
 
 **Feature Branch**: `011-loop-detection-llm`
@@ -21,8 +23,11 @@ As the engine, I detect when the model repeats the same tool call with the same 
 **Acceptance Scenarios**:
 
 1. **Given** the same tool call signature (name + arguments) repeated `toolLoopThreshold` times in succession, **When** the threshold is reached, **Then** a loop is detected (isLoop=true, reason "tool_call_loop", confidence 1.0) and the mission should stop. **[AC-1]**
+   **Type**: acceptance
 2. **Given** a tool-call streak interrupted by a *different* tool call, **When** the different call is observed, **Then** the streak resets and no loop is detected from the earlier run. **[AC-2]**
+   **Type**: acceptance
 3. **Given** tool-result or user messages interleaved between identical tool calls, **When** the detector observes them, **Then** they do not reset the streak (a call→result→call→result chain still accumulates). **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - LLM-based stagnation detection (Priority: P1)
 
@@ -34,9 +39,12 @@ As the engine, after a configurable number of turns, I periodically send recent 
 
 **Acceptance Scenarios**:
 
-1. **Given** llmCheckAfterTurns=30, **When** 30 turns pass, **Then** an LLM diagnosis is triggered (exactly one LLM call at the boundary). **[AC-4]**
-2. **Given** the LLM diagnoses stagnation with confidence > stagnationThreshold (default 0.8), **When** the diagnosis returns, **Then** the loop is detected and the mission stops. **[AC-5]**
-3. **Given** a diagnosis below the confidence threshold, **When** it returns, **Then** the mission continues normally (no detection). **[AC-6]**
+4. **Given** llmCheckAfterTurns=30, **When** 30 turns pass, **Then** an LLM diagnosis is triggered (exactly one LLM call at the boundary). **[AC-4]**
+   **Type**: acceptance
+5. **Given** the LLM diagnoses stagnation with confidence > stagnationThreshold (default 0.8), **When** the diagnosis returns, **Then** the loop is detected and the mission stops. **[AC-5]**
+   **Type**: acceptance
+6. **Given** a diagnosis below the confidence threshold, **When** it returns, **Then** the mission continues normally (no detection). **[AC-6]**
+   **Type**: acceptance
 
 ### User Story 3 - Configurable thresholds (Priority: P2)
 
@@ -48,7 +56,8 @@ As an operator, I configure the loop detection parameters: tool call repetition 
 
 **Acceptance Scenarios**:
 
-1. **Given** custom thresholds, **When** detection runs, **Then** the configured thresholds are used. **[AC-1/AC-4/AC-6 with non-default settings]**
+7. **Given** custom thresholds, **When** detection runs, **Then** the configured thresholds are used. **[AC-1/AC-4/AC-6 with non-default settings]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

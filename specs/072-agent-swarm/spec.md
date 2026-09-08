@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Agent swarm
 
 **Branch**: `feat/spec-072-agent-swarm` (stacked on `feat/spec-070-sub-agent-dispatch`, PR #81) | **Date**: 2026-08-29
@@ -35,40 +37,40 @@ keyed by task id.
 
 ## FRs
 
-- **FR-001** — Value objects (spec 066 house pattern): `SwarmTask`
+- **FR-001**: The system MUST satisfy this requirement: Value objects (spec 066 house pattern): `SwarmTask`
   (`id`, `spec: SubAgentSpec`, `mission`), `SwarmTaskResult` (`taskId`,
   `specName`, `status: SubAgentDispatchStatus`, `summary`), `SwarmResult`
   (`strategy`, `status`, `results`, `winner`, `completedCount`), each with
   `==`/`hashCode`/`toString`. Duplicate task ids are rejected with
   `ArgumentError` at `run()` (member instances key on task id).
-- **FR-002** — Concurrent fan-out: every task's dispatch starts EAGERLY
+- **FR-002**: The system MUST satisfy this requirement: Concurrent fan-out: every task's dispatch starts EAGERLY
   (all futures created before any is awaited — overlap is provable: a
   probe observing in-flight dispatches sees `maxActive == tasks.length`).
   Each member runs on a synthesized `SubAgentInstance(id: task.id,
   subAgentSpecId: spec.name, parentSessionId: 'swarm', totalRuns: 0)`.
-- **FR-003** — `allCompleted` (default): await every member; `status ==
+- **FR-003**: The system MUST satisfy this requirement: `allCompleted` (default): await every member; `status ==
   completed` iff every member's dispatch status is `completed`, else
   `partialFailure`; `results` in TASK order; `completedCount` = successful
   members; `winner` null.
-- **FR-004** — `firstCompleted`: the first member to finish with dispatch
+- **FR-004**: The system MUST satisfy this requirement: `firstCompleted`: the first member to finish with dispatch
   status `completed` wins — `status == firstCompleted`, `winner` set,
   `results == [winner]`, `completedCount == 1`. If every member finishes
   without a single completion: `partialFailure`, `winner` null, all
   results, `completedCount == 0`. Non-winning members are NOT cancelled
   (documented; they run to completion detached).
-- **FR-005** — `quorum`: `quorum` (k) is REQUIRED for this strategy and
+- **FR-005**: The system MUST satisfy this requirement: `quorum`: `quorum` (k) is REQUIRED for this strategy and
   must satisfy `1 <= k <= tasks.length` (`ArgumentError` otherwise, as is
   a missing k). The k-th successful member triggers
   `status == quorumReached` with `completedCount == k` and the
   completion-ordered results collected up to and including that member;
   if all members finish with fewer than k successes: `quorumFailed` with
   all results and the true success count.
-- **FR-006** — Pass-through wiring: `onEvent`, `clock`, `adminGranted`
+- **FR-006**: The system MUST satisfy this requirement: Pass-through wiring: `onEvent`, `clock`, `adminGranted`
   forwarded to every member dispatch; member `MissionStarted.missionId ==
   task.id` (the caller can attribute every event to its swarm member).
-- **FR-007** — Empty swarm is a caller bug: `run(tasks: [])` throws
+- **FR-007**: The system MUST satisfy this requirement: Empty swarm is a caller bug: `run(tasks: [])` throws
   `ArgumentError`.
-- **FR-008** — Gates: `dart analyze --fatal-infos` clean; `dart test` green
+- **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 937/2 at `52ee56a` + new tests).
 
 ## Verification
@@ -87,3 +89,29 @@ keyed by task id.
   spec 070's contract).
 - Swarm-level budgets (members carry their own spec budgets).
 - New EngineEvent subtypes (FR-006 documents the pass-through instead).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** members dispatch concurrently (overlap provable) **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** allCompleted returns a barrier over task-ordered results **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** allCompleted reports partialFailure when a member fails **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** firstCompleted wins on completion order, not submission order **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** firstCompleted without any success degrades to partialFailure **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** quorum reached on the k-th success **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** quorum unmet fails with the true success count **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** validation rejects empty, duplicate-id, and bad-quorum runs **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** single-task swarm runs a real child mission end-to-end **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** value objects carry house semantics **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
+   **Type**: acceptance

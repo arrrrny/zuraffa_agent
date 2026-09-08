@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "015-engine-event-json-part",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:40:44.222511Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "015-engine-event-json-part"
+  },
+  "files": [
+    {
+      "path": "specs/015-engine-event-json-part/tdd/test-list.md",
+      "action": "update",
+      "sha256": "2e66132bfaecdee74ac6b274d33d4cb417ac55a65de82fbcd9ccc250c034b402",
+      "bytes": 1481,
+      "snapshot": "# Test List: 015-engine-event-json-part\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | the part directive resolves and every engine-event behavior test passes (compilation is the pin; owner arrrrrny). | AC-1 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]\n\n"
+    },
+    {
+      "path": "specs/015-engine-event-json-part/tdd/traceability.md",
+      "action": "update",
+      "sha256": "1a476bc732c490695d63c97c09f8e3e6189545fdb9e64796b832eedc638a1808",
+      "bytes": 836,
+      "snapshot": "# Traceability: 015-engine-event-json-part\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:2605e5abc19c5c48f9aea71c4e8ba57f688c0447e1e352b9a5282b225a9954d9\nstatements: 1\nautomated: 1\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 28 | 1. **Given** the hand-curated sealed `EngineEvent` library with its `part 'engine_event.g.dart'` placeholder **When** the repository suite compiles and runs **Then** the part directive resolves and every engine-event behavior test passes (compilation is the pin; owner arrrrrny). | A1 | automated |\n\n"
+    },
+    {
+      "path": "specs/015-engine-event-json-part/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/015-engine-event-json-part/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

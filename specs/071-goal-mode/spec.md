@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Goal mode
 
 **Branch**: `feat/spec-071-goal-mode` (stacked on `feat/spec-069-mission-runner`, PR #80) | **Date**: 2026-08-29
@@ -37,25 +39,25 @@ prose in three old spec task files); the closest primitives are budget-only
 
 ## FRs
 
-- **FR-001** — `Goal` is a house-pattern value object: `id` + `description`,
+- **FR-001**: The system MUST satisfy this requirement: `Goal` is a house-pattern value object: `id` + `description`,
   with `==`/`hashCode`/`toString`.
-- **FR-002** — `GoalEvaluator` is the injected strategy:
+- **FR-002**: The system MUST satisfy this requirement: `GoalEvaluator` is the injected strategy:
   `bool isAchieved(Goal goal, List<ChatMessage> transcript)`. Rule-based in
   tests; an LLM-as-judge implementation plugs in behind the same seam. The
   transcript handed to the evaluator is an unmodifiable view.
-- **FR-003** — `run(goal: g, goalEvaluator: e)` (both or neither —
+- **FR-003**: The system MUST satisfy this requirement: `run(goal: g, goalEvaluator: e)` (both or neither —
   `ArgumentError` naming the mismatch otherwise). With goal mode active,
   after each turn's tool dispatch and `TurnCompleted` emission, and BEFORE
   the natural-stop check, the runner consults the evaluator; a `true`
   verdict stops the mission with `MissionStatus.goalAchieved`, `summary`
   set to that turn's assistant content, and `MissionCompleted.status ==
   'goalAchieved'`.
-- **FR-004** — Result surface: `MissionResult.goal` (the goal when goal
+- **FR-004**: The system MUST satisfy this requirement: Result surface: `MissionResult.goal` (the goal when goal
   mode ran, else null) and `MissionResult.goalAchieved` (true only on the
   `goalAchieved` terminal path; false when goal mode ran but the mission
   ended any other way; false when goal mode was inactive). Value semantics
   (`==`/`hashCode`/`toString`) extended accordingly.
-- **FR-005** — Ordering guarantees, load-bearing and mutation-tested:
+- **FR-005**: The system MUST satisfy this requirement: Ordering guarantees, load-bearing and mutation-tested:
   (a) evaluation happens AFTER tool dispatch within the turn (an evaluator
   keyed on tool results fires on the SAME turn they land);
   (b) evaluation happens BEFORE the natural-stop check (a goal met on the
@@ -63,11 +65,11 @@ prose in three old spec task files); the closest primitives are budget-only
   (c) the evaluator is consulted once per completed turn (a provider-failed
   turn is never evaluated);
   (d) budgets still win — goal mode never overrides `budgetExhausted`.
-- **FR-006** — No new `EngineEvent` subtypes: goal achievement surfaces
+- **FR-006**: The system MUST satisfy this requirement: No new `EngineEvent` subtypes: goal achievement surfaces
   through the terminal `MissionCompleted.status` string only (the sealed
   union grows only from its own spec, per issues #16–#24 / spec 067
   precedent).
-- **FR-007** — Gates: `dart analyze --fatal-infos` clean; `dart test` green
+- **FR-007**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 925/2 at `8a5bd83` + new tests; the spec-069 suite must stay
   green through the `MissionResult` surface extension).
 
@@ -84,3 +86,27 @@ prose in three old spec task files); the closest primitives are budget-only
 - An LLM-as-judge evaluator implementation (the seam accepts it later).
 - Persisting goals on `AgentSession` / mission records.
 - A goal-specific event subtype (FR-006 documents why not).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** goal achieved on turn 1 stops the mission early **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** goal evaluation sees tool results within the same turn **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** goal met on the natural-stop turn reports goalAchieved **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** unmet goal leaves the mission to its natural stop, evaluator consulted every turn **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** budget exhaustion overrides goal mode **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** goal and goalEvaluator must be supplied together **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** provider-failed turn is never goal-evaluated **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** evaluator receives an unmodifiable transcript view **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** Goal value semantics **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
+   **Type**: acceptance

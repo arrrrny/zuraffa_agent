@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Providers & Fallback Chain
 
 **Feature Branch**: `004-providers-and-fallback`
@@ -21,7 +23,9 @@ As the engine, I offer LLM clients for OpenAI-compatible (covers zikzak-ai self-
 **Acceptance Scenarios**:
 
 1. **Given** recorded provider fixtures, **When** each client streams, **Then** events, tool-call buffering, and usage fields parse identically across providers.
+   **Type**: acceptance
 2. **Given** the engine's pubspec, **When** resolved, **Then** dart_agent_core is absent; vendored files carry attribution.
+   **Type**: acceptance
 
 ### User Story 2 - Usage accounting (Priority: P2)
 
@@ -33,7 +37,8 @@ As the engine, every LLM call records token usage into the `UsageLedger` (spec 0
 
 **Acceptance Scenarios**:
 
-1. **Given** any completed LLM call, **When** inspected, **Then** its ledger entry exists with provider + model + token counts.
+3. **Given** any completed LLM call, **When** inspected, **Then** its ledger entry exists with provider + model + token counts.
+   **Type**: acceptance
 
 ### User Story 3 - Fallback chain with circuit breaker (Priority: P1)
 
@@ -45,9 +50,12 @@ As the engine operator, I configure an ordered provider chain (e.g., self-host �
 
 **Acceptance Scenarios**:
 
-1. **Given** provider A failing, **When** a call is made, **Then** B serves it; the mission observes only latency.
-2. **Given** A in open state, **When** the cooldown elapses, **Then** a half-open probe routes real traffic back on success.
-3. **Given** a mid-stream failure after partial chunks, **Then** the policy restarts on the next provider (or surfaces, per config) — never silently truncates.
+4. **Given** provider A failing, **When** a call is made, **Then** B serves it; the mission observes only latency.
+   **Type**: acceptance
+5. **Given** A in open state, **When** the cooldown elapses, **Then** a half-open probe routes real traffic back on success.
+   **Type**: acceptance
+6. **Given** a mid-stream failure after partial chunks, **Then** the policy restarts on the next provider (or surfaces, per config) — never silently truncates.
+   **Type**: acceptance
 
 ### User Story 4 - Health snapshot (Priority: P3)
 
@@ -59,7 +67,8 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` (state, failure 
 
 **Acceptance Scenarios**:
 
-1. **Given** any chain state, **When** the snapshot is read, **Then** it matches the internal breaker states.
+7. **Given** any chain state, **When** the snapshot is read, **Then** it matches the internal breaker states.
+   **Type**: acceptance
 
 ### Edge Cases
 

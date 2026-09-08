@@ -1,74 +1,58 @@
----
-feature: 29-tool_call_signature-datasource-pair
-loop: outside-in
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 7
-planned_at: 95f59a9
-updated_at: 4547b6a
-suite_baseline: green
----
-
-# Test List: ToolCallSignature datasource + mock pair
+# Test List: 29-tool_call_signature-datasource-pair
 
 ## Outer loop: acceptance behaviors
 
-One per acceptance criterion in `spec.md`. Each stays red until the feature works
-end to end through its real entry point — the datasource public API.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                    | traces   | kind    | state   | test                                                                                    |
-| --- | --------------------------------------------------------------------------- | -------- | ------- | ------- | --------------------------------------------------------------------------------------- |
-| A1  | capture(sig) then lookup(sig.key) returns the equal signature (round-trip)  | AC US1-1 | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| A2  | lookup of a never-captured key reports absence (null, no throw)             | AC US1-2 | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| A3  | Equal content builds equal signatures with identical keys                   | AC US2-1 | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart`                 |
-| A4  | Differing version (or name/hash) makes signatures unequal with different keys | AC US2-2 | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart`               |
-| A5  | Capturing the same content twice holds one entry (idempotent capture)       | AC US2-3 | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| A6  | count reflects distinct captured signatures                                | AC US3-1 | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| A7  | reset() zeroes count and clears every lookup                               | AC US3-2 | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | a subsequent `lookup(signature.key)` returns the signature (round-trip). | AC-1 | PENDING |
+| A2 | absence is reported (null / not-found — no throw, no phantom entry). | AC-2 | PENDING |
+| A3 | both signatures are equal, hash equally, and their keys are identical. | AC-3 | PENDING |
+| A4 | the signature is unequal to the version-1 signature and its key differs. | AC-4 | PENDING |
+| A5 | the store holds one entry (idempotent capture — dedup at the datasource level too). | AC-5 | PENDING |
+| A6 | it returns 3. | AC-6 | PENDING |
+| A7 | `count` returns 0 and every `lookup` reports absence. | AC-7 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/tool_call_signature/tool_call_signature.dart`
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The `ToolCallSignature` value object MUST carry `toolName`, `argumentHash`, `version` (default 1) with value equality and hashCode across all three fields. | FR-001 | PENDING |
+| U2 | `ToolCallSignature` MUST derive `id`/`key` from content — a stable canonical string of the form `toolName@version:argumentHash` — identical for equal signatures, different for any differing component. | FR-002 | PENDING |
+| U3 | Constructor backward compatibility MUST hold: `ToolCallSignature(id: ...)` from the anemic scaffold keeps compiling, and a content-only constructor derives the key automatically. | FR-003 | PENDING |
+| U4 | The datasource interface MUST define the persistence contract: `capture(signature)`, `lookup(key)`, `count()`, `reset()` — all asynchronous; plus the scaffolded `current()`/`reset()` semantics folded into the refined surface. | FR-004 | PENDING |
+| U5 | `capture` MUST be idempotent per key — duplicate captures of equal signatures do not grow the store. | FR-005 | PENDING |
+| U6 | `lookup` MUST return the captured signature for a known key and absence (null) for an unknown key — never throw for misses. | FR-006 | PENDING |
+| U7 | The mock datasource MUST implement the contract in memory: a key-addressed map, seeded empty, `reset` clearing all entries. | FR-007 | PENDING |
 
-| id  | behavior                                                                    | traces         | kind    | state   | test                                                                      |
-| --- | --------------------------------------------------------------------------- | -------------- | ------- | ------- | ------------------------------------------------------------------------- |
-| U1  | Equal content ⇒ equal signatures and equal hashCodes                       | FR-001, SC-003 | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
-| U2  | Differing toolName, argumentHash or version ⇒ unequal signatures           | FR-001, SC-003 | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
-| U3  | key is the canonical 'toolName@version:argumentHash' string                | FR-002         | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
-| U4  | version defaults to 1                                                       | FR-003         | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
-| U5  | Legacy ToolCallSignature(id: ...) construction keeps compiling              | FR-003         | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
-| U6  | Equality ignores a legacy explicit id — the content triple decides          | FR-001, edge-3 | example | DONE    | `test/domain/entities/tool_call_signature/tool_call_signature_test.dart` |
+## Routing provenance
 
-### `lib/src/data/datasources/tool_call_signature/` (interface + mock)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                    | traces         | kind    | state   | test                                                                      |
-| --- | --------------------------------------------------------------------------- | -------------- | ------- | ------- | ------------------------------------------------------------------------- |
-| U7  | Mock implements the datasource interface (compile parity, issues #29/#30)   | FR-004         | example | BASELINE | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| U8  | lookup returns null for misses — typed as ToolCallSignature?                | FR-006         | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
-| U9  | Empty toolName / argument hash are valid content with well-formed keys      | edge-4         | example | DONE    | `test/data/datasources/tool_call_signature/tool_call_signature_mock_datasource_test.dart` |
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 43]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 47]
+route: A6 -> acceptance lane [declared: type marker, spec line 62]
+route: A7 -> acceptance lane [declared: type marker, spec line 64]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Invariants and edge cases still to place
-
-- The key must be stable across process restarts within a version — it is a
-  pure function of content (covered by U3's format pin).
-- reset must not affect any other store (spec 25's tracker) — separate
-  instances by construction; no test coupling needed, documented in spec.
-
-## Out of scope
-
-- Signature → result caching (mapping to ToolResult): composes with spec 031;
-  not this pair's surface.
-- Cryptographic hashing of arguments (producing argumentHash): the caller's
-  concern; this pair treats the hash as opaque content.
-- Eviction policies (LRU/TTL) beyond reset: future backend concern.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md`:
-
-- Single test: `dart test <file> --plain-name "<test name>"`
-- Full suite: `dart test`
-- Coverage: not configured (corroboration only, never a gate)
-- Mutation (changed files): no tool configured — deliberate hand-mutants per
-  `/speckit.tdd.verify` Phase 4

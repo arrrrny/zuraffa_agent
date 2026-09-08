@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: PassAtK unbiased estimator (R6 eval harness)
 
 **Feature Branch**: `037-pass-at-k`
@@ -21,7 +23,9 @@ As the eval harness (R6), after a mission's n recorded runs I hold a list of per
 **Acceptance Scenarios**:
 
 1. **Given** a 10-run outcome list with 6 passes, **When** `fromResults(outcomes, k: 3)`, **Then** the result equals `compute(n: 10, c: 6, k: 3)` exactly (same triple, same value).
+   **Type**: acceptance
 2. **Given** an empty outcome list, or k < 1, or k > n, **When** `fromResults` is called, **Then** `ArgumentError` is thrown (the run is too small to draw from / the draw count is invalid).
+   **Type**: acceptance
 
 ---
 
@@ -35,8 +39,10 @@ As the eval reporter, I compare a pass@k value against a policy threshold ("miss
 
 **Acceptance Scenarios**:
 
-1. **Given** a pass@k result, **When** `meetsThreshold` is called with t == value, or t just below, **Then** it returns true; with t just above, false (both sides of the boundary).
-2. **Given** a threshold < 0 or > 1, **When** `meetsThreshold` is called, **Then** `ArgumentError` is thrown.
+3. **Given** a pass@k result, **When** `meetsThreshold` is called with t == value, or t just below, **Then** it returns true; with t just above, false (both sides of the boundary).
+   **Type**: acceptance
+4. **Given** a threshold < 0 or > 1, **When** `meetsThreshold` is called, **Then** `ArgumentError` is thrown.
+   **Type**: acceptance
 
 ---
 
@@ -50,7 +56,8 @@ As a metric consumer, I rely on the estimator's mathematical shape: monotonic no
 
 **Acceptance Scenarios**:
 
-1. **Given** n = 20, c = 4, **When** k sweeps 1..16, **Then** pass@k is non-decreasing across the sweep.
+5. **Given** n = 20, c = 4, **When** k sweeps 1..16, **Then** pass@k is non-decreasing across the sweep.
+   **Type**: acceptance
 
 ### Edge Cases
 

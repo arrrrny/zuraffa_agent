@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Episodic Memory
 
 **Feature Branch**: `010-episodic-memory`
@@ -21,8 +23,11 @@ As the engine, when context is compressed, the compressed messages become Episod
 **Acceptance Scenarios**:
 
 1. **Given** a compression event, **When** it completes, **Then** an EpisodicMemory entry is created with the XML snapshot and original messages. **[AC-1]**
+   **Type**: acceptance
 2. **Given** episodic memories exist, **When** the agent builds context, **Then** memory summaries are available for retrieval (AgentMessageHistory carries messages + episodicMemories). **[AC-2]**
+   **Type**: acceptance
 3. **Given** three successive compression events on a growing conversation, **When** all three complete, **Then** the store holds exactly 3 entries whose combined original messages cover the full compressed history. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Memory retrieval tool (Priority: P1)
 
@@ -34,8 +39,10 @@ As the model, I can call `retrieve_memory` to access earlier conversation histor
 
 **Acceptance Scenarios**:
 
-1. **Given** episodic memories exist, **When** `retrieve_memory` is called with snapshot_id, **Then** the specific memory is returned — with its original messages, not just the summary. **[AC-4]**
-2. **Given** episodic memories exist, **When** `retrieve_memory` is called with limit/offset, **Then** paginated results are returned. **[AC-5]**
+4. **Given** episodic memories exist, **When** `retrieve_memory` is called with snapshot_id, **Then** the specific memory is returned — with its original messages, not just the summary. **[AC-4]**
+   **Type**: acceptance
+5. **Given** episodic memories exist, **When** `retrieve_memory` is called with limit/offset, **Then** paginated results are returned. **[AC-5]**
+   **Type**: acceptance
 
 ### User Story 3 - Memory persistence (Priority: P2)
 
@@ -47,7 +54,8 @@ As the engine, episodic memories persist across sessions via the session storage
 
 **Acceptance Scenarios**:
 
-1. **Given** persisted episodic memories, **When** the session loads, **Then** memories are restored. **[AC-3 — the persistence half]**
+6. **Given** persisted episodic memories, **When** the session loads, **Then** memories are restored. **[AC-3 — the persistence half]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

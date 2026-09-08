@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Tools & MCP Client
 
 **Feature Branch**: `003-tools-and-mcp`
@@ -21,8 +23,11 @@ As the engine, I resolve tools from one registry: DDA-registered tools, AgentPlu
 **Acceptance Scenarios**:
 
 1. **Given** tools registered from any source, **When** the loop emits a call, **Then** the registry resolves it regardless of origin.
+   **Type**: acceptance
 2. **Given** arguments violating a tool's JSON Schema, **When** dispatched, **Then** a validation error returns as the tool result (mission continues).
+   **Type**: acceptance
 3. **Given** a parallel-execution batch, **When** dispatched, **Then** tools run concurrently with results collected in call order.
+   **Type**: acceptance
 
 ### User Story 2 - Risk tiers first-class (Priority: P1)
 
@@ -34,8 +39,10 @@ As the policy shell, I read each tool's risk tier â€” `safe | confirm | admin` â
 
 **Acceptance Scenarios**:
 
-1. **Given** risk `confirm`, **When** dispatched, **Then** execution awaits the approval callback; denial or timeout yields a denied tool result.
-2. **Given** risk `admin` on a non-internal mission, **When** dispatched, **Then** it is denied without invoking the implementation.
+4. **Given** risk `confirm`, **When** dispatched, **Then** execution awaits the approval callback; denial or timeout yields a denied tool result.
+   **Type**: acceptance
+5. **Given** risk `admin` on a non-internal mission, **When** dispatched, **Then** it is denied without invoking the implementation.
+   **Type**: acceptance
 
 ### User Story 3 - Native MCP client, three transports (Priority: P1)
 
@@ -47,9 +54,12 @@ As the engine, I act as MCP client over: **in-proc** (registry-direct, zero IPC 
 
 **Acceptance Scenarios**:
 
-1. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects (backoff) and resumes tool listing/calls.
-2. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without manager rebuild.
-3. **Given** in-proc tools, **When** called in a tight loop, **Then** no serialization boundary exists (pass-by-reference with defensive arg copy).
+6. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects (backoff) and resumes tool listing/calls.
+   **Type**: acceptance
+7. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without manager rebuild.
+   **Type**: acceptance
+8. **Given** in-proc tools, **When** called in a tight loop, **Then** no serialization boundary exists (pass-by-reference with defensive arg copy).
+   **Type**: acceptance
 
 ### User Story 4 - Tool-result size discipline (Priority: P2)
 
@@ -61,7 +71,8 @@ As the engine, results beyond a size threshold are summarized with an `artifactR
 
 **Acceptance Scenarios**:
 
-1. **Given** an oversized tool result, **When** returned to the loop, **Then** the model sees summary + artifactRef only.
+9. **Given** an oversized tool result, **When** returned to the loop, **Then** the model sees summary + artifactRef only.
+   **Type**: acceptance
 
 ### Edge Cases
 

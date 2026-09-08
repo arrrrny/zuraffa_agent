@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Event Bus
 
 **Feature Branch**: `013-event-bus`
@@ -21,7 +23,9 @@ As a plugin developer, I can subscribe to typed events emitted by the agent (sta
 **Acceptance Scenarios**:
 
 1. **Given** a subscriber to LLMChunkEvent, **When** the model streams, **Then** each chunk event is delivered.
+   **Type**: acceptance
 2. **Given** multiple subscribers, **When** an event fires, **Then** all subscribers receive it.
+   **Type**: acceptance
 
 ### User Story 2 - Request/response pattern (Priority: P2)
 
@@ -33,7 +37,8 @@ As a plugin developer, I can handle request/response events where the handler re
 
 **Acceptance Scenarios**:
 
-1. **Given** a registered handler for BeforeToolCallRequest, **When** the event fires, **Then** the handler's response is used.
+3. **Given** a registered handler for BeforeToolCallRequest, **When** the event fires, **Then** the handler's response is used.
+   **Type**: acceptance
 
 ### User Story 3 - Controller convenience (Priority: P2)
 
@@ -45,7 +50,8 @@ As a developer, an `AgentController` wraps the event bus with convenience method
 
 **Acceptance Scenarios**:
 
-1. **Given** an AgentController, **When** publish is called, **Then** all listeners receive the event.
+4. **Given** an AgentController, **When** publish is called, **Then** all listeners receive the event.
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

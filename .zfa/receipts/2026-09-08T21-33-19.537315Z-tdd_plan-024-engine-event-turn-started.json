@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "024-engine-event-turn-started",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:33:19.537315Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "024-engine-event-turn-started"
+  },
+  "files": [
+    {
+      "path": "specs/024-engine-event-turn-started/tdd/test-list.md",
+      "action": "update",
+      "sha256": "028fc3e2e8f951c43673670d3e96faeb9843efc98ab8373a39e79a193451c15a",
+      "bytes": 3869,
+      "snapshot": "# Test List: 024-engine-event-turn-started\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | `dart analyze` reports no `invalid_use_of_type_outside_library` error. | AC-1 | PENDING |\n| A2 | it succeeds with no `exhaustive_switch` warnings (the `switch` over `EngineEvent` in the test uses a `default` arm OR is checked with `is TurnStarted`). | AC-2 | PENDING |\n| A3 | the switch is exhaustive when expanded as `switch (e) { case TurnStarted(): ... }`. | AC-3 | PENDING |\n| A4 | `dart analyze` succeeds with no new errors. | AC-4 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | `lib/src/engine/events/engine_event.dart` MUST declare `sealed class EngineEvent` with `part 'turn_started.dart';` and `part 'engine_event.g.dart';` directives. | FR-001 | PENDING |\n| U2 | `lib/src/engine/events/turn_started.dart` MUST be `part of 'engine_event.dart';` and declare `final class TurnStarted extends EngineEvent` with a `const TurnStarted();` constructor and any payload fields the engine will emit (start-of-turn timestamp `DateTime`, optional `turnId` `String?`). | FR-002 | PENDING |\n| U3 | `lib/src/engine/events/engine_event.dart` MUST export the `EngineEvent` library through `lib/zuraffa_agent.dart` (i.e., add `export 'src/engine/events/engine_event.dart';`). | FR-003 | PENDING |\n| U4 | `dart analyze --fatal-infos` MUST report zero issues on `lib/` and on the new files in particular. | FR-004 | PENDING |\n| U5 | A new test file at `test/engine/events/engine_event_test.dart` MUST assert: (a) `TurnStarted()` is `is EngineEvent`; (b) `TurnStarted()` is `is TurnStarted`; (c) a `switch` over `EngineEvent` with a single `TurnStarted` case + `default` compiles and runs. | FR-005 | PENDING |\n| U6 | `dart test` MUST pass all pre-existing tests (now 134 after PR #32) + new tests = ≥ 137 passing. | FR-006 | PENDING |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 30]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/024-engine-event-turn-started/tdd/traceability.md",
+      "action": "update",
+      "sha256": "f7a8d1ae7bd5fe5f213f9e769f70741c304d4cb9b23c8add5c424863dc2f8a05",
+      "bytes": 2986,
+      "snapshot": "# Traceability: 024-engine-event-turn-started\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:78210932f3334d71746476a31aacee871eaa4deab6dfed5bcbc397a3946439de\nstatements: 10\nautomated: 10\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a hand-curated `lib/src/engine/events/engine_event.dart` declaring `sealed class EngineEvent`, **When** a part file declares `final class TurnStarted extends EngineEvent`, **Then** `dart analyze` reports no `invalid_use_of_type_outside_library` error. | A1 | automated |\n| AC-2 | 27 | 2. **Given** `TurnStarted` is the only `EngineEvent` subtype in this PR, **When** `dart analyze` is run on the whole `lib/`, **Then** it succeeds with no `exhaustive_switch` warnings (the `switch` over `EngineEvent` in the test uses a `default` arm OR is checked with `is TurnStarted`). | A2 | automated |\n| AC-3 | 29 | 3. **Given** a downstream consumer switches over `engineEvent`, **When** only `TurnStarted` is implemented, **Then** the switch is exhaustive when expanded as `switch (e) { case TurnStarted(): ... }`. | A3 | automated |\n| AC-4 | 42 | 1. **Given** the merged `engine_event.dart` library, **When** an agent adds a second `final class` extending `EngineEvent` in its own part file, **Then** `dart analyze` succeeds with no new errors. | A4 | automated |\n| FR-001 | 55 | - **FR-001**: `lib/src/engine/events/engine_event.dart` MUST declare `sealed class EngineEvent` with `part 'turn_started.dart';` and `part 'engine_event.g.dart';` directives. | U1 | automated |\n| FR-002 | 56 | - **FR-002**: `lib/src/engine/events/turn_started.dart` MUST be `part of 'engine_event.dart';` and declare `final class TurnStarted extends EngineEvent` with a `const TurnStarted();` constructor and any payload fields the engine will emit (start-of-turn timestamp `DateTime`, optional `turnId` `String?`). | U2 | automated |\n| FR-003 | 57 | - **FR-003**: `lib/src/engine/events/engine_event.dart` MUST export the `EngineEvent` library through `lib/zuraffa_agent.dart` (i.e., add `export 'src/engine/events/engine_event.dart';`). | U3 | automated |\n| FR-004 | 58 | - **FR-004**: `dart analyze --fatal-infos` MUST report zero issues on `lib/` and on the new files in particular. | U4 | automated |\n| FR-005 | 59 | - **FR-005**: A new test file at `test/engine/events/engine_event_test.dart` MUST assert: (a) `TurnStarted()` is `is EngineEvent`; (b) `TurnStarted()` is `is TurnStarted`; (c) a `switch` over `EngineEvent` with a single `TurnStarted` case + `default` compiles and runs. | U5 | automated |\n| FR-006 | 60 | - **FR-006**: `dart test` MUST pass all pre-existing tests (now 134 after PR #32) + new tests = ≥ 137 passing. | U6 | automated |\n\n"
+    },
+    {
+      "path": "specs/024-engine-event-turn-started/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "69fcaeb4167ba0a01b1f48508beec09e9a84e25b0085250a9045917c57e2f8e3",
+      "bytes": 278,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n| turn_started.dart | text |  | NOT-DONE |\n| engine_event.g.dart | text |  | NOT-DONE |\n| engine_event.dart | text |  | NOT-DONE |\n| src/engine/events/engine_event.dart | text |  | NOT-DONE |\n"
+    },
+    {
+      "path": "specs/024-engine-event-turn-started/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "65202cca706958d74b8d33a4b64374b24992733cf2a311136b75466654ce52e2",
+      "bytes": 337,
+      "snapshot": "[{\"surface\":\"turn_started.dart\",\"kind\":\"text\",\"provenBy\":[],\"state\":\"NOT-DONE\"},{\"surface\":\"engine_event.g.dart\",\"kind\":\"text\",\"provenBy\":[],\"state\":\"NOT-DONE\"},{\"surface\":\"engine_event.dart\",\"kind\":\"text\",\"provenBy\":[],\"state\":\"NOT-DONE\"},{\"surface\":\"src/engine/events/engine_event.dart\",\"kind\":\"text\",\"provenBy\":[],\"state\":\"NOT-DONE\"}]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

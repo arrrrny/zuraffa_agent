@@ -1,59 +1,54 @@
-# Test List: Loop Detection (LLM-based)
-
----
-feature: 011-loop-detection-llm
-loop: outside-in
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 6 # acceptance criteria AC-1..AC-6 in spec.md
-planned_at: 725312f
-updated_at: 725312f
-suite_baseline: red # 6 pre-existing loading failures (unrelated features); green criterion = feature tests pass AND failure delta vs the spec-010 baseline (6 loading failures) is zero new
----
+# Test List: 011-loop-detection-llm
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| A1  | 5 identical read_file("lib/a.dart") calls in a row are detected as a loop at the 5th call | AC-1, SC-001 | example | DONE | `default_loop_detector_test.dart::A1` |
-| A2  | 50 varied tool calls (different names/args) never fire a tool-loop detection | AC-2, SC-003 | example | DONE | `default_loop_detector_test.dart::A2` |
-| A3  | A call→result→call→result chain of identical calls accumulates and fires at the threshold | AC-3 | example | DONE | `default_loop_detector_test.dart::A3` |
-| A4  | With llmCheckAfterTurns=30 the first diagnosis fires exactly at turn 30 (one LLM call), not at 29 | AC-4, FR-003 | example | DONE | `default_loop_detector_test.dart::A4` |
-| A5  | A stagnation verdict at confidence 0.9 (threshold 0.8) produces a stop-signal result carrying the LLM's confidence and reason | AC-5, SC-002 | example | DONE | `default_loop_detector_test.dart::A5` |
-| A6  | A 60-turn non-stagnant mission (healthy diagnoses) yields zero detections | AC-6, SC-003 | example | DONE | `default_loop_detector_test.dart::A6` |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | a loop is detected (isLoop=true, reason "tool_call_loop", confidence 1.0) and the mission should stop. [AC-1] | AC-1 | PENDING |
+| A2 | the streak resets and no loop is detected from the earlier run. [AC-2] | AC-2 | PENDING |
+| A3 | they do not reset the streak (a call→result→call→result chain still accumulates). [AC-3] | AC-3 | PENDING |
+| A4 | an LLM diagnosis is triggered (exactly one LLM call at the boundary). [AC-4] | AC-4 | PENDING |
+| A5 | the loop is detected and the mission stops. [AC-5] | AC-5 | PENDING |
+| A6 | the mission continues normally (no detection). [AC-6] | AC-6 | PENDING |
+| A7 | the configured thresholds are used. [AC-1/AC-4/AC-6 with non-default settings] | AC-7 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/llm/loop_detector.dart`
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U1  | LoopDetectorConfig defaults: toolLoopThreshold=5, llmCheckAfterTurns=30, llmCheckInterval=5, stagnationThreshold=0.8, diagnosisWindowMessages=20 | FR-005, FR-004 | example | DONE | `loop_detector_test.dart::U1` |
-| U2  | LoopDetectorResult carries isLoop/reason/confidence/turnNumber with value semantics | Key Entities | example | DONE | `loop_detector_test.dart::U2` |
-| U3  | toolCallSignature is key-order-insensitive (same args in any order → same signature) and call-id-insensitive | FR-001 | example | DONE | `loop_detector_test.dart::U3` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The engine MUST detect tool call loops by tracking recent call signatures. | FR-001 | PENDING |
+| U2 | The engine MUST detect cognitive stagnation via periodic LLM diagnosis. | FR-002 | PENDING |
+| U3 | LLM diagnosis MUST be triggered after a configurable number of turns. | FR-003 | PENDING |
+| U4 | Stagnation detection MUST use a confidence threshold (default 0.8). | FR-004 | PENDING |
+| U5 | Detection parameters MUST be configurable. | FR-005 | PENDING |
 
-### `lib/src/llm/default_loop_detector.dart` — tool-loop path
+## Routing provenance
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U4  | The streak fires exactly at toolLoopThreshold consecutive identical signatures — not before (4 identical calls → no detection) | FR-001, AC-1 | boundary | DONE | `default_loop_detector_test.dart::U4` |
-| U5  | A different tool-call signature resets the streak (5×A, 1×B, 4×A → still no loop; the 5th consecutive A fires) | FR-001, AC-2 | example | DONE | `default_loop_detector_test.dart::U5` |
-| U6  | ToolResult/user messages between identical calls do not reset the streak | AC-3 | example | DONE | `default_loop_detector_test.dart::U6` |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### `lib/src/llm/default_loop_detector.dart` — stagnation path
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 43]
+route: A5 -> acceptance lane [declared: type marker, spec line 45]
+route: A6 -> acceptance lane [declared: type marker, spec line 47]
+route: A7 -> acceptance lane [declared: type marker, spec line 60]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | behavior | traces | kind    | state   | test |
-| --- | -------- | ------ | ------- | ------- | ---- |
-| U7  | Without an LlmClient the detector runs the pure heuristic path: many turns, zero diagnosis calls, tool-loop detection still works | FR-002 | example | DONE | `default_loop_detector_test.dart::U7` |
-| U8  | The first diagnosis fires at exactly llmCheckAfterTurns assistant turns and then every llmCheckInterval turns | FR-003, AC-4 | example | DONE | `default_loop_detector_test.dart::U8` |
-| U9  | An isStagnant verdict with confidence >= stagnationThreshold produces a detection carrying the verdict's confidence and reason | FR-002, FR-004, AC-5 | example | DONE | `default_loop_detector_test.dart::U9` |
-| U10 | A verdict with confidence below the threshold produces no detection (mission continues) | FR-004, AC-6 | boundary | DONE | `default_loop_detector_test.dart::U10` |
-| U11 | A malformed (non-JSON) diagnosis response is fail-open: no detection, error surfaced on the result | Assumptions | example | DONE | `default_loop_detector_test.dart::U11` |
-
-## Mutation targets (deliberate-mutant sampling)
-
-| target | mutant | killed by |
-| ------ | ------ | --------- |
-| streak reset branch | never reset (different signature ignored) | U5 (expects reset semantics) |
-| signature normalization | raw jsonEncode (key-order-sensitive) | U3 (same args reordered → equal signatures) |
-| confidence comparison | `>=` → `>` | U10 + boundary verdict at exactly 0.8 |
-| verdict parse | treat unparseable as stagnant | U11 (fail-open contract) |

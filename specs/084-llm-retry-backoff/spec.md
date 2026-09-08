@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R4: LLM Client Retry & Backoff — transient-error resilience
 
 **Branch**: `084-llm-retry-backoff` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -17,7 +19,7 @@ surface a clear final error when exhausted."
 ## Summary
 
 `sendWithRetry` / `openStreamWithRetry` (lib/src/llm/retry.dart, spec 007
-FR-006) already retry 429/5xx with capped exponential backoff behind an
+- **FR-006**: The system MUST satisfy this requirement: ) already retry 429/5xx with capped exponential backoff behind an
 injectable `LlmClock`, and `test/llm/retry_test.dart` (U4–U9) pins that
 core. What the R4 contract (issue #95) asks for that the tree does not yet
 satisfy:
@@ -118,36 +120,36 @@ sequences.
 
 ### Functional requirements
 
-- **FR-001**: The retryable set is exactly: HTTP 429, HTTP 5xx, and
+- **FR-001**: The system MUST satisfy this requirement: The retryable set is exactly: HTTP 429, HTTP 5xx, and
   `LlmNetworkException` (connection-level). Non-retryable statuses (other
   4xx) throw `LlmHttpException` immediately with zero retries (existing
   U7 pin; network recovery/exhaustion now first-class tested).
-- **FR-002**: Backoff for computed delays is exponential
+- **FR-002**: The system MUST satisfy this requirement: Backoff for computed delays is exponential
   (`base << (attempt-1)` plus injectable jitter) capped at
   `maxDelayMs`; total attempts are capped at `maxAttempts` (existing U8
   pin, cited).
-- **FR-003**: A `Retry-After` header in seconds form is honored UNCLAMPED:
+- **FR-003**: The system MUST satisfy this requirement: A `Retry-After` header in seconds form is honored UNCLAMPED:
   the sleep equals the header value in ms, regardless of `maxDelayMs` or
   any fixed ceiling (the 3600s cap is removed). Negative values are
   treated as 0; absent/unparseable headers fall back to the computed
   backoff.
-- **FR-004**: Network errors (`LlmNetworkException`) are retried under the
+- **FR-004**: The system MUST satisfy this requirement: Network errors (`LlmNetworkException`) are retried under the
   same policy (same backoff, same `maxAttempts`).
-- **FR-005**: On exhaustion the final error is typed and
+- **FR-005**: The system MUST satisfy this requirement: On exhaustion the final error is typed and
   attempt-annotated: the HTTP path throws `LlmHttpException` with
   `attempts == maxAttempts`; the network path throws a terminal
   `LlmNetworkException` (same type as the cause chain, original `cause`,
   `attempts == maxAttempts`); both `toString` forms name the attempt
   count. Outside the retry loop the exceptions default to `attempts: 1`
   (single-shot semantics, e.g. provider clients).
-- **FR-006**: Timing is deterministic under the injected clock: the same
+- **FR-006**: The system MUST satisfy this requirement: Timing is deterministic under the injected clock: the same
   script + the same jitter function produce byte-identical sleep
   sequences across runs (`LlmClock` seam, existing; now pinned
   cross-run).
-- **FR-007**: `openStreamWithRetry` follows the identical policy on the
+- **FR-007**: The system MUST satisfy this requirement: `openStreamWithRetry` follows the identical policy on the
   initial HTTP exchange (retryable statuses, Retry-After, attempts on the
   final error).
-- **FR-008**: Gates — `dart analyze` reports no new issues relative to the
+- **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green, including the unmodified spec-007 `test/llm/retry_test.dart`.
 
@@ -157,7 +159,7 @@ sequences.
 - `LlmHttpException` / `LlmNetworkException` — gain `attempts`.
 - `LlmClock` — injectable clock/sleep seam (unchanged).
 - `sendWithRetry` / `openStreamWithRetry` — policy unchanged except
-  FR-003/FR-005.
+- **FR-003**: The system MUST satisfy this requirement: /FR-005.
 
 ## Success criteria
 
@@ -178,3 +180,37 @@ sequences.
   the spec-007 test fixtures (`FakeLlmTransport`, `FakeLlmClock`).
 - Independent of: fallback chain (053), circuit breaker (035), MCP
   (082), ledger (083) — different files.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** T1 (pin): one network error then 200 recovers with one backoff **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** T2: network exhaustion → terminal typed error with attempts **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** T3: HTTP exhaustion → LlmHttpException with attempts **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** T5: Retry-After: 7200 with maxDelayMs: 250 → sleep exactly **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** T6 (pin): Retry-After: 90 with maxDelayMs: 250 → 90000 **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** T7 (pin): negative Retry-After is treated as 0 **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** T8 (pin): openStreamWithRetry honors Retry-After on the initial **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** T9 (pin): identical runs record identical sleep sequences **Then** the pinned regression test passes (`test/llm/retry_084_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** U4: a 429 then success is retried exactly once with one backoff delay **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** U5: a 5xx then success is retried and succeeds **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** U6: exhausted retries throw the last HTTP error after maxAttempts attempts **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** U7: a non-retryable 4xx is thrown immediately with zero retries **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** U8: backoff delays grow exponentially, are capped, and jitter is deterministic **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** U9: a Retry-After header overrides the computed backoff delay **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
+   **Type**: acceptance

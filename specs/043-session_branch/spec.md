@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: SessionBranch (fork/switch/resume)
 
 **Branch**: `043-session_branch` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Branching primitive — fork a session at entry N, switch between branches, resu
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #3 (State & Sessions)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** SessionBranch equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** SessionBranch inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** SessionBranchProvider is a SessionBranchService **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** SessionBranchProvider.current returns the active branch **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** SessionBranchProvider.current returns a supplied active branch **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** SessionBranchProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/session_branch/session_branch_provider_test.dart`).
+   **Type**: acceptance

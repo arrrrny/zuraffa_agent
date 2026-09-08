@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: LLM Provider Clients
 
 **Feature Branch**: `007-llm-provider-clients`
@@ -21,8 +23,11 @@ As the engine, I call any OpenAI-compatible API (self-host, Kimi, Groq, etc.) wi
 **Acceptance Scenarios**:
 
 1. **Given** an OpenAI-compatible endpoint, **When** streaming, **Then** content deltas, tool call fragments, and usage parse correctly. **[AC-1]**
+   **Type**: acceptance
 2. **Given** a malformed tool argument from the model, **When** parsed, **Then** it tolerates gracefully (empty map default). **[AC-2]**
+   **Type**: acceptance
 3. **Given** a non-2xx response, **When** received, **Then** a typed error with status code and body is thrown. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Anthropic client (Priority: P1)
 
@@ -34,8 +39,10 @@ As the engine, I call the Anthropic Messages API with thinking/reasoning support
 
 **Acceptance Scenarios**:
 
-1. **Given** an Anthropic endpoint, **When** streaming, **Then** thinking blocks and content blocks parse correctly. **[AC-4]**
-2. **Given** tool calls in the response, **When** accumulated, **Then** they assemble from streamed argument fragments. **[AC-5]**
+4. **Given** an Anthropic endpoint, **When** streaming, **Then** thinking blocks and content blocks parse correctly. **[AC-4]**
+   **Type**: acceptance
+5. **Given** tool calls in the response, **When** accumulated, **Then** they assemble from streamed argument fragments. **[AC-5]**
+   **Type**: acceptance
 
 ### User Story 3 - Gemini client (Priority: P1)
 
@@ -47,8 +54,10 @@ As the engine, I call the Google Generative AI API with JSON line streaming and 
 
 **Acceptance Scenarios**:
 
-1. **Given** a Gemini endpoint, **When** streaming, **Then** JSON line chunks parse correctly. **[AC-6]**
-2. **Given** a MALFORMED_FUNCTION_CALL, **When** retried, **Then** the client handles it gracefully. **[AC-7]**
+6. **Given** a Gemini endpoint, **When** streaming, **Then** JSON line chunks parse correctly. **[AC-6]**
+   **Type**: acceptance
+7. **Given** a MALFORMED_FUNCTION_CALL, **When** retried, **Then** the client handles it gracefully. **[AC-7]**
+   **Type**: acceptance
 
 ### User Story 4 - Shared contract tests (Priority: P1)
 
@@ -60,7 +69,8 @@ As a developer, all three clients pass one shared contract-test suite over recor
 
 **Acceptance Scenarios**:
 
-1. **Given** recorded fixtures for each provider, **When** the contract suite runs, **Then** all providers produce identical event sequences, tool-call buffering, and usage fields. **[AC-8]**
+8. **Given** recorded fixtures for each provider, **When** the contract suite runs, **Then** all providers produce identical event sequences, tool-call buffering, and usage fields. **[AC-8]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

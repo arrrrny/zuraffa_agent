@@ -1,53 +1,66 @@
-# Test List: Agent swarm
-
----
-feature: 072-agent-swarm
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 8 # FR-001..FR-008 in spec.md
-planned_at: 52ee56a # feat/spec-070-sub-agent-dispatch HEAD (stack base)
-updated_at: HEAD
-suite_baseline: green # 937 passed / 2 skipped at 52ee56a
----
+# Test List: 072-agent-swarm
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Concurrent fan-out: 3 scripted members with real delays — the in-flight probe observes `maxActive == 3` (all dispatches started before any completed) | FR-002 | example | PASSING | `test/engine/agent_swarm_test.dart::spec 072 — AgentSwarm::members dispatch concurrently (overlap provable)` |
-| A2  | allCompleted happy: every member succeeds → `completed`, `completedCount == 2`, results in TASK order, winner null | FR-003 | example | PASSING | `…::allCompleted returns a barrier over task-ordered results` |
-| A3  | allCompleted partial: one member fails → `partialFailure`, `completedCount == 1` | FR-003 | example | PASSING | `…::allCompleted reports partialFailure when a member fails` |
-| A4  | firstCompleted: the FASTEST member wins regardless of task order (A slow, B fast → winner B), `firstCompleted`, `results == [winner]`, `completedCount == 1` | FR-004 | example | PASSING | `…::firstCompleted wins on completion order, not submission order` |
-| A5  | firstCompleted no-success: every member fails → `partialFailure`, winner null, all results, `completedCount == 0` | FR-004 | example | PASSING | `…::firstCompleted without any success degrades to partialFailure` |
-| A6  | quorum reached: 2 successes of 3 (third slow failure) → `quorumReached`, `completedCount == 2`, results are the two successes in completion order | FR-005 | example | PASSING | `…::quorum reached on the k-th success` |
-| A7  | quorum failed: 0 successes of 3 with k=2 → `quorumFailed`, all results, `completedCount == 0` | FR-005 | example | PASSING | `…::quorum unmet fails with the true success count` |
-| A8  | Validation: empty tasks, duplicate ids, quorum missing / < 1 / > tasks.length each throw `ArgumentError` | FR-001, FR-005, FR-007 | example | PASSING | `…::validation rejects empty, duplicate-id, and bad-quorum runs` |
-| A9  | Real-service integration: single-task swarm over the REAL SubAgentDispatchService (fake LLM) → child mission actually runs, summary surfaces, `MissionStarted.missionId == task.id` reaches onEvent | FR-006 | example | PASSING | `…::single-task swarm runs a real child mission end-to-end` |
-| A10 | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 937/2 + new) | FR-008 | gate | PASSING | gates at branch HEAD: analyze clean; 947/2 |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/agent_swarm_test.dart`). | AC-10 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/agent_swarm.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `SwarmTask` / `SwarmTaskResult` / `SwarmResult` value semantics (==, hashCode, toString) | FR-001 | example | PASSING | `…::value objects carry house semantics` |
-| U2  | Member instance synthesis: `SubAgentInstance(id: task.id, subAgentSpecId: spec.name, parentSessionId: 'swarm', totalRuns: 0)` reaches the dispatch service | FR-002 | example | PASSING | A1/A9 fake assertions |
-| U3  | `clock` / `adminGranted` / `onEvent` forwarded to every member dispatch | FR-006 | example | PASSING | A9 + A1 fake capture |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: Value objects (spec 066 house pattern): `SwarmTask` | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: Concurrent fan-out: every task's dispatch starts EAGERLY | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: `allCompleted` (default): await every member; `status == | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: `firstCompleted`: the first member to finish with dispatch | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: `quorum`: `quorum` (k) is REQUIRED for this strategy and | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: Pass-through wiring: `onEvent`, `clock`, `adminGranted` | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: Empty swarm is a caller bug: `run(tasks: [])` throws | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green | FR-008 | PENDING |
 
-## Invariants and edge cases
+## Routing provenance
 
-- Overlap invariant: eager fan-out — maxActive == tasks.length for any nonzero delays (A1, deterministic: async bodies run synchronously to first await).
-- Attribution invariant: member events carry task.id as missionId (A9).
-- Non-cancellation honesty: early strategy return leaves siblings detached by design (FR-004 doc; no test asserts cancellation).
-- No new EngineEvent subtypes; no swarm events invented.
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Mutation plan (deliberate, one at a time, cp-restored)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A10 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | mutant | killed by |
-| --- | ------ | --------- |
-| M1  | fan-out made sequential (await each task before starting the next) | A1 (maxActive 1 vs 3) |
-| M2  | allCompleted status hardcoded `completed` (failures ignored) | A3 |
-| M3  | firstCompleted returns `tasks.first` result (submission order) | A4 (winner would be the slow A) |
-| M4  | quorum trigger counts ALL completions, not just successes | A7 (two failures would falsely reach k=2) |
-| M5  | `winner` never assigned on firstCompleted | A4 |

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: MissionRunner (multi-turn mission loop)
 
 **Branch**: `feat/spec-069-mission-runner` | **Date**: 2026-08-29
@@ -48,7 +50,7 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
 
 ## FRs
 
-- **FR-001** — `MissionRunner.run({missionId, messages, planner?})` emits, in
+- **FR-001**: The system MUST satisfy this requirement: `MissionRunner.run({missionId, messages, planner?})` emits, in
   order: `MissionStarted(emittedAt, missionId, startedAt)` … per turn:
   `SteeringInjected` per drained message (when a queue was supplied),
   `TurnStarted(emittedAt, turnId: '$missionId-turn-$n')`, then
@@ -59,11 +61,11 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   `TurnCompleted` (the turn never finished). All timestamps come from an
   injectable `clock` (default `DateTime.now`) — deterministic tests, no
   ambient time.
-- **FR-002** — Natural completion: when a turn's `finishReason == 'stop'` and
+- **FR-002**: The system MUST satisfy this requirement: Natural completion: when a turn's `finishReason == 'stop'` and
   the planner produced no tool calls, the mission stops with
   `MissionStatus.completed`; `MissionResult.summary` is that turn's assistant
   content; the assistant message is appended to the returned transcript.
-- **FR-003** — Tool dispatch: each planned `ToolCall` is dispatched
+- **FR-003**: The system MUST satisfy this requirement: Tool dispatch: each planned `ToolCall` is dispatched
   sequentially through the injected `ToolDispatcher`
   (`isInternalMission: false`); a `tool`-role `ChatMessage` carrying the
   result (success: `ToolDispatchResult.result`, failure:
@@ -71,12 +73,12 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   and `ToolCallCompleted` share a `callId` of the form
   `'$missionId-call-$turn-$index'`; `ToolCallCompleted.ok` mirrors
   `ToolDispatchResult.success`; a failed tool does NOT abort the mission.
-- **FR-004** — Steering drain: when constructed with a `SteeringQueue`, all
+- **FR-004**: The system MUST satisfy this requirement: Steering drain: when constructed with a `SteeringQueue`, all
   pending messages are drained at the START of each turn (FIFO via `pop()`),
   each appended to the transcript as a `user` message and announced with
   `SteeringInjected(emittedAt, content, injectedAt: message.injectedAt)`. The
   queue instance is never mutated in place; the drained snapshot replaces it.
-- **FR-005** — Budgets (from `StopPolicy`, when `enabled`): effective turn cap
+- **FR-005**: The system MUST satisfy this requirement: Budgets (from `StopPolicy`, when `enabled`): effective turn cap
   is `min(executor.loop.maxTurns, stopPolicy.maxTurns)` — reaching it stops
   the mission with `budgetExhausted` (the executor's `StateError` backstop
   never fires because the runner checks first). When
@@ -84,16 +86,16 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   `start + wallClockTimeout` is checked before each turn; exceeding it stops
   with `budgetExhausted`. When `enabled == false`, only the executor's
   `loop.maxTurns` applies.
-- **FR-006** — Provider failure: if `executor.runTurn` throws, the runner
+- **FR-006**: The system MUST satisfy this requirement: Provider failure: if `executor.runTurn` throws, the runner
   emits `ProviderError(emittedAt, providerName: executor.llmClient.config.id,
   error: e.toString())`, stops with `MissionStatus.providerFailed`, and still
   emits the terminal `MissionCompleted` (a mission never ends without its
   terminal event).
-- **FR-007** — `MissionResult` carries value semantics (spec 066 house
+- **FR-007**: The system MUST satisfy this requirement: `MissionResult` carries value semantics (spec 066 house
   pattern): `==`/`hashCode` over `(missionId, status, turnsUsed, transcript,
   summary)` with element-wise transcript comparison, and a `toString`
   rendering the id, status, turns, and message count.
-- **FR-008** — Gates: `dart analyze --fatal-infos` clean; `dart test` green
+- **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 915 passed / 2 skipped at `fec7889` + new tests).
 
 ## Verification
@@ -112,3 +114,29 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
 - Wiring `ThinkingDelta` / `PlanChanged` emission (streaming + planner specs).
 - Sub-agent execution on top of the loop (spec 070), goal-based stopping
   (spec 071), swarm orchestration (spec 072) — stacked follow-ups.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** natural single-turn mission emits the full ordered event sequence **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** natural completion returns completed status, summary, and grown transcript **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** tool dispatch round-trip emits correlated events and feeds results back **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** failed tool dispatch reports ok:false and the error text, mission continues **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** steering queue drains at turn start in FIFO order **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** maxTurns budget stops the mission before the executor backstop **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** wall-clock deadline stops the mission between turns **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** provider failure emits ProviderError and still closes the mission **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** MissionResult value semantics **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** planner receives an unmodifiable transcript view **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
+   **Type**: acceptance

@@ -1,67 +1,50 @@
----
-feature: 037-pass-at-k
-loop: inside-out
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 5
-planned_at: 57412fe
-updated_at: 627d7c2
-suite_baseline: green
----
-
-# Test List: PassAtK unbiased estimator (eval-run + threshold slice)
+# Test List: 037-pass-at-k
 
 ## Outer loop: acceptance behaviors
 
-Pure value object — the public API (factories, methods) is the entry point the
-harness consumes; `loop: inside-out`.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| A1  | fromResults over a 10-outcome run (6 true, k=3) equals compute on the triple    | AC US1-1 | example         | DONE    | `pass_at_k_test.dart` (red @ `e8b6e9a`) |
-| A2  | fromResults throws on empty outcomes / k<1 / k>n; order-independent             | AC US1-2 | example         | DONE    | `pass_at_k_test.dart` (red @ `e8b6e9a`) |
-| A3  | meetsThreshold is inclusive at t==value and flips on both sides                 | AC US2-1 | example         | DONE    | `pass_at_k_test.dart` (red @ `8e0580a`, M4 killed) |
-| A4  | meetsThreshold throws on t<0 / t>1 / NaN                                        | AC US2-2 | example         | DONE    | `pass_at_k_test.dart` (red @ `8e0580a`) |
-| A5  | k-sweep 1..n-c yields non-decreasing pass@k                                     | AC US3-1 | characterization | DONE (BASELINE + pin, MUTANT-C killed) | `pass_at_k_test.dart` (`627d7c2`) |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the result equals `compute(n: 10, c: 6, k: 3)` exactly (same triple, same value). | AC-1 | PENDING |
+| A2 | `ArgumentError` is thrown (the run is too small to draw from / the draw count is invalid). | AC-2 | PENDING |
+| A3 | it returns true; with t just above, false (both sides of the boundary). | AC-3 | PENDING |
+| A4 | `ArgumentError` is thrown. | AC-4 | PENDING |
+| A5 | pass@k is non-decreasing across the sweep. | AC-5 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/domain/entities/pass_at_k/pass_at_k.dart`
+One per functional requirement in `spec.md`.
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| U1  | fromResults derives n=length, c=trueCount and matches compute exactly           | FR-001   | example         | DONE    | `pass_at_k_test.dart` (red @ `e8b6e9a`, M3 killed) |
-| U2  | fromResults: empty outcomes ArgumentError; k=0 and k=n+1 ArgumentError; shuffled fixture equals sorted fixture | FR-001   | example         | DONE    | `pass_at_k_test.dart` (red @ `e8b6e9a`) |
-| U3  | meetsThreshold(t==value) true, t below true, t above false (both sides)         | FR-002   | example         | DONE    | `pass_at_k_test.dart` (red @ `8e0580a`, M4 killed) |
-| U4  | meetsThreshold: -0.1, 1.1, NaN all throw ArgumentError naming threshold         | FR-002   | example         | DONE    | `pass_at_k_test.dart` (red @ `8e0580a`) |
-| U5  | Monotonic non-decreasing in k for 1 <= k <= n-c (n=20, c=4 sweep)               | FR-003   | characterization | DONE (BASELINE + pin, MUTANT-C killed) | `pass_at_k_test.dart` (`627d7c2`) |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `PassAtK.fromResults(List<bool> outcomes, {required int k})` MUST derive n = outcomes.length and c = count of `true`, MUST throw `ArgumentError` on an empty outcome list (with the k range then necessarily invalid) or on k < 1 / k > n, and MUST produce a result identical (n, c, k, value) to `PassAtK.compute` on the derived triple. | FR-001 | PENDING |
+| U2 | Instance method `meetsThreshold(double threshold)` MUST return `value >= threshold` (inclusive at equality) and MUST throw `ArgumentError` when `threshold < 0 || threshold > 1 || threshold.isNaN`. | FR-002 | PENDING |
+| U3 | The estimator MUST remain monotonic non-decreasing in k for `1 <= k <= n - c` (pinned by an invariant sweep test; endpoints and c-monotonicity remain pinned by the existing suite). | FR-003 | PENDING |
+| U4 | `compute`'s existing validation, formula, `binomial` helper, equality-on-(n,c,k), and `toString` MUST keep their shipped semantics (pinned by the 10 pre-existing metric tests, unchanged). | FR-004 | PENDING |
+| U5 | The clean-arch layers (`PassAtKService.current/count`, `PassAtKProvider`) MUST keep their existing signatures and stub behavior; no behavioral change in this feature. | FR-005 | PENDING |
 
-### Shipped estimator surface (untouched — FR-004) + clean-arch layers (FR-005)
+## Routing provenance
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| U6  | compute validation + formula + endpoints (0 at c=0, 1 at n-c<k) keep passing    | FR-004   | characterization | BASELINE | `test/data/providers/pass_at_k/pass_at_k_provider_test.dart` (10 metric tests) |
-| U7  | binomial helper + (n,c,k) equality + toString keep passing                      | FR-004   | characterization | BASELINE | `test/data/providers/pass_at_k/pass_at_k_provider_test.dart` |
-| U8  | The 3 clean-arch stub tests keep passing unchanged                              | FR-005   | characterization | BASELINE | `test/data/providers/pass_at_k/pass_at_k_provider_test.dart` |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Invariants and edge cases still to place
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 43]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 60]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-- fromResults delegating to compute keeps ONE validation source of truth; no
-  duplicated bound logic to drift.
-- Doubles compare via closeTo(1e-12) in the match test — bit-exact equality is
-  expected (same arithmetic path) but closeTo documents tolerance honestly.
-
-## Out of scope
-
-- Wiring PassAtKProvider to the eval ledger: separate feature; FR-005 pins stubs.
-- pass^k (empirical) metric: spec 061-pass_k_empirical owns it.
-- Grader matrix (exact/schema/model-judge): issue #7 later PRs.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md`:
-
-- Single test: `dart test <file> --plain-name "<test name>"`
-- Full suite: `dart test`
-- Coverage: raw VM-format only; converter absent — corroboration only, never a gate
-- Mutation: no tool configured — deliberate hand-mutants per
-  `/speckit.tdd.verify` Phase 4

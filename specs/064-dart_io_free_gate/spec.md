@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: DartIoFreeGate (static gate)
 
 **Branch**: `064-dart_io_free_gate` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Static gate that fails the build if the eval runtime imports the platform IO mod
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #7 (Eval Harness)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGate equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGate inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGateProvider is a DartIoFreeGateService **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGateProvider.current returns the active gate **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGateProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** DartIoFreeGateProvider honours an injected value object **Then** the pinned regression test passes (`test/data/providers/dart_io_free_gate/dart_io_free_gate_provider_test.dart`).
+   **Type**: acceptance

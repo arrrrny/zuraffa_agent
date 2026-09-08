@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: StopPolicy clean-architecture layers (repository, service, provider)
 
 **Branch**: `014-stop-policy-clean-arch-layers` | **Date**: 2026-08-24
@@ -20,3 +22,23 @@ This PR ships a working set of clean-arch layers for one spec-002 value object (
 - `dart test` — All pre-existing + 5 new tests pass
 
 ## Closes #14
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** U10: StopPolicyProvider is a StopPolicyService **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** U11: parameterless StopPolicyProvider() keeps compiling (default wiring) **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** A1: a fresh chain returns the default policy from current() **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** A2 + A5: a policy seeded into the datasource is served by current(NoParams()) **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** A4: reset() restores the documented default through the whole chain **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** U12: defaultPolicy(NoParams) returns the canonical constant **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** A5: the provider serves reads through the datasource seam **Then** the pinned regression test passes (`test/data/providers/stop_policy/stop_policy_provider_test.dart`).
+   **Type**: acceptance

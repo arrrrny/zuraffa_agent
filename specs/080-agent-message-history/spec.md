@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R1 — Agent Message History (context assembly & pure transforms)
 
 **Branch**: `080-agent-message-history` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -141,7 +143,7 @@ key.
 - **FR-003**: `AgentMessageHistory.toJson()` MUST return a
   `Map<String, dynamic>` of shape `{messages: [for each m in messages: m.toJson()], episodicMemories: [for each em in episodicMemories: em.toJson()]}`.
   An empty history → `{messages: [], episodicMemories: []}`.
-- **FR-004**: `AgentMessageHistory.fromJson(Map<String, dynamic> json)`
+- **FR-004**: The system MUST satisfy this requirement: `AgentMessageHistory.fromJson(Map<String, dynamic> json)`
   MUST produce a history equal (by FR-001) to the original that was
   serialized with `toJson` — lossless round-trip.
 - **FR-005**: `AgentMessageHistory.fromJson` MUST throw `ArgumentError`
@@ -161,12 +163,12 @@ key.
   (by `==`, FR-001) the receiver's — no memory dropped, added, or
   reordered. (Already behaviorally true; this spec pins it via
   equality, not just length.)
-- **FR-007**: existing pure transforms (`appendMessages`, `addMemory`,
+- **FR-007**: The system MUST satisfy this requirement: existing pure transforms (`appendMessages`, `addMemory`,
   `truncate`) MUST remain pure: return a new value, never mutate the
   receiver. (Already behaviorally true; pinned by an assertion test.)
 - **FR-008**: existing constructor + `memorySummaries` MUST remain
   unchanged — no signature change, no behavior change.
-- **FR-009** (gates): `dart analyze --fatal-infos` exit 0 on the
+- **FR-009**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline 1089/2 + new).
 
 ### Key entities
@@ -191,7 +193,7 @@ key.
   one breaks equality; `hashCode` agrees (US1 / FR-001 / FR-002).
 - **SC-002**: A history with N messages + M memories round-trips
   through `toJson` → `fromJson` to an equal history (US2 /
-  FR-003 / FR-004).
+- **FR-003**: The system MUST satisfy this requirement: / FR-004).
 - **SC-003**: `truncate(N)` returns a history whose `episodicMemories`
   field equals (by `==`) the receiver's (US3 / FR-006).
 - **SC-004**: Every malformed-input variant (missing keys, wrong
@@ -217,3 +219,43 @@ key.
   memory arc, request/response, skill system) — different file,
   different tests. Spec 079 (skill system) lands on master separately;
   this spec branches from `29b7fef` so the two are independent.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** U1: equal histories (same message instances + same memory instances) are == **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** U2: appending a message breaks == **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** U3: appending a memory breaks == **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** U4: hashCode agrees with == **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** U5: toJson → fromJson preserves structural shape (lossless round-trip) **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** U6: empty history round-trips **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** U7: toJson shape has exactly two keys **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** U8: truncate(N).episodicMemories == receiver.episodicMemories **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** U9: truncate(0).episodicMemories == receiver.episodicMemories **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** U10: missing messages throws ArgumentError naming messages **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** U11: messages not a list throws ArgumentError naming messages **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** U12: missing episodicMemories throws ArgumentError naming episodicMemories **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** U13: malformed inner message (not a Map) throws ArgumentError naming messages[0] **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** U14: malformed inner memory (missing id) throws ArgumentError naming episodicMemories[0] **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** U15: appendMessages returns a new value; receiver unchanged **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+16. **Given** the feature implementation under its clean-architecture seams **When** U16: addMemory returns a new value; receiver unchanged **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance
+17. **Given** the feature implementation under its clean-architecture seams **When** U17: truncate returns a new value; receiver unchanged **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
+   **Type**: acceptance

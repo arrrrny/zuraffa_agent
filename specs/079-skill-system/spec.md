@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R1 — Skill System (directory discovery & system-prompt rendering)
 
 **Branch**: `079-skill-system` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -146,7 +148,7 @@ map contains the extra keys.
   the file. The exception's `message` names the offending file path
   and the reason (missing opening `---`, missing closing `---`, missing
   `name:` field, ill-formed YAML).
-- **FR-003**: `parseSkill(String content, {required String sourcePath})`
+- **FR-003**: The system MUST satisfy this requirement: `parseSkill(String content, {required String sourcePath})`
   MUST be a pure function: no `dart:io`, no `Future`, no side effects.
   Same content + sourcePath → same `Skill` (modulo the sourcePath
   field, which is echoed back on the result).
@@ -172,7 +174,7 @@ map contains the extra keys.
   a string with each skill rendered as `## Skill: {name}\n{description}\n\n{instructions}`,
   skills separated by a blank line, and return the empty string when
   the list is empty. Unchanged from current behavior — pinned.
-- **FR-009** (gates): `dart analyze --fatal-infos` exit 0 on the
+- **FR-009**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline 1073/2 + new).
   Pre-existing analyzer findings on unrelated files (1 warning +
   2 info at HEAD `29b7fef`) are out of scope and explicitly NOT
@@ -224,3 +226,41 @@ map contains the extra keys.
 - yaml package: `pubspec.lock` resolves `yaml ^3.1.4` transitively
   (via `zuraffa`); used to parse the frontmatter block. No new
   dependency declaration needed.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** U1: well-formed input returns a fully-populated Skill **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** U2: missing description field is tolerated (empty string) **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** U3: empty body after closing delimiter is tolerated **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** U4: extra frontmatter keys are preserved on Skill.metadata **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** U5: metadata is a defensive copy and values are coerced to plain Dart types **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** U6: missing opening --- throws missing-opening-delimiter **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** U7: missing closing --- throws missing-closing-delimiter **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** U8: missing name field throws missing-name **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** U9: ill-formed YAML throws yaml-parse-error **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** U10: non-existent directory returns an empty list **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** A1 / U-load: well-formed directory returns parsed skills in order **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** U11: malformed file surfaces as SkillFormatException **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** U12: filename rules — SKILL.md and *.skill.md match, README.md ignored **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** U13: does NOT recurse into subdirectories **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** U14: empty list renders as the empty string **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance
+16. **Given** the feature implementation under its clean-architecture seams **When** U15: two skills render as two ## Skill: blocks separated by a blank line **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
+   **Type**: acceptance

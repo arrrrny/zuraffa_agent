@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Planner/TODO System
 
 **Feature Branch**: `014-planner-todo-system`
@@ -21,7 +23,9 @@ As the model, I can create and update a structured to-do list via a `write_todos
 **Acceptance Scenarios**:
 
 1. **Given** a mission, **When** the model calls `write_todos`, **Then** the plan state is updated.
+   **Type**: acceptance
 2. **Given** a plan with pending/in_progress/completed steps, **When** the state is queried, **Then** accurate counts are returned.
+   **Type**: acceptance
 
 ### User Story 2 - Plan mode (Priority: P1)
 
@@ -33,8 +37,10 @@ As an operator, I configure plan mode: `none` (no planner), `auto` (optional), o
 
 **Acceptance Scenarios**:
 
-1. **Given** planMode=auto, **When** the mission starts, **Then** planner tools are available but optional.
-2. **Given** planMode=must, **When** the mission starts, **Then** planning is required before execution.
+3. **Given** planMode=auto, **When** the mission starts, **Then** planner tools are available but optional.
+   **Type**: acceptance
+4. **Given** planMode=must, **When** the mission starts, **Then** planning is required before execution.
+   **Type**: acceptance
 
 ### User Story 3 - Plan persistence (Priority: P2)
 
@@ -46,7 +52,8 @@ As the engine, the plan state persists across turns and is visible in the agent 
 
 **Acceptance Scenarios**:
 
-1. **Given** a plan updated at turn 3, **When** turn 5 starts, **Then** the plan state is preserved.
+5. **Given** a plan updated at turn 3, **When** turn 5 starts, **Then** the plan state is preserved.
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 

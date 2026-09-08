@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: CircuitBreaker state machine (R4 providers & fallback) — recovery readiness + persistence contract
 
 **Feature Branch**: `feat/specs-032-033-034-035` (spec dir: `035-circuit-breaker`)
@@ -21,8 +23,11 @@ As the fallback-chain coordinator, before attempting a provider I consult the br
 **Acceptance Scenarios**:
 
 1. **Given** a closed breaker (any counters), **When** `shouldProbe` is asked, **Then** it is false — there is nothing to recover.
+   **Type**: acceptance
 2. **Given** an open breaker with `openedAt` 29s ago and a 30s cooldown, **When** `shouldProbe` is asked, **Then** it is false; at exactly 30s it is true (boundary included: `elapsed >= cooldown`).
+   **Type**: acceptance
 3. **Given** a half-open breaker (already probing), **When** `shouldProbe` is asked, **Then** it is false — the probe is in flight, not due.
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the fallback-chain coordinator, when a tripped breaker recovers (open → hal
 
 **Acceptance Scenarios**:
 
-1. **Given** a breaker recovered via halfOpen (halfOpenThreshold successes), **When** a single failure lands, **Then** the breaker stays CLOSED with `failureCount == 1` — the old streak did not survive recovery.
-2. **Given** that recovered breaker, **When** `failureThreshold` consecutive failures land, **Then** it trips open again (a full fresh trip cycle).
-3. **Given** a half-open breaker with partial probe successes, **When** a failure lands, **Then** it re-trips open immediately with `halfOpenSuccesses == 0` and `openedAt` stamped at the failure.
+4. **Given** a breaker recovered via halfOpen (halfOpenThreshold successes), **When** a single failure lands, **Then** the breaker stays CLOSED with `failureCount == 1` — the old streak did not survive recovery.
+   **Type**: acceptance
+5. **Given** that recovered breaker, **When** `failureThreshold` consecutive failures land, **Then** it trips open again (a full fresh trip cycle).
+   **Type**: acceptance
+6. **Given** a half-open breaker with partial probe successes, **When** a failure lands, **Then** it re-trips open immediately with `halfOpenSuccesses == 0` and `openedAt` stamped at the failure.
+   **Type**: acceptance
 
 ---
 
@@ -52,9 +60,12 @@ As the persistence layer (health snapshots, chain state across process restarts)
 
 **Acceptance Scenarios**:
 
-1. **Given** an open breaker (openedAt T, cooldown 30s), **When** serialized at T+10s, parsed, and asked `shouldProbe(T+29s)`, **Then** it is false and `shouldProbe(T+30s)` is true — the cooldown continued across the round-trip.
-2. **Given** a half-open breaker with `halfOpenSuccesses == 1` (threshold 2), **When** serialized and parsed, **Then** the restored breaker is still halfOpen with `halfOpenSuccesses == 1` — one more success closes it (mid-probe resume).
-3. **Given** malformed JSON (missing id/thresholds/cooldown, negative counters, unknown state string, unparseable timestamps), **When** parsed, **Then** an `ArgumentError` names the offending field — never a silent default (a defaulted threshold would silently change trip behavior).
+7. **Given** an open breaker (openedAt T, cooldown 30s), **When** serialized at T+10s, parsed, and asked `shouldProbe(T+29s)`, **Then** it is false and `shouldProbe(T+30s)` is true — the cooldown continued across the round-trip.
+   **Type**: acceptance
+8. **Given** a half-open breaker with `halfOpenSuccesses == 1` (threshold 2), **When** serialized and parsed, **Then** the restored breaker is still halfOpen with `halfOpenSuccesses == 1` — one more success closes it (mid-probe resume).
+   **Type**: acceptance
+9. **Given** malformed JSON (missing id/thresholds/cooldown, negative counters, unknown state string, unparseable timestamps), **When** parsed, **Then** an `ArgumentError` names the offending field — never a silent default (a defaulted threshold would silently change trip behavior).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -69,12 +80,12 @@ As the persistence layer (health snapshots, chain state across process restarts)
 
 ### Functional Requirements
 
-- **FR-001**: The `CircuitBreaker` value object keeps its spec-exact nine-field surface and all transition semantics — `recordFailure`/`recordSuccess`/`tryHalfOpen` pure snapshot transitions, the `isOpen`/`isClosed`/`isHalfOpen` reads, value equality — unchanged (compile parity with the 12 existing tests).
+- **FR-001**: The system MUST satisfy this requirement: The `CircuitBreaker` value object keeps its spec-exact nine-field surface and all transition semantics — `recordFailure`/`recordSuccess`/`tryHalfOpen` pure snapshot transitions, the `isOpen`/`isClosed`/`isHalfOpen` reads, value equality — unchanged (compile parity with the 12 existing tests).
 - **FR-002**: `shouldProbe(DateTime now)` MUST return true iff `state == open && openedAt != null && now.difference(openedAt) >= cooldown` (inclusive boundary); false otherwise (closed, halfOpen, open-with-null-openedAt). It is a pure read — it MUST NOT transition the breaker (calling `tryHalfOpen` remains the coordinator's job).
 - **FR-003**: The full recovery cycle MUST hold as a composed regression: trip (threshold failures) → cooldown → halfOpen → threshold successes → closed with `failureCount == 0`; a subsequent single failure stays closed with `failureCount == 1` (fresh streak); threshold fresh failures re-trip; a half-open failure re-trips open with `halfOpenSuccesses == 0` and `openedAt` stamped.
 - **FR-004**: `toJson()` MUST emit all nine fields — `id`, `state` (state name), `failureCount`, `failureThreshold`, `cooldown` (microseconds int), `halfOpenSuccesses`, `halfOpenThreshold` always; `openedAt`, `lastFailureAt` only when non-null (ISO-8601) — and `CircuitBreaker.fromJson` MUST round-trip every state exactly (incl. mid-probe halfOpen and open-with-cooldown-remaining), with restored cooldown semantics identical to the original.
 - **FR-005**: `fromJson` MUST throw `ArgumentError` naming the field on: missing/ill-typed required fields, unknown state string, negative counters, `failureThreshold`/`halfOpenThreshold` < 1, `cooldown` <= 0, or unparseable timestamps — never a silent default.
-- **FR-006**: The clean-arch layers (`CircuitBreakerService.current/count`, `CircuitBreakerProvider`) keep their existing signatures and stubs (no behavioral change).
+- **FR-006**: The system MUST satisfy this requirement: The clean-arch layers (`CircuitBreakerService.current/count`, `CircuitBreakerProvider`) keep their existing signatures and stubs (no behavioral change).
 
 ### Key Entities *(include if feature involves data)*
 

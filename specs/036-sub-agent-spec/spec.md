@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: SubAgentSpec value object (R5 sub-agents & specs)
 
 **Feature Branch**: `036-sub-agent-spec`
@@ -21,8 +23,11 @@ As the spec loader (R5.2), I construct `SubAgentSpec` values from YAML agent spe
 **Acceptance Scenarios**:
 
 1. **Given** a spec with an empty `name`, empty `description`, or empty `systemPrompt`, **When** constructed, **Then** `ArgumentError` is thrown naming that field.
+   **Type**: acceptance
 2. **Given** a spec whose `tools` or `subAgents` allowlist contains an empty string id, **When** constructed, **Then** `ArgumentError` is thrown naming the list.
+   **Type**: acceptance
 3. **Given** a spec with `maxTurns` < 1, `contextWindowTokens` < 1, or a negative `wallClockTimeout`, **When** constructed, **Then** `ArgumentError` is thrown naming the budget field.
+   **Type**: acceptance
 
 ---
 
@@ -36,8 +41,10 @@ As the loader resolving `extends` chains (R5.2), I need the self-inheritance ill
 
 **Acceptance Scenarios**:
 
-1. **Given** a spec whose `extendsSpec` equals its own `name`, **When** constructed, **Then** `ArgumentError` is thrown (1-cycles are ill-formed).
-2. **Given** the four canonical shapes, **When** the getters are read, **Then** `isLeaf` == `subAgents.isEmpty`, `isRoot` == `extendsSpec == null`, and `hasBudgets` reflects the three budget fields (AC covered by existing tests — pinned, not new).
+4. **Given** a spec whose `extendsSpec` equals its own `name`, **When** constructed, **Then** `ArgumentError` is thrown (1-cycles are ill-formed).
+   **Type**: acceptance
+5. **Given** the four canonical shapes, **When** the getters are read, **Then** `isLeaf` == `subAgents.isEmpty`, `isRoot` == `extendsSpec == null`, and `hasBudgets` reflects the three budget fields (AC covered by existing tests — pinned, not new).
+   **Type**: acceptance
 
 ---
 
@@ -51,8 +58,10 @@ As a library consumer, I store specs in sets/maps (spec registries keyed by valu
 
 **Acceptance Scenarios**:
 
-1. **Given** two specs equal in all ten fields but with independently constructed `tools`/`subAgents` lists, **When** compared, **Then** they are `==` and share `hashCode` (AC covered by existing tests — pinned, not new).
-2. **Given** two specs differing in exactly one field, **Then** they are unequal.
+6. **Given** two specs equal in all ten fields but with independently constructed `tools`/`subAgents` lists, **When** compared, **Then** they are `==` and share `hashCode` (AC covered by existing tests — pinned, not new).
+   **Type**: acceptance
+7. **Given** two specs differing in exactly one field, **Then** they are unequal.
+   **Type**: acceptance
 
 ### Edge Cases
 

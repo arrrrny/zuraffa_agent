@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: RepetitionTracker datasource + mock pair
 
 **Feature Branch**: `25-repetition_tracker-datasource-pair`
@@ -21,8 +23,11 @@ As the engine loop, I feed every tool/LLM invocation signature to the repetition
 **Acceptance Scenarios**:
 
 1. **Given** a tracker configured `maxCalls=3, window=60s`, **When** the same signature is recorded 2 times, **Then** `isLooping` is false and `count` returns 2.
+   **Type**: acceptance
 2. **Given** the same tracker, **When** the same signature is recorded a 3rd time, **Then** `isLooping` is true (threshold met — "more than N times in the last M seconds" is inclusive of the Nth hit).
+   **Type**: acceptance
 3. **Given** two different signatures recorded 3 times each with `maxCalls=3`, **Then** both loop independently — counts are keyed per signature, never shared.
+   **Type**: acceptance
 
 ---
 
@@ -36,8 +41,10 @@ As the engine loop, I need calls older than the window to stop counting, so that
 
 **Acceptance Scenarios**:
 
-1. **Given** `window=60s` and 3 records at `T0`, **When** `count`/`isLooping` are evaluated at `T0+61s`, **Then** count is 0 and no loop is signalled.
-2. **Given** records at `T0` and `T0+50s` with `window=60s`, **When** evaluated at `T0+61s`, **Then** only the second record counts (boundary: exactly `window` old is expired; strictly inside is alive).
+4. **Given** `window=60s` and 3 records at `T0`, **When** `count`/`isLooping` are evaluated at `T0+61s`, **Then** count is 0 and no loop is signalled.
+   **Type**: acceptance
+5. **Given** records at `T0` and `T0+50s` with `window=60s`, **When** evaluated at `T0+61s`, **Then** only the second record counts (boundary: exactly `window` old is expired; strictly inside is alive).
+   **Type**: acceptance
 
 ---
 
@@ -51,8 +58,10 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 
 **Acceptance Scenarios**:
 
-1. **Given** a mock with 3 recorded signatures, **When** `reset()` is called, **Then** all counts drop to 0, no signature loops, and `current()` still returns the same configuration.
-2. **Given** any conforming implementation, **When** `record` returns, **Then** it returns the post-record in-window count for that signature (single round-trip read-after-write).
+6. **Given** a mock with 3 recorded signatures, **When** `reset()` is called, **Then** all counts drop to 0, no signature loops, and `current()` still returns the same configuration.
+   **Type**: acceptance
+7. **Given** any conforming implementation, **When** `record` returns, **Then** it returns the post-record in-window count for that signature (single round-trip read-after-write).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -97,3 +106,10 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 - Default configuration `maxCalls=5, window=60s` aligns with the StopPolicy default `repetitionThreshold=5` already documented on `StopPolicyService.defaultPolicy`.
 - Persistence here means the interface contract; an actual Hive/remote backend is out of scope for this feature (the mock is the reference implementation).
 - Existing regression tests asserting `UnimplementedError` stubs are superseded by this refinement: the pair now ships real behavior (documented as drift remediation).
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

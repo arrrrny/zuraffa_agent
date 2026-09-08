@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: R1 — Steering Message value object (JSON contract & equality)
 
 **Branch**: `081-steering-message` (off master `29b7fef`) | **Date**: 2026-08-29
@@ -127,7 +129,7 @@ equal `SteeringMessage`.
   injectedAt: <ISO-8601 string>}` — exactly three keys, no extras,
   no omissions. The timestamp MUST be `DateTime.toIso8601String()`
   output (UTC instants round-trip exactly).
-- **FR-003**: `SteeringMessage.fromJson(Map<String, dynamic> json)`
+- **FR-003**: The system MUST satisfy this requirement: `SteeringMessage.fromJson(Map<String, dynamic> json)`
   MUST produce a `SteeringMessage` equal (by FR-005) to the original
   that was serialized with `toJson` — lossless round-trip.
 - **FR-004**: `SteeringMessage.fromJson` MUST throw `ArgumentError`
@@ -153,7 +155,7 @@ equal `SteeringMessage`.
 - **FR-007**: `SteeringMessage.toString()` MUST return a human-readable
   string naming the type and the three fields (with content truncated
   to 40 characters to avoid log bloat for long messages).
-- **FR-008** (gates): `dart analyze --fatal-infos` exit 0 on the
+- **FR-008**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline + new).
 
 ### Key entities
@@ -197,3 +199,85 @@ equal `SteeringMessage`.
   `SteeringInjected` event (PR #19), the engine loop's steering
   drain (spec 002). All consume `SteeringMessage`; none are changed
   by this spec.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** U1: arbitrary values round-trip losslessly **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** U2: toJson shape has exactly three keys **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** U3: toJson injectedAt is ISO-8601 parseable **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** U4: missing id throws ArgumentError naming id **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** U5: non-string id throws ArgumentError naming id **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** U6: missing content throws ArgumentError naming content **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** U7: non-string content throws ArgumentError naming content **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** U8: missing injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** U9: non-string injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** U10: unparseable injectedAt throws ArgumentError naming injectedAt **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** U11: equal messages are == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** U12: differing id breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** U13: differing content breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** U14: differing injectedAt breaks == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** U15: hashCode agrees with == **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+16. **Given** the feature implementation under its clean-architecture seams **When** U16: identity short-circuits **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+17. **Given** the feature implementation under its clean-architecture seams **When** U17: empty content round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+18. **Given** the feature implementation under its clean-architecture seams **When** U18: unicode id round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+19. **Given** the feature implementation under its clean-architecture seams **When** U19: unicode content round-trips (Chinese, emoji, RTL) **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+20. **Given** the feature implementation under its clean-architecture seams **When** U20: non-UTC timestamp round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+21. **Given** the feature implementation under its clean-architecture seams **When** U21: microsecond precision round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+22. **Given** the feature implementation under its clean-architecture seams **When** U22: large content (>= 10 KB) round-trips **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+23. **Given** the feature implementation under its clean-architecture seams **When** U23: includes type name and id; long content truncated **Then** the pinned regression test passes (`test/domain/entities/steering_message/steering_message_test.dart`).
+   **Type**: acceptance
+24. **Given** the feature implementation under its clean-architecture seams **When** A1: enqueue on an empty queue yields head==message, isEmpty false, lastInjectedAt stamped **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+25. **Given** the feature implementation under its clean-architecture seams **When** A2: enqueue on a loaded queue appends FIFO (head stays the first) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+26. **Given** the feature implementation under its clean-architecture seams **When** A3: enqueue leaves the source snapshot fully unchanged (no state lost mid-turn) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+27. **Given** the feature implementation under its clean-architecture seams **When** U1: mutating the constructor source list after construction does not affect the queue **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+28. **Given** the feature implementation under its clean-architecture seams **When** U2: direct writes to queue.pending throw (unmodifiable view) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+29. **Given** the feature implementation under its clean-architecture seams **When** U4: enqueue preserves processedCount and id **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+30. **Given** the feature implementation under its clean-architecture seams **When** A4: pop returns the head and the drained queue with processedCount + 1 **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+31. **Given** the feature implementation under its clean-architecture seams **When** A5: pop on an empty queue throws StateError naming the queue id **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+32. **Given** the feature implementation under its clean-architecture seams **When** A6: double-pop drains FIFO and ends empty with processedCount + 2 **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+33. **Given** the feature implementation under its clean-architecture seams **When** U3: pop preserves lastInjectedAt on the drained queue **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+34. **Given** the feature implementation under its clean-architecture seams **When** A7: a populated queue round-trips JSON incl. FIFO order and processedCount **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+35. **Given** the feature implementation under its clean-architecture seams **When** A8: an empty queue serializes lastInjectedAt absent and restores null **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+36. **Given** the feature implementation under its clean-architecture seams **When** A9: a steering message round-trips JSON (id, content, injectedAt) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+37. **Given** the feature implementation under its clean-architecture seams **When** U5: malformed queue JSON throws ArgumentError (missing id, non-list pending, non-map entry) **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance
+38. **Given** the feature implementation under its clean-architecture seams **When** U6: malformed message JSON throws ArgumentError naming the key **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
+   **Type**: acceptance

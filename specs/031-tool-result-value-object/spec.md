@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: ToolResult value object (no id) + clean-arch layers
 
 **Feature Branch**: `031-tool-result-value-object`
@@ -21,8 +23,11 @@ As the engine, I construct tool results that are either successes (content the m
 **Acceptance Scenarios**:
 
 1. **Given** a success result with content + structuredPayload, **When** serialized to JSON and parsed back, **Then** the parsed value equals the original (content, payload, isError all preserved).
+   **Type**: acceptance
 2. **Given** an error result, **When** serialized and parsed back, **Then** `isError` is still true and the content (error message) is preserved.
+   **Type**: acceptance
 3. **Given** an error result with no structuredPayload, **When** serialized, **Then** the payload key is absent/null — not an empty object masquerading as data.
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the engine (spec 003 US4), when a tool returns a body beyond the size thresho
 
 **Acceptance Scenarios**:
 
-1. **Given** a 2 MB body and the oversized path, **When** the result is built, **Then** content is a bounded summary, `artifactRef` is non-null, and `isSummarized` is true.
-2. **Given** a summarized result, **When** serialized and parsed back, **Then** the artifactRef (kind, id, uri) survives the round-trip.
-3. **Given** an inline (non-summarized) result, **When** `isSummarized` is checked, **Then** it is false and serialization omits the artifactRef.
+4. **Given** a 2 MB body and the oversized path, **When** the result is built, **Then** content is a bounded summary, `artifactRef` is non-null, and `isSummarized` is true.
+   **Type**: acceptance
+5. **Given** a summarized result, **When** serialized and parsed back, **Then** the artifactRef (kind, id, uri) survives the round-trip.
+   **Type**: acceptance
+6. **Given** an inline (non-summarized) result, **When** `isSummarized` is checked, **Then** it is false and serialization omits the artifactRef.
+   **Type**: acceptance
 
 ---
 
@@ -52,8 +60,10 @@ As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing p
 
 **Acceptance Scenarios**:
 
-1. **Given** two equal results with distinct-but-equal payload map instances, **When** hashed, **Then** the hashCodes are equal (the contract the scaffold violates).
-2. **Given** results differing in content, payload, isError, or artifactRef, **Then** they are unequal.
+7. **Given** two equal results with distinct-but-equal payload map instances, **When** hashed, **Then** the hashCodes are equal (the contract the scaffold violates).
+   **Type**: acceptance
+8. **Given** results differing in content, payload, isError, or artifactRef, **Then** they are unequal.
+   **Type**: acceptance
 
 ### Edge Cases
 

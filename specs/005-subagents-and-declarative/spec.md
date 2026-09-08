@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Sub-agents & Declarative Agent Specs
 
 **Feature Branch**: `005-subagents-and-declarative`
@@ -21,8 +23,11 @@ As a parent agent, I dispatch sub-agents by type (e.g., explore / compose / veri
 **Acceptance Scenarios**:
 
 1. **Given** a registered sub-agent type, **When** dispatched, **Then** it runs with its own session (spec 002 tree), allowlist, and budget.
+   **Type**: acceptance
 2. **Given** a completed sub-agent, **When** results return, **Then** the parent context receives the result summary only.
+   **Type**: acceptance
 3. **Given** a sub-agent that fails, **Then** the parent receives a typed failure result and continues.
+   **Type**: acceptance
 
 ### User Story 2 - Resumable sub-agent instances (Priority: P2)
 
@@ -34,7 +39,8 @@ As a parent, I can resume a prior sub-agent instance (its session persists) to c
 
 **Acceptance Scenarios**:
 
-1. **Given** a persisted sub-agent instance id, **When** resumed, **Then** its session tree continues from the stored leaf.
+4. **Given** a persisted sub-agent instance id, **When** resumed, **Then** its session tree continues from the stored leaf.
+   **Type**: acceptance
 
 ### User Story 3 - Declarative agent specs (Priority: P1)
 
@@ -46,9 +52,12 @@ As an operator, I define agents declaratively in YAML — `extends` inheritance,
 
 **Acceptance Scenarios**:
 
-1. **Given** spec B `extends` spec A, **When** resolved, **Then** B inherits unspecified fields and overrides specified ones.
-2. **Given** a spec referencing an unknown tool or cyclic inheritance, **When** loaded, **Then** it fails validation with a precise error.
-3. **Given** a country playbook YAML, **When** loaded as a spec, **Then** agent behavior changes with no code change.
+5. **Given** spec B `extends` spec A, **When** resolved, **Then** B inherits unspecified fields and overrides specified ones.
+   **Type**: acceptance
+6. **Given** a spec referencing an unknown tool or cyclic inheritance, **When** loaded, **Then** it fails validation with a precise error.
+   **Type**: acceptance
+7. **Given** a country playbook YAML, **When** loaded as a spec, **Then** agent behavior changes with no code change.
+   **Type**: acceptance
 
 ### User Story 4 - Built-in dispatch tool (Priority: P2)
 
@@ -60,7 +69,8 @@ As the model, I delegate via a first-class dispatch tool (Kimi's `Agent` tool an
 
 **Acceptance Scenarios**:
 
-1. **Given** dispatch tool call with type + task, **Then** the engine creates/resumes the instance and awaits its result.
+8. **Given** dispatch tool call with type + task, **Then** the engine creates/resumes the instance and awaits its result.
+   **Type**: acceptance
 
 ### Edge Cases
 

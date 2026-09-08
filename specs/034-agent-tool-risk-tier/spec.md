@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: AgentTool entity + RiskTier enum (R3 tools & MCP) — classification, registry persistence, hash contract
 
 **Feature Branch**: `feat/specs-032-033-034-035` (spec dir: `034-agent-tool-risk-tier`)
@@ -23,8 +25,11 @@ As the dispatch/approval layer (R3.2: "Risk metadata first-class on AgentTool: `
 **Acceptance Scenarios**:
 
 1. **Given** the strings `'safe'`, `'confirm'`, `'admin'`, **When** parsed via `RiskTier.fromString`, **Then** each maps to its tier, and `name` round-trips the string back.
+   **Type**: acceptance
 2. **Given** an unknown string (`'delete'`, `''`, `'SAFE'` — case is significant), **When** parsed, **Then** an `ArgumentError` names the input — never a silent `safe` fallback.
+   **Type**: acceptance
 3. **Given** a tool of each tier, **When** the dispatcher consults `requiresConfirmation`/`isAdmin`, **Then** `safe` dispatches free, `confirm` pauses for approval, `admin` additionally requires a grant (pinned by the existing enum tests; the tier-parse is the new surface).
+   **Type**: acceptance
 
 ---
 
@@ -38,9 +43,12 @@ As the tool registry, I serialize tool declarations to JSON and parse them back 
 
 **Acceptance Scenarios**:
 
-1. **Given** a fully-declared tool, **When** serialized and parsed back, **Then** the parsed tool equals the original on every field including the deep params schema.
-2. **Given** a tool without a params schema, **When** serialized, **Then** the `paramsSchema` key is absent — never `null`, never an empty map masquerading as a schema.
-3. **Given** malformed declaration JSON (missing id/description, unknown tier or mode string, non-map schema), **When** parsed, **Then** an `ArgumentError` names the offending field — never a silent default tier (which would under-classify).
+4. **Given** a fully-declared tool, **When** serialized and parsed back, **Then** the parsed tool equals the original on every field including the deep params schema.
+   **Type**: acceptance
+5. **Given** a tool without a params schema, **When** serialized, **Then** the `paramsSchema` key is absent — never `null`, never an empty map masquerading as a schema.
+   **Type**: acceptance
+6. **Given** malformed declaration JSON (missing id/description, unknown tier or mode string, non-map schema), **When** parsed, **Then** an `ArgumentError` names the offending field — never a silent default tier (which would under-classify).
+   **Type**: acceptance
 
 ---
 
@@ -54,9 +62,12 @@ As the registry (collision rejection at registration time) and any hash-based co
 
 **Acceptance Scenarios**:
 
-1. **Given** two equal tools with distinct-but-equal `paramsSchema` map instances, **When** hashed, **Then** the hashCodes are equal (the scaffold's live violation — genuinely red today).
-2. **Given** equal schemas built in different insertion orders, **When** hashed, **Then** the tools remain equal with equal hashes (order-independent fold).
-3. **Given** tools differing in id, description, riskTier, executionMode, or schema contents, **Then** they are unequal (the existing per-axis test pins this; the hash side follows the fix).
+7. **Given** two equal tools with distinct-but-equal `paramsSchema` map instances, **When** hashed, **Then** the hashCodes are equal (the scaffold's live violation — genuinely red today).
+   **Type**: acceptance
+8. **Given** equal schemas built in different insertion orders, **When** hashed, **Then** the tools remain equal with equal hashes (order-independent fold).
+   **Type**: acceptance
+9. **Given** tools differing in id, description, riskTier, executionMode, or schema contents, **Then** they are unequal (the existing per-axis test pins this; the hash side follows the fix).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -71,13 +82,13 @@ As the registry (collision rejection at registration time) and any hash-based co
 
 ### Functional Requirements
 
-- **FR-001**: The `AgentTool` value object keeps its spec-exact five-field surface — `id`, `description`, `riskTier` (default `safe`), `executionMode` (default `sequential`), `paramsSchema?` — with value equality (deep `_mapEq` on the schema), `requiresConfirmation`, `isAdmin`, and the enum surfaces unchanged (compile parity with the 10 existing tests).
+- **FR-001**: The system MUST satisfy this requirement: The `AgentTool` value object keeps its spec-exact five-field surface — `id`, `description`, `riskTier` (default `safe`), `executionMode` (default `sequential`), `paramsSchema?` — with value equality (deep `_mapEq` on the schema), `requiresConfirmation`, `isAdmin`, and the enum surfaces unchanged (compile parity with the 10 existing tests).
 - **FR-002**: `RiskTier.fromString(String value)` MUST parse `'safe'`/`'confirm'`/`'admin'` exactly (case-significant) and MUST throw `ArgumentError` naming the input for anything else — never a silent default. `RiskTier.name` (the enum's built-in) round-trips the wire string.
 - **FR-003**: `ExecutionMode.fromString(String value)` MUST parse `'sequential'`/`'parallel'` with the same typed-failure discipline (consumed by FR-004).
 - **FR-004**: `toJson()` MUST emit `id`, `description`, `riskTier` (tier name), `executionMode` (mode name) always and `paramsSchema` only when non-null (absent-never-fabricated); `AgentTool.fromJson` MUST round-trip all five fields (schema deep-copied) and MUST throw `ArgumentError` naming the field on missing required keys, unknown tier/mode strings, or a non-map schema.
-- **FR-005**: The dispatch-policy reads (`RiskTier.severity`, `requiresConfirmation`, `isAdmin`) keep their existing semantics — the classification consumed by dispatch/approval (R3.2); pinned by the existing enum tests.
+- **FR-005**: The system MUST satisfy this requirement: The dispatch-policy reads (`RiskTier.severity`, `requiresConfirmation`, `isAdmin`) keep their existing semantics — the classification consumed by dispatch/approval (R3.2); pinned by the existing enum tests.
 - **FR-006**: `hashCode` MUST be consistent with `==`: an order-independent fold over the params schema entries (commutative sum of per-entry hashes, nested maps folded recursively) combined with `Object.hash(id, description, riskTier, executionMode)` — fixing the scaffold's live violation where equal tools with distinct-but-equal schema instances hash differently.
-- **FR-007**: The clean-arch layers (`AgentToolService.current/count`, `AgentToolProvider`) keep their existing signatures and stubs (no behavioral change — the classification + persistence + hash semantics are the deliverable).
+- **FR-007**: The system MUST satisfy this requirement: The clean-arch layers (`AgentToolService.current/count`, `AgentToolProvider`) keep their existing signatures and stubs (no behavioral change — the classification + persistence + hash semantics are the deliverable).
 
 ### Key Entities *(include if feature involves data)*
 

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Engine Core Loop
 
 **Feature Branch**: `002-engine-core-loop`
@@ -21,8 +23,11 @@ As a consuming app, I submit messages + tools to the engine and the engine drive
 **Acceptance Scenarios**:
 
 1. **Given** a mission with tools available, **When** the LLM returns `tool_calls`, **Then** the engine dispatches each call, appends result messages, and re-invokes the LLM until a non-tool finish reason.
+   **Type**: acceptance
 2. **Given** a scripted 200-call mission, **When** executed, **Then** it completes without state corruption or event loss.
+   **Type**: acceptance
 3. **Given** the same inputs and a recorded LLM, **When** re-run 10×, **Then** the event stream is byte-identical (determinism).
+   **Type**: acceptance
 
 ### User Story 2 - Interleaved thinking is preserved (Priority: P1)
 
@@ -34,8 +39,10 @@ As the engine, I keep assistant thinking blocks in context alongside tool calls 
 
 **Acceptance Scenarios**:
 
-1. **Given** a provider streaming thinking deltas, **When** a turn completes, **Then** the assistant message carries thinking blocks next to tool calls.
-2. **Given** a multi-turn mission, **When** turn N+1's context is assembled, **Then** prior turns' thinking blocks are present.
+4. **Given** a provider streaming thinking deltas, **When** a turn completes, **Then** the assistant message carries thinking blocks next to tool calls.
+   **Type**: acceptance
+5. **Given** a multi-turn mission, **When** turn N+1's context is assembled, **Then** prior turns' thinking blocks are present.
+   **Type**: acceptance
 
 ### User Story 3 - Mid-mission steering (Priority: P2)
 
@@ -47,8 +54,10 @@ As a user, I inject guidance mid-mission (pi-mono steering/follow-up pattern) an
 
 **Acceptance Scenarios**:
 
-1. **Given** a running mission, **When** a steering message is enqueued, **Then** it is injected before the next LLM call.
-2. **Given** follow-up messages queued at mission end, **When** the loop checks stop conditions, **Then** the loop continues with the follow-ups instead of exiting.
+6. **Given** a running mission, **When** a steering message is enqueued, **Then** it is injected before the next LLM call.
+   **Type**: acceptance
+7. **Given** follow-up messages queued at mission end, **When** the loop checks stop conditions, **Then** the loop continues with the follow-ups instead of exiting.
+   **Type**: acceptance
 
 ### User Story 4 - Loop safety rails (Priority: P2)
 
@@ -60,8 +69,10 @@ As the engine operator, I bound every mission: max-turns, wall-clock timeout, an
 
 **Acceptance Scenarios**:
 
-1. **Given** maxTurns=5, **When** the model never stops calling tools, **Then** the mission ends with a `MaxTurnsExceeded` outcome after turn 5.
-2. **Given** identical repeated tool calls, **When** the threshold is hit, **Then** `LoopDetected` fires and the mission aborts cleanly.
+8. **Given** maxTurns=5, **When** the model never stops calling tools, **Then** the mission ends with a `MaxTurnsExceeded` outcome after turn 5.
+   **Type**: acceptance
+9. **Given** identical repeated tool calls, **When** the threshold is hit, **Then** `LoopDetected` fires and the mission aborts cleanly.
+   **Type**: acceptance
 
 ### User Story 5 - Typed streaming events (Priority: P1)
 
@@ -73,7 +84,8 @@ As the UI layer, I consume the mission as typed lifecycle events — thinking de
 
 **Acceptance Scenarios**:
 
-1. **Given** any running mission, **When** events occur, **Then** consumers receive them in order with monotonic turn/sequence identifiers.
+10. **Given** any running mission, **When** events occur, **Then** consumers receive them in order with monotonic turn/sequence identifiers.
+   **Type**: acceptance
 
 ### Edge Cases
 

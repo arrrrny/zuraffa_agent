@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: EngineEvent sealed library + TurnStarted
 
 **Feature Branch**: `024-engine-event-turn-started`
@@ -21,8 +23,11 @@ As the build CI, I see `dart analyze --fatal-infos` succeed on `lib/src/engine/e
 **Acceptance Scenarios**:
 
 1. **Given** a hand-curated `lib/src/engine/events/engine_event.dart` declaring `sealed class EngineEvent`, **When** a part file declares `final class TurnStarted extends EngineEvent`, **Then** `dart analyze` reports no `invalid_use_of_type_outside_library` error.
+   **Type**: acceptance
 2. **Given** `TurnStarted` is the only `EngineEvent` subtype in this PR, **When** `dart analyze` is run on the whole `lib/`, **Then** it succeeds with no `exhaustive_switch` warnings (the `switch` over `EngineEvent` in the test uses a `default` arm OR is checked with `is TurnStarted`).
+   **Type**: acceptance
 3. **Given** a downstream consumer switches over `engineEvent`, **When** only `TurnStarted` is implemented, **Then** the switch is exhaustive when expanded as `switch (e) { case TurnStarted(): ... }`.
+   **Type**: acceptance
 
 ### User Story 2 - Foundation for the 8 sibling events (Priority: P2)
 
@@ -34,7 +39,8 @@ As the next agent fixing issue #23 (turn_completed), I clone this worktree's `en
 
 **Acceptance Scenarios**:
 
-1. **Given** the merged `engine_event.dart` library, **When** an agent adds a second `final class` extending `EngineEvent` in its own part file, **Then** `dart analyze` succeeds with no new errors.
+4. **Given** the merged `engine_event.dart` library, **When** an agent adds a second `final class` extending `EngineEvent` in its own part file, **Then** `dart analyze` succeeds with no new errors.
+   **Type**: acceptance
 
 ### Edge Cases
 

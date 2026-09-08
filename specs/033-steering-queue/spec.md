@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: SteeringQueue + SteeringMessage (R1 engine core) — enqueue/dispatch/inject semantics
 
 **Feature Branch**: `feat/specs-032-033-034-035` (spec dir: `033-steering-queue`)
@@ -21,8 +23,11 @@ As the engine loop (pi-mono pattern: "mid-mission user input injected between tu
 **Acceptance Scenarios**:
 
 1. **Given** an empty queue, **When** a message is enqueued, **Then** the returned snapshot has `pendingCount == 1`, `head == message`, `isEmpty == false`, and `lastInjectedAt == message.injectedAt`.
+   **Type**: acceptance
 2. **Given** a queue with one pending message, **When** a second message is enqueued, **Then** the returned snapshot's pending list is `[first, second]` (FIFO order preserved — `head` is still the first).
+   **Type**: acceptance
 3. **Given** any queue, **When** `enqueue` is called, **Then** the source snapshot's pending list, `processedCount`, and `lastInjectedAt` are unchanged (state is never lost mid-turn).
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the engine loop between turns, I pop the head steering message (the one the `
 
 **Acceptance Scenarios**:
 
-1. **Given** a queue with pending `[m1, m2]`, **When** popped, **Then** the returned message is `m1`, the returned queue's pending is `[m2]`, `processedCount` is `old + 1`, and `lastInjectedAt` is preserved.
-2. **Given** an empty queue, **When** popped, **Then** a `StateError` is thrown (typed failure — the engine only pops when non-empty; a silent null would fabricate a steering injection).
-3. **Given** a queue with pending `[m1, m2]`, **When** popped twice, **Then** the messages come out `m1` then `m2` (FIFO drain order matches inject order) and the final queue is empty with `processedCount == old + 2`.
+4. **Given** a queue with pending `[m1, m2]`, **When** popped, **Then** the returned message is `m1`, the returned queue's pending is `[m2]`, `processedCount` is `old + 1`, and `lastInjectedAt` is preserved.
+   **Type**: acceptance
+5. **Given** an empty queue, **When** popped, **Then** a `StateError` is thrown (typed failure — the engine only pops when non-empty; a silent null would fabricate a steering injection).
+   **Type**: acceptance
+6. **Given** a queue with pending `[m1, m2]`, **When** popped twice, **Then** the messages come out `m1` then `m2` (FIFO drain order matches inject order) and the final queue is empty with `processedCount == old + 2`.
+   **Type**: acceptance
 
 ---
 
@@ -52,9 +60,12 @@ As the persistence layer (the queue persists between turns; the session tree rec
 
 **Acceptance Scenarios**:
 
-1. **Given** a populated queue (two pending, processedCount 3, lastInjectedAt set), **When** serialized and parsed back, **Then** the parsed queue equals the original on every field including FIFO order.
-2. **Given** an empty fresh queue (lastInjectedAt null), **When** serialized, **Then** the `lastInjectedAt` key is absent — never fabricated — and the round-trip restores a null.
-3. **Given** a steering message, **When** serialized and parsed back, **Then** id, content, and injectedAt round-trip exactly.
+7. **Given** a populated queue (two pending, processedCount 3, lastInjectedAt set), **When** serialized and parsed back, **Then** the parsed queue equals the original on every field including FIFO order.
+   **Type**: acceptance
+8. **Given** an empty fresh queue (lastInjectedAt null), **When** serialized, **Then** the `lastInjectedAt` key is absent — never fabricated — and the round-trip restores a null.
+   **Type**: acceptance
+9. **Given** a steering message, **When** serialized and parsed back, **Then** id, content, and injectedAt round-trip exactly.
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -72,8 +83,8 @@ As the persistence layer (the queue persists between turns; the session tree rec
 - **FR-002**: `enqueue(SteeringMessage message)` MUST return a NEW snapshot with `pending + [message]` (FIFO append) and `lastInjectedAt == message.injectedAt`; `processedCount` and `id` are unchanged; the source snapshot is never mutated.
 - **FR-003**: `pop()` MUST return a record `({SteeringMessage message, SteeringQueue queue})` where `message` is the current head, `queue` is a NEW snapshot with the head removed, `processedCount + 1`, `lastInjectedAt` preserved, and the remainder of the pending list in order; popping an empty queue MUST throw `StateError`. The source snapshot is never mutated.
 - **FR-004**: `SteeringMessage.toJson()/fromJson()` MUST round-trip id, content, injectedAt exactly (ISO-8601 timestamp); `SteeringQueue.toJson()/fromJson()` MUST round-trip id, pending (nested message objects, FIFO order), processedCount, and lastInjectedAt-when-present; absent optionals serialize absent, never fabricated; missing/ill-typed required keys throw `ArgumentError` naming the key.
-- **FR-005**: The `head`/`isEmpty`/`pendingCount` getters and value equality keep their existing semantics (compile parity with the 9 existing tests — equality stays deep over pending).
-- **FR-006**: The clean-arch layers (`SteeringQueueService.current/count`, `SteeringQueueProvider`) keep their existing signatures and stubs (no behavioral change — the queue semantics are the deliverable).
+- **FR-005**: The system MUST satisfy this requirement: The `head`/`isEmpty`/`pendingCount` getters and value equality keep their existing semantics (compile parity with the 9 existing tests — equality stays deep over pending).
+- **FR-006**: The system MUST satisfy this requirement: The clean-arch layers (`SteeringQueueService.current/count`, `SteeringQueueProvider`) keep their existing signatures and stubs (no behavioral change — the queue semantics are the deliverable).
 
 ### Key Entities *(include if feature involves data)*
 

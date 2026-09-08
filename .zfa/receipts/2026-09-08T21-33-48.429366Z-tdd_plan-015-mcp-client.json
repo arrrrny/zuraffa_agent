@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "015-mcp-client",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:33:48.429366Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "015-mcp-client"
+  },
+  "files": [
+    {
+      "path": "specs/015-mcp-client/tdd/test-list.md",
+      "action": "update",
+      "sha256": "4533bba4a6b681fd743e13718cd002d76c2f018d031663902e51ba507b773f7d",
+      "bytes": 3123,
+      "snapshot": "# Test List: 015-mcp-client\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | it executes without serialization overhead. | AC-1 | PENDING |\n| A2 | the client reconnects and resumes. | AC-2 | PENDING |\n| A3 | calls continue without rebuild. | AC-3 | PENDING |\n| A4 | the client reconnects automatically. | AC-4 | PENDING |\n| A5 | they are registered in the tool registry. | AC-5 | PENDING |\n| A6 | the cache is invalidated and tools are re-listed. | AC-6 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | The MCP client MUST implement in-proc, SSE+Bearer, and stdio transports. | FR-001 | PENDING |\n| U2 | SSE transport MUST support automatic reconnect with exponential backoff. | FR-002 | PENDING |\n| U3 | SSE transport MUST support auth callback for token rotation. | FR-003 | PENDING |\n| U4 | stdio transport MUST handle process crashes with bounded retries. | FR-004 | PENDING |\n| U5 | Tool listing MUST be cached and invalidated on change notifications. | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| McpClient |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 39]\nroute: A3 -> acceptance lane [declared: type marker, spec line 41]\nroute: A4 -> acceptance lane [declared: type marker, spec line 54]\nroute: A5 -> acceptance lane [declared: type marker, spec line 67]\nroute: A6 -> acceptance lane [declared: type marker, spec line 69]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/015-mcp-client/tdd/traceability.md",
+      "action": "update",
+      "sha256": "9a7983dbeb36f597fc23a3bac03ea00c63b6b57997d3fa42420b4ce42a6e761e",
+      "bytes": 1993,
+      "snapshot": "# Traceability: 015-mcp-client\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:088d0c25c9837c34f3a09bc3c7a46bd9f087fe0eb544c50b32ed5be77a297ef1\nstatements: 11\nautomated: 11\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** an in-proc MCP server, **When** a tool is called, **Then** it executes without serialization overhead. | A1 | automated |\n| AC-2 | 38 | 1. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects and resumes. | A2 | automated |\n| AC-3 | 40 | 2. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without rebuild. | A3 | automated |\n| AC-4 | 53 | 1. **Given** a stdio server that crashes, **When** it restarts, **Then** the client reconnects automatically. | A4 | automated |\n| AC-5 | 66 | 1. **Given** an MCP server, **When** tools are listed, **Then** they are registered in the tool registry. | A5 | automated |\n| AC-6 | 68 | 2. **Given** a tools-changed notification, **When** received, **Then** the cache is invalidated and tools are re-listed. | A6 | automated |\n| FR-001 | 75 | - **FR-001**: The MCP client MUST implement in-proc, SSE+Bearer, and stdio transports. | U1 | automated |\n| FR-002 | 76 | - **FR-002**: SSE transport MUST support automatic reconnect with exponential backoff. | U2 | automated |\n| FR-003 | 77 | - **FR-003**: SSE transport MUST support auth callback for token rotation. | U3 | automated |\n| FR-004 | 78 | - **FR-004**: stdio transport MUST handle process crashes with bounded retries. | U4 | automated |\n| FR-005 | 79 | - **FR-005**: Tool listing MUST be cached and invalidated on change notifications. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/015-mcp-client/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/015-mcp-client/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}
