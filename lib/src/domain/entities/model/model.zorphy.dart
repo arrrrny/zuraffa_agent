@@ -32,6 +32,27 @@ class Model {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  Model copyWithField<T>(Field<Model, T> field, T value) {
+    switch (field.name) {
+      case 'provider':
+        return copyWith(provider: value as String);
+      case 'modelId':
+        return copyWith(modelId: value as String);
+      case 'contextWindow':
+        return copyWith(contextWindow: value as int);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'Model has no settable field with this name',
+        );
+    }
+  }
+
   Model copyWithModel({String? provider, String? modelId, int? contextWindow}) {
     return copyWith(
       provider: provider,

@@ -33,6 +33,27 @@ class ArtifactRef {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ArtifactRef copyWithField<T>(Field<ArtifactRef, T> field, T value) {
+    switch (field.name) {
+      case 'kind':
+        return copyWith(kind: value as String);
+      case 'id':
+        return copyWith(id: value as String);
+      case 'uri':
+        return copyWith(uri: value as String?);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ArtifactRef has no settable field with this name',
+        );
+    }
+  }
+
   ArtifactRef copyWithArtifactRef({String? kind, String? id, String? uri}) {
     return copyWith(kind: kind, id: id, uri: uri);
   }

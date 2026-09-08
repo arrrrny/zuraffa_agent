@@ -47,6 +47,31 @@ class GoldenMission {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  GoldenMission copyWithField<T>(Field<GoldenMission, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'name':
+        return copyWith(name: value as String);
+      case 'cassette':
+        return copyWith(cassette: value as Map<String, dynamic>);
+      case 'taskDefinition':
+        return copyWith(taskDefinition: value as String);
+      case 'graderBindings':
+        return copyWith(graderBindings: value as List<String>);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'GoldenMission has no settable field with this name',
+        );
+    }
+  }
+
   GoldenMission copyWithGoldenMission({
     String? id,
     String? name,

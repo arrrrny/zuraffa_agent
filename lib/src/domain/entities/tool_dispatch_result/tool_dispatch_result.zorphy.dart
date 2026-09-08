@@ -42,6 +42,32 @@ class ToolDispatchResult {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ToolDispatchResult copyWithField<T>(
+    Field<ToolDispatchResult, T> field,
+    T value,
+  ) {
+    switch (field.name) {
+      case 'success':
+        return copyWith(success: value as bool);
+      case 'result':
+        return copyWith(result: value as String);
+      case 'error':
+        return copyWith(error: value as String);
+      case 'artifactRefs':
+        return copyWith(artifactRefs: value as List<String>);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ToolDispatchResult has no settable field with this name',
+        );
+    }
+  }
+
   ToolDispatchResult copyWithToolDispatchResult({
     bool? success,
     String? result,

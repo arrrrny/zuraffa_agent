@@ -8,7 +8,10 @@
 // Mirrors the ProviderConfigProvider / EngineLoopProvider pattern
 // (spec 052 / 045).
 
-import 'package:zuraffa/zuraffa.dart';
+// `ToolResult` is hidden because zuraffa >=6.2.0's agent runtime
+// (src/agent/policy/policy_hook.dart) exports its own; spec 031's ToolResult
+// value object is the one in scope here.
+import 'package:zuraffa/zuraffa.dart' hide ToolResult;
 
 import '../../../domain/entities/tool_result/tool_result.dart';
 import '../../../domain/services/tool_result_service.dart';

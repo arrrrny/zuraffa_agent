@@ -57,6 +57,35 @@ class AgentSpec {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  AgentSpec copyWithField<T>(Field<AgentSpec, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'tools':
+        return copyWith(tools: value as List<String>);
+      case 'subagents':
+        return copyWith(subagents: value as List<String>);
+      case 'budget':
+        return copyWith(budget: value as String);
+      case 'systemPrompt':
+        return copyWith(systemPrompt: value as String);
+      case 'riskTier':
+        return copyWith(riskTier: value as String);
+      case 'extendsSpec':
+        return copyWith(extendsSpec: value as String);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'AgentSpec has no settable field with this name',
+        );
+    }
+  }
+
   AgentSpec copyWithAgentSpec({
     String? id,
     List<String>? tools,

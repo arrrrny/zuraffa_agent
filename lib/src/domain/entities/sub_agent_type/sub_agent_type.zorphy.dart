@@ -47,6 +47,31 @@ class SubAgentType {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  SubAgentType copyWithField<T>(Field<SubAgentType, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'name':
+        return copyWith(name: value as String);
+      case 'specRef':
+        return copyWith(specRef: value as String);
+      case 'allowlist':
+        return copyWith(allowlist: value as List<String>);
+      case 'budgetProfile':
+        return copyWith(budgetProfile: value as String);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'SubAgentType has no settable field with this name',
+        );
+    }
+  }
+
   SubAgentType copyWithSubAgentType({
     String? id,
     String? name,

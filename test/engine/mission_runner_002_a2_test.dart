@@ -88,11 +88,9 @@ class FakeToolDispatcher implements ToolDispatcher {
 class ScriptedPlanner implements ToolCallPlanner {
   ScriptedPlanner(this.perTurn);
   final int perTurn;
-  int _count = 0;
 
   @override
   Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async {
-    _count++;
     // Model only wants tools when it explicitly asked (finishReason == 'tool_calls').
     // On the natural stop turn it returns nothing, which ends the mission.
     if (completion.finishReason != 'tool_calls') return const [];

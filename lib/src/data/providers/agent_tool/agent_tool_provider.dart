@@ -10,8 +10,10 @@
 
 // Hide `AgentTool` (the @Zorphy annotation from zorphy_annotation, re-exported
 // via zuraffa.dart) so it does not clash with our hand-curated AgentTool
-// value object in the entities import below.
-import 'package:zuraffa/zuraffa.dart' hide AgentTool;
+// value object in the entities import below. `RiskTier` is hidden because
+// zuraffa >=6.2.0's agent runtime (src/agent/runtime/mission.dart) exports
+// its own; spec 034's RiskTier is the one in scope here.
+import 'package:zuraffa/zuraffa.dart' hide AgentTool, RiskTier;
 
 import '../../../domain/entities/agent_tool/agent_tool.dart';
 import '../../../domain/services/agent_tool_service.dart';

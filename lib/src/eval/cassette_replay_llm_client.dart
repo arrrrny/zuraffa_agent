@@ -65,7 +65,7 @@ class CassetteReplayLlmClient extends LlmClientProvider {
   final List<String> eventOrder;
 
   int _cursor = 0;
-  int _liveCallCount = 0;
+  final int _liveCallCount = 0;
 
   /// How many recordings have been served so far.
   int get consumed => _cursor;

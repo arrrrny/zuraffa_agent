@@ -119,7 +119,7 @@ String eventKey(EngineEvent e) => switch (e) {
 void main() {
   test('A3: 10 identical runs produce a byte-identical event stream', () async {
     // Fixed clock so every emittedAt is constant across runs.
-    final fixedClock = () => DateTime.utc(2026, 1, 1);
+    DateTime fixedClock() => DateTime.utc(2026, 1, 1);
 
     // Build a fresh runner per run (no shared mutable state between runs).
     Future<(List<String>, MissionResult)> runOnce() async {

@@ -62,6 +62,40 @@ class ToolInvocationRecord {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ToolInvocationRecord copyWithField<T>(
+    Field<ToolInvocationRecord, T> field,
+    T value,
+  ) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'parentId':
+        return copyWith(parentId: value as String?);
+      case 'timestamp':
+        return copyWith(timestamp: value as DateTime);
+      case 'toolCallId':
+        return copyWith(toolCallId: value as String);
+      case 'toolName':
+        return copyWith(toolName: value as String);
+      case 'resultEntryId':
+        return copyWith(resultEntryId: value as String?);
+      case 'isError':
+        return copyWith(isError: value as bool);
+      case 'durationMs':
+        return copyWith(durationMs: value as int);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ToolInvocationRecord has no settable field with this name',
+        );
+    }
+  }
+
   ToolInvocationRecord copyWithToolInvocationRecord({
     String? id,
     String? parentId,

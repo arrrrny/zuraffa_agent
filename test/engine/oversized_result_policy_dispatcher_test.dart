@@ -10,7 +10,10 @@
 import 'dart:convert';
 
 import 'package:test/test.dart';
-import 'package:zuraffa/zuraffa.dart' show NoParams, ProviderConfig;
+import 'package:zuraffa/zuraffa.dart' show NoParams;
+// zuraffa >=6.2.0 no longer exports ProviderConfig; spec 052's local
+// entity is the one in scope.
+import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 
 import 'package:zuraffa_agent/src/artifact/artifact_service.dart';
 import 'package:zuraffa_agent/src/artifact/in_memory_artifact_store.dart';
@@ -19,7 +22,6 @@ import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executo
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/data/providers/oversized_result_policy/oversized_result_policy_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/artifact_ref/artifact_ref.dart';
-import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
