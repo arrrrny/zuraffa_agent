@@ -255,5 +255,24 @@ void main() {
       expect(notification, isA<McpWireNotificationToolsChanged>());
       await transport.close();
     });
+
+    test('U19: SSE lifecycle — misuse typed, open/close idempotent, close '
+        'aborts the stream', () async {
+      final transport = IoSseMcpTransport(endpoint: mock.url.toString());
+      await expectLater(
+        transport.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+      await transport.open();
+      await transport.open(); // no second GET
+      expect(mock.getRequests, hasLength(1));
+      await transport.close();
+      await transport.close(); // no throw
+      expect(transport.isOpen, isFalse);
+      await expectLater(
+        transport.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+    });
   });
 }

@@ -706,3 +706,36 @@ refactor.
 - The `HttpResponse.flush()` finding is test-fixture-side, not a lib/ or
   framework defect: no misfire. (The transport is the *client*; the mock is
   the server. Real SSE servers write+flush their own way.)
+
+## Cycle 20 — SSE lifecycle (U19)
+
+**Scope**: send-before-open typed; double open (one GET) and double close
+no-ops; close aborts the stream and poisons later sends typed.
+
+### RED
+
+First run PASSED (guards shipped with cycles 13/15) → deliberate-mutant
+check:
+
+```
+MUTANT: open idempotence guard disabled
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U19:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U19: SSE lifecycle — misuse typed, open/close idempotent, close aborts the stream [E]
+  Expected: an object with length of <1>
+    Actual: [Instance of '_GetRecord', Instance of '_GetRecord']
+```
+
+Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+01:16 +1218 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
