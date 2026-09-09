@@ -37,7 +37,7 @@ known ids, open/closed/exit lifecycle orderings).
 | U9 | `crash`-mode child exit: `isOpen` → false, an in-flight send's future completes with the typed `McpWireClosedException`, the next send throws the same typed failure (throw, not error-response — the client reconnect contract), and the `notifications` stream is done. | FR-003 | DONE |
 | U10 | `send` before `open` (and after `close`) throws `McpWireClosedException` — never `UnimplementedError`, never an `Error`. | FR-007 | DONE |
 | U11 | Double `open` and double `close` are no-ops: no second process spawn, no throw, `isOpen` consistent. | FR-007 | DONE |
-| U12 | `close()`: the child process is terminated, `isOpen` → false, subsequent send throws typed, `notifications` is closed; pending sends at close time fail typed. | FR-007 | PENDING |
+| U12 | `close()`: the child process is terminated, `isOpen` → false, subsequent send throws typed, `notifications` is closed; pending sends at close time fail typed. | FR-007 | DONE |
 
 ### Component: `lib/src/mcp/io_sse_mcp_transport.dart`
 

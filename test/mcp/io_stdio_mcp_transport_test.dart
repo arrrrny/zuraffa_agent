@@ -5,6 +5,7 @@
 // real subprocess I/O, no external services, no prebuilt binaries.
 // Dialect contract: specs/105-production-mcp-transports/contracts/mcp-wire-dialect.md.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:test/test.dart';
@@ -149,6 +150,30 @@ void main() {
       await transport.close();
       await transport.close(); // must not throw
       expect(transport.isOpen, isFalse);
+    });
+
+    test('U12: close fails in-flight sends typed and shuts the streams down',
+        () async {
+      final transport = _spawn('slow');
+      await transport.open();
+      // Attach a listener at creation time: the rejection lands while
+      // close() runs, before any later expect could subscribe.
+      Object? captured;
+      unawaited(
+        transport
+            .send(const McpWireRequestCallTool(name: 'echo', arguments: {}))
+            .then((_) {}, onError: (Object e) {
+          captured = e;
+        }),
+      );
+      await transport.close(); // while the call is in flight
+      expect(captured, isA<McpWireClosedException>());
+      expect(transport.isOpen, isFalse);
+      expect(transport.notifications, emitsDone);
+      await expectLater(
+        transport.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
     });
   });
 }

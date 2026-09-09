@@ -408,3 +408,47 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 12 — stdio close teardown with in-flight send (U12)
+
+**Scope**: close() fails in-flight sends typed, shuts the notification
+stream, and leaves the transport consistently closed. Mock fixture grew the
+`slow` mode (answers after 300ms) so the close-vs-answer race is
+deterministic.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U12:"
+00:05 +0 -1: spec-105 — IoStdioMcpTransport U12: close fails in-flight sends typed and shuts the streams down [E]
+     Which: threw TimeoutException:<TimeoutException after 0:00:05.000000: Future not completed>
+```
+
+(The in-flight send hung forever after close — nothing drained pending.)
+
+### GREEN — three iterations, all inside the cycle
+
+1. First green attempt surfaced a **test-harness compile error** (the mock's
+   `listen` callback used `await` without `async` — 8 suite failures,
+   caught by the full-suite gate, root cause fixed: `async` callback).
+2. Second attempt surfaced an unhandled-rejection report: the pending
+   completer was completed with the typed error while the suspended `send`
+   frame had not yet subscribed to it (`await stdin.flush()` sat between).
+   This is a **real implementation hazard** (close racing a send), not test
+   noise — fixed in the implementation: `send` returns and thus subscribes
+   to the completer future synchronously; the stdin flush is
+   fire-and-forget with a guarded error sink (a flush error is exactly the
+   close/exit-drains-pending path).
+3. Test mechanics: the in-flight expectation attaches a listener at creation
+   time (`unawaited(...then(onError: ...))`).
+
+```
+$ dart test
+01:11 +1212 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+`_failPending(reason)` extracted, shared by `close()` and `_handleExit()`.

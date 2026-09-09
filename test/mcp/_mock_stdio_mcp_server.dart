@@ -2,7 +2,8 @@
 // dialect of specs/105-production-mcp-transports/contracts/mcp-wire-dialect.md.
 // Run as a subprocess by the IoStdioMcpTransport integration tests:
 //   dart test/mcp/_mock_stdio_mcp_server.dart <mode>
-// Modes: echo | garbage | notify | crash (see io_stdio_mcp_transport_test.dart).
+// Modes: echo | garbage | notify | crash | slow (see
+// io_stdio_mcp_transport_test.dart).
 import 'dart:convert';
 import 'dart:io';
 
@@ -68,7 +69,7 @@ void main(List<String> args) {
     });
   }
 
-  stdin.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+  stdin.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
     Map<String, dynamic> request;
     try {
       final decoded = jsonDecode(line);
@@ -87,6 +88,10 @@ void main(List<String> args) {
       if (mode == 'crash' && params['name'] == 'crash') {
         stderr.writeln('mock: crashing on command');
         exit(1);
+      }
+      if (mode == 'slow') {
+        // Long enough for the test to close the transport mid-flight.
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       }
       answerCall(id, params);
     }

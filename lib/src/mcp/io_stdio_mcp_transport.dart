@@ -80,13 +80,16 @@ class IoStdioMcpTransport implements McpWire {
   void _handleExit() {
     if (_closed) return;
     _isOpen = false;
-    final failure = const McpWireClosedException(
-        'IoStdioMcpTransport: the server process exited');
+    _failPending('the server process exited');
+    _notifications.close();
+  }
+
+  void _failPending(String reason) {
+    final failure = McpWireClosedException('IoStdioMcpTransport: $reason');
     for (final completer in _pending.values) {
       completer.completeError(failure);
     }
     _pending.clear();
-    _notifications.close();
   }
 
   @override
@@ -95,6 +98,7 @@ class IoStdioMcpTransport implements McpWire {
     _isOpen = false;
     _process?.kill();
     _process = null;
+    _failPending('the transport was closed');
     await _stdoutSub?.cancel();
     _stdoutSub = null;
     await _stderrSub?.cancel();
@@ -130,7 +134,11 @@ class IoStdioMcpTransport implements McpWire {
         };
     }
     process.stdin.writeln(jsonEncode(envelope));
-    await process.stdin.flush();
+    // The completer future is returned (and thus subscribed) synchronously:
+    // a close/exit completing this pending entry in the same turn can never
+    // produce an unhandled rejection. Flush errors mean the pipe died —
+    // exactly the path where close/exit drains the pending entry typed.
+    unawaited(process.stdin.flush().catchError((Object _) {}));
     return completer.future;
   }
 
