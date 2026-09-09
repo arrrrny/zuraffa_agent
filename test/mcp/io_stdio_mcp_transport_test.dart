@@ -104,5 +104,15 @@ void main() {
       expect(payload['tools'], isNotEmpty); // the echo descriptor, not 999's
       await transport.close();
     });
+
+    test('U6: the tools-changed notification is observed on notifications',
+        () async {
+      final transport = _spawn('notify');
+      await transport.open();
+      final notification = await transport.notifications.first
+          .timeout(const Duration(seconds: 5));
+      expect(notification, isA<McpWireNotificationToolsChanged>());
+      await transport.close();
+    });
   });
 }

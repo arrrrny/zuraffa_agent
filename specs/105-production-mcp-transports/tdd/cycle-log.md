@@ -267,3 +267,36 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 8 — stdio tools-changed notification (U6)
+
+**Scope**: the notify-mode child's `notifications/tools/list_changed` line
+surfaces as `McpWireNotificationToolsChanged`.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U6:"
+00:05 +0 -1: spec-105 — IoStdioMcpTransport U6: the tools-changed notification is observed on notifications [E]
+  TimeoutException after 0:00:05.000000: Future not completed
+```
+
+(Nothing ever emitted — a bounded red: the test's own 5s timeout, well under
+the suite's 30s per-test timeout.)
+
+### GREEN
+
+`_handleLine`: id-less messages with method
+`notifications/tools/list_changed` add `McpWireNotificationToolsChanged`
+to the broadcast controller.
+
+```
+$ dart test
+00:59 +1208 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

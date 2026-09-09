@@ -127,6 +127,12 @@ class IoStdioMcpTransport implements McpWire {
     final id = message['id'];
     if (id is int && _pending.containsKey(id)) {
       _pending.remove(id)!.complete(_responseFor(message));
+      return;
+    }
+    // Server-pushed notification (no id): only the tools-changed method has
+    // semantic meaning on this seam.
+    if (message['method'] == 'notifications/tools/list_changed') {
+      _notifications.add(const McpWireNotificationToolsChanged());
     }
   }
 
