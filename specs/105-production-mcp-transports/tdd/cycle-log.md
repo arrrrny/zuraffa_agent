@@ -335,3 +335,42 @@ No issues found!
 One lint fix inside the cycle: `unawaited(...)` for the exitCode future
 (unawaited_futures) — constitution X requires pristine analysis before the
 cycle commits.
+
+## Cycle 10 — stdio send-before-open typed (U10)
+
+**Scope**: send on a never-opened transport fails with the typed exception.
+
+### RED
+
+First run PASSED (the closed-guard shipped with cycle 2's send path) →
+deliberate-mutant check. First mutant (deleting the guard) did not compile —
+null-safety rejects `process.stdin` on `Process?`; a compile error is not a
+behavioral red, so the mutant was revised to a compilable behavioral one:
+
+```
+MUTANT: guard throws StateError instead of McpWireClosedException
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U10:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U10: send before open fails typed [E]
+  Expected: throws <Instance of 'McpWireClosedException'>
+    Actual: <Instance of 'Future<McpWireResponse>'>
+```
+
+The test pins the typed contract, not merely "it throws". Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+00:46 +1210 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
+
+### Notes
+
+- The first (non-compiling) mutant attempt is recorded for honesty: no code
+  state from it was ever committed or tested green.

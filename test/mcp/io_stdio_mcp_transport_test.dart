@@ -131,5 +131,13 @@ void main() {
         throwsA(isA<McpWireClosedException>()),
       );
     });
+
+    test('U10: send before open fails typed', () async {
+      final transport = _spawn('echo');
+      await expectLater(
+        transport.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+    });
   });
 }
