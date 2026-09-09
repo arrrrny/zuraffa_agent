@@ -57,6 +57,7 @@ class IoStdioMcpTransport implements McpWire {
 
   @override
   Future<void> open() async {
+    if (_isOpen) return; // idempotent: never spawn a second session
     final process = await Process.start(executable, args);
     _process = process;
     // Drain the pipes from day one: a child blocked on a full stdout

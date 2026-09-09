@@ -374,3 +374,37 @@ None needed.
 
 - The first (non-compiling) mutant attempt is recorded for honesty: no code
   state from it was ever committed or tested green.
+
+## Cycle 11 — stdio idempotent open/close (U11)
+
+**Scope**: double open and double close are no-ops; the session stays
+consistent.
+
+### RED
+
+First run PASSED → deliberate-mutant check:
+
+```
+MUTANT: close() adds to the notification controller after closing it
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U11:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U11: double open and double close are no-ops [E]
+  (StateError from the second close)
+```
+
+Restored; green also added the open-guard (`if (_isOpen) return;`) so a
+double open can never spawn a second (leaked) session — the spawn count is
+not observable through the seam, noted here as the honest limit of this
+test's reach.
+
+### GREEN
+
+```
+$ dart test
+00:45 +1211 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

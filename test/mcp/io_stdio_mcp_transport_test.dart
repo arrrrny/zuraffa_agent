@@ -139,5 +139,16 @@ void main() {
         throwsA(isA<McpWireClosedException>()),
       );
     });
+
+    test('U11: double open and double close are no-ops', () async {
+      final transport = _spawn('echo');
+      await transport.open();
+      await transport.open(); // must not throw; session stays consistent
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      await transport.close();
+      await transport.close(); // must not throw
+      expect(transport.isOpen, isFalse);
+    });
   });
 }
