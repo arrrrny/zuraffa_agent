@@ -33,7 +33,7 @@ known ids, open/closed/exit lifecycle orderings).
 | U5 | A JSON-RPC **error** response from the child completes the send as `McpWireResponseError` with the error's stringified code and message (not an exception, not a crash). | FR-002 | DONE |
 | U6 | The `notify`-mode child's `notifications/tools/list_changed` line is observed as `McpWireNotificationToolsChanged` on `notifications` before the normal answer resolves. | FR-003 | PENDING |
 | U7 | `garbage`-mode junk lines (non-JSON, valid-JSON-but-unknown) produce no notification, no crash; a subsequent RPC on the same transport still succeeds. | FR-003 | DONE |
-| U8 | A response line whose `id` matches no in-flight request is dropped silently; the in-flight request still resolves from its own (later) response. | FR-002 | PENDING |
+| U8 | A response line whose `id` matches no in-flight request is dropped silently; the in-flight request still resolves from its own (later) response. | FR-002 | DONE |
 | U9 | `crash`-mode child exit: `isOpen` → false, an in-flight send's future completes with the typed `McpWireClosedException`, the next send throws the same typed failure (throw, not error-response — the client reconnect contract), and the `notifications` stream is done. | FR-003 | PENDING |
 | U10 | `send` before `open` (and after `close`) throws `McpWireClosedException` — never `UnimplementedError`, never an `Error`. | FR-007 | PENDING |
 | U11 | Double `open` and double `close` are no-ops: no second process spawn, no throw, `isOpen` consistent. | FR-007 | PENDING |

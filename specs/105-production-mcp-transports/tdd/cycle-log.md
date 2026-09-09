@@ -234,3 +234,36 @@ No issues found!
 ### REFACTOR
 
 None — the mapping extracted into `_responseFor` is the cycle's own shape.
+
+## Cycle 7 — stdio id matching: unknown ids dropped (U8)
+
+**Scope**: a startup response for an id nobody asked (999) is dropped; the
+in-flight request resolves from its own response.
+
+### RED
+
+First run PASSED (id matching in place since cycle 2) → deliberate-mutant
+check:
+
+```
+MUTANT: pending completed FIFO instead of id-matched
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U8:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U8: a response with an unknown id is dropped; the real answer still resolves [E]
+  Expected: non-empty
+    Actual: []
+```
+
+The test detects order-matched (vs id-matched) resolution. Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+00:48 +1207 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

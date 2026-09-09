@@ -92,5 +92,17 @@ void main() {
       expect(err.message, 'tool exploded');
       await transport.close();
     });
+
+    test('U8: a response with an unknown id is dropped; the real answer still resolves',
+        () async {
+      // garbage mode emits a result for id 999 (nobody asked) at startup.
+      final transport = _spawn('garbage');
+      await transport.open();
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      final payload = (resp as McpWireResponseOk).payload;
+      expect(payload['tools'], isNotEmpty); // the echo descriptor, not 999's
+      await transport.close();
+    });
   });
 }
