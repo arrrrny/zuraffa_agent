@@ -2,12 +2,32 @@
 
 import 'types.dart';
 
+/// The persisted session-tree schema contract (spec 110, issue #122).
+/// Bump [currentVersion] and register a migration step on every schema
+/// change — see ARCHITECTURE.md for the migration policy.
+abstract final class SessionSchema {
+  static const int currentVersion = 3;
+  static const String headerKey = '_schema';
+}
+
 /// Result metadata returned when opening a storage datasource.
 class StoreOpenResult {
   final int loadedEntriesCount;
   final JsonlTear? tearReport;
 
-  const StoreOpenResult({required this.loadedEntriesCount, this.tearReport});
+  /// The schema version the store is at after [init] completed (spec 110).
+  final int? schemaVersion;
+
+  /// When a migration ran at open time: the version migrated FROM.
+  /// Null when the store was already current (or brand new).
+  final int? migratedFromVersion;
+
+  const StoreOpenResult({
+    required this.loadedEntriesCount,
+    this.tearReport,
+    this.schemaVersion,
+    this.migratedFromVersion,
+  });
 }
 
 /// Diagnostic information when a corrupt JSONL tail is salvaged.
