@@ -1,3 +1,18 @@
+## 0.2.0
+
+- Production MCP transports: `IoStdioMcpTransport` (subprocess JSON-RPC over
+  stdin/stdout) and `IoSseMcpTransport` (bearer-authenticated SSE stream +
+  JSON-RPC POST) replace the last `UnimplementedError` stubs — the engine can
+  now talk to real MCP servers (issue #107).
+- Lifecycle safety: idempotent open/close, typed `McpWireClosedException` /
+  `McpWireOpenException` failures compatible with the client reconnect
+  policy, pending sends drained typed on close/exit.
+- Server-pushed tools-changed notifications surface on both transports;
+  log noise and unknown ids are tolerated silently.
+- Hygiene: zero TODO/FIXME/HACK in `lib/`; purity allowlist completed with
+  the spec-076 memory adapter; built under the zfa TDD discipline (24
+  behaviors, mutant-audited).
+
 ## 0.1.1
 
 - Packaging release on the standard zuraffa package template: README,
