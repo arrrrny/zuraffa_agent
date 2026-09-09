@@ -217,7 +217,7 @@ sends typed; send-before-open fails typed; open/close are idempotent.
 
 ## Phase 8: Gates & Polish
 
-- [ ] T017 Run `/speckit.tdd.verify` → `tdd/verification.md` (audits all
+- [x] T017 Run `/speckit.tdd.verify` → `tdd/verification.md` (audits all
   behaviors incl. [A1]–[A5] coverage; deliberate mutants on the
   highest-risk behaviors: id matching, SSE framing, exit propagation).
 - [ ] T018 Commit spec-kit artifacts + source per the repo's `spec(105):` /
@@ -283,3 +283,31 @@ US1 alone is a viable MVP: local-subprocess MCP servers work end-to-end
   renumbered or reworded otherwise).
 - The two lib files are HAND-CURATED (purity allowlist) — the loop edits
   them in place; never regenerate via zfa make.
+
+---
+
+## Phase 9: TDD remediation (from tdd/verification.md audit @ f032778)
+
+*Verdict: PASS_WITH_GAPS — no blocking findings; the MEDIUM smell findings
+below are worth clearing before review.*
+
+- [x] T019 [P] Fix MED-1: subscribe to `notifications` BEFORE `open()` in
+  the U6 test (`test/mcp/io_stdio_mcp_transport_test.dart:113`), matching
+  the U18/A3 pattern — removes the broadcast-drop race. Prove: the suite
+  stays green across 3 consecutive runs of the file.
+- [x] T020 [P] Fix MED-2: `addTearDown(transport.close)` /
+  `addTearDown(mock.stop)` at resource creation in both transport test
+  files and the cross-transport group, so a failing assert never leaks a
+  child process or bound server. Prove: `dart test test/mcp/` green.
+- [x] T021 [P] Fix MED-3: strengthen U15 (`io_sse…test.dart:168`) and U8
+  (`io_stdio…test.dart:105`) to assert the exact descriptor maps; fold U7's
+  subsumed assertion into U8's (keep U7's junk-skip purpose decisive by
+  asserting the exact echo descriptor). Prove: suite green + mutants from
+  the audit still killed.
+- [x] T022 Apply the accepted LOW findings: assert `statusCode == 404` in
+  U14 (predicate pattern from A2); remove U13's redundant in-test
+  `mock.stop()`; split U17's two scenarios into separate tests; `dart
+  format` the two new test files. Prove: `dart analyze --fatal-infos` clean
+  + `dart test` green.
+- [x] T023 Re-run `/speckit.tdd.verify quick` after T019–T022 — the final
+  audit must show zero MEDIUM findings before the PR.

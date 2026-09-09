@@ -53,23 +53,24 @@ void main(List<String> args) {
   // JSON-RPC response for an id no one has asked about yet (999).
   if (mode == 'garbage') {
     stdout.writeln('NOT JSON AT ALL — just a chatty log line');
-    stdout.writeln(jsonEncode({
-      'jsonrpc': '2.0',
-      'id': 999,
-      'result': {'tools': <String>[]},
-    }));
+    stdout.writeln(
+      jsonEncode({
+        'jsonrpc': '2.0',
+        'id': 999,
+        'result': {'tools': <String>[]},
+      }),
+    );
     stdout.flush();
   }
 
   // A server-pushed tools-changed notification before any request.
   if (mode == 'notify') {
-    emit({
-      'jsonrpc': '2.0',
-      'method': 'notifications/tools/list_changed',
-    });
+    emit({'jsonrpc': '2.0', 'method': 'notifications/tools/list_changed'});
   }
 
-  stdin.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
+  stdin.transform(utf8.decoder).transform(const LineSplitter()).listen((
+    line,
+  ) async {
     Map<String, dynamic> request;
     try {
       final decoded = jsonDecode(line);
@@ -83,7 +84,8 @@ void main(List<String> args) {
     if (method == 'tools/list') {
       answerToolsList(id);
     } else if (method == 'tools/call') {
-      final params = (request['params'] as Map?)?.cast<String, dynamic>() ??
+      final params =
+          (request['params'] as Map?)?.cast<String, dynamic>() ??
           const <String, dynamic>{};
       if (mode == 'crash' && params['name'] == 'crash') {
         stderr.writeln('mock: crashing on command');
