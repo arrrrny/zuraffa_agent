@@ -20,6 +20,7 @@ class HiveSessionStorage implements SessionStorage {
 
   static const _metaBoxName = '_zuraffa_meta';
   static const _activeLeafKey = 'activeLeafId';
+  static const _schemaVersionKey = 'schemaVersion';
 
   late Box<SessionTreeEntry> _entryBox;
   late Box<String> _metaBox;
@@ -31,7 +32,24 @@ class HiveSessionStorage implements SessionStorage {
     _entryBox = await Hive.openBox<SessionTreeEntry>(boxName);
     _metaBox = await Hive.openBox<String>(_metaBoxName);
 
-    return StoreOpenResult(loadedEntriesCount: _entryBox.length);
+    // Schema-version stamp (spec 110, issue #122): Hive stores hydrated
+    // objects rather than raw maps, so value-level migrations are deferred;
+    // the stamp makes the persisted version observable. A box without a
+    // stamp is legacy (pre-versioning) and is stamped forward.
+    final existing = _metaBox.get(_schemaVersionKey);
+    final schemaVersion =
+        existing == null ? SessionSchema.currentVersion : int.parse(existing);
+    await _metaBox.put(
+        _schemaVersionKey, '${SessionSchema.currentVersion}');
+
+    return StoreOpenResult(
+      loadedEntriesCount: _entryBox.length,
+      schemaVersion: SessionSchema.currentVersion,
+      migratedFromVersion:
+          existing == null || schemaVersion < SessionSchema.currentVersion
+              ? schemaVersion
+              : null,
+    );
   }
 
   @override

@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'session_migrator.dart';
 import 'session_storage.dart';
 import 'types.dart';
 
@@ -30,13 +31,43 @@ class JsonlSessionStorage implements SessionStorage {
   Future<StoreOpenResult> init() async {
     final file = File(path);
     if (!await file.exists()) {
-      return const StoreOpenResult(loadedEntriesCount: 0);
+      // Fresh store: born at the current schema version (spec 110).
+      await _writeHeader(file);
+      return const StoreOpenResult(
+        loadedEntriesCount: 0,
+        schemaVersion: SessionSchema.currentVersion,
+      );
     }
 
     final lines = await file.readAsLines();
     int salvagedCount = 0;
     int tearLineNumber = 0;
     String? tearReason;
+
+    // Schema-version detection (spec 110, issue #122): the header line is
+    // the FIRST line; its absence marks a legacy v1 file.
+    int? headerVersion;
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      final decoded = jsonDecode(line) as Map<String, dynamic>;
+      if (decoded.containsKey(SessionSchema.headerKey)) {
+        final schema = decoded[SessionSchema.headerKey] as Map<String, dynamic>;
+        headerVersion = schema['schemaVersion'] as int;
+        if (headerVersion > SessionSchema.currentVersion) {
+          throw StateError(
+            'session file schemaVersion $headerVersion is newer than the '
+            'supported version ${SessionSchema.currentVersion} — downgrade '
+            'is not supported',
+          );
+        }
+        lines[i] = ''; // header consumed — never surfaced as an entry
+      }
+      break; // the header (if any) is the first non-empty line
+    }
+    final fromVersion = headerVersion ?? 1;
+    final needsMigration = fromVersion < SessionSchema.currentVersion;
+    final migrator = needsMigration ? SessionMigrator.standard() : null;
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
@@ -51,14 +82,24 @@ class JsonlSessionStorage implements SessionStorage {
           continue;
         }
 
-        final entry = SessionTreeEntry.fromJson(json);
+        // Legacy file: migrate the raw map through the registry before
+        // deserialization (spec 110).
+        final raw = needsMigration ? migrator!.migrate(json) : json;
+        final entry = SessionTreeEntry.fromJson(raw);
         _entries[entry.id] = entry;
+        lines[i] = needsMigration ? jsonEncode(entry.toJson()) : line;
         salvagedCount++;
       } catch (e) {
         tearLineNumber = i + 1;
         tearReason = 'Malformed JSON at line ${i + 1}: $e';
         break; // Stop at first corrupt line (tear recovery).
       }
+    }
+
+    // A migrated (or header-less) file is rewritten atomically with the
+    // current-version header so the NEXT open is a native open.
+    if (needsMigration || headerVersion == null) {
+      await _rewriteWithHeader(file, lines);
     }
 
     if (tearReason != null) {
@@ -69,11 +110,48 @@ class JsonlSessionStorage implements SessionStorage {
           reason: tearReason,
           salvagedEntryCount: salvagedCount,
         ),
+        schemaVersion: SessionSchema.currentVersion,
+        migratedFromVersion: needsMigration ? fromVersion : null,
       );
     }
 
-    return StoreOpenResult(loadedEntriesCount: salvagedCount);
+    return StoreOpenResult(
+      loadedEntriesCount: salvagedCount,
+      schemaVersion: SessionSchema.currentVersion,
+      migratedFromVersion: needsMigration ? fromVersion : null,
+    );
   }
+
+  /// Writes the current-version header as the first line of a fresh store.
+  Future<void> _writeHeader(File file) async {
+    final sink = file.openWrite(mode: FileMode.write);
+    sink.writeln(_headerLine());
+    await sink.flush();
+    await sink.close();
+  }
+
+  /// Atomic rewrite (temp + rename) with the current-version header, the
+  /// migrated entry lines, and the active-leaf meta line.
+  Future<void> _rewriteWithHeader(File file, List<String> lines) async {
+    final tmp = File('$path.migrating');
+    final sink = tmp.openWrite(mode: FileMode.write);
+    sink.writeln(_headerLine());
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+      sink.writeln(trimmed);
+    }
+    if (_activeLeafId.isNotEmpty) {
+      sink.writeln(jsonEncode({'_meta': true, 'activeLeafId': _activeLeafId}));
+    }
+    await sink.flush();
+    await sink.close();
+    await tmp.rename(path);
+  }
+
+  static String _headerLine() => jsonEncode({
+    SessionSchema.headerKey: {'schemaVersion': SessionSchema.currentVersion},
+  });
 
   @override
   Future<void> appendEntry(SessionTreeEntry entry) async {
