@@ -47,7 +47,12 @@ class IoStdioMcpTransport implements McpWire {
   IoStdioMcpTransport({
     required this.executable,
     this.args = const [],
-  });
+  }) {
+    if (executable.trim().isEmpty) {
+      throw ArgumentError.value(
+          executable, 'executable', 'must be a non-empty command');
+    }
+  }
 
   @override
   Future<void> open() async {

@@ -63,5 +63,12 @@ void main() {
       });
       await transport.close();
     });
+
+    test('U4: constructor rejects an empty executable', () {
+      expect(
+        () => IoStdioMcpTransport(executable: ''),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
   });
 }

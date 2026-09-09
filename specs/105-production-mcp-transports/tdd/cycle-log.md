@@ -137,3 +137,32 @@ None needed.
 ### Notes
 
 - Suite +1 (U3, no pin removed this cycle) = 1203.
+
+## Cycle 4 — stdio constructor validation (U4)
+
+**Scope**: an empty `executable` fails at construction, before any process.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U4:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U4: constructor rejects an empty executable [E]
+  Expected: throws <Instance of 'ArgumentError'>
+     Which: returned <Instance of 'IoStdioMcpTransport'>
+```
+
+### GREEN
+
+Constructor eagerly validates `executable` (`ArgumentError.value` naming the
+field) — misconfiguration fails at construction, per data-model.md.
+
+```
+$ dart test
+00:53 +1204 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
