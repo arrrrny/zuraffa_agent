@@ -46,6 +46,7 @@ import '../domain/entities/steering_queue/steering_queue.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
+import '../config/zuraffa_config.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -168,13 +169,15 @@ class MissionRunner {
     RepetitionTrackerDatasource? repetitionTracker,
     required void Function(EngineEvent) onEvent,
     DateTime Function()? clock,
+    ZuraffaConfig? config,
   })  : _executor = executor,
         _toolDispatcher = toolDispatcher,
         _stopPolicy = stopPolicy,
         _queue = steeringQueue,
         _repetition = repetitionTracker,
         _onEvent = onEvent,
-        _clock = clock ?? DateTime.now;
+        _clock = clock ?? DateTime.now,
+        _config = config;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -183,6 +186,11 @@ class MissionRunner {
   final RepetitionTrackerDatasource? _repetition;
   final void Function(EngineEvent) _onEvent;
   final DateTime Function() _clock;
+
+  /// Optional runtime configuration (spec 107, issue #121). When supplied,
+  /// [run] validates it first and refuses to start on any issue — fail fast
+  /// at startup instead of at first turn.
+  final ZuraffaConfig? _config;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -218,6 +226,17 @@ class MissionRunner {
     Goal? goal,
     GoalEvaluator? goalEvaluator,
   }) async {
+    final config = _config;
+    if (config != null) {
+      final issues = config.validate();
+      if (issues.isNotEmpty) {
+        throw StateError(
+          'MissionRunner: configuration failed startup validation '
+          '(spec 107 / issue #121):\n'
+          '${issues.map((i) => '  - ${i.message}').join('\n')}',
+        );
+      }
+    }
     if ((goal == null) != (goalEvaluator == null)) {
       throw ArgumentError.value(
         goal == null ? 'goalEvaluator' : 'goal',
