@@ -142,10 +142,10 @@ void main() {
       expect(t.isOpen, isFalse);
     });
 
-    test('open() throws UnimplementedError', () {
-      final t = IoStdioMcpTransport(executable: 'node');
-      expect(() => t.open(), throwsA(isA<UnimplementedError>()));
-    });
+    // NOTE (spec 105): the former "open() throws UnimplementedError" pin was
+    // retired — open() is now a real subprocess session, pinned by
+    // test/mcp/io_stdio_mcp_transport_test.dart (U1 onward). The send() pin
+    // below goes with it when the send path lands (same spec).
 
     test('send() throws UnimplementedError', () async {
       final t = IoStdioMcpTransport(executable: 'node');
