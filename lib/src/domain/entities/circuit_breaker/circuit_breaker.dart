@@ -304,8 +304,9 @@ class CircuitBreaker {
       'halfOpenThreshold': halfOpenThreshold,
     };
     if (openedAt != null) json['openedAt'] = openedAt!.toIso8601String();
-    if (lastFailureAt != null)
+    if (lastFailureAt != null) {
       json['lastFailureAt'] = lastFailureAt!.toIso8601String();
+    }
     return json;
   }
 

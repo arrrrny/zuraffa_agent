@@ -131,8 +131,9 @@ class SteeringQueue {
       'pending': [for (final m in pending) m.toJson()],
       'processedCount': processedCount,
     };
-    if (lastInjectedAt != null)
+    if (lastInjectedAt != null) {
       json['lastInjectedAt'] = lastInjectedAt!.toIso8601String();
+    }
     return json;
   }
 

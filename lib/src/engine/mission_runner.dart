@@ -47,6 +47,7 @@ import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
 import '../config/zuraffa_config.dart';
+import '../security/tool_result_sanitizer.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -170,6 +171,7 @@ class MissionRunner {
     required void Function(EngineEvent) onEvent,
     DateTime Function()? clock,
     ZuraffaConfig? config,
+    ToolResultSanitizer? toolResultSanitizer,
   }) : _executor = executor,
        _toolDispatcher = toolDispatcher,
        _stopPolicy = stopPolicy,
@@ -177,7 +179,8 @@ class MissionRunner {
        _repetition = repetitionTracker,
        _onEvent = onEvent,
        _clock = clock ?? DateTime.now,
-       _config = config;
+       _config = config,
+       _toolResultSanitizer = toolResultSanitizer;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -191,6 +194,11 @@ class MissionRunner {
   /// [run] validates it first and refuses to start on any issue — fail fast
   /// at startup instead of at first turn.
   final ZuraffaConfig? _config;
+
+  /// Optional tool-output sanitizer (spec 109, issue #118). When supplied,
+  /// every dispatched tool's output (success content and error text) is
+  /// redacted BEFORE it joins the transcript — the LLM egress boundary.
+  final ToolResultSanitizer? _toolResultSanitizer;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -352,10 +360,17 @@ class MissionRunner {
           arguments: call.arguments,
           isInternalMission: false,
         );
+        // Sanitize at the egress boundary (spec 109, issue #118): the
+        // transcript is what the next request relays to the model vendor.
+        final rawContent = result.success ? result.result : result.error;
+        final sanitizer = _toolResultSanitizer;
+        final toolContent = sanitizer == null
+            ? rawContent
+            : sanitizer.sanitize(rawContent).content;
         transcript.add(
           ChatMessage(
             role: 'tool',
-            content: result.success ? result.result : result.error,
+            content: toolContent,
           ),
         );
         _onEvent(
