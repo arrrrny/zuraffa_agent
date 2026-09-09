@@ -1,3 +1,23 @@
+## 0.3.0
+
+- **Fail-closed configuration** (issue #117): `ProviderConfigProvider` and
+  `YamlAgentSpecProvider` no longer invent defaults — constructing without an
+  injected configuration throws immediately. All vendor references stripped
+  from non-test code. **Breaking**: no-arg construction of these two
+  providers was previously possible and is now an error.
+- **`ZuraffaConfig`** (issue #121): one aggregate over the six engine
+  configuration sections with typed startup validation (`missing` /
+  `outOfRange` / `incompatible` issues), YAML + environment loaders
+  (`ZFA_*` variables), a `SecretResolver` interface, and a fail-fast gate in
+  `MissionRunner.run` — an invalid configuration refuses to start before the
+  first turn. README documents the contract with a working example.
+- **MCP resilience** (issue #120): per-server circuit breaker (fail-fast
+  `circuit-open` after N consecutive failures, cooldown probe recovery),
+  per-call timeout (default 30s, typed `timeout` error, never auto-retried),
+  and opt-in transient retry for read-only tools. `McpToolDescriptor` gains
+  an additive `readOnly` flag.
+- Built under the zfa TDD discipline: 3 specs, 40 behaviors, mutant-audited.
+
 ## 0.2.0
 
 - Production MCP transports: `IoStdioMcpTransport` (subprocess JSON-RPC over
