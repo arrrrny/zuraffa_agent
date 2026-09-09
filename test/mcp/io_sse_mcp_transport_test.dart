@@ -11,9 +11,11 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/mcp/io_sse_mcp_transport.dart';
-import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart'
-    show McpWireClosedException;
+import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
+
+final _scriptPath =
+    File('test/mcp/_mock_stdio_mcp_server.dart').absolute.path;
 
 class _GetRecord {
   final String? accept;
@@ -101,8 +103,7 @@ class _SseMock {
 }
 
 void main() {
-  group('spec-105 — IoSseMcpTransport', () {
-    late _SseMock mock;
+  group('spec-105 — IoSseMcpTransport', () {    late _SseMock mock;
     setUp(() async {
       mock = _SseMock();
       await mock.start();
@@ -321,6 +322,75 @@ void main() {
               e is McpWireOpenException && e.statusCode == 404),
         ),
       );
+    });
+  });
+
+  group('spec-105 — cross-transport acceptance', () {
+    test('A3: tools-changed notifications surface from both transports '
+        '(SC-003)', () async {
+      // stdio: the notify-mode child pushes before answering
+      final stdio = IoStdioMcpTransport(
+        executable: Platform.resolvedExecutable,
+        args: [_scriptPath, 'notify'],
+      );
+      final stdioNotification =
+          stdio.notifications.first.timeout(const Duration(seconds: 5));
+      await stdio.open();
+      expect(await stdioNotification, isA<McpWireNotificationToolsChanged>());
+
+      // SSE: the loopback mock pushes at stream-open time
+      final mock = _SseMock();
+      await mock.start();
+      mock.streamText =
+          'data: {"jsonrpc":"2.0","method":"notifications/tools/list_changed"}'
+          '\n\n';
+      final sse = IoSseMcpTransport(endpoint: mock.url.toString());
+      final sseNotification =
+          sse.notifications.first.timeout(const Duration(seconds: 5));
+      await sse.open();
+      expect(await sseNotification, isA<McpWireNotificationToolsChanged>());
+
+      await sse.close();
+      await mock.stop();
+      await stdio.close();
+    });
+
+    test('A4: lifecycle safety across transports (SC-004)', () async {
+      // stdio: a child crash drops the session with typed failures
+      final stdio = IoStdioMcpTransport(
+        executable: Platform.resolvedExecutable,
+        args: [_scriptPath, 'crash'],
+      );
+      await stdio.open();
+      Object? captured;
+      final exitCaught = Completer<void>();
+      unawaited(
+        stdio
+            .send(const McpWireRequestCallTool(name: 'crash', arguments: {}))
+            .then((_) {}, onError: (Object e) {
+          captured = e;
+          exitCaught.complete();
+        }),
+      );
+      await exitCaught.future.timeout(const Duration(seconds: 10));
+      expect(captured, isA<McpWireClosedException>());
+      expect(stdio.isOpen, isFalse);
+
+      // SSE: misuse is typed and lifecycle calls are no-ops
+      final mock = _SseMock();
+      await mock.start();
+      final sse = IoSseMcpTransport(endpoint: mock.url.toString());
+      await expectLater(
+        sse.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+      await sse.open();
+      await sse.open();
+      expect(mock.getRequests, hasLength(1));
+      await sse.close();
+      await sse.close();
+      expect(sse.isOpen, isFalse);
+      await mock.stop();
     });
   });
 }

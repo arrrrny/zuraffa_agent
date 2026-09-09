@@ -776,3 +776,36 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 22 — A3 + A4 closed: cross-transport acceptances (SC-003, SC-004)
+
+**Scope**: A3 — one test observing tools-changed from BOTH transports (stdio
+notify child + SSE stream event). A4 — one test composing stdio crash-exit
+typed failures with SSE misuse/idempotence.
+
+### RED
+
+Both PASSED first run (composing pinned units) → deliberate-mutant check on
+A4:
+
+```
+MUTANT: stdio exit handling disabled (_handleExit returns immediately)
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "A4:"
+00:10 +0 -1: cross-transport acceptance A4: lifecycle safety across transports (SC-004) [E]
+  TimeoutException after 0:00:10.000000: Future not completed
+```
+
+The acceptance detects a broken exit→typed-failure wiring. Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+01:20 +1221 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
