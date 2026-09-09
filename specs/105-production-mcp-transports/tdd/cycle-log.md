@@ -488,3 +488,39 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 14 — SSE open: a real event-stream session (U13)
+
+**Scope**: `IoSseMcpTransport.open` GETs the endpoint with
+`Accept: text/event-stream` + Bearer auth, reports open, and is idempotent.
+Loopback `HttpServer` mock harness added to the SSE test file.
+
+### RED
+
+```
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U13:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U13: open GETs the event stream with auth headers and reports open [E]
+  UnimplementedError: IoSseMcpTransport.open not yet implemented — see spec 015 plan.md Phase 8
+```
+
+### GREEN
+
+`open()`: `HttpClient.getUrl` (validated http(s) URI), Accept + Bearer
+headers, non-200 → `McpWireOpenException` (typed) with client teardown,
+200 → `_isOpen = true`, response drained (parsing arrives with U18),
+`exitCode`-style abort safety. `close()` force-closes the client.
+
+```
+$ dart test
+00:51 +1213 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### Notes
+
+- The SSE `open() throws UnimplementedError` pin (provider tests) retired
+  with the same stated-reason mechanism as cycle 1; the SSE send() pin
+  stays until U15. Suite: −1 (pin) +1 (U13) = 1213.
+- `McpWireClosedException` stays defined once (stdio adapter) per
+  data-model.md; the SSE adapter imports it.

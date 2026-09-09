@@ -43,7 +43,7 @@ known ids, open/closed/exit lifecycle orderings).
 
 | id | behavior | traces | state |
 | -- | -------- | ------ | ----- |
-| U13 | `open()` GETs the endpoint with `Accept: text/event-stream` and (token configured) `Authorization: Bearer <token>` — asserted server-side — and `isOpen` is true; a second `open()` issues no second GET. | FR-004 | PENDING |
+| U13 | `open()` GETs the endpoint with `Accept: text/event-stream` and (token configured) `Authorization: Bearer <token>` — asserted server-side — and `isOpen` is true; a second `open()` issues no second GET. | FR-004 | DONE |
 | U14 | Open against a 404-serving endpoint fails with the typed open exception naming status 404; construction with a non-http(s) endpoint throws `ArgumentError`. | FR-004 | PENDING |
 | U15 | `tools/list` POSTs the contract envelope and completes `McpWireResponseOk` with the mock payload. | FR-005 | PENDING |
 | U16 | `tools/call` POST round-trips arguments/result; the mock asserts the `tools/call` envelope (`method`, `params.name`, `params.arguments`) and the auth header on the POST. | FR-005 | PENDING |
