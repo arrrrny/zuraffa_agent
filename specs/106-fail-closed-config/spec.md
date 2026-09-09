@@ -118,9 +118,11 @@ configured set without invention.
 - **FR-003** (US3): a configured service returns the injected configuration
   verbatim through its existing interface; behavior is otherwise unchanged.
 - **FR-004** (US2): after this spec, a case-insensitive search for the
-  gateway host and model id returns zero hits across the entire repository
-  except this spec's own documentation; the fallback chain's default ids
-  contain no vendor id.
+  gateway host and model id returns zero hits in **non-test code** (the
+  issue's own scope: `lib/` and tooling) and in the integration test that
+  carried the vendor default; the fallback chain's default ids contain no
+  vendor id. Inert fixture model strings inside engine unit tests are
+  explicitly out of scope — they are literal test data, never routed.
 - **FR-005** (US2): the integration test requires explicit environment
   configuration for endpoint/model/token and skips (with a stated reason)
   when they are absent — it never falls back to a default vendor.
@@ -139,8 +141,8 @@ configured set without invention.
   configuration throws at construction, naming the missing configuration;
   constructing with one never throws on that path.
 - **SC-002** (US2 / FR-004): the vendor-host and model-id search returns
-  zero hits outside this spec directory; the `'kilo'` provider id is gone
-  from library defaults.
+  zero hits in non-test code and the integration test; the `'kilo'`
+  provider id is gone from library defaults.
 - **SC-003** (US3 / FR-003): explicitly configured services behave exactly
   as before — same interface, same returned values.
 - **SC-004** (FR-005): the integration test skips with a stated reason when
