@@ -1,3 +1,22 @@
+## 0.4.0
+
+- **Tool-result sanitization** (issue #118): `ToolResultSanitizer` with six
+  built-in regex rules (AWS key, GitHub PAT, JWT, private-key headers,
+  Slack tokens, Stripe live keys), configurable per rule, wired into
+  `MissionRunner` so secret-bearing tool output is redacted before it
+  reaches the model vendor.
+- **Session storage schema versioning** (issue #122): `SessionSchema`
+  (current version 3), JSONL header line + legacy detection + atomic
+  rewrite at open, `SessionMigrator` ordered registry (1→2, 2→3),
+  Hive meta-box stamp, `StoreOpenResult.schemaVersion` /
+  `migratedFromVersion`. Migration policy documented in `ARCHITECTURE.md`.
+- **Grader diversity** (issue #125): common `Grader` interface with
+  `ExactMatchGrader`, `RegexGrader`, `JsonPathGrader` (documented subset),
+  `LlmJudgeGrader` (injected completion seam), and a bind-by-id
+  `GraderRegistry`.
+- Built under the zfa TDD discipline: 3 specs, 34 behaviors, mutant-audited
+  (bypass / migration-disabled / unknown-id mutants all killed).
+
 ## 0.3.1
 
 - **Built on the published `zuraffa` framework (^6.2.2)** — fleet-wide
