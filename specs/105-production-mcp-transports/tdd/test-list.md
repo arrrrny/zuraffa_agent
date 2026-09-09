@@ -27,7 +27,7 @@ known ids, open/closed/exit lifecycle orderings).
 | id | behavior | traces | state |
 | -- | -------- | ------ | ----- |
 | U1 | `open()` spawns the mock child (`echo` mode) and `isOpen` is true once open completes; opening an already-open transport does not spawn a second process. | FR-001 | DONE |
-| U2 | A `McpWireRequestListTools` send writes the contract's `tools/list` JSON-RPC line to the child's stdin and completes `McpWireResponseOk` carrying the mock's advertised descriptor (`name: echo`, `paramsSchema` preserved). | FR-002 | PENDING |
+| U2 | A `McpWireRequestListTools` send writes the contract's `tools/list` JSON-RPC line to the child's stdin and completes `McpWireResponseOk` carrying the mock's advertised descriptor (`name: echo`, `paramsSchema` preserved). | FR-002 | DONE |
 | U3 | A `McpWireRequestCallTool` send round-trips arguments and completes with the result payload `{echo: <arguments>}`; a second call on the SAME transport also succeeds (session persistence, id counter advances). | FR-002 | PENDING |
 | U4 | Construction with an empty `executable` throws `ArgumentError` naming the field — before any process exists. | FR-007 | PENDING |
 | U5 | A JSON-RPC **error** response from the child completes the send as `McpWireResponseError` with the error's stringified code and message (not an exception, not a crash). | FR-002 | PENDING |

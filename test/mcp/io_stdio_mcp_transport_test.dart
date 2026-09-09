@@ -27,5 +27,21 @@ void main() {
       expect(transport.isOpen, isTrue);
       await transport.close();
     });
+
+    test('U2: tools/list round-trips the advertised descriptors', () async {
+      final transport = _spawn('echo');
+      await transport.open();
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      final payload = (resp as McpWireResponseOk).payload;
+      expect(payload['tools'], [
+        {
+          'name': 'echo',
+          'description': 'Echoes arguments',
+          'paramsSchema': {'type': 'object'},
+        },
+      ]);
+      await transport.close();
+    });
   });
 }

@@ -39,6 +39,8 @@ class IoStdioMcpTransport implements McpWire {
   StreamSubscription<String>? _stdoutSub;
   StreamSubscription<String>? _stderrSub;
   bool _isOpen = false;
+  int _nextId = 0;
+  final Map<int, Completer<McpWireResponse>> _pending = {};
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
@@ -56,7 +58,7 @@ class IoStdioMcpTransport implements McpWire {
     _stdoutSub = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((_) {});
+        .listen(_handleLine);
     _stderrSub = process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -78,9 +80,51 @@ class IoStdioMcpTransport implements McpWire {
 
   @override
   Future<McpWireResponse> send(McpWireRequest request) async {
-    throw UnimplementedError(
-      'IoStdioMcpTransport.send not yet implemented — see spec 015 plan.md Phase 8',
-    );
+    final process = _process;
+    if (!_isOpen || process == null) {
+      throw const McpWireClosedException(
+          'IoStdioMcpTransport: send on a transport that is not open');
+    }
+    final id = _nextId++;
+    final completer = Completer<McpWireResponse>();
+    _pending[id] = completer;
+    final Map<String, Object?> envelope;
+    switch (request) {
+      case McpWireRequestListTools():
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/list',
+          'params': <String, Object?>{},
+        };
+      case McpWireRequestCallTool(name: final name, arguments: final arguments):
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/call',
+          'params': {'name': name, 'arguments': arguments},
+        };
+    }
+    process.stdin.writeln(jsonEncode(envelope));
+    await process.stdin.flush();
+    return completer.future;
+  }
+
+  void _handleLine(String line) {
+    Map<String, dynamic> message;
+    try {
+      final decoded = jsonDecode(line);
+      if (decoded is! Map<String, dynamic>) return;
+      message = decoded;
+    } on FormatException {
+      return; // log-noise lines are skipped (pinned at U7)
+    }
+    final id = message['id'];
+    if (id is int && _pending.containsKey(id)) {
+      final result = (message['result'] as Map?)?.cast<String, dynamic>() ??
+          const <String, dynamic>{};
+      _pending.remove(id)!.complete(McpWireResponseOk(result));
+    }
   }
 
   @override

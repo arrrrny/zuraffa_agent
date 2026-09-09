@@ -145,15 +145,9 @@ void main() {
     // NOTE (spec 105): the former "open() throws UnimplementedError" pin was
     // retired — open() is now a real subprocess session, pinned by
     // test/mcp/io_stdio_mcp_transport_test.dart (U1 onward). The send() pin
-    // below goes with it when the send path lands (same spec).
-
-    test('send() throws UnimplementedError', () async {
-      final t = IoStdioMcpTransport(executable: 'node');
-      expect(
-        () => t.send(const McpWireRequestListTools()),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    // was retired for the same reason when the send path landed (U2): send
+    // before open now throws the typed McpWireClosedException (pinned at
+    // U10), and the round-trip is pinned against the mock child.
 
     test('close() sets isOpen=false and is idempotent', () async {
       final t = IoStdioMcpTransport(executable: 'node');

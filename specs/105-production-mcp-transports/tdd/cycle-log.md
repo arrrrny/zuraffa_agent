@@ -62,3 +62,41 @@ None needed — open/close pairing is the minimal shape.
   cycle replaces it. Suite: −1 (pin) +1 (U1) = 1202.
 - 3 analyzer findings in the new fixture (dynamic / `List` inference)
   fixed within the same green step — constitution X (pristine analysis).
+
+## Cycle 2 — stdio tools/list round-trip (U2)
+
+**Scope**: `send` writes the contract's JSON-RPC envelope to the child's
+stdin and resolves with the id-matched `result` payload.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U2: tools/list round-trips the advertised descriptors"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U2: tools/list round-trips the advertised descriptors [E]
+  UnimplementedError: IoStdioMcpTransport.send not yet implemented — see spec 015 plan.md Phase 8
+```
+
+### GREEN
+
+`send`: closed-guard (typed `McpWireClosedException`), monotonic id,
+per-request envelope via exhaustive switch on the sealed request family,
+`writeln`+`flush` to stdin, future from the pending map. `_handleLine`:
+JSON-decode (junk skipped), id-matched `result` → `McpWireResponseOk`.
+
+```
+$ dart test
+00:35 +1202 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None — first shape of the parse path; error/notify branches arrive with
+their own cycles (U5, U6).
+
+### Notes
+
+- The remaining `send() throws UnimplementedError` pin (stdio group,
+  provider tests) retired in this cycle per the reason recorded in-file at
+  cycle 1. Suite: −1 (pin) +1 (U2) = 1202.
