@@ -45,23 +45,30 @@ class JsonlSessionStorage implements SessionStorage {
     String? tearReason;
 
     // Schema-version detection (spec 110, issue #122): the header line is
-    // the FIRST line; its absence marks a legacy v1 file.
+    // the FIRST line; its absence marks a legacy v1 file. An undecodable
+    // first line means "no header" — the main loop's tear scan reports it
+    // exactly as before this spec.
     int? headerVersion;
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
       if (line.isEmpty) continue;
-      final decoded = jsonDecode(line) as Map<String, dynamic>;
-      if (decoded.containsKey(SessionSchema.headerKey)) {
-        final schema = decoded[SessionSchema.headerKey] as Map<String, dynamic>;
-        headerVersion = schema['schemaVersion'] as int;
-        if (headerVersion > SessionSchema.currentVersion) {
-          throw StateError(
-            'session file schemaVersion $headerVersion is newer than the '
-            'supported version ${SessionSchema.currentVersion} — downgrade '
-            'is not supported',
-          );
+      try {
+        final decoded = jsonDecode(line) as Map<String, dynamic>;
+        if (decoded.containsKey(SessionSchema.headerKey)) {
+          final schema =
+              decoded[SessionSchema.headerKey] as Map<String, dynamic>;
+          headerVersion = schema['schemaVersion'] as int;
+          if (headerVersion > SessionSchema.currentVersion) {
+            throw StateError(
+              'session file schemaVersion $headerVersion is newer than the '
+              'supported version ${SessionSchema.currentVersion} — downgrade '
+              'is not supported',
+            );
+          }
+          lines[i] = ''; // header consumed — never surfaced as an entry
         }
-        lines[i] = ''; // header consumed — never surfaced as an entry
+      } on FormatException {
+        break; // no header — tear scan handles the corrupt line below
       }
       break; // the header (if any) is the first non-empty line
     }
