@@ -81,19 +81,20 @@ class SseMcpClient implements McpClient {
     required McpDelay delay,
     McpBreakerConfig? breakerConfig,
     McpRetryConfig? retryConfig,
-  })  : _wireFactory = wireFactory,
-        _authTokenCallback = authTokenCallback,
-        _guard = breakerConfig == null
-            ? null
-            : McpCallGuard(config: breakerConfig, now: now),
-        _retryConfig = retryConfig,
-        _delay = delay,
-        _reconnect = reconnectPolicy ??
-            McpReconnectPolicy(
-              config: McpReconnectPolicyConfig.sse,
-              delay: delay,
-            ),
-        _clock = now;
+  }) : _wireFactory = wireFactory,
+       _authTokenCallback = authTokenCallback,
+       _guard = breakerConfig == null
+           ? null
+           : McpCallGuard(config: breakerConfig, now: now),
+       _retryConfig = retryConfig,
+       _delay = delay,
+       _reconnect =
+           reconnectPolicy ??
+           McpReconnectPolicy(
+             config: McpReconnectPolicyConfig.sse,
+             delay: delay,
+           ),
+       _clock = now;
 
   final McpClock _clock;
 
@@ -137,9 +138,7 @@ class SseMcpClient implements McpClient {
     if (_state != McpClientState.connected || _wire == null) {
       throw StateError('SseMcpClient.listTools called in state $_state');
     }
-    final resp = await _callWithReconnect(
-      const McpWireRequestListTools(),
-    );
+    final resp = await _callWithReconnect(const McpWireRequestListTools());
     if (resp is! McpWireResponseOk) {
       final err = resp as McpWireResponseError;
       throw StateError('SseMcpClient.listTools: ${err.code}: ${err.message}');
@@ -184,15 +183,20 @@ class SseMcpClient implements McpClient {
         ).timeout(opts.effectiveTimeout);
         return switch (resp) {
           McpWireResponseOk(:final payload) => McpCallOk(payload),
-          McpWireResponseError(:final code, :final message) =>
-            McpCallError(code: code, message: message),
+          McpWireResponseError(:final code, :final message) => McpCallError(
+            code: code,
+            message: message,
+          ),
         };
       } on TimeoutException {
-        // The in-flight request is abandoned (futures can't be cancelled);
-        // the model decides what to do next — timeouts are never retried.
+        // The in-flight request is abandoned (futures can't be cancelled) —
+        // note: a request that completes later may still reset the
+        // reconnect policy; benign (optimistic backoff). The model decides
+        // what to do next — timeouts are never retried.
         return McpCallError(
           code: 'timeout',
-          message: 'SseMcpClient.callTool($name) timed out after '
+          message:
+              'SseMcpClient.callTool($name) timed out after '
               '${opts.effectiveTimeout}',
         );
       } catch (e) {
@@ -216,7 +220,8 @@ class SseMcpClient implements McpClient {
     while (true) {
       attemptNumber += 1;
       final result = await attemptUnderGuard();
-      final retryable = retry != null &&
+      final retryable =
+          retry != null &&
           result is McpCallError &&
           transientCallCodes.contains(result.code);
       if (!retryable || attemptNumber >= retry.maxAttempts) {

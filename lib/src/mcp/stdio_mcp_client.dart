@@ -56,18 +56,19 @@ class StdioMcpClient implements McpClient {
     required McpDelay delay,
     McpBreakerConfig? breakerConfig,
     McpRetryConfig? retryConfig,
-  })  : _wireFactory = wireFactory,
-        _guard = breakerConfig == null
-            ? null
-            : McpCallGuard(config: breakerConfig, now: now),
-        _retryConfig = retryConfig,
-        _delay = delay,
-        _reconnect = reconnectPolicy ??
-            McpReconnectPolicy(
-              config: McpReconnectPolicyConfig.stdio,
-              delay: delay,
-            ),
-        _clock = now;
+  }) : _wireFactory = wireFactory,
+       _guard = breakerConfig == null
+           ? null
+           : McpCallGuard(config: breakerConfig, now: now),
+       _retryConfig = retryConfig,
+       _delay = delay,
+       _reconnect =
+           reconnectPolicy ??
+           McpReconnectPolicy(
+             config: McpReconnectPolicyConfig.stdio,
+             delay: delay,
+           ),
+       _clock = now;
 
   final McpClock _clock;
 
@@ -110,9 +111,7 @@ class StdioMcpClient implements McpClient {
     if (_state != McpClientState.connected || _wire == null) {
       throw StateError('StdioMcpClient.listTools called in state $_state');
     }
-    final resp = await _callWithReconnect(
-      const McpWireRequestListTools(),
-    );
+    final resp = await _callWithReconnect(const McpWireRequestListTools());
     if (resp is! McpWireResponseOk) {
       final err = resp as McpWireResponseError;
       throw StateError('StdioMcpClient.listTools: ${err.code}: ${err.message}');
@@ -155,14 +154,19 @@ class StdioMcpClient implements McpClient {
         ).timeout(opts.effectiveTimeout);
         return switch (resp) {
           McpWireResponseOk(:final payload) => McpCallOk(payload),
-          McpWireResponseError(:final code, :final message) =>
-            McpCallError(code: code, message: message),
+          McpWireResponseError(:final code, :final message) => McpCallError(
+            code: code,
+            message: message,
+          ),
         };
       } on TimeoutException {
-        // The in-flight request is abandoned; timeouts are never retried.
+        // The in-flight request is abandoned (it may still complete later
+        // and reset the reconnect policy — benign, optimistic backoff);
+        // timeouts are never retried.
         return McpCallError(
           code: 'timeout',
-          message: 'StdioMcpClient.callTool($name) timed out after '
+          message:
+              'StdioMcpClient.callTool($name) timed out after '
               '${opts.effectiveTimeout}',
         );
       } catch (e) {
@@ -183,7 +187,8 @@ class StdioMcpClient implements McpClient {
     while (true) {
       attemptNumber += 1;
       final result = await attemptUnderGuard();
-      final retryable = retry != null &&
+      final retryable =
+          retry != null &&
           result is McpCallError &&
           transientCallCodes.contains(result.code);
       if (!retryable || attemptNumber >= retry.maxAttempts) {

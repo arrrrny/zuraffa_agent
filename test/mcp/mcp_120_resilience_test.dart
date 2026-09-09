@@ -293,3 +293,5 @@ void main() {
     );
   });
 }
+
+// PR #144 review finding — InProc honors the call timeout too.
