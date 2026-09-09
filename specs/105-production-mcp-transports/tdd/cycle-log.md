@@ -204,3 +204,33 @@ None needed.
 ### Notes
 
 - Suite +1 = 1205.
+
+## Cycle 6 — stdio JSON-RPC error mapping (U5)
+
+**Scope**: a child's `error` response object becomes
+`McpWireResponseError` (stringified code + message), not an exception.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U5:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U5: a JSON-RPC error response maps to the typed error response [E]
+  Expected: <Instance of 'McpWireResponseError'>
+    Actual: <Instance of 'McpWireResponseOk'>
+```
+
+### GREEN
+
+`_responseFor`: `error` map → `McpWireResponseError(code, message)`;
+otherwise `result` map → `McpWireResponseOk`.
+
+```
+$ dart test
+00:57 +1206 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None — the mapping extracted into `_responseFor` is the cycle's own shape.

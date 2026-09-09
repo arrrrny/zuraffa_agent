@@ -126,10 +126,24 @@ class IoStdioMcpTransport implements McpWire {
     }
     final id = message['id'];
     if (id is int && _pending.containsKey(id)) {
-      final result = (message['result'] as Map?)?.cast<String, dynamic>() ??
-          const <String, dynamic>{};
-      _pending.remove(id)!.complete(McpWireResponseOk(result));
+      _pending.remove(id)!.complete(_responseFor(message));
     }
+  }
+
+  /// Maps a JSON-RPC response object onto the sealed response family:
+  /// an `error` object becomes the typed error (application-level failure),
+  /// anything else carries its `result` map.
+  McpWireResponse _responseFor(Map<String, dynamic> message) {
+    final error = message['error'];
+    if (error is Map) {
+      return McpWireResponseError(
+        code: error['code']?.toString() ?? '',
+        message: error['message']?.toString() ?? '',
+      );
+    }
+    final result = (message['result'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
+    return McpWireResponseOk(result);
   }
 
   @override

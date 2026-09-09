@@ -78,5 +78,19 @@ void main() {
       expect(resp, isA<McpWireResponseOk>());
       await transport.close();
     });
+
+    test('U5: a JSON-RPC error response maps to the typed error response',
+        () async {
+      final transport = _spawn('garbage');
+      await transport.open();
+      final resp = await transport.send(
+        const McpWireRequestCallTool(name: 'boom', arguments: {}),
+      );
+      expect(resp, isA<McpWireResponseError>());
+      final err = resp as McpWireResponseError;
+      expect(err.code, '-32601');
+      expect(err.message, 'tool exploded');
+      await transport.close();
+    });
   });
 }
