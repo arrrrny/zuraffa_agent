@@ -19,6 +19,7 @@ import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_reconnect_policy.dart';
 import 'mcp_tool_descriptor.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_wire.dart';
 
 /// Function that returns a fresh bearer token. Called before each
@@ -60,6 +61,12 @@ class SseMcpClient implements McpClient {
   McpClientState _state = McpClientState.disconnected;
   DateTime? _lastStateChangeAt;
 
+  /// Per-server call-level breaker (spec 108, issue #120); null = no
+  /// breaker (calls are only timeout-bounded).
+  final McpCallGuard? _guard;
+  final McpRetryConfig? _retryConfig;
+  final McpDelay _delay;
+
   void _setState(McpClientState next) {
     _state = next;
     _lastStateChangeAt = _clock();
@@ -72,14 +79,22 @@ class SseMcpClient implements McpClient {
     McpReconnectPolicy? reconnectPolicy,
     required McpClock now,
     required McpDelay delay,
-  })  : _wireFactory = wireFactory,
-        _authTokenCallback = authTokenCallback,
-        _reconnect = reconnectPolicy ??
-            McpReconnectPolicy(
-              config: McpReconnectPolicyConfig.sse,
-              delay: delay,
-            ),
-        _clock = now;
+    McpBreakerConfig? breakerConfig,
+    McpRetryConfig? retryConfig,
+  }) : _wireFactory = wireFactory,
+       _authTokenCallback = authTokenCallback,
+       _guard = breakerConfig == null
+           ? null
+           : McpCallGuard(config: breakerConfig, now: now),
+       _retryConfig = retryConfig,
+       _delay = delay,
+       _reconnect =
+           reconnectPolicy ??
+           McpReconnectPolicy(
+             config: McpReconnectPolicyConfig.sse,
+             delay: delay,
+           ),
+       _clock = now;
 
   final McpClock _clock;
 
@@ -123,9 +138,7 @@ class SseMcpClient implements McpClient {
     if (_state != McpClientState.connected || _wire == null) {
       throw StateError('SseMcpClient.listTools called in state $_state');
     }
-    final resp = await _callWithReconnect(
-      const McpWireRequestListTools(),
-    );
+    final resp = await _callWithReconnect(const McpWireRequestListTools());
     if (resp is! McpWireResponseOk) {
       final err = resp as McpWireResponseError;
       throw StateError('SseMcpClient.listTools: ${err.code}: ${err.message}');
@@ -149,28 +162,72 @@ class SseMcpClient implements McpClient {
   @override
   Future<McpCallResult> callTool(
     String name,
-    Map<String, dynamic> arguments,
-  ) async {
+    Map<String, dynamic> arguments, {
+    McpCallOptions? options,
+  }) async {
     if (_state != McpClientState.connected || _wire == null) {
       return McpCallError(
         code: 'client-not-connected',
         message: 'SseMcpClient.callTool in state $_state',
       );
     }
-    try {
-      final resp = await _callWithReconnect(
-        McpWireRequestCallTool(name: name, arguments: arguments),
-      );
-      return switch (resp) {
-        McpWireResponseOk(:final payload) => McpCallOk(payload),
-        McpWireResponseError(:final code, :final message) =>
-          McpCallError(code: code, message: message),
-      };
-    } catch (e) {
-      return McpCallError(
-        code: 'transport-error',
-        message: 'SseMcpClient.callTool($name) threw: $e',
-      );
+    final opts = options ?? const McpCallOptions();
+    // Client-level retry config is the default for read-only calls; a
+    // per-call config overrides it. Non-read-only calls are never retried.
+    final retry = opts.readOnly ? (opts.retry ?? _retryConfig) : null;
+
+    Future<McpCallResult> attempt() async {
+      try {
+        final resp = await _callWithReconnect(
+          McpWireRequestCallTool(name: name, arguments: arguments),
+        ).timeout(opts.effectiveTimeout);
+        return switch (resp) {
+          McpWireResponseOk(:final payload) => McpCallOk(payload),
+          McpWireResponseError(:final code, :final message) => McpCallError(
+            code: code,
+            message: message,
+          ),
+        };
+      } on TimeoutException {
+        // The in-flight request is abandoned (futures can't be cancelled) —
+        // note: a request that completes later may still reset the
+        // reconnect policy; benign (optimistic backoff). The model decides
+        // what to do next — timeouts are never retried.
+        return McpCallError(
+          code: 'timeout',
+          message:
+              'SseMcpClient.callTool($name) timed out after '
+              '${opts.effectiveTimeout}',
+        );
+      } catch (e) {
+        return McpCallError(
+          code: 'transport-error',
+          message: 'SseMcpClient.callTool($name) threw: $e',
+        );
+      }
+    }
+
+    Future<McpCallResult> attemptUnderGuard() {
+      final guard = _guard;
+      if (guard == null) return attempt();
+      return guard.call(attempt);
+    }
+
+    // Spec 108 (issue #120): timeout results and application errors are
+    // final; only transient codes are retried, and only for read-only
+    // calls with a retry config.
+    var attemptNumber = 0;
+    while (true) {
+      attemptNumber += 1;
+      final result = await attemptUnderGuard();
+      final retryable =
+          retry != null &&
+          result is McpCallError &&
+          transientCallCodes.contains(result.code);
+      if (!retryable || attemptNumber >= retry.maxAttempts) {
+        return result;
+      }
+      await _delay(retry.backoff);
     }
   }
 

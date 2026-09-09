@@ -16,6 +16,7 @@ import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_reconnect_policy.dart';
 import 'mcp_tool_descriptor.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_wire.dart';
 
 /// Factory that builds a fresh [McpWire] for stdio. The stdio client
@@ -29,6 +30,9 @@ class StdioMcpClient implements McpClient {
 
   final McpStdioWireFactory _wireFactory;
   final McpReconnectPolicy _reconnect;
+  final McpCallGuard? _guard;
+  final McpRetryConfig? _retryConfig;
+  final McpDelay _delay;
 
   McpWire? _wire;
   StreamSubscription<McpWireNotification>? _notifSub;
@@ -50,13 +54,21 @@ class StdioMcpClient implements McpClient {
     McpReconnectPolicy? reconnectPolicy,
     required McpClock now,
     required McpDelay delay,
-  })  : _wireFactory = wireFactory,
-        _reconnect = reconnectPolicy ??
-            McpReconnectPolicy(
-              config: McpReconnectPolicyConfig.stdio,
-              delay: delay,
-            ),
-        _clock = now;
+    McpBreakerConfig? breakerConfig,
+    McpRetryConfig? retryConfig,
+  }) : _wireFactory = wireFactory,
+       _guard = breakerConfig == null
+           ? null
+           : McpCallGuard(config: breakerConfig, now: now),
+       _retryConfig = retryConfig,
+       _delay = delay,
+       _reconnect =
+           reconnectPolicy ??
+           McpReconnectPolicy(
+             config: McpReconnectPolicyConfig.stdio,
+             delay: delay,
+           ),
+       _clock = now;
 
   final McpClock _clock;
 
@@ -99,9 +111,7 @@ class StdioMcpClient implements McpClient {
     if (_state != McpClientState.connected || _wire == null) {
       throw StateError('StdioMcpClient.listTools called in state $_state');
     }
-    final resp = await _callWithReconnect(
-      const McpWireRequestListTools(),
-    );
+    final resp = await _callWithReconnect(const McpWireRequestListTools());
     if (resp is! McpWireResponseOk) {
       final err = resp as McpWireResponseError;
       throw StateError('StdioMcpClient.listTools: ${err.code}: ${err.message}');
@@ -125,28 +135,66 @@ class StdioMcpClient implements McpClient {
   @override
   Future<McpCallResult> callTool(
     String name,
-    Map<String, dynamic> arguments,
-  ) async {
+    Map<String, dynamic> arguments, {
+    McpCallOptions? options,
+  }) async {
     if (_state != McpClientState.connected || _wire == null) {
       return McpCallError(
         code: 'client-not-connected',
         message: 'StdioMcpClient.callTool in state $_state',
       );
     }
-    try {
-      final resp = await _callWithReconnect(
-        McpWireRequestCallTool(name: name, arguments: arguments),
-      );
-      return switch (resp) {
-        McpWireResponseOk(:final payload) => McpCallOk(payload),
-        McpWireResponseError(:final code, :final message) =>
-          McpCallError(code: code, message: message),
-      };
-    } catch (e) {
-      return McpCallError(
-        code: 'transport-error',
-        message: 'StdioMcpClient.callTool($name) threw: $e',
-      );
+    final opts = options ?? const McpCallOptions();
+    final retry = opts.readOnly ? (opts.retry ?? _retryConfig) : null;
+
+    Future<McpCallResult> attempt() async {
+      try {
+        final resp = await _callWithReconnect(
+          McpWireRequestCallTool(name: name, arguments: arguments),
+        ).timeout(opts.effectiveTimeout);
+        return switch (resp) {
+          McpWireResponseOk(:final payload) => McpCallOk(payload),
+          McpWireResponseError(:final code, :final message) => McpCallError(
+            code: code,
+            message: message,
+          ),
+        };
+      } on TimeoutException {
+        // The in-flight request is abandoned (it may still complete later
+        // and reset the reconnect policy — benign, optimistic backoff);
+        // timeouts are never retried.
+        return McpCallError(
+          code: 'timeout',
+          message:
+              'StdioMcpClient.callTool($name) timed out after '
+              '${opts.effectiveTimeout}',
+        );
+      } catch (e) {
+        return McpCallError(
+          code: 'transport-error',
+          message: 'StdioMcpClient.callTool($name) threw: $e',
+        );
+      }
+    }
+
+    Future<McpCallResult> attemptUnderGuard() {
+      final guard = _guard;
+      if (guard == null) return attempt();
+      return guard.call(attempt);
+    }
+
+    var attemptNumber = 0;
+    while (true) {
+      attemptNumber += 1;
+      final result = await attemptUnderGuard();
+      final retryable =
+          retry != null &&
+          result is McpCallError &&
+          transientCallCodes.contains(result.code);
+      if (!retryable || attemptNumber >= retry.maxAttempts) {
+        return result;
+      }
+      await _delay(retry.backoff);
     }
   }
 
