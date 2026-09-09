@@ -70,5 +70,13 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
+
+    test('U7: garbage lines are skipped and the session survives', () async {
+      final transport = _spawn('garbage');
+      await transport.open();
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      await transport.close();
+    });
   });
 }

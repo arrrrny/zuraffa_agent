@@ -166,3 +166,41 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 5 — stdio garbage-line tolerance (U7) — driven out of list order
+
+**Scope**: non-JSON log-noise lines from the child are skipped; the session
+survives. Driven BEFORE U5/U8 (deliberate execution-order deviation): their
+tests use the same `garbage`-mode child, whose junk lines would fail their
+reds for the wrong reason until this tolerance exists.
+
+### RED
+
+First run PASSED (cycle 2's parser already swallowed `FormatException`) →
+deliberate-mutant check:
+
+```
+MUTANT: junk tolerance removed from _handleLine
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U7:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U7: garbage lines are skipped and the session survives [E]
+  FormatException: Unexpected character (at character 1)
+```
+
+Mutant restored exactly.
+
+### GREEN
+
+```
+$ dart test
+00:38 +1205 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
+
+### Notes
+
+- Suite +1 = 1205.
