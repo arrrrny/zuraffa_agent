@@ -557,3 +557,37 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 16 — SSE tools/list POST round-trip (U15)
+
+**Scope**: send POSTs the contract's JSON-RPC envelope and maps the reply's
+`result` to `McpWireResponseOk`.
+
+### RED
+
+```
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U15:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U15: tools/list POSTs the contract envelope and maps the result [E]
+  UnimplementedError: IoSseMcpTransport.send not yet implemented — see spec 015 plan.md Phase 8
+```
+
+### GREEN
+
+Full send path: closed-guard, id, envelope switch (mirrors the stdio
+adapter), POST with Content-Type + auth, status check (non-2xx → typed),
+JSON parse (undecodable → typed), error/result mapping. The error-mapping
+branches land with the send path (mirroring stdio); U17's cycle pins them
+with its own test.
+
+```
+$ dart test
+01:12 +1214 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### Notes
+
+- The last `send() throws UnimplementedError` pin (SSE group, provider
+  tests) retired with the stated reason recorded in-file: no stub behavior
+  remains anywhere in the repo to pin. Suite: −1 (pin) +1 (U15) = 1214.

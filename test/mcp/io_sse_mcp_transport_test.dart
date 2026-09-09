@@ -137,5 +137,33 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
+
+    test('U15: tools/list POSTs the contract envelope and maps the result',
+        () async {
+      mock.postResponder = (envelope) => {
+            'jsonrpc': '2.0',
+            'id': envelope['id'],
+            'result': {
+              'tools': [
+                {
+                  'name': 'echo',
+                  'description': 'Echoes arguments',
+                  'paramsSchema': {'type': 'object'},
+                },
+              ],
+            },
+          };
+      final transport = IoSseMcpTransport(endpoint: mock.url.toString());
+      await transport.open();
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      final payload = (resp as McpWireResponseOk).payload;
+      expect(payload['tools'], isNotEmpty);
+      final posted = mock.postRequests.single;
+      final envelope = jsonDecode(posted.body) as Map<String, dynamic>;
+      expect(envelope['jsonrpc'], '2.0');
+      expect(envelope['method'], 'tools/list');
+      await transport.close();
+    });
   });
 }

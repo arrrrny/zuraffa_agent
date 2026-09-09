@@ -99,18 +99,12 @@ void main() {
       expect(t.isOpen, isFalse);
     });
 
-    // NOTE (spec 105): the former "open() throws UnimplementedError" pin was
-    // retired — open() is now a real networked session, pinned by
-    // test/mcp/io_sse_mcp_transport_test.dart (U13 onward). The send() pin
-    // below goes with it when the SSE send path lands (same spec).
-
-    test('send() throws UnimplementedError', () async {
-      final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse');
-      expect(
-        () => t.send(const McpWireRequestListTools()),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    // NOTE (spec 105): the former "open() throws UnimplementedError" and
+    // "send() throws UnimplementedError" pins were retired — open() is a
+    // real networked session (pinned by test/mcp/io_sse_mcp_transport_test.dart
+    // U13 onward) and send() now POSTs the JSON-RPC envelope (U15 onward);
+    // send before open throws the typed McpWireClosedException (pinned at
+    // U19). No stub behavior remains in this repo to pin.
 
     test('close() sets isOpen=false and is idempotent', () async {
       final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse');

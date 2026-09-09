@@ -40,6 +40,7 @@ class IoSseMcpTransport implements McpWire {
 
   HttpClient? _client;
   bool _isOpen = false;
+  int _nextId = 0;
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
@@ -119,9 +120,70 @@ class IoSseMcpTransport implements McpWire {
 
   @override
   Future<McpWireResponse> send(McpWireRequest request) async {
-    throw UnimplementedError(
-      'IoSseMcpTransport.send not yet implemented — see spec 015 plan.md Phase 8',
-    );
+    final client = _client;
+    if (!_isOpen || client == null) {
+      throw const McpWireClosedException(
+          'IoSseMcpTransport: send on a transport that is not open');
+    }
+    final id = _nextId++;
+    final Map<String, Object?> envelope;
+    switch (request) {
+      case McpWireRequestListTools():
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/list',
+          'params': <String, Object?>{},
+        };
+      case McpWireRequestCallTool(name: final name, arguments: final arguments):
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/call',
+          'params': {'name': name, 'arguments': arguments},
+        };
+    }
+    final HttpClientRequest post;
+    try {
+      post = await client.postUrl(_uri);
+    } on SocketException {
+      throw const McpWireClosedException(
+          'IoSseMcpTransport: the connection was refused during send');
+    }
+    post.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+    _applyAuth(post);
+    post.write(jsonEncode(envelope));
+    final HttpClientResponse response;
+    try {
+      response = await post.close();
+    } on SocketException {
+      throw const McpWireClosedException(
+          'IoSseMcpTransport: the connection dropped during send');
+    }
+    final body = await utf8.decoder.bind(response).join();
+    if (response.statusCode < 200 || response.statusCode > 299) {
+      throw McpWireClosedException(
+          'IoSseMcpTransport: the endpoint answered HTTP '
+          '${response.statusCode} for ${envelope['method']}');
+    }
+    final Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(body) as Map<String, dynamic>;
+    } on FormatException {
+      throw McpWireClosedException(
+          'IoSseMcpTransport: undecodable response body for '
+          '${envelope['method']}');
+    }
+    final error = decoded['error'];
+    if (error is Map) {
+      return McpWireResponseError(
+        code: error['code']?.toString() ?? '',
+        message: error['message']?.toString() ?? '',
+      );
+    }
+    final result = (decoded['result'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
+    return McpWireResponseOk(result);
   }
 
   @override
