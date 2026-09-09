@@ -524,3 +524,36 @@ No issues found!
   stays until U15. Suite: −1 (pin) +1 (U13) = 1213.
 - `McpWireClosedException` stays defined once (stdio adapter) per
   data-model.md; the SSE adapter imports it.
+
+## Cycle 15 — SSE open failure mapping + endpoint validation (U14)
+
+**Scope**: a non-200 stream open fails typed (`McpWireOpenException` naming
+the status); a non-http(s) endpoint throws `ArgumentError` at construction.
+
+### RED
+
+```
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U14:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U14: non-200 open fails typed; endpoint validated at construction [E]
+  Expected: throws <Instance of 'ArgumentError'>
+    Actual: <Closure: () => IoSseMcpTransport>
+```
+
+(The 404-typed half was already green from cycle 14's status check; the red
+came from the missing constructor validation.)
+
+### GREEN
+
+Constructor eagerly validates the endpoint scheme (http/https only) —
+misconfiguration fails at construction.
+
+```
+$ dart test
+01:01 +1214 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

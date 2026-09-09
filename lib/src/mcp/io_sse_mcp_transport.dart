@@ -46,7 +46,14 @@ class IoSseMcpTransport implements McpWire {
   IoSseMcpTransport({
     required this.endpoint,
     this.bearerToken,
-  });
+  }) {
+    final uri = Uri.tryParse(endpoint);
+    if (uri == null ||
+        !uri.hasScheme ||
+        (uri.scheme != 'http' && uri.scheme != 'https')) {
+      throw ArgumentError.value(endpoint, 'endpoint', 'must be an http(s) URL');
+    }
+  }
 
   Uri get _uri {
     final uri = Uri.tryParse(endpoint);

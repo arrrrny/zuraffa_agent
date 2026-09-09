@@ -122,5 +122,20 @@ void main() {
       await transport.close();
       await mock.stop();
     });
+
+    test('U14: non-200 open fails typed; endpoint validated at construction',
+        () async {
+      mock.getStatus = 404;
+      final transport = IoSseMcpTransport(endpoint: mock.url.toString());
+      await expectLater(
+        transport.open(),
+        throwsA(isA<McpWireOpenException>()),
+      );
+      expect(transport.isOpen, isFalse);
+      expect(
+        () => IoSseMcpTransport(endpoint: 'ftp://nope/x'),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
   });
 }
