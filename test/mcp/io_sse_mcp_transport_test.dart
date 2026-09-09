@@ -274,5 +274,53 @@ void main() {
         throwsA(isA<McpWireClosedException>()),
       );
     });
+
+    test('A2: full SSE session with auth, list, call — and a typed 404 '
+        'open failure (SC-002)', () async {
+      mock.postResponder = (envelope) => {
+            'jsonrpc': '2.0',
+            'id': envelope['id'],
+            'result': envelope['method'] == 'tools/list'
+                ? {
+                    'tools': [
+                      {'name': 'echo', 'description': 'Echoes arguments'},
+                    ],
+                  }
+                : {
+                    'echo': (envelope['params'] as Map)['arguments'],
+                  },
+          };
+      final transport = IoSseMcpTransport(
+        endpoint: mock.url.toString(),
+        bearerToken: 'session-token',
+      );
+      await transport.open();
+      final list = await transport.send(const McpWireRequestListTools());
+      final tools = ((list as McpWireResponseOk).payload['tools'] as List)
+          .cast<Map<dynamic, dynamic>>();
+      expect(tools.single['name'], 'echo');
+      final call = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'q': 7}),
+      );
+      expect((call as McpWireResponseOk).payload, {
+        'echo': {'q': 7},
+      });
+      expect(
+        mock.postRequests.map((p) => p.authorization),
+        everyElement('Bearer session-token'),
+      );
+      await transport.close();
+
+      // non-200 open fails typed with the status named
+      mock.getStatus = 404;
+      final failing = IoSseMcpTransport(endpoint: mock.url.toString());
+      await expectLater(
+        failing.open(),
+        throwsA(
+          predicate((Object e) =>
+              e is McpWireOpenException && e.statusCode == 404),
+        ),
+      );
+    });
   });
 }

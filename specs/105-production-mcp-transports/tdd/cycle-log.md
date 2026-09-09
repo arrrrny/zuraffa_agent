@@ -739,3 +739,40 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 21 — A2 closed: the full SSE session acceptance (SC-002)
+
+**Scope**: one composed flow — open with bearer, tools/list, tools/call
+(envelope + auth asserted server-side), close; plus a 404 open failing
+typed with the status pinned.
+
+### RED
+
+First run failed on the acceptance's own fixture (the mock responder
+answered every POST with the tools payload; auth assertion used `.single`
+over two POSTs). Fixture corrected — behavior assertions unchanged and
+strengthened (auth asserted on every POST). Then pass-first on the real
+path → deliberate-mutant check:
+
+```
+MUTANT: POST auth header attachment removed
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "A2:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport A2: full SSE session with auth, list, call — and a typed 404 open failure (SC-002) [E]
+  Expected: every element('Bearer session-token')
+    Actual: [null, null]
+```
+
+Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+01:20 +1219 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
