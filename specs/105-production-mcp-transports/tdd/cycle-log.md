@@ -623,3 +623,37 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 18 — SSE POST failure mapping (U17)
+
+**Scope**: 2xx bodies carrying a JSON-RPC error object map to
+`McpWireResponseError`; non-2xx POSTs fail the send typed.
+
+### RED
+
+First run PASSED (both branches shipped with cycle 16's send path) →
+deliberate-mutant check:
+
+```
+MUTANT: non-2xx becomes an error response instead of a throw
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U17:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U17: POST failures map — 2xx error body to the typed error response, non-2xx to a typed throw [E]
+  Expected: throws <Instance of 'McpWireClosedException'>
+    Actual: <Instance of 'Future<McpWireResponse>'>
+```
+
+Pins the throw-vs-response contract the reconnect policy depends on.
+Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+01:19 +1216 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

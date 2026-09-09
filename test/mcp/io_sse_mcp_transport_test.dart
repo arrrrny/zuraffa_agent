@@ -11,6 +11,8 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/mcp/io_sse_mcp_transport.dart';
+import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart'
+    show McpWireClosedException;
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
 
 class _GetRecord {
@@ -194,6 +196,35 @@ void main() {
       expect(params['name'], 'echo');
       expect(params['arguments'], {'x': 1});
       await transport.close();
+    });
+
+    test('U17: POST failures map — 2xx error body to the typed error '
+        'response, non-2xx to a typed throw', () async {
+      mock.postResponder = (envelope) => {
+            'jsonrpc': '2.0',
+            'id': envelope['id'],
+            'error': {'code': -32000, 'message': 'tool exploded'},
+          };
+      final transport = IoSseMcpTransport(endpoint: mock.url.toString());
+      await transport.open();
+      final resp = await transport.send(
+        const McpWireRequestCallTool(name: 'boom', arguments: {}),
+      );
+      expect(resp, isA<McpWireResponseError>());
+      final err = resp as McpWireResponseError;
+      expect(err.code, '-32000');
+      expect(err.message, 'tool exploded');
+      await transport.close();
+
+      mock.postStatus = 500;
+      mock.postResponder = null;
+      final transport2 = IoSseMcpTransport(endpoint: mock.url.toString());
+      await transport2.open();
+      await expectLater(
+        transport2.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+      await transport2.close();
     });
   });
 }

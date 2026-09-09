@@ -47,7 +47,7 @@ known ids, open/closed/exit lifecycle orderings).
 | U14 | Open against a 404-serving endpoint fails with the typed open exception naming status 404; construction with a non-http(s) endpoint throws `ArgumentError`. | FR-004 | DONE |
 | U15 | `tools/list` POSTs the contract envelope and completes `McpWireResponseOk` with the mock payload. | FR-005 | DONE |
 | U16 | `tools/call` POST round-trips arguments/result; the mock asserts the `tools/call` envelope (`method`, `params.name`, `params.arguments`) and the auth header on the POST. | FR-005 | DONE |
-| U17 | POST-level failures: a 2xx body carrying a JSON-RPC error object completes `McpWireResponseError`; a non-2xx POST fails the send typed naming the status. | FR-005 | PENDING |
+| U17 | POST-level failures: a 2xx body carrying a JSON-RPC error object completes `McpWireResponseError`; a non-2xx POST fails the send typed naming the status. | FR-005 | DONE |
 | U18 | The SSE parser: a tools-changed event emitted after keep-alive comment lines and CRLF terminators is observed on `notifications`; an event with empty data and an unrecognized method are ignored; a multi-line `data:` field joins into one payload. | FR-006 | PENDING |
 | U19 | Lifecycle: `send` before `open` throws typed; double open (no second GET) and double close are no-ops; `close()` aborts the stream GET, `isOpen` → false, subsequent send throws typed. | FR-007 | PENDING |
 
