@@ -100,3 +100,40 @@ their own cycles (U5, U6).
 - The remaining `send() throws UnimplementedError` pin (stdio group,
   provider tests) retired in this cycle per the reason recorded in-file at
   cycle 1. Suite: −1 (pin) +1 (U2) = 1202.
+
+## Cycle 3 — stdio tools/call round-trip + session persistence (U3)
+
+**Scope**: `tools/call` carries arguments through the envelope; a second
+call on the same transport proves a session.
+
+### RED
+
+First run PASSED (the U2 send path is generic over the sealed request
+family) → deliberate-mutant check per the playbook:
+
+```
+MUTANT: tools/call envelope drops 'arguments'
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U3:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport U3: tools/call round-trips arguments and the session persists [E]
+  Expected: {'echo': {'x': 1}}
+    Actual: {'echo': {}}
+```
+
+The test detects an argument round-trip regression. Mutant restored exactly.
+
+### GREEN
+
+```
+$ dart test
+00:53 +1203 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.
+
+### Notes
+
+- Suite +1 (U3, no pin removed this cycle) = 1203.

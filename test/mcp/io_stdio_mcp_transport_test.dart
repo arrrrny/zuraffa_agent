@@ -43,5 +43,25 @@ void main() {
       ]);
       await transport.close();
     });
+
+    test('U3: tools/call round-trips arguments and the session persists',
+        () async {
+      final transport = _spawn('echo');
+      await transport.open();
+      final first = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'x': 1}),
+      );
+      expect(first, isA<McpWireResponseOk>());
+      expect((first as McpWireResponseOk).payload, {
+        'echo': {'x': 1},
+      });
+      final second = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'y': 'z'}),
+      );
+      expect((second as McpWireResponseOk).payload, {
+        'echo': {'y': 'z'},
+      });
+      await transport.close();
+    });
   });
 }
