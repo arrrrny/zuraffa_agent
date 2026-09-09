@@ -63,6 +63,10 @@ class _SseMock {
         return;
       }
       req.response.headers.contentType = ContentType('text', 'event-stream');
+      // dart:io quirk (verified by probe): HttpResponse.flush() completing
+      // does NOT push buffered body bytes for a held-open chunked response;
+      // bufferOutput=false streams writes straight to the socket.
+      req.response.bufferOutput = false;
       for (final line in streamText.split('\n')) {
         req.response.writeln(line);
       }
@@ -225,6 +229,31 @@ void main() {
         throwsA(isA<McpWireClosedException>()),
       );
       await transport2.close();
+    });
+
+    test('U18: the SSE parser surfaces tools-changed and ignores noise',
+        () async {
+      mock.streamText = [
+        // keep-alive comment with CRLF terminators
+        ': keep-alive ping\r\n\r\n',
+        // an unrecognized notification method
+        'data: {"jsonrpc":"2.0","method":"other/notification"}\r\n\r\n',
+        // an empty-data event
+        'data: \r\n\r\n',
+        // the real notification, split across two data: fields
+        'data: {"jsonrpc":"2.0",\r\n',
+        'data:  "method":"notifications/tools/list_changed"}\r\n\r\n',
+      ].join();
+      final transport = IoSseMcpTransport(endpoint: mock.url.toString());
+      // Subscribe BEFORE opening: the mock writes at stream-open time and
+      // `notifications` is a broadcast stream — events emitted before a
+      // listener attaches are dropped.
+      final notificationFuture = transport.notifications.first
+          .timeout(const Duration(seconds: 5));
+      await transport.open();
+      final notification = await notificationFuture;
+      expect(notification, isA<McpWireNotificationToolsChanged>());
+      await transport.close();
     });
   });
 }

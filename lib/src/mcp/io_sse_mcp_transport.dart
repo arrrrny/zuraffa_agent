@@ -105,9 +105,47 @@ class IoSseMcpTransport implements McpWire {
     }
     _client = client;
     _isOpen = true;
-    // Stream content is consumed from U18 onward (notifications parsing);
-    // drain errors so an aborted stream never becomes an unhandled error.
-    response.listen((_) {}, onError: (Object _) {}, cancelOnError: false);
+    // The event stream is parsed incrementally (WHATWG subset, see the
+    // dialect contract): comment/keep-alives and non-data fields ignored,
+    // `data:` fields joined per event, events separated by blank lines.
+    response
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen(_handleStreamLine, onError: (Object _) {}, cancelOnError: true);
+  }
+
+  final List<String> _dataBuffer = <String>[];
+
+  void _handleStreamLine(String line) {
+    if (line.isEmpty) {
+      if (_dataBuffer.isEmpty) return;
+      final payload = _dataBuffer.join('\n');
+      _dataBuffer.clear();
+      _dispatchStreamPayload(payload);
+      return;
+    }
+    if (line.startsWith(':')) return; // comment / keep-alive
+    final colon = line.indexOf(':');
+    final field = colon == -1 ? line : line.substring(0, colon);
+    var value = colon == -1 ? '' : line.substring(colon + 1);
+    if (value.startsWith(' ')) value = value.substring(1);
+    if (field == 'data') _dataBuffer.add(value);
+    // `event:`, `id:`, `retry:` fields are accepted and ignored.
+  }
+
+  void _dispatchStreamPayload(String payload) {
+    if (payload.isEmpty) return;
+    Map<String, dynamic> message;
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map<String, dynamic>) return;
+      message = decoded;
+    } on FormatException {
+      return;
+    }
+    if (message['method'] == 'notifications/tools/list_changed') {
+      _notifications.add(const McpWireNotificationToolsChanged());
+    }
   }
 
   @override

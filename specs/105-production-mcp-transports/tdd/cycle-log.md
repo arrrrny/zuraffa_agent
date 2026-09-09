@@ -657,3 +657,52 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 19 — SSE event parser (U18)
+
+**Scope**: incremental WHATWG-subset parser: tools-changed observed across
+keep-alive comments and CRLF; multi-line `data:` joined; empty/unrecognized
+events ignored.
+
+### RED
+
+```
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U18:"
+00:05 +0 -1: spec-105 — IoSseMcpTransport U18: the SSE parser surfaces tools-changed and ignores noise [E]
+  TimeoutException after 0:00:05.000000: Future not completed
+```
+
+(Drain-only pipe — nothing parsed.)
+
+### GREEN — with one environment finding worth recording
+
+First green attempt still timed out. Forensics with standalone probes +
+curl isolated a **dart:io behavior**: `HttpResponse.flush()` completing does
+NOT push buffered body bytes for a held-open chunked response — the mock
+never actually streamed. Server-side fix (test fixture only):
+`bufferOutput = false` before writing, which streams writes straight to the
+socket. Client parser then implemented as planned: utf8 → LineSplitter →
+field dispatch (`data:` accumulate, `:` comments and `event:`/`id:`/`retry:`
+ignored, blank line dispatches the joined payload), JSON-decode, method
+check → typed notification. A second mechanics fix: the test subscribes to
+the broadcast `notifications` stream BEFORE opening (events emitted before a
+listener attaches are dropped by design).
+
+```
+$ dart test
+01:08 +1217 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+Parser lives in three small private methods (`_handleStreamLine`,
+`_dispatchStreamPayload`, buffer field) — the cycle's own shape, nothing to
+refactor.
+
+### Notes
+
+- The `HttpResponse.flush()` finding is test-fixture-side, not a lib/ or
+  framework defect: no misfire. (The transport is the *client*; the mock is
+  the server. Real SSE servers write+flush their own way.)
