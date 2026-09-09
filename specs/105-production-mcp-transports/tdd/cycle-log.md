@@ -452,3 +452,39 @@ No issues found!
 ### REFACTOR
 
 `_failPending(reason)` extracted, shared by `close()` and `_handleExit()`.
+
+## Cycle 13 — A1 closed: the full stdio session acceptance (SC-001)
+
+**Scope**: the US1 outer loop — one composed flow through the public seam:
+open → tools/list → tools/call → tools/call → close, descriptor and
+payloads asserted end to end.
+
+### RED
+
+First run PASSED (composes the pinned units U1–U12) → deliberate-mutant
+check:
+
+```
+MUTANT: open() no longer flips the open signal
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "A1:"
+00:00 +0 -1: spec-105 — IoStdioMcpTransport A1: full stdio session — open, list, call, call, close (SC-001) [E]
+  Expected: true
+    Actual: <false>
+```
+
+The acceptance detects a wiring break across composed units. Restored
+exactly; a strict_raw_type warning on the new assertion fixed (constitution
+X).
+
+### GREEN
+
+```
+$ dart test
+00:55 +1213 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

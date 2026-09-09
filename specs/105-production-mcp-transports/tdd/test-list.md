@@ -10,7 +10,7 @@ loopback HTTP, mocked MCP peer).
 
 | id | behavior | traces | state |
 | -- | -------- | ------ | ----- |
-| A1 | Against the mock stdio child (`test/mcp/_mock_stdio_mcp_server.dart echo`), an opened `IoStdioMcpTransport` completes `tools/list` with the advertised descriptor and `tools/call` with the echoed result, and a follow-up call on the same transport succeeds (`test/mcp/io_stdio_mcp_transport_test.dart`). | SC-001 | PENDING |
+| A1 | Against the mock stdio child (`test/mcp/_mock_stdio_mcp_server.dart echo`), an opened `IoStdioMcpTransport` completes `tools/list` with the advertised descriptor and `tools/call` with the echoed result, and a follow-up call on the same transport succeeds (`test/mcp/io_stdio_mcp_transport_test.dart`). | SC-001 | DONE |
 | A2 | Against the loopback SSE mock (`HttpServer`), an opened `IoSseMcpTransport` completes `tools/list` and `tools/call`; the mock observed the bearer header when configured; a non-200 open fails typed with the status named (`test/mcp/io_sse_mcp_transport_test.dart`). | SC-002 | PENDING |
 | A3 | A tools-changed notification pushed by each mock server is observed on that transport's `notifications` stream; garbage lines/events produce no notification and no crash (`test/mcp/io_stdio_mcp_transport_test.dart` + `test/mcp/io_sse_mcp_transport_test.dart`). | SC-003 | PENDING |
 | A4 | A stdio child exit flips the open signal off and fails pending+subsequent sends typed; send-before-open fails typed on both transports; double open/double close are safe on both (`test/mcp/io_stdio_mcp_transport_test.dart` + `test/mcp/io_sse_mcp_transport_test.dart`). | SC-004 | PENDING |

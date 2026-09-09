@@ -152,6 +152,32 @@ void main() {
       expect(transport.isOpen, isFalse);
     });
 
+    test('A1: full stdio session — open, list, call, call, close (SC-001)',
+        () async {
+      final transport = _spawn('echo');
+      await transport.open();
+      expect(transport.isOpen, isTrue);
+      final list = await transport.send(const McpWireRequestListTools());
+      final tools = ((list as McpWireResponseOk).payload['tools'] as List)
+          .cast<Map<dynamic, dynamic>>();
+      expect(tools.single['name'], 'echo');
+      expect(tools.single['paramsSchema'], {'type': 'object'});
+      final call = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'k': 'v'}),
+      );
+      expect((call as McpWireResponseOk).payload, {
+        'echo': {'k': 'v'},
+      });
+      final call2 = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'n': 2}),
+      );
+      expect((call2 as McpWireResponseOk).payload, {
+        'echo': {'n': 2},
+      });
+      await transport.close();
+      expect(transport.isOpen, isFalse);
+    });
+
     test('U12: close fails in-flight sends typed and shuts the streams down',
         () async {
       final transport = _spawn('slow');
