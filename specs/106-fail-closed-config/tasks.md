@@ -43,6 +43,6 @@ the load-bearing link `/speckit.tdd.run` ticks against.
   zero hits; `rg "'kilo'" lib/` zero hits; integration file env-required.
 - [x] T011 Acceptance [A3] gates: `dart analyze` zero findings; `dart test`
   green; purity gate unchanged.
-- [ ] T012 Run `/speckit.tdd.verify` → `tdd/verification.md`; commit artifacts
+- [x] T012 Run `/speckit.tdd.verify` → `tdd/verification.md`; commit artifacts
   + source (`spec(106):`/`feat(106):` convention); push; open PR closing
   #117.
