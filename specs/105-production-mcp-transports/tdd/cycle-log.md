@@ -300,3 +300,38 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 9 — stdio exit propagation (U9)
+
+**Scope**: a child crash drops the session — open signal off, in-flight and
+subsequent sends fail typed (`McpWireClosedException`), notifications done.
+
+### RED
+
+```
+$ dart test test/mcp/io_stdio_mcp_transport_test.dart --plain-name "U9:"
+00:10 +0 -1: spec-105 — IoStdioMcpTransport U9: child exit flips isOpen off and fails sends typed [E]
+     Which: threw TimeoutException:<TimeoutException after 0:00:10.000000: Future not completed>
+```
+
+(The pending send hung forever on exit — the test's own 10s bound makes the
+red decisive instead of a 30s suite timeout.)
+
+### GREEN
+
+`process.exitCode` (unawaited) → `_handleExit`: guards on `_closed`
+(set by `close()`), flips `_isOpen` off, completes every pending send with
+`McpWireClosedException`, clears the map, closes notifications.
+
+```
+$ dart test
+00:57 +1209 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+One lint fix inside the cycle: `unawaited(...)` for the exitCode future
+(unawaited_futures) — constitution X requires pristine analysis before the
+cycle commits.

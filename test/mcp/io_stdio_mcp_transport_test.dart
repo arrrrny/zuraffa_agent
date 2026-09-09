@@ -114,5 +114,22 @@ void main() {
       expect(notification, isA<McpWireNotificationToolsChanged>());
       await transport.close();
     });
+
+    test('U9: child exit flips isOpen off and fails sends typed', () async {
+      final transport = _spawn('crash');
+      await transport.open();
+      final pending = transport.send(
+        const McpWireRequestCallTool(name: 'crash', arguments: {}),
+      );
+      await expectLater(
+        pending.timeout(const Duration(seconds: 10)),
+        throwsA(isA<McpWireClosedException>()),
+      );
+      expect(transport.isOpen, isFalse);
+      await expectLater(
+        transport.send(const McpWireRequestListTools()),
+        throwsA(isA<McpWireClosedException>()),
+      );
+    });
   });
 }

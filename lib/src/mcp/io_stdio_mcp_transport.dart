@@ -39,6 +39,7 @@ class IoStdioMcpTransport implements McpWire {
   StreamSubscription<String>? _stdoutSub;
   StreamSubscription<String>? _stderrSub;
   bool _isOpen = false;
+  bool _closed = false;
   int _nextId = 0;
   final Map<int, Completer<McpWireResponse>> _pending = {};
   final StreamController<McpWireNotification> _notifications =
@@ -69,10 +70,27 @@ class IoStdioMcpTransport implements McpWire {
         .transform(const LineSplitter())
         .listen((_) {});
     _isOpen = true;
+    unawaited(process.exitCode.then((_) => _handleExit()));
+  }
+
+  /// A child exit (crash or normal) is a dropped session: the open signal
+  /// goes off, in-flight sends fail typed — the reconnect policy's signal —
+  /// and the notification stream is done.
+  void _handleExit() {
+    if (_closed) return;
+    _isOpen = false;
+    final failure = const McpWireClosedException(
+        'IoStdioMcpTransport: the server process exited');
+    for (final completer in _pending.values) {
+      completer.completeError(failure);
+    }
+    _pending.clear();
+    _notifications.close();
   }
 
   @override
   Future<void> close() async {
+    _closed = true;
     _isOpen = false;
     _process?.kill();
     _process = null;
