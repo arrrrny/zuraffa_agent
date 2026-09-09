@@ -99,18 +99,12 @@ void main() {
       expect(t.isOpen, isFalse);
     });
 
-    test('open() throws UnimplementedError', () {
-      final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse');
-      expect(() => t.open(), throwsA(isA<UnimplementedError>()));
-    });
-
-    test('send() throws UnimplementedError', () async {
-      final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse');
-      expect(
-        () => t.send(const McpWireRequestListTools()),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    // NOTE (spec 105): the former "open() throws UnimplementedError" and
+    // "send() throws UnimplementedError" pins were retired — open() is a
+    // real networked session (pinned by test/mcp/io_sse_mcp_transport_test.dart
+    // U13 onward) and send() now POSTs the JSON-RPC envelope (U15 onward);
+    // send before open throws the typed McpWireClosedException (pinned at
+    // U19). No stub behavior remains in this repo to pin.
 
     test('close() sets isOpen=false and is idempotent', () async {
       final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse');
@@ -142,18 +136,12 @@ void main() {
       expect(t.isOpen, isFalse);
     });
 
-    test('open() throws UnimplementedError', () {
-      final t = IoStdioMcpTransport(executable: 'node');
-      expect(() => t.open(), throwsA(isA<UnimplementedError>()));
-    });
-
-    test('send() throws UnimplementedError', () async {
-      final t = IoStdioMcpTransport(executable: 'node');
-      expect(
-        () => t.send(const McpWireRequestListTools()),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    // NOTE (spec 105): the former "open() throws UnimplementedError" pin was
+    // retired — open() is now a real subprocess session, pinned by
+    // test/mcp/io_stdio_mcp_transport_test.dart (U1 onward). The send() pin
+    // was retired for the same reason when the send path landed (U2): send
+    // before open now throws the typed McpWireClosedException (pinned at
+    // U10), and the round-trip is pinned against the mock child.
 
     test('close() sets isOpen=false and is idempotent', () async {
       final t = IoStdioMcpTransport(executable: 'node');

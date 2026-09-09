@@ -1,8 +1,8 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#1 (epic — native agent engine) and
-// specs/014-planner-todo-system (gap-analysis row 7: Planner/TODO system).
+// specs/014-planner-todo-system (gap-analysis row 7: planner todo system).
 //
-// Concrete provider stub for the Planner/TODO data layer. Mirrors the
+// Concrete provider stub for the planner todo data layer. Mirrors the
 // StopPolicyProvider pattern from PR #48 and the SteeringQueueProvider
 // pattern from PR #51: bodies throw UnimplementedError so the file is
 // analyzable without forcing real I/O. Parameterless methods (current,
