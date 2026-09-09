@@ -591,3 +591,35 @@ No issues found!
 - The last `send() throws UnimplementedError` pin (SSE group, provider
   tests) retired with the stated reason recorded in-file: no stub behavior
   remains anywhere in the repo to pin. Suite: −1 (pin) +1 (U15) = 1214.
+
+## Cycle 17 — SSE tools/call round-trip + auth (U16)
+
+**Scope**: tools/call POST carries name+arguments and the bearer header;
+the mocked reply maps back through the sealed response family.
+
+### RED
+
+First run PASSED (send path is generic, cycle 16) → deliberate-mutant check:
+
+```
+MUTANT: tools/call envelope drops 'arguments'
+$ dart test test/mcp/io_sse_mcp_transport_test.dart --plain-name "U16:"
+00:00 +0 -1: spec-105 — IoSseMcpTransport U16: tools/call POST round-trips arguments and carries auth [E]
+  Expected: {'echo': {'x': 1}}
+    Actual: {'echo': null}
+```
+
+Restored exactly.
+
+### GREEN
+
+```
+$ dart test
+01:05 +1215 ~2: All tests passed!
+$ dart analyze
+No issues found!
+```
+
+### REFACTOR
+
+None needed.

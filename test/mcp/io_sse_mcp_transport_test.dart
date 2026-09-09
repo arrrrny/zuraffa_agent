@@ -165,5 +165,35 @@ void main() {
       expect(envelope['method'], 'tools/list');
       await transport.close();
     });
+
+    test('U16: tools/call POST round-trips arguments and carries auth',
+        () async {
+      mock.postResponder = (envelope) => {
+            'jsonrpc': '2.0',
+            'id': envelope['id'],
+            'result': {
+              'echo': (envelope['params'] as Map)['arguments'],
+            },
+          };
+      final transport = IoSseMcpTransport(
+        endpoint: mock.url.toString(),
+        bearerToken: 'tok-1',
+      );
+      await transport.open();
+      final resp = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'x': 1}),
+      );
+      expect(resp, isA<McpWireResponseOk>());
+      expect((resp as McpWireResponseOk).payload, {
+        'echo': {'x': 1},
+      });
+      final posted = mock.postRequests.single;
+      expect(posted.authorization, 'Bearer tok-1');
+      final envelope = jsonDecode(posted.body) as Map<String, dynamic>;
+      final params = envelope['params'] as Map<String, dynamic>;
+      expect(params['name'], 'echo');
+      expect(params['arguments'], {'x': 1});
+      await transport.close();
+    });
   });
 }
