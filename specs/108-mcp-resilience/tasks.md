@@ -10,29 +10,29 @@ is observed failing before its implementation.
 
 ## Phase 2: The guard (pure core)
 
-- [ ] T003 [P] Test `test/mcp/mcp_call_guard_test.dart` — [U1] threshold
+- [x] T003 [P] Test `test/mcp/mcp_call_guard_test.dart` — [U1] threshold
   opens, [U2] success resets, [U3] open fails fast typed without invoking
   and does not self-feed, [U4] cooldown probe recovers both ways, [U5]
   thrown exceptions count + propagate.
-- [ ] T004 Implement `lib/src/mcp/mcp_call_guard.dart` (`McpCallGuard`,
+- [x] T004 Implement `lib/src/mcp/mcp_call_guard.dart` (`McpCallGuard`,
   `McpBreakerConfig`, `McpRetryConfig`, `McpCallOptions` with the 30s
   default) — makes [U1]–[U5] green.
 
 ## Phase 3: Client wiring
 
-- [ ] T005 [P] Test `test/mcp/mcp_120_resilience_test.dart` — [U6] hung
+- [x] T005 [P] Test `test/mcp/mcp_120_resilience_test.dart` — [U6] hung
   wire → typed timeout, [U7] default 30s observable, [U8] read-only retry
   bounded, [U9] non-read-only never retried, [U10] timeout never retried,
   [U11] app errors never retried, [U12] descriptor readOnly default +
   round-trip.
-- [ ] T006 Implement client wiring: options on `McpClient.callTool`
+- [x] T006 Implement client wiring: options on `McpClient.callTool`
   (interface + Sse/Stdio/InProc), timeout, guard, retry; descriptor
   `readOnly` flag; contract documentation — makes [U6]–[U12] green and
   closes [A1].
 
 ## Phase 4: Acceptance gates + verify
 
-- [ ] T007 Acceptance [A1]: breaker sequence through the client.
-- [ ] T008 Acceptance [A2] gates: analyze, suite, purity, contract grep.
-- [ ] T009 Run `/speckit.tdd.verify` → `tdd/verification.md`; commit
+- [x] T007 Acceptance [A1]: breaker sequence through the client.
+- [x] T008 Acceptance [A2] gates: analyze, suite, purity, contract grep.
+- [x] T009 Run `/speckit.tdd.verify` → `tdd/verification.md`; commit
   (`feat(108):`), push, open PR closing #120.

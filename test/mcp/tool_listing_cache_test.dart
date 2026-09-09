@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
+import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart' show McpCallOptions;
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 import 'package:zuraffa_agent/src/mcp/tool_listing_cache.dart';
@@ -42,7 +43,7 @@ class _CountingClient implements McpClient {
   }
 
   @override
-  Future<McpCallResult> callTool(String name, Map<String, dynamic> args) async =>
+  Future<McpCallResult> callTool(String name, Map<String, dynamic> args, {McpCallOptions? options}) async =>
       const McpCallError(code: 'not-implemented', message: 'stub');
 
   @override

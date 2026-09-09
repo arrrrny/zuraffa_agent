@@ -14,6 +14,7 @@
 import 'dart:async';
 
 import '../domain/entities/mcp_transport/mcp_transport.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_tool_descriptor.dart';
@@ -106,8 +107,9 @@ class InProcMcpClient implements McpClient {
   @override
   Future<McpCallResult> callTool(
     String name,
-    Map<String, dynamic> arguments,
-  ) async {
+    Map<String, dynamic> arguments, {
+    McpCallOptions? options,
+  }) async {
     if (_state != McpClientState.connected) {
       return McpCallError(
         code: 'client-not-connected',

@@ -26,10 +26,15 @@ class McpToolDescriptor {
   final String description;
   final Map<String, dynamic>? paramsSchema;
 
+  /// True when the tool is safe to repeat (idempotent) — opts calls into
+  /// transient-failure retry (spec 108, issue #120). Defaults to false.
+  final bool readOnly;
+
   const McpToolDescriptor({
     required this.name,
     required this.description,
     this.paramsSchema,
+    this.readOnly = false,
   });
 
   @override

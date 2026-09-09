@@ -13,6 +13,7 @@ import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
 import 'package:zuraffa_agent/src/engine/tool_registry.dart';
+import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart' show McpCallOptions;
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
@@ -36,7 +37,7 @@ class _FakeMcpClient implements McpClient {
   @override
   Future<List<McpToolDescriptor>> listTools() async => nextTools;
   @override
-  Future<McpCallResult> callTool(String n, Map<String, dynamic> a) async =>
+  Future<McpCallResult> callTool(String n, Map<String, dynamic> a, {McpCallOptions? options}) async =>
       const McpCallError(code: 'not-implemented', message: 'stub');
   @override
   Stream<void> get onToolsChanged => _toolsChangedController.stream;
