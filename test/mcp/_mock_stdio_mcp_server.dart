@@ -7,6 +7,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+/// Repo-relative path to this script — shared by the transport tests so the
+/// spawn target is declared once, next to the script it names.
+final mockScriptPath = 'test/mcp/_mock_stdio_mcp_server.dart';
+
 void emit(Map<String, Object?> json) {
   stdout.writeln(jsonEncode(json));
   stdout.flush();

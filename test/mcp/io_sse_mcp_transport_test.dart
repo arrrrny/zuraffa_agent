@@ -13,8 +13,9 @@ import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/mcp/io_sse_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
+import '_mock_stdio_mcp_server.dart' show mockScriptPath;
 
-final _scriptPath = File('test/mcp/_mock_stdio_mcp_server.dart').absolute.path;
+final _scriptPath = File(mockScriptPath).absolute.path;
 
 class _GetRecord {
   final String? accept;
@@ -150,6 +151,25 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
     });
+
+    test(
+      'U14c: connection-refused open fails typed (statusCode null)',
+      () async {
+        // Bind a port, then release it: connecting to the freshly-freed port
+        // is refused, exercising the connect-error path of open().
+        final doomed = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final port = doomed.port;
+        await doomed.close();
+        final transport = IoSseMcpTransport(
+          endpoint: 'http://127.0.0.1:$port/mcp',
+        );
+        await expectLater(
+          transport.open(),
+          throwsA(isA<McpWireOpenException>()),
+        );
+        expect(transport.isOpen, isFalse);
+      },
+    );
 
     test(
       'U15: tools/list POSTs the contract envelope and maps the result',

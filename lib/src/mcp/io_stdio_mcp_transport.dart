@@ -45,13 +45,13 @@ class IoStdioMcpTransport implements McpWire {
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoStdioMcpTransport({
-    required this.executable,
-    this.args = const [],
-  }) {
+  IoStdioMcpTransport({required this.executable, this.args = const []}) {
     if (executable.trim().isEmpty) {
       throw ArgumentError.value(
-          executable, 'executable', 'must be a non-empty command');
+        executable,
+        'executable',
+        'must be a non-empty command',
+      );
     }
   }
 
@@ -96,8 +96,19 @@ class IoStdioMcpTransport implements McpWire {
   Future<void> close() async {
     _closed = true;
     _isOpen = false;
-    _process?.kill();
+    final process = _process;
     _process = null;
+    process?.kill();
+    if (process != null) {
+      // An uncooperative child that ignores SIGTERM must not linger holding
+      // its pipes after the transport reports closed — escalate, bounded so
+      // close() never hangs.
+      try {
+        await process.exitCode.timeout(const Duration(milliseconds: 250));
+      } on TimeoutException {
+        process.kill(ProcessSignal.sigkill);
+      }
+    }
     _failPending('the transport was closed');
     await _stdoutSub?.cancel();
     _stdoutSub = null;
@@ -111,7 +122,8 @@ class IoStdioMcpTransport implements McpWire {
     final process = _process;
     if (!_isOpen || process == null) {
       throw const McpWireClosedException(
-          'IoStdioMcpTransport: send on a transport that is not open');
+        'IoStdioMcpTransport: send on a transport that is not open',
+      );
     }
     final id = _nextId++;
     final completer = Completer<McpWireResponse>();
@@ -133,12 +145,20 @@ class IoStdioMcpTransport implements McpWire {
           'params': {'name': name, 'arguments': arguments},
         };
     }
-    process.stdin.writeln(jsonEncode(envelope));
-    // The completer future is returned (and thus subscribed) synchronously:
-    // a close/exit completing this pending entry in the same turn can never
-    // produce an unhandled rejection. Flush errors mean the pipe died —
-    // exactly the path where close/exit drains the pending entry typed.
-    unawaited(process.stdin.flush().catchError((Object _) {}));
+    try {
+      process.stdin.writeln(jsonEncode(envelope));
+      // The completer future is returned (and thus subscribed) synchronously:
+      // a close/exit completing this pending entry in the same turn can never
+      // produce an unhandled rejection. Flush errors mean the pipe died —
+      // exactly the path where close/exit drains the pending entry typed.
+      unawaited(process.stdin.flush().catchError((Object _) {}));
+    } on Object {
+      // The child died between the guard and the write: keep the typed
+      // failure contract (never an untyped platform exception).
+      throw const McpWireClosedException(
+        'IoStdioMcpTransport: the server process is gone',
+      );
+    }
     return completer.future;
   }
 
@@ -174,7 +194,8 @@ class IoStdioMcpTransport implements McpWire {
         message: error['message']?.toString() ?? '',
       );
     }
-    final result = (message['result'] as Map?)?.cast<String, dynamic>() ??
+    final result =
+        (message['result'] as Map?)?.cast<String, dynamic>() ??
         const <String, dynamic>{};
     return McpWireResponseOk(result);
   }

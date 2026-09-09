@@ -11,8 +11,9 @@ import 'dart:io';
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
+import '_mock_stdio_mcp_server.dart' show mockScriptPath;
 
-final _scriptPath = File('test/mcp/_mock_stdio_mcp_server.dart').absolute.path;
+final _scriptPath = File(mockScriptPath).absolute.path;
 
 IoStdioMcpTransport _spawn(String mode) => IoStdioMcpTransport(
   executable: Platform.resolvedExecutable,

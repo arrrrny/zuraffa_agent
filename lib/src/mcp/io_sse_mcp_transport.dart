@@ -44,10 +44,7 @@ class IoSseMcpTransport implements McpWire {
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoSseMcpTransport({
-    required this.endpoint,
-    this.bearerToken,
-  }) {
+  IoSseMcpTransport({required this.endpoint, this.bearerToken}) {
     final uri = Uri.tryParse(endpoint);
     if (uri == null ||
         !uri.hasScheme ||
@@ -61,8 +58,7 @@ class IoSseMcpTransport implements McpWire {
     if (uri == null ||
         (uri.scheme != 'http' && uri.scheme != 'https') ||
         !uri.hasScheme) {
-      throw ArgumentError.value(
-          endpoint, 'endpoint', 'must be an http(s) URL');
+      throw ArgumentError.value(endpoint, 'endpoint', 'must be an http(s) URL');
     }
     return uri;
   }
@@ -81,18 +77,22 @@ class IoSseMcpTransport implements McpWire {
     final HttpClientRequest request;
     try {
       request = await client.getUrl(_uri);
-    } on Object {
+    } on SocketException catch (e) {
       client.close(force: true);
-      rethrow;
+      throw McpWireOpenException(
+        'IoSseMcpTransport: connection failed: ${e.message}',
+      );
     }
     request.headers.set(HttpHeaders.acceptHeader, 'text/event-stream');
     _applyAuth(request);
     final HttpClientResponse response;
     try {
       response = await request.close();
-    } on Object {
+    } on SocketException catch (e) {
       client.close(force: true);
-      rethrow;
+      throw McpWireOpenException(
+        'IoSseMcpTransport: connection dropped during open: ${e.message}',
+      );
     }
     if (response.statusCode != HttpStatus.ok) {
       final status = response.statusCode;
@@ -161,7 +161,8 @@ class IoSseMcpTransport implements McpWire {
     final client = _client;
     if (!_isOpen || client == null) {
       throw const McpWireClosedException(
-          'IoSseMcpTransport: send on a transport that is not open');
+        'IoSseMcpTransport: send on a transport that is not open',
+      );
     }
     final id = _nextId++;
     final Map<String, Object?> envelope;
@@ -186,7 +187,8 @@ class IoSseMcpTransport implements McpWire {
       post = await client.postUrl(_uri);
     } on SocketException {
       throw const McpWireClosedException(
-          'IoSseMcpTransport: the connection was refused during send');
+        'IoSseMcpTransport: the connection was refused during send',
+      );
     }
     post.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
     _applyAuth(post);
@@ -196,21 +198,24 @@ class IoSseMcpTransport implements McpWire {
       response = await post.close();
     } on SocketException {
       throw const McpWireClosedException(
-          'IoSseMcpTransport: the connection dropped during send');
+        'IoSseMcpTransport: the connection dropped during send',
+      );
     }
     final body = await utf8.decoder.bind(response).join();
     if (response.statusCode < 200 || response.statusCode > 299) {
       throw McpWireClosedException(
-          'IoSseMcpTransport: the endpoint answered HTTP '
-          '${response.statusCode} for ${envelope['method']}');
+        'IoSseMcpTransport: the endpoint answered HTTP '
+        '${response.statusCode} for ${envelope['method']}',
+      );
     }
     final Map<String, dynamic> decoded;
     try {
       decoded = jsonDecode(body) as Map<String, dynamic>;
     } on FormatException {
       throw McpWireClosedException(
-          'IoSseMcpTransport: undecodable response body for '
-          '${envelope['method']}');
+        'IoSseMcpTransport: undecodable response body for '
+        '${envelope['method']}',
+      );
     }
     final error = decoded['error'];
     if (error is Map) {
@@ -219,7 +224,8 @@ class IoSseMcpTransport implements McpWire {
         message: error['message']?.toString() ?? '',
       );
     }
-    final result = (decoded['result'] as Map?)?.cast<String, dynamic>() ??
+    final result =
+        (decoded['result'] as Map?)?.cast<String, dynamic>() ??
         const <String, dynamic>{};
     return McpWireResponseOk(result);
   }
