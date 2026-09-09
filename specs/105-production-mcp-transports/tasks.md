@@ -74,7 +74,7 @@ session; an error reply maps to the typed error response.
 
 ### Tests for US1 (written FIRST, observed failing)
 
-- [ ] T004 [P] [US1] Test `test/mcp/io_stdio_mcp_transport_test.dart`
+- [x] T004 [P] [US1] Test `test/mcp/io_stdio_mcp_transport_test.dart`
   (round-trip group) — [U1] open() spawns the mock (`echo` mode) and
   `isOpen` is true afterwards, [U2] `tools/list` returns the mock's
   advertised descriptor (`name: echo`, `paramsSchema` preserved),
@@ -83,13 +83,13 @@ session; an error reply maps to the typed error response.
   reply maps to `McpWireResponseError` (stringified code + message),
   [U8] a response line with an unknown id is dropped and the in-flight
   request still resolves (garbage mode) — closes acceptance [A1].
-- [ ] T005 [P] [US1] Test `test/mcp/io_stdio_mcp_transport_test.dart`
+- [x] T005 [P] [US1] Test `test/mcp/io_stdio_mcp_transport_test.dart`
   (validation group) — [U4] constructor rejects an empty `executable` with
   `ArgumentError` naming the field (eager, fails at construction).
 
 ### Implementation for US1
 
-- [ ] T006 [US1] Implement `IoStdioMcpTransport.open/send` +
+- [x] T006 [US1] Implement `IoStdioMcpTransport.open/send` +
   `McpWireClosedException` in `lib/src/mcp/io_stdio_mcp_transport.dart`
   (plan.md Component 1: Process.start, line-framed JSON-RPC writes,
   id-matched pending map, error mapping, eager constructor validation;
@@ -110,7 +110,7 @@ succeed, tools/list and tools/call round-trip, open/POST failures map typed.
 
 ### Tests for US2 (written FIRST, observed failing)
 
-- [ ] T007 [P] [US2] Test `test/mcp/io_sse_mcp_transport_test.dart`
+- [x] T007 [P] [US2] Test `test/mcp/io_sse_mcp_transport_test.dart`
   (round-trip group) — [U13] open() GETs the endpoint with
   `Accept: text/event-stream` and the `Authorization: Bearer` header when a
   token is configured (asserted server-side) and `isOpen` is true,
@@ -118,7 +118,7 @@ succeed, tools/list and tools/call round-trip, open/POST failures map typed.
   [U16] `tools/call` POST round-trips arguments/result with the contract's
   JSON-RPC envelope asserted server-side — closes acceptance [A2] together
   with [U14]/[U17].
-- [ ] T008 [P] [US2] Test `test/mcp/io_sse_mcp_transport_test.dart`
+- [x] T008 [P] [US2] Test `test/mcp/io_sse_mcp_transport_test.dart`
   (failure group) — [U14] non-200 open (404 served) fails with a typed
   exception naming the status and the constructor rejects a non-http(s)
   endpoint with `ArgumentError`, [U17] POST-level failures: a 2xx body with
@@ -127,7 +127,7 @@ succeed, tools/list and tools/call round-trip, open/POST failures map typed.
 
 ### Implementation for US2
 
-- [ ] T009 [US2] Implement `IoSseMcpTransport.open/send` in
+- [x] T009 [US2] Implement `IoSseMcpTransport.open/send` in
   `lib/src/mcp/io_sse_mcp_transport.dart` (plan.md Component 2: HttpClient
   GET + POST, bearer header, status checks, JSON-RPC mapping, typed
   `McpWireOpenException`; header updated) — makes [U13]–[U17] green,
@@ -147,12 +147,12 @@ junk lines/events produce nothing and no crash.
 
 ### Tests for US3 (written FIRST, observed failing)
 
-- [ ] T010 [US3] Test `test/mcp/io_stdio_mcp_transport_test.dart`
+- [x] T010 [US3] Test `test/mcp/io_stdio_mcp_transport_test.dart`
   (notifications group) — [U6] `notify`-mode mock's
   `notifications/tools/list_changed` line is observed on `notifications`
   before the normal answer resolves, [U7] `garbage`-mode junk lines produce
   no notification and no crash; subsequent RPC still succeeds.
-- [ ] T011 [P] [US3] Test `test/mcp/io_sse_mcp_transport_test.dart`
+- [x] T011 [P] [US3] Test `test/mcp/io_sse_mcp_transport_test.dart`
   (SSE parsing group) — [U18] a tools-changed SSE event delivered after
   keep-alive comment lines and CRLF terminators is observed on
   `notifications`; empty-data and unrecognized events are ignored; a
@@ -160,7 +160,7 @@ junk lines/events produce nothing and no crash.
 
 ### Implementation for US3
 
-- [ ] T012 [US3] Implement notification paths: stdio stdout-line
+- [x] T012 [US3] Implement notification paths: stdio stdout-line
   notification parsing + SSE incremental event parser (plan.md Component 2
   parser: comment/`event:`/`id:`/`retry:` ignored, `data:` join, CRLF/LF) —
   makes [U6], [U7], [U18] green, closing [A3].
@@ -179,12 +179,12 @@ sends typed; send-before-open fails typed; open/close are idempotent.
 
 ### Tests for US4 (written FIRST, observed failing)
 
-- [ ] T013 [US4] Test `test/mcp/io_stdio_mcp_transport_test.dart` (exit
+- [x] T013 [US4] Test `test/mcp/io_stdio_mcp_transport_test.dart` (exit
   group) — [U9] `crash`-mode child exit: `isOpen` → false, an in-flight
   send completes with the typed failure, a subsequent send throws the same
   typed failure (client reconnect contract: throw, not response),
   notification stream closes.
-- [ ] T014 [P] [US4] Test both transport files (misuse + teardown group) —
+- [x] T014 [P] [US4] Test both transport files (misuse + teardown group) —
   [U10] send-before-open/after-close throws typed (stdio), [U11] double
   open and double close are no-ops (stdio, no second spawn), [U12] close()
   terminates the child, closes notifications, pending sends fail typed
@@ -194,7 +194,7 @@ sends typed; send-before-open fails typed; open/close are idempotent.
 
 ### Implementation for US4
 
-- [ ] T015 [US4] Implement lifecycle handling: stdio exit propagation +
+- [x] T015 [US4] Implement lifecycle handling: stdio exit propagation +
   pending-completer resolution + idempotence guards (both adapters);
   `close()` idempotent teardown (plan.md lifecycle state machine) — makes
   [U9]–[U12], [U19] green, closing [A4].
@@ -207,7 +207,7 @@ sends typed; send-before-open fails typed; open/close are idempotent.
 
 **Goal**: the issue's mechanical definition of done.
 
-- [ ] T016 [US5] Acceptance gates [A5]: `rg "TODO|FIXME|HACK" lib/` zero
+- [x] T016 [US5] Acceptance gates [A5]: `rg "TODO|FIXME|HACK" lib/` zero
   hits; `dart analyze` zero findings repo-wide (constitution X); `dart test`
   green (baseline 1202 + new); purity gate unchanged (no new dart:io files
   beyond the two allowlisted adapters). Any red here is a behavior fix with

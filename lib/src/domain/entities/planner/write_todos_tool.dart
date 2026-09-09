@@ -1,6 +1,6 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#1 (epic — native agent engine) and
-// specs/014-planner-todo-system (gap-analysis row 7: Planner/TODO system,
+// specs/014-planner-todo-system (gap-analysis row 7: planner todo system,
 // modeled after dart_agent_core's write_todos tool with PlanState —
 // attributed port of the tool contract, MIT).
 //

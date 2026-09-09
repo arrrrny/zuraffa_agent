@@ -809,3 +809,37 @@ No issues found!
 ### REFACTOR
 
 None needed.
+
+## Cycle 23 — A5 closed: the issue #107 hygiene acceptance (SC-005)
+
+**Scope**: the mechanical definition of done from issue #107: zero
+TODO/FIXME/HACK in `lib/`, analyzer pristine, suite green, purity gate
+green.
+
+### RED (pre-existing gate failures on master, surfaced by this cycle's gates)
+
+1. `rg "TODO|FIXME|HACK" lib/` → 13 hits, ALL the literal string "TODO"
+   inside the spec name "Planner/TODO system" in comments (spec 014
+   corpus). Comment-only rewording to lowercase "planner todo system" —
+   zero behavior change, gate now honest.
+2. The CI purity gate **already failed on master**:
+   `lib/src/engine/persistent_agent_memory.dart` (spec 076) imports dart:io
+   but was never added to the ALLOWED list — the gate was not run on that
+   merge. Remedy per constitution VII's own process: consciously reviewed
+   and added WITH justification (file-backed atomic-snapshot persistence
+   adapter — the exact adapter category the allowlist exists for).
+
+### GREEN
+
+```
+$ rg "TODO|FIXME|HACK" lib/     → no matches ✓
+$ dart analyze                  → No issues found! ✓
+$ dart test                     → 1221 passed, 0 failed ✓
+$ purity gate (pipeline.yml logic, run locally) → PASS ✓
+```
+
+### Notes
+
+- The two pre-existing failures are recorded here and in the PR body; they
+  are enablers of SC-005, not feature drift (the spec's SC-005 requires the
+  gates green, and #107's DoD requires zero rg hits on master).

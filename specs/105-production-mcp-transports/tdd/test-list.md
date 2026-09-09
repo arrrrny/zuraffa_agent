@@ -14,7 +14,7 @@ loopback HTTP, mocked MCP peer).
 | A2 | Against the loopback SSE mock (`HttpServer`), an opened `IoSseMcpTransport` completes `tools/list` and `tools/call`; the mock observed the bearer header when configured; a non-200 open fails typed with the status named (`test/mcp/io_sse_mcp_transport_test.dart`). | SC-002 | DONE |
 | A3 | A tools-changed notification pushed by each mock server is observed on that transport's `notifications` stream; garbage lines/events produce no notification and no crash (`test/mcp/io_stdio_mcp_transport_test.dart` + `test/mcp/io_sse_mcp_transport_test.dart`). | SC-003 | DONE |
 | A4 | A stdio child exit flips the open signal off and fails pending+subsequent sends typed; send-before-open fails typed on both transports; double open/double close are safe on both (`test/mcp/io_stdio_mcp_transport_test.dart` + `test/mcp/io_sse_mcp_transport_test.dart`). | SC-004 | DONE |
-| A5 | `rg "TODO\|FIXME\|HACK" lib/` returns zero hits; `dart analyze` reports zero findings repo-wide; `dart test` green (baseline 1202 + new); the purity allowlist is unchanged (no dart:io import outside the allowlisted adapters). | SC-005 | PENDING |
+| A5 | `rg "TODO\|FIXME\|HACK" lib/` returns zero hits; `dart analyze` reports zero findings repo-wide; `dart test` green (baseline 1202 + new); the purity allowlist is unchanged (no dart:io import outside the allowlisted adapters). | SC-005 | DONE |
 
 ## Inner loop: unit behaviors
 

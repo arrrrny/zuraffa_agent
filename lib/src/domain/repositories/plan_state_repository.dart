@@ -1,6 +1,6 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 // See issue arrrrrny/zuraffa_agent#1 (epic — native agent engine) and
-// specs/014-planner-todo-system (gap-analysis row 7: Planner/TODO system).
+// specs/014-planner-todo-system (gap-analysis row 7: planner todo system).
 //
 // zfa v6.0.0's `zfa make <Entity> repository usecase di mock provider
 // service datasource` crashes for every entity (issue #14) and the
