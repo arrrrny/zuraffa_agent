@@ -1,18 +1,24 @@
 // ACTUAL INTEGRATION TEST for the LlmClient (spec 065).
 //
 // Drives a real chat completion through the local proxy (http://localhost:8890)
-// against the configured OpenAI-compatible gateway (kilo.ai). This is the
+// against an operator-configured OpenAI-compatible gateway. This is the
 // end-to-end "agent talks to the model" check the user asked for.
 //
-// It is env-gated and self-skipping so the suite stays green in CI / without
-// the proxy:
-//   - KIMI_API_KEY  : required bearer token. If unset, all tests skip.
-//   - LLM_BASE_URL  : default https://api.kilo.ai/api/gateway
-//   - LLM_PROXY_URL : default http://localhost:8890 (empty = direct connect)
-//   - LLM_MODEL     : default tencent/hy3:free
+// spec 106 (issue #117): there is NO default gateway — every endpoint value
+// must be provided explicitly by the operator. The test self-skips with a
+// stated reason when configuration is absent; it never falls back to a
+// vendor.
+//
+// Required environment:
+//   - KIMI_API_KEY  : bearer token (if unset, all tests skip).
+//   - LLM_BASE_URL  : the gateway base URL (required — no default).
+//   - LLM_MODEL     : the model id (required — no default).
+// Optional environment:
+//   - LLM_PROXY_URL : local proxy (default http://localhost:8890; empty = direct).
 //
 // Run locally with:
-//   KIMI_API_KEY=<jwt> dart test test/integration/llm_client_proxy_test.dart
+//   KIMI_API_KEY=<jwt> LLM_BASE_URL=<url> LLM_MODEL=<model> \
+//     dart test test/integration/llm_client_proxy_test.dart
 
 import 'dart:io';
 
@@ -38,17 +44,22 @@ Future<bool> _proxyReachable(String proxyUrl) async {
 
 void main() {
   final apiKey = Platform.environment['KIMI_API_KEY'] ?? '';
-  final baseUrl = Platform.environment['LLM_BASE_URL'] ?? 'https://api.kilo.ai/api/gateway';
+  final baseUrl = Platform.environment['LLM_BASE_URL'] ?? '';
   final proxyUrl = Platform.environment['LLM_PROXY_URL'] ?? 'http://localhost:8890';
-  final model = Platform.environment['LLM_MODEL'] ?? 'tencent/hy3:free';
+  final model = Platform.environment['LLM_MODEL'] ?? '';
 
-  final hasKey = apiKey.isNotEmpty;
+  final configured = apiKey.isNotEmpty && baseUrl.isNotEmpty && model.isNotEmpty;
+  final skipReason = configured
+      ? false
+      : 'live LLM integration requires KIMI_API_KEY, LLM_BASE_URL and '
+          'LLM_MODEL to be set explicitly — no default gateway is provided '
+          '(spec 106 / issue #117)';
 
   group('LlmClient live integration (via local proxy)', () {
     test('provider resolves the active client from config', () async {
       final provider = LlmClientProvider(
         config: ProviderConfig(
-          id: 'kilo',
+          id: 'integration',
           providerKind: 'openai',
           baseUrl: baseUrl,
           models: [model],
@@ -58,19 +69,16 @@ void main() {
         proxyUrl: proxyUrl,
       );
       final client = await provider.current(NoParams());
-      expect(client.providerName, 'kilo');
       expect(client.model, model);
-    }, skip: hasKey ? false : 'KIMI_API_KEY not set');
+    }, skip: skipReason);
 
     test('performs a real completion through the proxy', () async {
-      if (!hasKey) return; // skip handled below
       if (!await _proxyReachable(proxyUrl)) {
-        await Future<void>.value(); // no-op; skip via markTestSkipped
         markTestSkipped('proxy $proxyUrl not reachable');
       }
       final provider = LlmClientProvider(
         config: ProviderConfig(
-          id: 'kilo',
+          id: 'integration',
           providerKind: 'openai',
           baseUrl: baseUrl,
           models: [model],
@@ -86,6 +94,6 @@ void main() {
       expect(completion.finishReason, isNotEmpty);
       expect(completion.usage.totalTokens, greaterThan(0));
       print('[integration] model=${completion.usage} content="${completion.content}"');
-    }, skip: hasKey ? false : 'KIMI_API_KEY not set');
+    }, skip: skipReason);
   });
 }

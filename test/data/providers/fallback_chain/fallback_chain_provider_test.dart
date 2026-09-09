@@ -38,6 +38,12 @@ void main() {
       expect(chain.advances, greaterThanOrEqualTo(0));
     });
 
+    test('U5: default chain ids carry no vendor id (spec 106, issue #117)',
+        () async {
+      final chain = await FallbackChainProvider().current(NoParams());
+      expect(chain.providerIds, isNot(contains('kilo')));
+    });
+
     test('FallbackChainProvider.count returns 1', () async {
       expect(await FallbackChainProvider().count(NoParams()), 1);
     });

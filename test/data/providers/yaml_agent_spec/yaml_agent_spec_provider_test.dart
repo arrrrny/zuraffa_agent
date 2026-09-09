@@ -24,27 +24,24 @@ void main() {
   });
 
   group('arrarrny/zuraffa_agent#6 - YamlAgentSpec clean-arch layers', () {
-    test('YamlAgentSpecProvider is a YamlAgentSpecService', () {
-      final provider = YamlAgentSpecProvider();
-      expect(provider, isA<YamlAgentSpecService>());
+    // spec 106 (issue #117): the provider no longer invents a default
+    // agent spec — the former no-arg pins (id 'default', base allowlist)
+    // were retired with that invented-default behavior.
+
+    test('U3: constructing without a spec throws ArgumentError naming it',
+        () {
+      expect(
+        () => YamlAgentSpecProvider(),
+        throwsA(
+          predicate((Object e) =>
+              e is ArgumentError &&
+              e.message.toString().contains('YamlAgentSpec')),
+        ),
+      );
     });
 
-    test('YamlAgentSpecProvider.current returns the active agent spec', () async {
-      final provider = YamlAgentSpecProvider();
-      final spec = await provider.current(NoParams());
-      expect(spec, isA<YamlAgentSpec>());
-      expect(spec.id, 'default');
-      expect(spec.name, 'base');
-      expect(spec.toolAllowlist, contains('read_file'));
-      expect(spec.systemPrompt, isNotEmpty);
-    });
-
-    test('YamlAgentSpecProvider.count returns 1', () async {
-      final provider = YamlAgentSpecProvider();
-      expect(await provider.count(NoParams()), 1);
-    });
-
-    test('YamlAgentSpecProvider honours an injected value object', () async {
+    test('U4 + A1: a configured provider serves the injected spec verbatim',
+        () async {
       final custom = YamlAgentSpec(
         id: 'custom',
         name: 'research',
@@ -53,10 +50,13 @@ void main() {
         systemPrompt: 'Research the topic.',
       );
       final provider = YamlAgentSpecProvider(custom);
+      expect(provider, isA<YamlAgentSpecService>());
       final spec = await provider.current(NoParams());
+      expect(spec, same(custom));
       expect(spec.id, 'custom');
       expect(spec.extendsSpecId, 'base');
       expect(spec.toolAllowlist, ['search']);
+      expect(await provider.count(NoParams()), 1);
     });
   });
 

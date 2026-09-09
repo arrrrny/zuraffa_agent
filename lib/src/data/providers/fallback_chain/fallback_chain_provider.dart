@@ -19,7 +19,9 @@ class FallbackChainProvider
       : _active = active ??
             FallbackChain(
               id: 'default',
-              providerIds: ['kilo', 'anthropic', 'gemini'],
+              // spec 106 (issue #117): default ids are neutral client kinds —
+              // no vendor alias.
+              providerIds: ['anthropic', 'gemini'],
               currentProviderIndex: 0,
               advances: 0,
             );
