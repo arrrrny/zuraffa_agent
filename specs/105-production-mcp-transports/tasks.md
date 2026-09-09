@@ -47,7 +47,7 @@ U1–U12 stdio, U13–U19 SSE).
 **Goal**: A hermetic, scriptable mock MCP child process speaking the
 contract in `contracts/mcp-wire-dialect.md`.
 
-- [ ] T003 [P] Create `test/mcp/_mock_stdio_mcp_server.dart` — plain Dart
+- [x] T003 [P] Create `test/mcp/_mock_stdio_mcp_server.dart` — plain Dart
   script, `<mode>` argv: `echo` (tools/list → one `echo` descriptor;
   tools/call → `{echo: arguments}`), `notify` (tools-changed notification
   line first, then normal answers), `crash` (answers tools/list, then
