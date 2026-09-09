@@ -16,15 +16,16 @@ class FallbackChainProvider
   final FallbackChain _active;
 
   FallbackChainProvider([FallbackChain? active])
-      : _active = active ??
-            FallbackChain(
-              id: 'default',
-              // spec 106 (issue #117): default ids are neutral client kinds —
-              // no vendor alias.
-              providerIds: ['anthropic', 'gemini'],
-              currentProviderIndex: 0,
-              advances: 0,
-            );
+    : _active =
+          active ??
+          FallbackChain(
+            id: 'default',
+            // spec 106 (issue #117): default ids are neutral client kinds —
+            // no vendor alias.
+            providerIds: ['anthropic', 'gemini'],
+            currentProviderIndex: 0,
+            advances: 0,
+          );
 
   @override
   Future<FallbackChain> current(NoParams params) async => _active;

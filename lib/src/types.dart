@@ -80,10 +80,7 @@ class TextBlock extends ContentBlock {
   const TextBlock(this.text);
 
   @override
-  Map<String, dynamic> toJson() => {
-        '_type': 'text',
-        'text': text,
-      };
+  Map<String, dynamic> toJson() => {'_type': 'text', 'text': text};
 
   factory TextBlock.fromJson(Map<String, dynamic> json) =>
       TextBlock(json['text'] as String);
@@ -91,7 +88,9 @@ class TextBlock extends ContentBlock {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TextBlock && runtimeType == other.runtimeType && text == other.text;
+      other is TextBlock &&
+          runtimeType == other.runtimeType &&
+          text == other.text;
 
   @override
   int get hashCode => text.hashCode;
@@ -105,15 +104,15 @@ class ImageBlock extends ContentBlock {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'image',
-        'data': data,
-        'mimeType': mimeType,
-      };
+    '_type': 'image',
+    'data': data,
+    'mimeType': mimeType,
+  };
 
   factory ImageBlock.fromJson(Map<String, dynamic> json) => ImageBlock(
-        data: json['data'] as String,
-        mimeType: json['mimeType'] as String,
-      );
+    data: json['data'] as String,
+    mimeType: json['mimeType'] as String,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -140,17 +139,17 @@ class AudioBlock extends ContentBlock {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'audio',
-        'data': data,
-        'mimeType': mimeType,
-        if (durationMs != null) 'durationMs': durationMs,
-      };
+    '_type': 'audio',
+    'data': data,
+    'mimeType': mimeType,
+    if (durationMs != null) 'durationMs': durationMs,
+  };
 
   factory AudioBlock.fromJson(Map<String, dynamic> json) => AudioBlock(
-        data: json['data'] as String,
-        mimeType: json['mimeType'] as String,
-        durationMs: json['durationMs'] as int?,
-      );
+    data: json['data'] as String,
+    mimeType: json['mimeType'] as String,
+    durationMs: json['durationMs'] as int?,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -170,25 +169,21 @@ class DocumentBlock extends ContentBlock {
   final String mimeType;
   final String? title;
 
-  const DocumentBlock({
-    required this.data,
-    required this.mimeType,
-    this.title,
-  });
+  const DocumentBlock({required this.data, required this.mimeType, this.title});
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'document',
-        'data': data,
-        'mimeType': mimeType,
-        if (title != null) 'title': title,
-      };
+    '_type': 'document',
+    'data': data,
+    'mimeType': mimeType,
+    if (title != null) 'title': title,
+  };
 
   factory DocumentBlock.fromJson(Map<String, dynamic> json) => DocumentBlock(
-        data: json['data'] as String,
-        mimeType: json['mimeType'] as String,
-        title: json['title'] as String?,
-      );
+    data: json['data'] as String,
+    mimeType: json['mimeType'] as String,
+    title: json['title'] as String?,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -216,17 +211,17 @@ class ToolCallBlock extends ContentBlock {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'toolCall',
-        'id': id,
-        'name': name,
-        'arguments': arguments,
-      };
+    '_type': 'toolCall',
+    'id': id,
+    'name': name,
+    'arguments': arguments,
+  };
 
   factory ToolCallBlock.fromJson(Map<String, dynamic> json) => ToolCallBlock(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        arguments: Map<String, dynamic>.from(json['arguments'] as Map),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    arguments: Map<String, dynamic>.from(json['arguments'] as Map),
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -249,15 +244,15 @@ class ThinkingBlock extends ContentBlock {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'thinking',
-        'thinking': thinking,
-        if (signature != null) 'signature': signature,
-      };
+    '_type': 'thinking',
+    'thinking': thinking,
+    if (signature != null) 'signature': signature,
+  };
 
   factory ThinkingBlock.fromJson(Map<String, dynamic> json) => ThinkingBlock(
-        thinking: json['thinking'] as String,
-        signature: json['signature'] as String?,
-      );
+    thinking: json['thinking'] as String,
+    signature: json['signature'] as String?,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -276,7 +271,7 @@ sealed class AgentMessage {
   final DateTime timestamp;
 
   const AgentMessage({DateTime? timestamp})
-      : timestamp = timestamp ?? const _DefaultDateTime();
+    : timestamp = timestamp ?? const _DefaultDateTime();
 
   Map<String, dynamic> toJson();
 
@@ -316,13 +311,12 @@ class UserMessage extends AgentMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'role': 'user',
-        'content': content.map((c) => c.toJson()).toList(),
-        'timestamp': (timestamp is _DefaultDateTime
-                ? DateTime.now().toUtc()
-                : timestamp)
+    'role': 'user',
+    'content': content.map((c) => c.toJson()).toList(),
+    'timestamp':
+        (timestamp is _DefaultDateTime ? DateTime.now().toUtc() : timestamp)
             .toIso8601String(),
-      };
+  };
 
   factory UserMessage.fromJson(Map<String, dynamic> json) {
     final rawContent = json['content'];
@@ -331,9 +325,11 @@ class UserMessage extends AgentMessage {
       blocks = [TextBlock(rawContent)];
     } else if (rawContent is List) {
       blocks = rawContent
-          .map((item) => item is String
-              ? TextBlock(item)
-              : ContentBlock.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => item is String
+                ? TextBlock(item)
+                : ContentBlock.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
     } else {
       blocks = [];
@@ -357,13 +353,12 @@ class AssistantMessage extends AgentMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'role': 'assistant',
-        'content': content.map((c) => c.toJson()).toList(),
-        'timestamp': (timestamp is _DefaultDateTime
-                ? DateTime.now().toUtc()
-                : timestamp)
+    'role': 'assistant',
+    'content': content.map((c) => c.toJson()).toList(),
+    'timestamp':
+        (timestamp is _DefaultDateTime ? DateTime.now().toUtc() : timestamp)
             .toIso8601String(),
-      };
+  };
 
   factory AssistantMessage.fromJson(Map<String, dynamic> json) {
     final rawContent = json['content'];
@@ -372,9 +367,11 @@ class AssistantMessage extends AgentMessage {
       blocks = [TextBlock(rawContent)];
     } else if (rawContent is List) {
       blocks = rawContent
-          .map((item) => item is String
-              ? TextBlock(item)
-              : ContentBlock.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => item is String
+                ? TextBlock(item)
+                : ContentBlock.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
     } else {
       blocks = [];
@@ -406,17 +403,16 @@ class ToolResultMessage extends AgentMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'role': 'toolResult',
-        'toolCallId': toolCallId,
-        'toolName': toolName,
-        'content': content,
-        'isError': isError,
-        'artifactRefs': artifactRefs.map((a) => a.toJson()).toList(),
-        'timestamp': (timestamp is _DefaultDateTime
-                ? DateTime.now().toUtc()
-                : timestamp)
+    'role': 'toolResult',
+    'toolCallId': toolCallId,
+    'toolName': toolName,
+    'content': content,
+    'isError': isError,
+    'artifactRefs': artifactRefs.map((a) => a.toJson()).toList(),
+    'timestamp':
+        (timestamp is _DefaultDateTime ? DateTime.now().toUtc() : timestamp)
             .toIso8601String(),
-      };
+  };
 
   factory ToolResultMessage.fromJson(Map<String, dynamic> json) =>
       ToolResultMessage(
@@ -424,9 +420,13 @@ class ToolResultMessage extends AgentMessage {
         toolName: json['toolName'] as String,
         content: json['content'] as String,
         isError: json['isError'] as bool? ?? false,
-        artifactRefs: (json['artifactRefs'] as List?)
-                ?.map((item) =>
-                    ArtifactRef.fromJson(Map<String, dynamic>.from(item as Map)))
+        artifactRefs:
+            (json['artifactRefs'] as List?)
+                ?.map(
+                  (item) => ArtifactRef.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ),
+                )
                 .toList() ??
             const [],
         timestamp: json['timestamp'] != null
@@ -447,22 +447,21 @@ class CustomMessage extends AgentMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'role': 'custom',
-        'messageType': messageType,
-        'payload': payload,
-        'timestamp': (timestamp is _DefaultDateTime
-                ? DateTime.now().toUtc()
-                : timestamp)
+    'role': 'custom',
+    'messageType': messageType,
+    'payload': payload,
+    'timestamp':
+        (timestamp is _DefaultDateTime ? DateTime.now().toUtc() : timestamp)
             .toIso8601String(),
-      };
+  };
 
   factory CustomMessage.fromJson(Map<String, dynamic> json) => CustomMessage(
-        messageType: json['messageType'] as String,
-        payload: Map<String, dynamic>.from(json['payload'] as Map),
-        timestamp: json['timestamp'] != null
-            ? DateTime.parse(json['timestamp'] as String)
-            : null,
-      );
+    messageType: json['messageType'] as String,
+    payload: Map<String, dynamic>.from(json['payload'] as Map),
+    timestamp: json['timestamp'] != null
+        ? DateTime.parse(json['timestamp'] as String)
+        : null,
+  );
 }
 
 // Sealed SessionTreeEntry Hierarchy
@@ -526,20 +525,21 @@ class MessageEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'message',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'message': message.toJson(),
-      };
+    '_type': 'message',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'message': message.toJson(),
+  };
 
   factory MessageEntry.fromJson(Map<String, dynamic> json) => MessageEntry(
-        id: json['id'] as String,
-        parentId: json['parentId'] as String?,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        message: AgentMessage.fromJson(
-            Map<String, dynamic>.from(json['message'] as Map)),
-      );
+    id: json['id'] as String,
+    parentId: json['parentId'] as String?,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    message: AgentMessage.fromJson(
+      Map<String, dynamic>.from(json['message'] as Map),
+    ),
+  );
 }
 
 class TurnRecordEntry extends SessionTreeEntry {
@@ -554,19 +554,21 @@ class TurnRecordEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'turn',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'turn',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
-  factory TurnRecordEntry.fromJson(Map<String, dynamic> json) => TurnRecordEntry(
+  factory TurnRecordEntry.fromJson(Map<String, dynamic> json) =>
+      TurnRecordEntry(
         id: json['id'] as String,
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: TurnRecord.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
       );
 }
 
@@ -586,14 +588,14 @@ class ToolInvocationEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'toolInvocation',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-        'arguments': arguments,
-        'artifactRefs': artifactRefs.map((a) => a.toJson()).toList(),
-      };
+    '_type': 'toolInvocation',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+    'arguments': arguments,
+    'artifactRefs': artifactRefs.map((a) => a.toJson()).toList(),
+  };
 
   factory ToolInvocationEntry.fromJson(Map<String, dynamic> json) =>
       ToolInvocationEntry(
@@ -601,13 +603,18 @@ class ToolInvocationEntry extends SessionTreeEntry {
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: ToolInvocationRecord.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
         arguments: json['arguments'] != null
             ? Map<String, dynamic>.from(json['arguments'] as Map)
             : const {},
-        artifactRefs: (json['artifactRefs'] as List?)
-                ?.map((item) =>
-                    ArtifactRef.fromJson(Map<String, dynamic>.from(item as Map)))
+        artifactRefs:
+            (json['artifactRefs'] as List?)
+                ?.map(
+                  (item) => ArtifactRef.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ),
+                )
                 .toList() ??
             const [],
       );
@@ -627,24 +634,25 @@ class UsageEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'usage',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-        if (model != null) 'model': model!.toJson(),
-      };
+    '_type': 'usage',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+    if (model != null) 'model': model!.toJson(),
+  };
 
   factory UsageEntry.fromJson(Map<String, dynamic> json) => UsageEntry(
-        id: json['id'] as String,
-        parentId: json['parentId'] as String?,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        record: UsageLedgerEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
-        model: json['model'] != null
-            ? Model.fromJson(Map<String, dynamic>.from(json['model'] as Map))
-            : null,
-      );
+    id: json['id'] as String,
+    parentId: json['parentId'] as String?,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    record: UsageLedgerEntry.fromJson(
+      Map<String, dynamic>.from(json['record'] as Map),
+    ),
+    model: json['model'] != null
+        ? Model.fromJson(Map<String, dynamic>.from(json['model'] as Map))
+        : null,
+  );
 }
 
 class CompactionTreeEntry extends SessionTreeEntry {
@@ -661,13 +669,13 @@ class CompactionTreeEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'compaction',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-        'summary': summary.toJson(),
-      };
+    '_type': 'compaction',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+    'summary': summary.toJson(),
+  };
 
   factory CompactionTreeEntry.fromJson(Map<String, dynamic> json) =>
       CompactionTreeEntry(
@@ -675,9 +683,11 @@ class CompactionTreeEntry extends SessionTreeEntry {
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: CompactionEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
         summary: CompactionSummary.fromJson(
-            Map<String, dynamic>.from(json['summary'] as Map)),
+          Map<String, dynamic>.from(json['summary'] as Map),
+        ),
       );
 }
 
@@ -693,12 +703,12 @@ class ThinkingLevelEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'thinkingLevel',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'thinkingLevel',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
   factory ThinkingLevelEntry.fromJson(Map<String, dynamic> json) =>
       ThinkingLevelEntry(
@@ -706,7 +716,8 @@ class ThinkingLevelEntry extends SessionTreeEntry {
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: ThinkingLevelChangeEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
       );
 }
 
@@ -722,12 +733,12 @@ class ModelChangeTreeEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'modelChange',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'modelChange',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
   factory ModelChangeTreeEntry.fromJson(Map<String, dynamic> json) =>
       ModelChangeTreeEntry(
@@ -735,7 +746,8 @@ class ModelChangeTreeEntry extends SessionTreeEntry {
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: ModelChangeEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
       );
 }
 
@@ -751,12 +763,12 @@ class BranchSummaryTreeEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'branchSummary',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'branchSummary',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
   factory BranchSummaryTreeEntry.fromJson(Map<String, dynamic> json) =>
       BranchSummaryTreeEntry(
@@ -764,7 +776,8 @@ class BranchSummaryTreeEntry extends SessionTreeEntry {
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: BranchSummaryEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
       );
 }
 
@@ -780,20 +793,21 @@ class LabelTreeEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'label',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'label',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
   factory LabelTreeEntry.fromJson(Map<String, dynamic> json) => LabelTreeEntry(
-        id: json['id'] as String,
-        parentId: json['parentId'] as String?,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        record: LabelEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
-      );
+    id: json['id'] as String,
+    parentId: json['parentId'] as String?,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    record: LabelEntry.fromJson(
+      Map<String, dynamic>.from(json['record'] as Map),
+    ),
+  );
 }
 
 class CustomTreeEntry extends SessionTreeEntry {
@@ -808,18 +822,20 @@ class CustomTreeEntry extends SessionTreeEntry {
 
   @override
   Map<String, dynamic> toJson() => {
-        '_type': 'custom',
-        'id': id,
-        'parentId': parentId,
-        'timestamp': timestamp.toIso8601String(),
-        'record': record.toJson(),
-      };
+    '_type': 'custom',
+    'id': id,
+    'parentId': parentId,
+    'timestamp': timestamp.toIso8601String(),
+    'record': record.toJson(),
+  };
 
-  factory CustomTreeEntry.fromJson(Map<String, dynamic> json) => CustomTreeEntry(
+  factory CustomTreeEntry.fromJson(Map<String, dynamic> json) =>
+      CustomTreeEntry(
         id: json['id'] as String,
         parentId: json['parentId'] as String?,
         timestamp: DateTime.parse(json['timestamp'] as String),
         record: CustomEntry.fromJson(
-            Map<String, dynamic>.from(json['record'] as Map)),
+          Map<String, dynamic>.from(json['record'] as Map),
+        ),
       );
 }

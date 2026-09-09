@@ -59,7 +59,9 @@ List<String> validateParameters(
 
       // Type validation.
       if (fieldType != null && !_typeMatches(value, fieldType)) {
-        errors.add('Field $fieldName: expected $fieldType, got ${value.runtimeType}');
+        errors.add(
+          'Field $fieldName: expected $fieldType, got ${value.runtimeType}',
+        );
         continue;
       }
 
@@ -104,10 +106,9 @@ List<String> validateParameters(
       if (fieldType == 'object' && value is Map<String, dynamic>) {
         final nestedSchema = fieldSchema['properties'] as Map<String, dynamic>?;
         if (nestedSchema != null) {
-          errors.addAll(validateParameters(
-            {'properties': nestedSchema},
-            value,
-          ));
+          errors.addAll(
+            validateParameters({'properties': nestedSchema}, value),
+          );
         }
       }
     }

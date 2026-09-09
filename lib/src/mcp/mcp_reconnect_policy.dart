@@ -88,8 +88,8 @@ class McpReconnectPolicy {
     required this.config,
     required McpDelay delay,
     int seed = 0,
-  })  : _delay = delay,
-        _rng = math.Random(seed);
+  }) : _delay = delay,
+       _rng = math.Random(seed);
 
   /// Number of attempts made so far. Resets to 0 after a successful
   /// reconnect.
@@ -111,13 +111,16 @@ class McpReconnectPolicy {
       );
     }
     _attempt += 1;
-    final raw = config.initial.inMicroseconds *
-        math.pow(config.factor, _attempt - 1);
+    final raw =
+        config.initial.inMicroseconds * math.pow(config.factor, _attempt - 1);
     final capped = raw.clamp(0, config.cap.inMicroseconds).toDouble();
     var delayMicros = capped;
     if (config.jitter > 0.0) {
-      final jitterScale = (1 - config.jitter) + _rng.nextDouble() * 2 * config.jitter;
-      delayMicros = (capped * jitterScale).clamp(0, config.cap.inMicroseconds).toDouble();
+      final jitterScale =
+          (1 - config.jitter) + _rng.nextDouble() * 2 * config.jitter;
+      delayMicros = (capped * jitterScale)
+          .clamp(0, config.cap.inMicroseconds)
+          .toDouble();
     }
     await _delay(Duration(microseconds: delayMicros.toInt()));
     return true;

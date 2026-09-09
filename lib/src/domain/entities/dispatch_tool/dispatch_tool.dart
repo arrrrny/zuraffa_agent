@@ -26,7 +26,11 @@ class DispatchTool {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DispatchTool &&
-          runtimeType == other.runtimeType && id == other.id && toolName == other.toolName && subAgentSpecId == other.subAgentSpecId && riskTier == other.riskTier);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          toolName == other.toolName &&
+          subAgentSpecId == other.subAgentSpecId &&
+          riskTier == other.riskTier);
 
   @override
   int get hashCode => Object.hash(id, toolName, subAgentSpecId, riskTier);

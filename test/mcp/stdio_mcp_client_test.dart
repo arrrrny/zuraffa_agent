@@ -75,17 +75,20 @@ void main() {
       await client.disconnect();
     });
 
-    test('a drop mid-call triggers reconnect within stdio backoff (SC-003)', () async {
-      final fakeWire = FakeMcpWire();
-      fakeWire.enqueueNext(Exception('subprocess crashed'));
-      fakeWire.enqueueNext(const McpWireResponseOk({'content': 'recovered'}));
-      final client = buildClient(fakeWire: fakeWire);
-      await client.connect();
-      final result = await client.callTool('fs.read', {});
-      expect(result, isA<McpCallOk>());
-      expect(fakeWire.openCallCount, greaterThanOrEqualTo(2));
-      await client.disconnect();
-    });
+    test(
+      'a drop mid-call triggers reconnect within stdio backoff (SC-003)',
+      () async {
+        final fakeWire = FakeMcpWire();
+        fakeWire.enqueueNext(Exception('subprocess crashed'));
+        fakeWire.enqueueNext(const McpWireResponseOk({'content': 'recovered'}));
+        final client = buildClient(fakeWire: fakeWire);
+        await client.connect();
+        final result = await client.callTool('fs.read', {});
+        expect(result, isA<McpCallOk>());
+        expect(fakeWire.openCallCount, greaterThanOrEqualTo(2));
+        await client.disconnect();
+      },
+    );
 
     test('exhausted retries transition the client to failed state', () async {
       final fakeWire = FakeMcpWire();

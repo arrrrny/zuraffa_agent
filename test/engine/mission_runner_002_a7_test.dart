@@ -26,16 +26,16 @@ const kFollowUp = 'actually, also tell me about tomorrow';
 
 class AlwaysStopsClient extends LlmClientProvider {
   AlwaysStopsClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<List<ChatMessage>> contexts = [];
 
@@ -60,97 +60,98 @@ class NoToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: '',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: '',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }
 
 void main() {
-  test('A7: a follow-up queued as the turn completes continues the loop instead '
-      'of ending the mission', () async {
-    const loop = EngineLoop(
-      id: 'loop-7',
-      sessionId: 's7',
-      maxTurns: 5,
-      wallClockTimeoutMs: 600000,
-      repetitionThreshold: 10,
-    );
-    const policy = StopPolicy(
-      id: 'cap7',
-      maxTurns: 5,
-      wallClockTimeout: Duration.zero,
-      repetitionThreshold: 10,
-    );
+  test(
+    'A7: a follow-up queued as the turn completes continues the loop instead '
+    'of ending the mission',
+    () async {
+      const loop = EngineLoop(
+        id: 'loop-7',
+        sessionId: 's7',
+        maxTurns: 5,
+        wallClockTimeoutMs: 600000,
+        repetitionThreshold: 10,
+      );
+      const policy = StopPolicy(
+        id: 'cap7',
+        maxTurns: 5,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 10,
+      );
 
-    final client = AlwaysStopsClient();
-    final events = <EngineEvent>[];
-    late final MissionRunner runner;
-    var enqueued = false;
+      final client = AlwaysStopsClient();
+      final events = <EngineEvent>[];
+      late final MissionRunner runner;
+      var enqueued = false;
 
-    runner = MissionRunner(
-      executor: EngineLoopExecutor(loop, client),
-      toolDispatcher: NoToolDispatcher(),
-      stopPolicy: policy,
-      steeringQueue: SteeringQueue(id: 'q7', pending: const [], processedCount: 0),
-      onEvent: (event) {
-        events.add(event);
-        if (event is TurnCompleted && !enqueued) {
-          enqueued = true;
-          runner.enqueue(SteeringMessage(
-            id: 'follow-1',
-            content: kFollowUp,
-            injectedAt: DateTime.utc(2026, 1, 1),
-          ));
-        }
-      },
-    );
+      runner = MissionRunner(
+        executor: EngineLoopExecutor(loop, client),
+        toolDispatcher: NoToolDispatcher(),
+        stopPolicy: policy,
+        steeringQueue: SteeringQueue(
+          id: 'q7',
+          pending: const [],
+          processedCount: 0,
+        ),
+        onEvent: (event) {
+          events.add(event);
+          if (event is TurnCompleted && !enqueued) {
+            enqueued = true;
+            runner.enqueue(
+              SteeringMessage(
+                id: 'follow-1',
+                content: kFollowUp,
+                injectedAt: DateTime.utc(2026, 1, 1),
+              ),
+            );
+          }
+        },
+      );
 
-    final result = await runner.run(
-      missionId: 'm7',
-      messages: const [ChatMessage(role: 'user', content: 'weather?')],
-    );
+      final result = await runner.run(
+        missionId: 'm7',
+        messages: const [ChatMessage(role: 'user', content: 'weather?')],
+      );
 
-    // The loop continued: two LLM turns, not one.
-    expect(result.turnsUsed, 2);
-    expect(client.contexts.length, 2);
+      // The loop continued: two LLM turns, not one.
+      expect(result.turnsUsed, 2);
+      expect(client.contexts.length, 2);
 
-    // The follow-up was injected, and turn 2 actually saw it.
-    expect(
-      events.whereType<SteeringInjected>().map((e) => e.content),
-      [kFollowUp],
-    );
-    expect(
-      client.contexts[1].map((m) => m.content),
-      contains(kFollowUp),
-    );
+      // The follow-up was injected, and turn 2 actually saw it.
+      expect(events.whereType<SteeringInjected>().map((e) => e.content), [
+        kFollowUp,
+      ]);
+      expect(client.contexts[1].map((m) => m.content), contains(kFollowUp));
 
-    // With the queue drained, the mission ends naturally on turn 2.
-    expect(result.status, MissionStatus.completed);
-    expect(result.summary, 'answer 2');
-  });
+      // With the queue drained, the mission ends naturally on turn 2.
+      expect(result.status, MissionStatus.completed);
+      expect(result.summary, 'answer 2');
+    },
+  );
 }

@@ -9,11 +9,9 @@ part 'approval_request.g.dart';
 /// ApprovalRequest entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $ApprovalRequest {
-
   String get id;
   String get toolName;
   Map<String, dynamic> get arguments;
   DateTime get requestedAt;
   int get timeoutMs;
 }
-

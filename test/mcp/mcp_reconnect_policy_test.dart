@@ -30,8 +30,11 @@ void main() {
       expect(millis[3], 800);
       // Cap kicks in at 1000ms.
       for (var i = 4; i < 8; i++) {
-        expect(millis[i], lessThanOrEqualTo(1000),
-            reason: 'delay[$i] = ${millis[i]}ms must be <= cap (1000ms)');
+        expect(
+          millis[i],
+          lessThanOrEqualTo(1000),
+          reason: 'delay[$i] = ${millis[i]}ms must be <= cap (1000ms)',
+        );
       }
     });
 
@@ -86,8 +89,11 @@ void main() {
         await policy.nextBackoff();
       }
       for (final d in delays) {
-        expect(d.inMilliseconds, lessThanOrEqualTo(2000),
-            reason: '${d.inMilliseconds}ms exceeds stdio cap (2000ms)');
+        expect(
+          d.inMilliseconds,
+          lessThanOrEqualTo(2000),
+          reason: '${d.inMilliseconds}ms exceeds stdio cap (2000ms)',
+        );
       }
     });
 
@@ -147,8 +153,11 @@ void main() {
       // AND <= cap. We assert the cap-only invariant; the lower bound
       // is harder to assert without recording the un-jittered base.
       for (final d in delays) {
-        expect(d.inMilliseconds, lessThanOrEqualTo(1500),
-            reason: 'jittered delay exceeds cap*(1+jitter)');
+        expect(
+          d.inMilliseconds,
+          lessThanOrEqualTo(1500),
+          reason: 'jittered delay exceeds cap*(1+jitter)',
+        );
       }
     });
   });

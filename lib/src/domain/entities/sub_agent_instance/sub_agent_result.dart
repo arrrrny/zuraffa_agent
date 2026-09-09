@@ -29,16 +29,16 @@ class SubAgentResult {
   const SubAgentResult.success({
     required this.instanceId,
     required this.summary,
-  })  : ok = true,
-        failureKind = null,
-        failureReason = null;
+  }) : ok = true,
+       failureKind = null,
+       failureReason = null;
 
   const SubAgentResult.failure({
     required this.instanceId,
     required this.failureKind,
     required this.failureReason,
-  })  : ok = false,
-        summary = '';
+  }) : ok = false,
+       summary = '';
 
   @override
   bool operator ==(Object other) =>

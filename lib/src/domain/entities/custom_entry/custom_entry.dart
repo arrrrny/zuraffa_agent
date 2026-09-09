@@ -9,11 +9,9 @@ part 'custom_entry.g.dart';
 /// CustomEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $CustomEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
   String get customType;
   String get payload;
 }
-

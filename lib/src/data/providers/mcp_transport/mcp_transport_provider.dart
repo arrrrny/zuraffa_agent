@@ -20,13 +20,14 @@ class McpTransportProvider
   final McpTransport _active;
 
   McpTransportProvider([McpTransport? active])
-      : _active = active ??
-            const McpTransport(
-              id: 'inproc',
-              transportType: 'in-proc',
-              endpoint: 'in-process',
-              authRequired: false,
-            );
+    : _active =
+          active ??
+          const McpTransport(
+            id: 'inproc',
+            transportType: 'in-proc',
+            endpoint: 'in-process',
+            authRequired: false,
+          );
 
   @override
   Future<McpTransport> current(NoParams params) async => _active;

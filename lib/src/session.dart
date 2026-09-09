@@ -89,10 +89,7 @@ class AgentSession {
   }
 
   /// Appends a [UsageLedgerEntry] for token accounting.
-  Future<String> appendUsage(
-    UsageLedgerEntry usage, {
-    Model? model,
-  }) async {
+  Future<String> appendUsage(UsageLedgerEntry usage, {Model? model}) async {
     final id = _generateId();
     final parentId = await storage.getActiveLeafId();
     final entry = UsageEntry(

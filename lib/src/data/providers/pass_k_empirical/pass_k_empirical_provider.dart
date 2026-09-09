@@ -16,14 +16,15 @@ class PassKEmpiricalProvider
   final PassKEmpirical _active;
 
   PassKEmpiricalProvider([PassKEmpirical? active])
-      : _active = active ??
-            const PassKEmpirical(
-              id: 'default',
-              taskId: 'mission-1',
-              k: 10,
-              successCount: 10,
-              empiricalRate: 1.0,
-            );
+    : _active =
+          active ??
+          const PassKEmpirical(
+            id: 'default',
+            taskId: 'mission-1',
+            k: 10,
+            successCount: 10,
+            empiricalRate: 1.0,
+          );
 
   @override
   Future<PassKEmpirical> current(NoParams params) async => _active;

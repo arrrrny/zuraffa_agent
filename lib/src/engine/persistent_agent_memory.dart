@@ -38,20 +38,17 @@ import 'agent_memory.dart';
 /// and lives here, beside its only consumer.
 class MemoryJsonCodec {
   static Map<String, dynamic> recordToJson(MemoryRecord record) => {
-        'id': record.id,
-        'content': record.content,
-        'tags': record.tags.toList()..sort(),
-        'source': {
-          if (record.source.sessionId != null)
-            'sessionId': record.source.sessionId,
-          if (record.source.missionId != null)
-            'missionId': record.source.missionId,
-          if (record.source.agentName != null)
-            'agentName': record.source.agentName,
-        },
-        'createdAt': record.createdAt.toIso8601String(),
-        'salience': record.salience,
-      };
+    'id': record.id,
+    'content': record.content,
+    'tags': record.tags.toList()..sort(),
+    'source': {
+      if (record.source.sessionId != null) 'sessionId': record.source.sessionId,
+      if (record.source.missionId != null) 'missionId': record.source.missionId,
+      if (record.source.agentName != null) 'agentName': record.source.agentName,
+    },
+    'createdAt': record.createdAt.toIso8601String(),
+    'salience': record.salience,
+  };
 
   /// Decodes one record. Throws [FormatException] / [TypeError] /
   /// [ArgumentError] on malformed input — callers (restore) treat those as
@@ -85,20 +82,20 @@ class MemoryJsonCodec {
   }
 
   static Map<String, dynamic> linkToJson(MemoryLink link) => {
-        'fromRecordId': link.fromRecordId,
-        'toRecordId': link.toRecordId,
-        'type': link.type.name,
-        'createdAt': link.createdAt.toIso8601String(),
-        if (link.note != null) 'note': link.note,
-      };
+    'fromRecordId': link.fromRecordId,
+    'toRecordId': link.toRecordId,
+    'type': link.type.name,
+    'createdAt': link.createdAt.toIso8601String(),
+    if (link.note != null) 'note': link.note,
+  };
 
   static MemoryLink linkFromJson(Map<String, dynamic> json) => MemoryLink(
-        fromRecordId: json['fromRecordId'] as String,
-        toRecordId: json['toRecordId'] as String,
-        type: MemoryLinkType.values.byName(json['type'] as String),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        note: json['note'] as String?,
-      );
+    fromRecordId: json['fromRecordId'] as String,
+    toRecordId: json['toRecordId'] as String,
+    type: MemoryLinkType.values.byName(json['type'] as String),
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    note: json['note'] as String?,
+  );
 }
 
 /// Writes [contents] to [file] atomically: land in a `*.tmp` sibling first,
@@ -114,8 +111,10 @@ const int _snapshotVersion = 1;
 void _checkVersion(Map<String, dynamic> doc, File file) {
   final version = doc['version'];
   if (version != _snapshotVersion) {
-    throw StateError('unsupported memory file version $version '
-        '(expected $_snapshotVersion): ${file.path}');
+    throw StateError(
+      'unsupported memory file version $version '
+      '(expected $_snapshotVersion): ${file.path}',
+    );
   }
 }
 
@@ -183,13 +182,15 @@ class PersistentLongTermMemoryStore extends LongTermMemoryStore {
     final entries = doc['records'];
     if (entries is! List) {
       throw StateError(
-          'memory file is corrupt (records is not a list): ${file.path}');
+        'memory file is corrupt (records is not a list): ${file.path}',
+      );
     }
     for (final entry in entries) {
       if (entry is! Map) continue;
       try {
-        super.remember(MemoryJsonCodec
-            .recordFromJson(Map<String, dynamic>.from(entry)));
+        super.remember(
+          MemoryJsonCodec.recordFromJson(Map<String, dynamic>.from(entry)),
+        );
       } on FormatException {
         continue; // 010 precedent: one bad entry must not lose the rest.
       } on TypeError {
@@ -220,23 +221,34 @@ class PersistentMemoryGraph extends MemoryGraph {
   final List<MemoryLink> _links = [];
 
   @override
-  void link(String fromRecordId, String toRecordId, MemoryLinkType type,
-      {String? note}) {
+  void link(
+    String fromRecordId,
+    String toRecordId,
+    MemoryLinkType type, {
+    String? note,
+  }) {
     if (fromRecordId == toRecordId) {
       throw ArgumentError.value(
-          fromRecordId, 'fromRecordId', 'a memory cannot link to itself');
+        fromRecordId,
+        'fromRecordId',
+        'a memory cannot link to itself',
+      );
     }
-    _links.removeWhere((l) =>
-        l.fromRecordId == fromRecordId &&
-        l.toRecordId == toRecordId &&
-        l.type == type);
-    _links.add(MemoryLink(
-      fromRecordId: fromRecordId,
-      toRecordId: toRecordId,
-      type: type,
-      createdAt: DateTime.now().toUtc(),
-      note: note,
-    ));
+    _links.removeWhere(
+      (l) =>
+          l.fromRecordId == fromRecordId &&
+          l.toRecordId == toRecordId &&
+          l.type == type,
+    );
+    _links.add(
+      MemoryLink(
+        fromRecordId: fromRecordId,
+        toRecordId: toRecordId,
+        type: type,
+        createdAt: DateTime.now().toUtc(),
+        note: note,
+      ),
+    );
     _writeThrough();
   }
 
@@ -255,15 +267,15 @@ class PersistentMemoryGraph extends MemoryGraph {
 
   @override
   List<MemoryLink> neighborsOf(String recordId) => List.unmodifiable([
-        for (final l in _links)
-          if (l.fromRecordId == recordId || l.toRecordId == recordId) l,
-      ]);
+    for (final l in _links)
+      if (l.fromRecordId == recordId || l.toRecordId == recordId) l,
+  ]);
 
   @override
   List<MemoryLink> linksOf(MemoryLinkType type) => List.unmodifiable([
-        for (final l in _links)
-          if (l.type == type) l,
-      ]);
+    for (final l in _links)
+      if (l.type == type) l,
+  ]);
 
   /// Loads the file into the graph — same semantics as
   /// [PersistentLongTermMemoryStore.restore] (missing file → no-op;
@@ -283,18 +295,22 @@ class PersistentMemoryGraph extends MemoryGraph {
     final entries = doc['links'];
     if (entries is! List) {
       throw StateError(
-          'memory file is corrupt (links is not a list): ${file.path}');
+        'memory file is corrupt (links is not a list): ${file.path}',
+      );
     }
     for (final entry in entries) {
       if (entry is! Map) continue;
       try {
-        final link =
-            MemoryJsonCodec.linkFromJson(Map<String, dynamic>.from(entry));
+        final link = MemoryJsonCodec.linkFromJson(
+          Map<String, dynamic>.from(entry),
+        );
         if (link.fromRecordId == link.toRecordId) continue;
-        _links.removeWhere((l) =>
-            l.fromRecordId == link.fromRecordId &&
-            l.toRecordId == link.toRecordId &&
-            l.type == link.type);
+        _links.removeWhere(
+          (l) =>
+              l.fromRecordId == link.fromRecordId &&
+              l.toRecordId == link.toRecordId &&
+              l.type == link.type,
+        );
         _links.add(link);
       } on FormatException {
         continue;

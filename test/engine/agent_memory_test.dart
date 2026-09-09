@@ -6,7 +6,11 @@ import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/engine/agent_memory.dart';
 
 MemorySource src({String? sessionId, String? missionId, String? agentName}) =>
-    MemorySource(sessionId: sessionId, missionId: missionId, agentName: agentName);
+    MemorySource(
+      sessionId: sessionId,
+      missionId: missionId,
+      agentName: agentName,
+    );
 
 MemoryRecord rec(
   String id,
@@ -15,15 +19,14 @@ MemoryRecord rec(
   MemorySource? source,
   DateTime? createdAt,
   double salience = 0.5,
-}) =>
-    MemoryRecord(
-      id: id,
-      content: content,
-      tags: tags,
-      source: source ?? src(agentName: 'test'),
-      createdAt: createdAt ?? DateTime.utc(2026, 1, 1),
-      salience: salience,
-    );
+}) => MemoryRecord(
+  id: id,
+  content: content,
+  tags: tags,
+  source: source ?? src(agentName: 'test'),
+  createdAt: createdAt ?? DateTime.utc(2026, 1, 1),
+  salience: salience,
+);
 
 void main() {
   group('spec 073 — AgentMemorySystem', () {
@@ -38,10 +41,18 @@ void main() {
 
       // MemoryRecord equality across all fields; salience bounds; empty
       // content rejected.
-      final r1 = rec('m1', 'the user prefers concise answers',
-          tags: {'preference'}, salience: 0.9);
-      final r2 = rec('m1', 'the user prefers concise answers',
-          tags: {'preference'}, salience: 0.9);
+      final r1 = rec(
+        'm1',
+        'the user prefers concise answers',
+        tags: {'preference'},
+        salience: 0.9,
+      );
+      final r2 = rec(
+        'm1',
+        'the user prefers concise answers',
+        tags: {'preference'},
+        salience: 0.9,
+      );
       expect(r1 == r2, isTrue);
       expect(r1.hashCode, r2.hashCode);
       expect(r1.toString(), contains('m1'));
@@ -87,14 +98,25 @@ void main() {
 
     test('LongTermMemoryStore replaces, ranks, and filters', () {
       final store = LongTermMemoryStore();
-      final low = rec('lt1', 'kilo serves the openai-compatible api',
-          createdAt: DateTime.utc(2026, 1, 1), salience: 0.2);
-      final high = rec('lt2', 'KILO is the default provider',
-          createdAt: DateTime.utc(2026, 1, 2), salience: 0.9);
-      final tagged = rec('lt3', 'provider fallback order documented',
-          tags: {'infra', 'providers'},
-          createdAt: DateTime.utc(2026, 1, 3),
-          salience: 0.5);
+      final low = rec(
+        'lt1',
+        'kilo serves the openai-compatible api',
+        createdAt: DateTime.utc(2026, 1, 1),
+        salience: 0.2,
+      );
+      final high = rec(
+        'lt2',
+        'KILO is the default provider',
+        createdAt: DateTime.utc(2026, 1, 2),
+        salience: 0.9,
+      );
+      final tagged = rec(
+        'lt3',
+        'provider fallback order documented',
+        tags: {'infra', 'providers'},
+        createdAt: DateTime.utc(2026, 1, 3),
+        salience: 0.5,
+      );
 
       store.remember(low);
       store.remember(high);
@@ -102,24 +124,36 @@ void main() {
       expect(store.all, hasLength(3));
 
       // Same-id replace keeps position.
-      store.remember(rec('lt2', 'KILO is the default provider (updated)',
-          createdAt: DateTime.utc(2026, 1, 2), salience: 0.9));
+      store.remember(
+        rec(
+          'lt2',
+          'KILO is the default provider (updated)',
+          createdAt: DateTime.utc(2026, 1, 2),
+          salience: 0.9,
+        ),
+      );
       expect(store.all, hasLength(3));
       expect(store.byId('lt2')!.content, contains('updated'));
       expect(store.all[1].id, 'lt2', reason: 'replace keeps position');
 
       // Search: case-insensitive substring, salience desc, createdAt desc.
       final hits = store.search('kilo');
-      expect(hits.map((m) => m.id), ['lt2', 'lt1'],
-          reason: 'salience 0.9 before 0.2');
+      expect(hits.map((m) => m.id), [
+        'lt2',
+        'lt1',
+      ], reason: 'salience 0.9 before 0.2');
       expect(store.search('KILO'), hasLength(2), reason: 'case-insensitive');
       expect(store.search('missing'), isEmpty);
       expect(store.search(''), isEmpty);
 
       // Tie on salience → createdAt desc decides.
       final tie = LongTermMemoryStore();
-      tie.remember(rec('t1', 'alpha note', createdAt: DateTime.utc(2026, 1, 1)));
-      tie.remember(rec('t2', 'note alpha', createdAt: DateTime.utc(2026, 1, 5)));
+      tie.remember(
+        rec('t1', 'alpha note', createdAt: DateTime.utc(2026, 1, 1)),
+      );
+      tie.remember(
+        rec('t2', 'note alpha', createdAt: DateTime.utc(2026, 1, 5)),
+      );
       expect(tie.search('alpha').map((m) => m.id), ['t2', 't1']);
 
       // byTag exact match (case preserved); latest(n) by createdAt desc.
@@ -133,13 +167,18 @@ void main() {
       expect(() => store.all.add(rec('x', 'x')), throwsUnsupportedError);
     });
 
-    test('SessionMemoryStore scopes by session with global id uniqueness',
-        () {
+    test('SessionMemoryStore scopes by session with global id uniqueness', () {
       final store = SessionMemoryStore();
-      final s1note = rec('n1', 'user asked about provider budgets',
-          source: src(sessionId: 's1'));
-      final s2note = rec('n2', 'the mission failed on timeout',
-          source: src(sessionId: 's2'));
+      final s1note = rec(
+        'n1',
+        'user asked about provider budgets',
+        source: src(sessionId: 's1'),
+      );
+      final s2note = rec(
+        'n2',
+        'the mission failed on timeout',
+        source: src(sessionId: 's2'),
+      );
 
       store.remember('s1', s1note);
       store.remember('s2', s2note);
@@ -149,17 +188,29 @@ void main() {
       expect(store.contains('n1'), isTrue);
 
       // Insertion order within a session.
-      store.remember('s1', rec('n0', 'first note of s1',
-          source: src(sessionId: 's1'), createdAt: DateTime.utc(2025, 12, 31)));
-      expect(store.forSession('s1').map((m) => m.id), ['n1', 'n0'],
-          reason: 'insertion order, not createdAt order');
+      store.remember(
+        's1',
+        rec(
+          'n0',
+          'first note of s1',
+          source: src(sessionId: 's1'),
+          createdAt: DateTime.utc(2025, 12, 31),
+        ),
+      );
+      expect(store.forSession('s1').map((m) => m.id), [
+        'n1',
+        'n0',
+      ], reason: 'insertion order, not createdAt order');
 
       // Global id uniqueness: remembering an existing id under a different
       // session RELOCATES the record.
-      store.remember('s2', rec('n1', 'relocated note',
-          source: src(sessionId: 's2')));
-      expect(store.forSession('s1').map((m) => m.id), ['n0'],
-          reason: 'n1 left s1');
+      store.remember(
+        's2',
+        rec('n1', 'relocated note', source: src(sessionId: 's2')),
+      );
+      expect(store.forSession('s1').map((m) => m.id), [
+        'n0',
+      ], reason: 'n1 left s1');
       expect(store.forSession('s2').map((m) => m.id), ['n2', 'n1']);
       expect(store.byId('n1')!.content, 'relocated note');
 
@@ -176,33 +227,31 @@ void main() {
     test('MemoryGraph traverses both directions and filters by type', () {
       final graph = MemoryGraph();
       graph.link('a', 'b', MemoryLinkType.supports);
-      graph.link('c', 'a', MemoryLinkType.contradicts,
-          note: 'c refutes a');
+      graph.link('c', 'a', MemoryLinkType.contradicts, note: 'c refutes a');
       graph.link('a', 'd', MemoryLinkType.derivedFrom);
 
       // neighborsOf: EITHER endpoint, outgoing flag correct.
       final around = graph.neighborsOf('a');
       expect(around, hasLength(3));
-      final outgoing =
-          around.where((l) => l.fromRecordId == 'a').toList();
-      final incoming =
-          around.where((l) => l.fromRecordId != 'a').toList();
+      final outgoing = around.where((l) => l.fromRecordId == 'a').toList();
+      final incoming = around.where((l) => l.fromRecordId != 'a').toList();
       expect(outgoing, hasLength(2));
       expect(incoming, hasLength(1));
       expect(incoming.single.type, MemoryLinkType.contradicts);
 
       // Standalone graph rejects self-links (unknown ids are the facade's
       // job — see A4).
-      expect(() => graph.link('x', 'x', MemoryLinkType.relatesTo),
-          throwsArgumentError);
+      expect(
+        () => graph.link('x', 'x', MemoryLinkType.relatesTo),
+        throwsArgumentError,
+      );
 
       // Duplicate (from,to,type) replaces — different note, same count.
       graph.link('a', 'b', MemoryLinkType.supports, note: 'replaced');
       expect(graph.links, hasLength(3));
       expect(
         graph.links
-            .firstWhere((l) =>
-                l.fromRecordId == 'a' && l.toRecordId == 'b')
+            .firstWhere((l) => l.fromRecordId == 'a' && l.toRecordId == 'b')
             .note,
         'replaced',
       );
@@ -217,38 +266,60 @@ void main() {
       expect(graph.linksOf(MemoryLinkType.supersedes), isEmpty);
 
       // Unmodifiable view.
-      expect(() => graph.links.add(
-            MemoryLink(fromRecordId: 'p', toRecordId: 'q',
-                type: MemoryLinkType.relatesTo,
-                createdAt: DateTime.utc(2026)),
-          ), throwsUnsupportedError);
+      expect(
+        () => graph.links.add(
+          MemoryLink(
+            fromRecordId: 'p',
+            toRecordId: 'q',
+            type: MemoryLinkType.relatesTo,
+            createdAt: DateTime.utc(2026),
+          ),
+        ),
+        throwsUnsupportedError,
+      );
     });
 
     test('three-layer story: remember, link, recall, promote', () {
       final system = AgentMemorySystem();
 
-      final fact = system.remember(rec('fact-1', 'the user prefers dart',
-          tags: {'preference'}, salience: 0.6));
+      final fact = system.remember(
+        rec(
+          'fact-1',
+          'the user prefers dart',
+          tags: {'preference'},
+          salience: 0.6,
+        ),
+      );
       expect(fact.id, 'fact-1');
       expect(system.longTermMemory.contains('fact-1'), isTrue);
 
       system.remember(
-          rec('note-1', 'user said the dart preference again today',
-              source: src(sessionId: 'sess-7'), salience: 0.8),
-          sessionId: 'sess-7');
+        rec(
+          'note-1',
+          'user said the dart preference again today',
+          source: src(sessionId: 'sess-7'),
+          salience: 0.8,
+        ),
+        sessionId: 'sess-7',
+      );
       expect(system.sessionMemory.forSession('sess-7'), hasLength(1));
 
       // Cross-reference across layers.
-      system.link('note-1', 'fact-1', MemoryLinkType.supports,
-          note: 'today reinforced the preference');
+      system.link(
+        'note-1',
+        'fact-1',
+        MemoryLinkType.supports,
+        note: 'today reinforced the preference',
+      );
 
       // Recall finds BOTH with correct layer attribution.
       final hits = system.recall('dart');
       expect(hits, hasLength(2));
-      expect(hits.map((h) => h.layer).toSet(),
-          {MemoryLayer.session, MemoryLayer.longTerm});
-      expect(
-          hits.first.record.id, 'note-1', reason: 'salience 0.8 > 0.6');
+      expect(hits.map((h) => h.layer).toSet(), {
+        MemoryLayer.session,
+        MemoryLayer.longTerm,
+      });
+      expect(hits.first.record.id, 'note-1', reason: 'salience 0.8 > 0.6');
 
       // Promote the session note; the link survives; recall still finds
       // it, now long-term.
@@ -260,8 +331,11 @@ void main() {
 
       final after = system.recall('dart');
       expect(after, hasLength(2));
-      expect(after.map((h) => h.layer), everyElement(MemoryLayer.longTerm),
-          reason: 'promoted note is now long-term');
+      expect(
+        after.map((h) => h.layer),
+        everyElement(MemoryLayer.longTerm),
+        reason: 'promoted note is now long-term',
+      );
 
       final linked = system.linked('note-1');
       expect(linked, hasLength(1));
@@ -274,18 +348,34 @@ void main() {
     test('recall ranks by salience then recency across both layers', () {
       final system = AgentMemorySystem();
       // Long-term, LOW salience, older.
-      system.remember(rec('lt-low', 'rust memory safety matters',
-          createdAt: DateTime.utc(2026, 1, 1), salience: 0.2));
+      system.remember(
+        rec(
+          'lt-low',
+          'rust memory safety matters',
+          createdAt: DateTime.utc(2026, 1, 1),
+          salience: 0.2,
+        ),
+      );
       // Session, HIGH salience, newer — must rank FIRST.
       system.remember(
-          rec('s-high', 'rust async runtime pitfalls noted',
-              source: src(sessionId: 's'),
-              createdAt: DateTime.utc(2026, 1, 2),
-              salience: 0.9),
-          sessionId: 's');
+        rec(
+          's-high',
+          'rust async runtime pitfalls noted',
+          source: src(sessionId: 's'),
+          createdAt: DateTime.utc(2026, 1, 2),
+          salience: 0.9,
+        ),
+        sessionId: 's',
+      );
       // Long-term, HIGH salience, newer still — ties broken by createdAt.
-      system.remember(rec('lt-high', 'rust borrow checker rules',
-          createdAt: DateTime.utc(2026, 1, 3), salience: 0.9));
+      system.remember(
+        rec(
+          'lt-high',
+          'rust borrow checker rules',
+          createdAt: DateTime.utc(2026, 1, 3),
+          salience: 0.9,
+        ),
+      );
 
       final hits = system.recall('rust');
       expect(hits.map((h) => h.record.id), ['lt-high', 's-high', 'lt-low']);
@@ -307,15 +397,23 @@ void main() {
     test('link validates endpoints and stays idempotent', () {
       final system = AgentMemorySystem();
       system.remember(rec('real', 'a real memory'));
-      system.remember(rec('note', 'a session note',
-          source: src(sessionId: 's')), sessionId: 's');
+      system.remember(
+        rec('note', 'a session note', source: src(sessionId: 's')),
+        sessionId: 's',
+      );
 
-      expect(() => system.link('real', 'ghost', MemoryLinkType.supports),
-          throwsArgumentError);
-      expect(() => system.link('ghost', 'real', MemoryLinkType.supports),
-          throwsArgumentError);
-      expect(() => system.link('real', 'real', MemoryLinkType.relatesTo),
-          throwsArgumentError);
+      expect(
+        () => system.link('real', 'ghost', MemoryLinkType.supports),
+        throwsArgumentError,
+      );
+      expect(
+        () => system.link('ghost', 'real', MemoryLinkType.supports),
+        throwsArgumentError,
+      );
+      expect(
+        () => system.link('real', 'real', MemoryLinkType.relatesTo),
+        throwsArgumentError,
+      );
 
       // Re-linking the same (from, to, type) replaces — no throw.
       system.link('real', 'note', MemoryLinkType.supports);
@@ -328,15 +426,25 @@ void main() {
       final system = AgentMemorySystem();
       final created = DateTime.utc(2025, 6, 15);
       system.remember(
-          rec('keep', 'promote me: the deploy script lives in /bin',
-              source: src(sessionId: 's9'), createdAt: created, salience: 0.7),
-          sessionId: 's9');
-      system.remember(rec('stay', 'long-term already',
-          createdAt: created, salience: 0.7));
+        rec(
+          'keep',
+          'promote me: the deploy script lives in /bin',
+          source: src(sessionId: 's9'),
+          createdAt: created,
+          salience: 0.7,
+        ),
+        sessionId: 's9',
+      );
+      system.remember(
+        rec('stay', 'long-term already', createdAt: created, salience: 0.7),
+      );
 
       expect(() => system.promote('ghost'), throwsArgumentError);
-      expect(() => system.promote('stay'),
-          throwsArgumentError, reason: 'already long-term');
+      expect(
+        () => system.promote('stay'),
+        throwsArgumentError,
+        reason: 'already long-term',
+      );
 
       final promoted = system.promote('keep');
       expect(promoted.createdAt, created, reason: 'createdAt preserved');
@@ -345,40 +453,52 @@ void main() {
       expect(system.longTermMemory.byId('keep')!.content, contains('/bin'));
     });
 
-    test('forgetSession evaporates session memory and leaves honest dangling links',
-        () {
-      final system = AgentMemorySystem();
-      system.remember(rec('fact', 'a durable fact'));
-      system.remember(rec('evap', 'a session note that will evaporate',
-          source: src(sessionId: 's1')), sessionId: 's1');
-      system.link('evap', 'fact', MemoryLinkType.supports);
+    test(
+      'forgetSession evaporates session memory and leaves honest dangling links',
+      () {
+        final system = AgentMemorySystem();
+        system.remember(rec('fact', 'a durable fact'));
+        system.remember(
+          rec(
+            'evap',
+            'a session note that will evaporate',
+            source: src(sessionId: 's1'),
+          ),
+          sessionId: 's1',
+        );
+        system.link('evap', 'fact', MemoryLinkType.supports);
 
-      system.sessionMemory.forgetSession('s1');
+        system.sessionMemory.forgetSession('s1');
 
-      // The link is still in the graph — the record it points at is gone.
-      final linked = system.linked('fact');
-      expect(linked, hasLength(1));
-      final (link, record, layer) = linked.single;
-      expect(link.fromRecordId, 'evap');
-      expect(record, isNull, reason: 'dangling link resolves to null');
-      expect(layer, isNull);
-    });
+        // The link is still in the graph — the record it points at is gone.
+        final linked = system.linked('fact');
+        expect(linked, hasLength(1));
+        final (link, record, layer) = linked.single;
+        expect(link.fromRecordId, 'evap');
+        expect(record, isNull, reason: 'dangling link resolves to null');
+        expect(layer, isNull);
+      },
+    );
 
     test('remember rejects an id already used in the opposite layer', () {
       final system = AgentMemorySystem();
       system.remember(rec('dup', 'long-term first'));
       expect(
-          () => system.remember(rec('dup', 'session clash'),
-              sessionId: 's'),
-          throwsArgumentError,
-          reason: 'id already in long-term');
+        () => system.remember(rec('dup', 'session clash'), sessionId: 's'),
+        throwsArgumentError,
+        reason: 'id already in long-term',
+      );
 
       final other = AgentMemorySystem();
-      other.remember(rec('dup', 'session first',
-          source: src(sessionId: 's')), sessionId: 's');
-      expect(() => other.remember(rec('dup', 'long-term clash')),
-          throwsArgumentError,
-          reason: 'id already in session');
+      other.remember(
+        rec('dup', 'session first', source: src(sessionId: 's')),
+        sessionId: 's',
+      );
+      expect(
+        () => other.remember(rec('dup', 'long-term clash')),
+        throwsArgumentError,
+        reason: 'id already in session',
+      );
     });
   });
 }

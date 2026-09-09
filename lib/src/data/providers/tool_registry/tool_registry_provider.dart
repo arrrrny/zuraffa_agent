@@ -17,14 +17,15 @@ class ToolRegistryProvider
   final ToolRegistry _active;
 
   ToolRegistryProvider([ToolRegistry? active])
-      : _active = active ??
-            const ToolRegistry(
-              id: 'default',
-              toolNames: ['fs.read', 'fs.write', 'dispatch'],
-              ddToolCount: 2,
-              generatedToolCount: 1,
-              mcpToolCount: 0,
-            );
+    : _active =
+          active ??
+          const ToolRegistry(
+            id: 'default',
+            toolNames: ['fs.read', 'fs.write', 'dispatch'],
+            ddToolCount: 2,
+            generatedToolCount: 1,
+            mcpToolCount: 0,
+          );
 
   @override
   Future<ToolRegistry> current(NoParams params) async => _active;

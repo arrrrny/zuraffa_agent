@@ -26,7 +26,11 @@ class SessionTreeEntry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SessionTreeEntry &&
-          runtimeType == other.runtimeType && id == other.id && sessionId == other.sessionId && parentEntryId == other.parentEntryId && createdAt == other.createdAt);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          sessionId == other.sessionId &&
+          parentEntryId == other.parentEntryId &&
+          createdAt == other.createdAt);
 
   @override
   int get hashCode => Object.hash(id, sessionId, parentEntryId, createdAt);

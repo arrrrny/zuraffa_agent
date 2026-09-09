@@ -14,46 +14,111 @@ import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_disp
 void main() {
   group('arrarrny/zuraffa_agent#4 - ToolDispatchMode value equality', () {
     test('ToolDispatchMode equality is value-based across all fields', () {
-      final a = ToolDispatchMode(id: 'id-a', mode: 'sequential', maxParallel: 10, failFast: true);
-      final b = ToolDispatchMode(id: 'id-a', mode: 'sequential', maxParallel: 10, failFast: true);
+      final a = ToolDispatchMode(
+        id: 'id-a',
+        mode: 'sequential',
+        maxParallel: 10,
+        failFast: true,
+      );
+      final b = ToolDispatchMode(
+        id: 'id-a',
+        mode: 'sequential',
+        maxParallel: 10,
+        failFast: true,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('ToolDispatchMode inequality differs when a field changes', () {
-      final a = ToolDispatchMode(id: 'id-a', mode: 'sequential', maxParallel: 10, failFast: true);
-      final b = ToolDispatchMode(id: 'id-b', mode: 'parallel', maxParallel: 20, failFast: false);
+      final a = ToolDispatchMode(
+        id: 'id-a',
+        mode: 'sequential',
+        maxParallel: 10,
+        failFast: true,
+      );
+      final b = ToolDispatchMode(
+        id: 'id-b',
+        mode: 'parallel',
+        maxParallel: 20,
+        failFast: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolDispatchMode inequality detected per-field: id', () {
-      final a = ToolDispatchMode(id: 'id-1', mode: 'sequential', maxParallel: 1, failFast: false);
-      final b = ToolDispatchMode(id: 'id-2', mode: 'sequential', maxParallel: 1, failFast: false);
+      final a = ToolDispatchMode(
+        id: 'id-1',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: false,
+      );
+      final b = ToolDispatchMode(
+        id: 'id-2',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolDispatchMode inequality detected per-field: mode', () {
-      final a = ToolDispatchMode(id: 'id', mode: 'sequential', maxParallel: 1, failFast: false);
-      final b = ToolDispatchMode(id: 'id', mode: 'parallel', maxParallel: 1, failFast: false);
+      final a = ToolDispatchMode(
+        id: 'id',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: false,
+      );
+      final b = ToolDispatchMode(
+        id: 'id',
+        mode: 'parallel',
+        maxParallel: 1,
+        failFast: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolDispatchMode inequality detected per-field: maxParallel', () {
-      final a = ToolDispatchMode(id: 'id', mode: 'sequential', maxParallel: 1, failFast: false);
-      final b = ToolDispatchMode(id: 'id', mode: 'sequential', maxParallel: 5, failFast: false);
+      final a = ToolDispatchMode(
+        id: 'id',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: false,
+      );
+      final b = ToolDispatchMode(
+        id: 'id',
+        mode: 'sequential',
+        maxParallel: 5,
+        failFast: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolDispatchMode inequality detected per-field: failFast', () {
-      final a = ToolDispatchMode(id: 'id', mode: 'sequential', maxParallel: 1, failFast: true);
-      final b = ToolDispatchMode(id: 'id', mode: 'sequential', maxParallel: 1, failFast: false);
+      final a = ToolDispatchMode(
+        id: 'id',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: true,
+      );
+      final b = ToolDispatchMode(
+        id: 'id',
+        mode: 'sequential',
+        maxParallel: 1,
+        failFast: false,
+      );
       expect(a == b, isFalse);
     });
   });
 
   group('arrarrny/zuraffa_agent#4 - ToolDispatchMode toString', () {
     test('toString includes id, mode, and maxParallel', () {
-      final m = ToolDispatchMode(id: 'dispatch-1', mode: 'parallel', maxParallel: 8, failFast: true);
+      final m = ToolDispatchMode(
+        id: 'dispatch-1',
+        mode: 'parallel',
+        maxParallel: 8,
+        failFast: true,
+      );
       final s = m.toString();
       expect(s, contains('dispatch-1'));
       expect(s, contains('parallel'));
@@ -66,12 +131,15 @@ void main() {
       expect(ToolDispatchModeProvider(), isA<ToolDispatchModeService>());
     });
 
-    test('ToolDispatchModeProvider.current returns the active dispatch mode', () async {
-      final mode = await ToolDispatchModeProvider().current(NoParams());
-      expect(mode, isA<ToolDispatchMode>());
-      expect(mode.mode, 'sequential');
-      expect(mode.maxParallel, greaterThan(0));
-    });
+    test(
+      'ToolDispatchModeProvider.current returns the active dispatch mode',
+      () async {
+        final mode = await ToolDispatchModeProvider().current(NoParams());
+        expect(mode, isA<ToolDispatchMode>());
+        expect(mode.mode, 'sequential');
+        expect(mode.maxParallel, greaterThan(0));
+      },
+    );
 
     test('ToolDispatchModeProvider.count returns 1', () async {
       expect(await ToolDispatchModeProvider().count(NoParams()), 1);
@@ -131,7 +199,12 @@ void main() {
     });
 
     test('ToolDispatchResult.copyWith produces new instance', () {
-      final a = ToolDispatchResult(success: true, result: 'ok', error: '', artifactRefs: []);
+      final a = ToolDispatchResult(
+        success: true,
+        result: 'ok',
+        error: '',
+        artifactRefs: [],
+      );
       final b = a.copyWith(success: false, error: 'fail');
       expect(b.success, isFalse);
       expect(b.error, 'fail');
@@ -141,8 +214,18 @@ void main() {
     });
 
     test('ToolDispatchResult hasResult / noResult helpers', () {
-      final withResult = ToolDispatchResult(success: true, result: 'data', error: '', artifactRefs: []);
-      final noResult = ToolDispatchResult(success: false, result: '', error: 'err', artifactRefs: []);
+      final withResult = ToolDispatchResult(
+        success: true,
+        result: 'data',
+        error: '',
+        artifactRefs: [],
+      );
+      final noResult = ToolDispatchResult(
+        success: false,
+        result: '',
+        error: 'err',
+        artifactRefs: [],
+      );
       expect(withResult.hasResult, isTrue);
       expect(withResult.noResult, isFalse);
       expect(noResult.hasResult, isFalse);
@@ -150,8 +233,18 @@ void main() {
     });
 
     test('ToolDispatchResult hasError / noError helpers', () {
-      final withError = ToolDispatchResult(success: false, result: '', error: 'boom', artifactRefs: []);
-      final noError = ToolDispatchResult(success: true, result: 'ok', error: '', artifactRefs: []);
+      final withError = ToolDispatchResult(
+        success: false,
+        result: '',
+        error: 'boom',
+        artifactRefs: [],
+      );
+      final noError = ToolDispatchResult(
+        success: true,
+        result: 'ok',
+        error: '',
+        artifactRefs: [],
+      );
       expect(withError.hasError, isTrue);
       expect(withError.noError, isFalse);
       expect(noError.hasError, isFalse);

@@ -38,7 +38,8 @@ class MemoryTools {
   /// `memory_remember` — store a fact, note, or learning.
   static const AgentTool rememberTool = AgentTool(
     id: 'memory_remember',
-    description: 'Store a durable fact or a session note in agent memory. '
+    description:
+        'Store a durable fact or a session note in agent memory. '
         'Use session_id to scope the note to the current session; omit it '
         'to remember across sessions. Returns the stored memory id.',
     riskTier: RiskTier.safe,
@@ -69,7 +70,8 @@ class MemoryTools {
   /// `memory_recall` — search both memory layers.
   static const AgentTool recallTool = AgentTool(
     id: 'memory_recall',
-    description: 'Search long-term and session memory by keyword. Returns '
+    description:
+        'Search long-term and session memory by keyword. Returns '
         'ranked lines: layer, id, salience, content.',
     riskTier: RiskTier.safe,
     executionMode: ExecutionMode.sequential,
@@ -86,7 +88,8 @@ class MemoryTools {
   /// `memory_link` — cross-reference two memories.
   static const AgentTool linkTool = AgentTool(
     id: 'memory_link',
-    description: 'Cross-reference two memories with a typed link: '
+    description:
+        'Cross-reference two memories with a typed link: '
         'supports, contradicts, supersedes, derivedFrom, or relatesTo.',
     riskTier: RiskTier.safe,
     executionMode: ExecutionMode.sequential,
@@ -112,11 +115,8 @@ class MemoryTools {
   );
 
   /// All three declarations, unmodifiable.
-  static List<AgentTool> get declarations => List.unmodifiable(const [
-        rememberTool,
-        recallTool,
-        linkTool,
-      ]);
+  static List<AgentTool> get declarations =>
+      List.unmodifiable(const [rememberTool, recallTool, linkTool]);
 }
 
 /// Bridges tool dispatches onto an [AgentMemorySystem] — the runtime
@@ -150,13 +150,13 @@ class MemoryToolDispatcher implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
@@ -181,16 +181,14 @@ class MemoryToolDispatcher implements ToolDispatcher {
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true; // every memory tool is RiskTier.safe
+  }) => true; // every memory tool is RiskTier.safe
 
   // Tool implementations -------------------------------------------------
 
   Future<ToolDispatchResult> _remember(Map<String, dynamic> arguments) async {
     final content = arguments['content'];
     if (content is! String || content.trim().isEmpty) {
-      return _failure(
-          'memory_remember requires non-empty string "content"');
+      return _failure('memory_remember requires non-empty string "content"');
     }
     final salienceArg = arguments['salience'];
     var salience = 0.5;
@@ -200,7 +198,8 @@ class MemoryToolDispatcher implements ToolDispatcher {
           salienceArg.toDouble() < 0.0 ||
           salienceArg.toDouble() > 1.0) {
         return _failure(
-            'salience must be a number within 0.0..1.0 (got: $salienceArg)');
+          'salience must be a number within 0.0..1.0 (got: $salienceArg)',
+        );
       }
       salience = salienceArg.toDouble();
     }
@@ -216,8 +215,9 @@ class MemoryToolDispatcher implements ToolDispatcher {
     final idArg = arguments['id'];
     final id = idArg is String && idArg.isNotEmpty ? idArg : _nextId();
     final sessionIdArg = arguments['session_id'];
-    final sessionId =
-        sessionIdArg is String && sessionIdArg.isNotEmpty ? sessionIdArg : null;
+    final sessionId = sessionIdArg is String && sessionIdArg.isNotEmpty
+        ? sessionIdArg
+        : null;
 
     final record = MemoryRecord(
       id: id,
@@ -250,8 +250,7 @@ class MemoryToolDispatcher implements ToolDispatcher {
     int? limit;
     if (limitArg != null) {
       if (limitArg is! num || limitArg.toInt() < 1) {
-        return _failure(
-            'limit must be a positive number (got: $limitArg)');
+        return _failure('limit must be a positive number (got: $limitArg)');
       }
       limit = limitArg.toInt();
     }
@@ -267,8 +266,8 @@ class MemoryToolDispatcher implements ToolDispatcher {
     final lines = [
       for (final hit in hits)
         '${hit.layer.name} | ${hit.record.id} | '
-        'salience ${hit.record.salience.toStringAsFixed(1)} | '
-        '${hit.record.content}',
+            'salience ${hit.record.salience.toStringAsFixed(1)} | '
+            '${hit.record.content}',
     ];
     return ToolDispatchResult(
       success: true,
@@ -283,16 +282,16 @@ class MemoryToolDispatcher implements ToolDispatcher {
     final toId = arguments['to_id'];
     final typeArg = arguments['type'];
     if (fromId is! String || toId is! String || typeArg is! String) {
-      return _failure(
-          'memory_link requires string from_id, to_id, and type');
+      return _failure('memory_link requires string from_id, to_id, and type');
     }
     MemoryLinkType type;
     try {
       type = MemoryLinkType.values.byName(typeArg);
     } on ArgumentError {
       return _failure(
-          'unknown link type "$typeArg" — expected one of: '
-          '${MemoryLinkType.values.map((t) => t.name).join(', ')}');
+        'unknown link type "$typeArg" — expected one of: '
+        '${MemoryLinkType.values.map((t) => t.name).join(', ')}',
+      );
     }
     final noteArg = arguments['note'];
     final note = noteArg is String && noteArg.isNotEmpty ? noteArg : null;
@@ -324,11 +323,11 @@ class MemoryToolDispatcher implements ToolDispatcher {
   }
 
   ToolDispatchResult _failure(String error) => ToolDispatchResult(
-        success: false,
-        result: '',
-        error: error,
-        artifactRefs: const [],
-      );
+    success: false,
+    result: '',
+    error: error,
+    artifactRefs: const [],
+  );
 }
 
 /// Renders the system-prompt digest of what the agent remembers: the top
@@ -343,7 +342,8 @@ class MemoryPromptProjection {
   /// The top [limit] long-term memories by salience (desc, then
   /// createdAt desc) as prompt lines `"- [id] content"`.
   List<String> render({int limit = 10}) {
-    final ranked = [...memory.longTermMemory.all]..sort((a, b) {
+    final ranked = [...memory.longTermMemory.all]
+      ..sort((a, b) {
         final bySalience = b.salience.compareTo(a.salience);
         if (bySalience != 0) return bySalience;
         return b.createdAt.compareTo(a.createdAt);
@@ -360,7 +360,8 @@ class MemoryPromptProjection {
   /// [limit] applies per layer, so this can emit up to `2 * limit` lines.
   List<String> renderWithSession(String sessionId, {int limit = 10}) {
     final sessionLines = [
-      for (final record in memory.sessionMemory.forSession(sessionId).take(limit))
+      for (final record
+          in memory.sessionMemory.forSession(sessionId).take(limit))
         '- [session] [${record.id}] ${record.content}',
     ];
     return List.unmodifiable([...sessionLines, ...render(limit: limit)]);

@@ -91,11 +91,11 @@ class SteeringQueue {
   /// (the queue records when the newest message was injected).
   /// `id` and `processedCount` are unchanged; `this` is never mutated.
   SteeringQueue enqueue(SteeringMessage message) => SteeringQueue._(
-        id: id,
-        pending: List.unmodifiable([...pending, message]),
-        processedCount: processedCount,
-        lastInjectedAt: message.injectedAt,
-      );
+    id: id,
+    pending: List.unmodifiable([...pending, message]),
+    processedCount: processedCount,
+    lastInjectedAt: message.injectedAt,
+  );
 
   /// Pops the head message (dispatch): returns a record carrying the
   /// popped [message] (the one the engine's `SteeringInjected` event will
@@ -131,7 +131,8 @@ class SteeringQueue {
       'pending': [for (final m in pending) m.toJson()],
       'processedCount': processedCount,
     };
-    if (lastInjectedAt != null) json['lastInjectedAt'] = lastInjectedAt!.toIso8601String();
+    if (lastInjectedAt != null)
+      json['lastInjectedAt'] = lastInjectedAt!.toIso8601String();
     return json;
   }
 
@@ -144,32 +145,56 @@ class SteeringQueue {
   factory SteeringQueue.fromJson(Map<String, dynamic> json) {
     final idRaw = json['id'];
     if (idRaw is! String) {
-      throw ArgumentError.value(idRaw, 'id', 'SteeringQueue.id must be a non-null string');
+      throw ArgumentError.value(
+        idRaw,
+        'id',
+        'SteeringQueue.id must be a non-null string',
+      );
     }
     final processedRaw = json['processedCount'];
     if (processedRaw is! int || processedRaw < 0) {
-      throw ArgumentError.value(processedRaw, 'processedCount', 'SteeringQueue.processedCount must be a non-negative int');
+      throw ArgumentError.value(
+        processedRaw,
+        'processedCount',
+        'SteeringQueue.processedCount must be a non-negative int',
+      );
     }
     final pendingRaw = json['pending'];
     if (pendingRaw is! List) {
-      throw ArgumentError.value(pendingRaw, 'pending', 'SteeringQueue.pending must be a list of message objects');
+      throw ArgumentError.value(
+        pendingRaw,
+        'pending',
+        'SteeringQueue.pending must be a list of message objects',
+      );
     }
     final messages = <SteeringMessage>[
       for (final entry in pendingRaw)
         if (entry is Map)
           SteeringMessage.fromJson(Map<String, dynamic>.from(entry))
         else
-          throw ArgumentError.value(entry, 'pending', 'SteeringQueue.pending entries must be message objects'),
+          throw ArgumentError.value(
+            entry,
+            'pending',
+            'SteeringQueue.pending entries must be message objects',
+          ),
     ];
     DateTime? lastInjectedAt;
     final lastRaw = json['lastInjectedAt'];
     if (lastRaw != null) {
       if (lastRaw is! String) {
-        throw ArgumentError.value(lastRaw, 'lastInjectedAt', 'SteeringQueue.lastInjectedAt must be an ISO-8601 string when present');
+        throw ArgumentError.value(
+          lastRaw,
+          'lastInjectedAt',
+          'SteeringQueue.lastInjectedAt must be an ISO-8601 string when present',
+        );
       }
       lastInjectedAt = DateTime.tryParse(lastRaw);
       if (lastInjectedAt == null) {
-        throw ArgumentError.value(lastRaw, 'lastInjectedAt', 'SteeringQueue.lastInjectedAt is not a parseable ISO-8601 timestamp');
+        throw ArgumentError.value(
+          lastRaw,
+          'lastInjectedAt',
+          'SteeringQueue.lastInjectedAt is not a parseable ISO-8601 timestamp',
+        );
       }
     }
     return SteeringQueue._(
@@ -200,7 +225,8 @@ class SteeringQueue {
   }
 
   @override
-  int get hashCode => Object.hash(id, Object.hashAll(pending), processedCount, lastInjectedAt);
+  int get hashCode =>
+      Object.hash(id, Object.hashAll(pending), processedCount, lastInjectedAt);
 
   @override
   String toString() =>

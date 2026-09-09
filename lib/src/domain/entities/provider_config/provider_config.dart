@@ -28,7 +28,12 @@ class ProviderConfig {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProviderConfig &&
-          runtimeType == other.runtimeType && id == other.id && providerKind == other.providerKind && baseUrl == other.baseUrl && models == other.models && timeoutMs == other.timeoutMs);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          providerKind == other.providerKind &&
+          baseUrl == other.baseUrl &&
+          models == other.models &&
+          timeoutMs == other.timeoutMs);
 
   @override
   int get hashCode => Object.hash(id, providerKind, baseUrl, models, timeoutMs);

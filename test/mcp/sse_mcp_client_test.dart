@@ -53,20 +53,23 @@ void main() {
       await client.disconnect();
     });
 
-    test('connect invokes the auth callback to fetch the bearer token', () async {
-      final fakeWire = FakeMcpWire();
-      var authCallCount = 0;
-      final client = buildClient(
-        fakeWire: fakeWire,
-        authCallback: () async {
-          authCallCount += 1;
-          return 'bearer-token-$authCallCount';
-        },
-      );
-      await client.connect();
-      expect(authCallCount, 1);
-      await client.disconnect();
-    });
+    test(
+      'connect invokes the auth callback to fetch the bearer token',
+      () async {
+        final fakeWire = FakeMcpWire();
+        var authCallCount = 0;
+        final client = buildClient(
+          fakeWire: fakeWire,
+          authCallback: () async {
+            authCallCount += 1;
+            return 'bearer-token-$authCallCount';
+          },
+        );
+        await client.connect();
+        expect(authCallCount, 1);
+        await client.disconnect();
+      },
+    );
 
     test('listTools maps the wire payload to descriptors', () async {
       final fakeWire = FakeMcpWire();
@@ -92,9 +95,7 @@ void main() {
 
     test('callTool returns McpCallOk on wire success', () async {
       final fakeWire = FakeMcpWire();
-      fakeWire.enqueueNext(
-        const McpWireResponseOk({'content': 'hello'}),
-      );
+      fakeWire.enqueueNext(const McpWireResponseOk({'content': 'hello'}));
       final client = buildClient(fakeWire: fakeWire);
       await client.connect();
       final result = await client.callTool('fs.read', {'path': '/etc/hosts'});
@@ -119,43 +120,47 @@ void main() {
       await client.disconnect();
     });
 
-    test('a drop mid-call triggers reconnect within SSE backoff (SC-002)', () async {
-      final fakeWire = FakeMcpWire();
-      // First send throws (transport drop); reconnect opens the wire
-      // again; second send succeeds.
-      fakeWire.enqueueNext(Exception('transport drop'));
-      fakeWire.enqueueNext(
-        const McpWireResponseOk({'content': 'recovered'}),
-      );
-      final client = buildClient(fakeWire: fakeWire);
-      await client.connect();
-      final result = await client.callTool('fs.read', {});
-      expect(result, isA<McpCallOk>());
-      final ok = result as McpCallOk;
-      expect(ok.result['content'], 'recovered');
-      // Reconnect happened — wire.open called at least twice.
-      expect(fakeWire.openCallCount, greaterThanOrEqualTo(2));
-      await client.disconnect();
-    });
+    test(
+      'a drop mid-call triggers reconnect within SSE backoff (SC-002)',
+      () async {
+        final fakeWire = FakeMcpWire();
+        // First send throws (transport drop); reconnect opens the wire
+        // again; second send succeeds.
+        fakeWire.enqueueNext(Exception('transport drop'));
+        fakeWire.enqueueNext(const McpWireResponseOk({'content': 'recovered'}));
+        final client = buildClient(fakeWire: fakeWire);
+        await client.connect();
+        final result = await client.callTool('fs.read', {});
+        expect(result, isA<McpCallOk>());
+        final ok = result as McpCallOk;
+        expect(ok.result['content'], 'recovered');
+        // Reconnect happened — wire.open called at least twice.
+        expect(fakeWire.openCallCount, greaterThanOrEqualTo(2));
+        await client.disconnect();
+      },
+    );
 
-    test('auth callback is invoked on reconnect (FR-003 token rotation)', () async {
-      final fakeWire = FakeMcpWire();
-      fakeWire.enqueueNext(Exception('transport drop'));
-      fakeWire.enqueueNext(const McpWireResponseOk({}));
-      var authCallCount = 0;
-      final client = buildClient(
-        fakeWire: fakeWire,
-        authCallback: () async {
-          authCallCount += 1;
-          return 'token-$authCallCount';
-        },
-      );
-      await client.connect();
-      expect(authCallCount, 1);
-      await client.callTool('fs.read', {});
-      expect(authCallCount, 2); // auth callback called again on reconnect
-      await client.disconnect();
-    });
+    test(
+      'auth callback is invoked on reconnect (FR-003 token rotation)',
+      () async {
+        final fakeWire = FakeMcpWire();
+        fakeWire.enqueueNext(Exception('transport drop'));
+        fakeWire.enqueueNext(const McpWireResponseOk({}));
+        var authCallCount = 0;
+        final client = buildClient(
+          fakeWire: fakeWire,
+          authCallback: () async {
+            authCallCount += 1;
+            return 'token-$authCallCount';
+          },
+        );
+        await client.connect();
+        expect(authCallCount, 1);
+        await client.callTool('fs.read', {});
+        expect(authCallCount, 2); // auth callback called again on reconnect
+        await client.disconnect();
+      },
+    );
 
     test('exhausted retries transition the client to failed state', () async {
       final fakeWire = FakeMcpWire();

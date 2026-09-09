@@ -27,8 +27,9 @@ void main() {
   group('UpdateToolInvocationRecordUseCase', () {
     final tToolInvocationRecord = MockToolInvocationRecord();
     test('should call repository.update and return result', () async {
-      when(() => mockRepository.update(any()))
-          .thenAnswer((_) async => tToolInvocationRecord);
+      when(
+        () => mockRepository.update(any()),
+      ).thenAnswer((_) async => tToolInvocationRecord);
       final result = await useCase.call(
         UpdateParams<String, ToolInvocationRecordPatch>(
           id: '1',

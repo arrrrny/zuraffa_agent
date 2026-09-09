@@ -68,13 +68,8 @@ class StopPolicy {
           enabled == other.enabled);
 
   @override
-  int get hashCode => Object.hash(
-        id,
-        maxTurns,
-        wallClockTimeout,
-        repetitionThreshold,
-        enabled,
-      );
+  int get hashCode =>
+      Object.hash(id, maxTurns, wallClockTimeout, repetitionThreshold, enabled);
 
   @override
   String toString() =>

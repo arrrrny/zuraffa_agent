@@ -60,11 +60,7 @@ class McpCallOptions {
 
   static const Duration defaultTimeout = Duration(seconds: 30);
 
-  const McpCallOptions({
-    this.timeout,
-    this.readOnly = false,
-    this.retry,
-  });
+  const McpCallOptions({this.timeout, this.readOnly = false, this.retry});
 
   /// The effective timeout for a call with these options.
   Duration get effectiveTimeout => timeout ?? defaultTimeout;
@@ -87,14 +83,14 @@ class McpCallGuard {
   McpCallGuard({
     McpBreakerConfig config = const McpBreakerConfig(),
     DateTime Function()? now,
-  })  : config = config,
-        _now = now ?? DateTime.now,
-        _breaker = CircuitBreaker(
-          id: 'mcp-call-guard',
-          failureThreshold: config.failureThreshold,
-          cooldown: config.cooldown,
-          halfOpenThreshold: 1,
-        );
+  }) : config = config,
+       _now = now ?? DateTime.now,
+       _breaker = CircuitBreaker(
+         id: 'mcp-call-guard',
+         failureThreshold: config.failureThreshold,
+         cooldown: config.cooldown,
+         halfOpenThreshold: 1,
+       );
 
   CircuitBreakerState get state => _breaker.state;
   bool get isOpen => _breaker.isOpen;
@@ -106,9 +102,7 @@ class McpCallGuard {
   ///   invoking [action];
   /// - success → `recordSuccess`; call error → `recordFailure`; thrown →
   ///   `recordFailure` + rethrow (spec 082 reconnect contract).
-  Future<McpCallResult> call(
-    Future<McpCallResult> Function() action,
-  ) async {
+  Future<McpCallResult> call(Future<McpCallResult> Function() action) async {
     if (_breaker.shouldProbe(_now())) {
       _breaker = _breaker.tryHalfOpen(_now());
     }
@@ -117,7 +111,8 @@ class McpCallGuard {
       // short-circuit itself must not churn the state.
       return const McpCallError(
         code: 'circuit-open',
-        message: 'McpCallGuard: the circuit is open (server failing); '
+        message:
+            'McpCallGuard: the circuit is open (server failing); '
             'retry after the cooldown',
       );
     }

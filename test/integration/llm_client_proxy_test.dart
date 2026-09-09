@@ -34,7 +34,11 @@ Future<bool> _proxyReachable(String proxyUrl) async {
   final host = uri.host;
   final port = uri.port;
   try {
-    final socket = await Socket.connect(host, port, timeout: const Duration(seconds: 3));
+    final socket = await Socket.connect(
+      host,
+      port,
+      timeout: const Duration(seconds: 3),
+    );
     socket.destroy();
     return true;
   } on Exception {
@@ -45,15 +49,17 @@ Future<bool> _proxyReachable(String proxyUrl) async {
 void main() {
   final apiKey = Platform.environment['KIMI_API_KEY'] ?? '';
   final baseUrl = Platform.environment['LLM_BASE_URL'] ?? '';
-  final proxyUrl = Platform.environment['LLM_PROXY_URL'] ?? 'http://localhost:8890';
+  final proxyUrl =
+      Platform.environment['LLM_PROXY_URL'] ?? 'http://localhost:8890';
   final model = Platform.environment['LLM_MODEL'] ?? '';
 
-  final configured = apiKey.isNotEmpty && baseUrl.isNotEmpty && model.isNotEmpty;
+  final configured =
+      apiKey.isNotEmpty && baseUrl.isNotEmpty && model.isNotEmpty;
   final skipReason = configured
       ? false
       : 'live LLM integration requires KIMI_API_KEY, LLM_BASE_URL and '
-          'LLM_MODEL to be set explicitly — no default gateway is provided '
-          '(spec 106 / issue #117)';
+            'LLM_MODEL to be set explicitly — no default gateway is provided '
+            '(spec 106 / issue #117)';
 
   group('LlmClient live integration (via local proxy)', () {
     test('provider resolves the active client from config', () async {
@@ -93,7 +99,9 @@ void main() {
       expect(completion.content, isNotEmpty);
       expect(completion.finishReason, isNotEmpty);
       expect(completion.usage.totalTokens, greaterThan(0));
-      print('[integration] model=${completion.usage} content="${completion.content}"');
+      print(
+        '[integration] model=${completion.usage} content="${completion.content}"',
+      );
     }, skip: skipReason);
   });
 }

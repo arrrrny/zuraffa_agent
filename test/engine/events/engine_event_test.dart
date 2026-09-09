@@ -105,18 +105,29 @@ void main() {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
     test('ToolCallCompleted is an EngineEvent', () {
-      final event = ToolCallCompleted(emittedAt: fixedTime, toolName: 'sample', callId: 'sample', ok: true);
+      final event = ToolCallCompleted(
+        emittedAt: fixedTime,
+        toolName: 'sample',
+        callId: 'sample',
+        ok: true,
+      );
       expect(event, isA<EngineEvent>());
       expect(event, isA<ToolCallCompleted>());
     });
 
     test('ToolCallCompleted carries payload fields', () {
-      final event = ToolCallCompleted(emittedAt: fixedTime, toolName: 'sample', callId: 'sample', ok: true);
+      final event = ToolCallCompleted(
+        emittedAt: fixedTime,
+        toolName: 'sample',
+        callId: 'sample',
+        ok: true,
+      );
       expect(event.emittedAt, fixedTime);
       expect(event.toolName, 'sample');
       expect(event.callId, 'sample');
       expect(event.ok, isTrue);
-    });  });
+    });
+  });
   group('arrarrny/zuraffa_agent#20 — EngineEvent.ThinkingDelta', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
@@ -130,27 +141,41 @@ void main() {
       final event = ThinkingDelta(emittedAt: fixedTime, delta: 'sample');
       expect(event.emittedAt, fixedTime);
       expect(event.delta, 'sample');
-    });  });
+    });
+  });
   group('arrarrny/zuraffa_agent#19 — EngineEvent.SteeringInjected', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
     test('SteeringInjected is an EngineEvent', () {
-      final event = SteeringInjected(emittedAt: fixedTime, content: 'sample', injectedAt: fixedTime);
+      final event = SteeringInjected(
+        emittedAt: fixedTime,
+        content: 'sample',
+        injectedAt: fixedTime,
+      );
       expect(event, isA<EngineEvent>());
       expect(event, isA<SteeringInjected>());
     });
 
     test('SteeringInjected carries payload fields', () {
-      final event = SteeringInjected(emittedAt: fixedTime, content: 'sample', injectedAt: fixedTime);
+      final event = SteeringInjected(
+        emittedAt: fixedTime,
+        content: 'sample',
+        injectedAt: fixedTime,
+      );
       expect(event.emittedAt, fixedTime);
       expect(event.content, 'sample');
       expect(event.injectedAt, fixedTime);
-    });  });
+    });
+  });
   group('arrarrny/zuraffa_agent#18 — EngineEvent.ProviderError', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
     test('ProviderError is an EngineEvent', () {
-      final event = ProviderError(emittedAt: fixedTime, providerName: 'sample', error: 'sample');
+      final event = ProviderError(
+        emittedAt: fixedTime,
+        providerName: 'sample',
+        error: 'sample',
+      );
       expect(event, isA<EngineEvent>());
       expect(event, isA<ProviderError>());
     });
@@ -166,69 +191,94 @@ void main() {
       expect(event.error, '401 unauthorized (terminal)');
     });
 
-    test('describe(EngineEvent) switch routes ProviderError to provider_error(providerName)', () {
-      String describe(EngineEvent e) => switch (e) {
-        TurnStarted(:final turnId) => 'turn_started($turnId)',
-        TurnCompleted(:final reason) => 'turn_completed($reason)',
-        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
-        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-        SteeringInjected(:final content) => 'steering_injected($content)',
-        ProviderError(:final providerName) => 'provider_error($providerName)',
-        MissionStarted(:final missionId) => 'mission_started($missionId)',
-        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-      };
+    test(
+      'describe(EngineEvent) switch routes ProviderError to provider_error(providerName)',
+      () {
+        String describe(EngineEvent e) => switch (e) {
+          TurnStarted(:final turnId) => 'turn_started($turnId)',
+          TurnCompleted(:final reason) => 'turn_completed($reason)',
+          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+          ToolCallCompleted(:final toolName) =>
+            'tool_call_completed($toolName)',
+          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          SteeringInjected(:final content) => 'steering_injected($content)',
+          ProviderError(:final providerName) => 'provider_error($providerName)',
+          MissionStarted(:final missionId) => 'mission_started($missionId)',
+          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        };
 
-      final event = ProviderError(
-        emittedAt: fixedTime,
-        providerName: 'openai',
-        error: '401 unauthorized (terminal)',
-      );
-      expect(describe(event), 'provider_error(openai)');
-    });
+        final event = ProviderError(
+          emittedAt: fixedTime,
+          providerName: 'openai',
+          error: '401 unauthorized (terminal)',
+        );
+        expect(describe(event), 'provider_error(openai)');
+      },
+    );
   });
   group('arrarrny/zuraffa_agent#17 — EngineEvent.MissionStarted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
     final startedTime = DateTime.utc(2026, 8, 24, 7, 45, 0);
 
     test('MissionStarted is an EngineEvent', () {
-      final event = MissionStarted(emittedAt: fixedTime, missionId: 'sample', startedAt: fixedTime);
+      final event = MissionStarted(
+        emittedAt: fixedTime,
+        missionId: 'sample',
+        startedAt: fixedTime,
+      );
       expect(event, isA<EngineEvent>());
       expect(event, isA<MissionStarted>());
     });
 
     test('MissionStarted carries payload fields', () {
-      final event = MissionStarted(emittedAt: fixedTime, missionId: 'm-7', startedAt: startedTime);
+      final event = MissionStarted(
+        emittedAt: fixedTime,
+        missionId: 'm-7',
+        startedAt: startedTime,
+      );
       expect(event.emittedAt, fixedTime);
       expect(event.missionId, 'm-7');
       expect(event.startedAt, startedTime);
       expect(event.startedAt, isNot(equals(event.emittedAt)));
     });
 
-    test('describe(EngineEvent) switch routes MissionStarted to mission_started(missionId)', () {
-      String describe(EngineEvent e) => switch (e) {
-        TurnStarted(:final turnId) => 'turn_started($turnId)',
-        TurnCompleted(:final reason) => 'turn_completed($reason)',
-        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
-        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-        SteeringInjected(:final content) => 'steering_injected($content)',
-        ProviderError(:final providerName) => 'provider_error($providerName)',
-        MissionStarted(:final missionId) => 'mission_started($missionId)',
-        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-      };
+    test(
+      'describe(EngineEvent) switch routes MissionStarted to mission_started(missionId)',
+      () {
+        String describe(EngineEvent e) => switch (e) {
+          TurnStarted(:final turnId) => 'turn_started($turnId)',
+          TurnCompleted(:final reason) => 'turn_completed($reason)',
+          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+          ToolCallCompleted(:final toolName) =>
+            'tool_call_completed($toolName)',
+          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          SteeringInjected(:final content) => 'steering_injected($content)',
+          ProviderError(:final providerName) => 'provider_error($providerName)',
+          MissionStarted(:final missionId) => 'mission_started($missionId)',
+          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        };
 
-      final event = MissionStarted(emittedAt: fixedTime, missionId: 'm-7', startedAt: startedTime);
-      expect(describe(event), 'mission_started(m-7)');
-    });
+        final event = MissionStarted(
+          emittedAt: fixedTime,
+          missionId: 'm-7',
+          startedAt: startedTime,
+        );
+        expect(describe(event), 'mission_started(m-7)');
+      },
+    );
   });
   group('arrarrny/zuraffa_agent#16 — EngineEvent.MissionCompleted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
 
     test('MissionCompleted is an EngineEvent', () {
-      final event = MissionCompleted(emittedAt: fixedTime, missionId: 'sample', status: 'sample', summary: null);
+      final event = MissionCompleted(
+        emittedAt: fixedTime,
+        missionId: 'sample',
+        status: 'sample',
+        summary: null,
+      );
       expect(event, isA<EngineEvent>());
       expect(event, isA<MissionCompleted>());
     });
@@ -256,28 +306,32 @@ void main() {
       expect(event.summary, isNull);
     });
 
-    test('describe(EngineEvent) switch routes MissionCompleted to mission_completed(missionId)', () {
-      String describe(EngineEvent e) => switch (e) {
-        TurnStarted(:final turnId) => 'turn_started($turnId)',
-        TurnCompleted(:final reason) => 'turn_completed($reason)',
-        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
-        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-        SteeringInjected(:final content) => 'steering_injected($content)',
-        ProviderError(:final providerName) => 'provider_error($providerName)',
-        MissionStarted(:final missionId) => 'mission_started($missionId)',
-        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-      };
+    test(
+      'describe(EngineEvent) switch routes MissionCompleted to mission_completed(missionId)',
+      () {
+        String describe(EngineEvent e) => switch (e) {
+          TurnStarted(:final turnId) => 'turn_started($turnId)',
+          TurnCompleted(:final reason) => 'turn_completed($reason)',
+          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+          ToolCallCompleted(:final toolName) =>
+            'tool_call_completed($toolName)',
+          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          SteeringInjected(:final content) => 'steering_injected($content)',
+          ProviderError(:final providerName) => 'provider_error($providerName)',
+          MissionStarted(:final missionId) => 'mission_started($missionId)',
+          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        };
 
-      final event = MissionCompleted(
-        emittedAt: fixedTime,
-        missionId: 'm-42',
-        status: 'fail',
-        summary: 'goal 2 unreachable',
-      );
-      expect(describe(event), 'mission_completed(m-42)');
-    });
+        final event = MissionCompleted(
+          emittedAt: fixedTime,
+          missionId: 'm-42',
+          status: 'fail',
+          summary: 'goal 2 unreachable',
+        );
+        expect(describe(event), 'mission_completed(m-42)');
+      },
+    );
   });
 
   group('spec 066 — EngineEvent value semantics', () {
@@ -292,9 +346,18 @@ void main() {
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(equals(TurnStarted(emittedAt: t, turnId: 't-2'))));
       expect(a, isNot(equals(TurnStarted(emittedAt: t))));
-      expect(a, isNot(equals(TurnStarted(emittedAt: otherTime, turnId: 't-1'))));
-      expect(a.toString(), 'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: t-1)');
-      expect(TurnStarted(emittedAt: t).toString(), 'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: null)');
+      expect(
+        a,
+        isNot(equals(TurnStarted(emittedAt: otherTime, turnId: 't-1'))),
+      );
+      expect(
+        a.toString(),
+        'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: t-1)',
+      );
+      expect(
+        TurnStarted(emittedAt: t).toString(),
+        'TurnStarted(emittedAt: 2026-08-24 07:30:00.000Z, turnId: null)',
+      );
     });
 
     test('TurnCompleted equality, hashCode, toString', () {
@@ -302,34 +365,145 @@ void main() {
       final b = TurnCompleted(emittedAt: t, reason: 'cancelled');
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(TurnCompleted(emittedAt: t, reason: 'max-tokens-reached'))));
+      expect(
+        a,
+        isNot(
+          equals(TurnCompleted(emittedAt: t, reason: 'max-tokens-reached')),
+        ),
+      );
       expect(a, isNot(equals(TurnCompleted(emittedAt: t))));
-      expect(a, isNot(equals(TurnCompleted(emittedAt: otherTime, reason: 'cancelled'))));
-      expect(a.toString(), 'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: cancelled)');
-      expect(TurnCompleted(emittedAt: t).toString(), 'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: null)');
+      expect(
+        a,
+        isNot(equals(TurnCompleted(emittedAt: otherTime, reason: 'cancelled'))),
+      );
+      expect(
+        a.toString(),
+        'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: cancelled)',
+      );
+      expect(
+        TurnCompleted(emittedAt: t).toString(),
+        'TurnCompleted(emittedAt: 2026-08-24 07:30:00.000Z, reason: null)',
+      );
     });
 
     test('ToolCallStarted equality, hashCode, toString', () {
-      final a = ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-1');
-      final b = ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-1');
+      final a = ToolCallStarted(
+        emittedAt: t,
+        toolName: 'fs.read',
+        callId: 'c-1',
+      );
+      final b = ToolCallStarted(
+        emittedAt: t,
+        toolName: 'fs.read',
+        callId: 'c-1',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(ToolCallStarted(emittedAt: t, toolName: 'fs.write', callId: 'c-1'))));
-      expect(a, isNot(equals(ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-2'))));
-      expect(a, isNot(equals(ToolCallStarted(emittedAt: otherTime, toolName: 'fs.read', callId: 'c-1'))));
-      expect(a.toString(), 'ToolCallStarted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1)');
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallStarted(emittedAt: t, toolName: 'fs.write', callId: 'c-1'),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallStarted(emittedAt: t, toolName: 'fs.read', callId: 'c-2'),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallStarted(
+              emittedAt: otherTime,
+              toolName: 'fs.read',
+              callId: 'c-1',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a.toString(),
+        'ToolCallStarted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1)',
+      );
     });
 
     test('ToolCallCompleted equality, hashCode, toString', () {
-      final a = ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: true);
-      final b = ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: true);
+      final a = ToolCallCompleted(
+        emittedAt: t,
+        toolName: 'fs.read',
+        callId: 'c-1',
+        ok: true,
+      );
+      final b = ToolCallCompleted(
+        emittedAt: t,
+        toolName: 'fs.read',
+        callId: 'c-1',
+        ok: true,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-1', ok: false))));
-      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.write', callId: 'c-1', ok: true))));
-      expect(a, isNot(equals(ToolCallCompleted(emittedAt: t, toolName: 'fs.read', callId: 'c-2', ok: true))));
-      expect(a, isNot(equals(ToolCallCompleted(emittedAt: otherTime, toolName: 'fs.read', callId: 'c-1', ok: true))));
-      expect(a.toString(), 'ToolCallCompleted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1, ok: true)');
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallCompleted(
+              emittedAt: t,
+              toolName: 'fs.read',
+              callId: 'c-1',
+              ok: false,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallCompleted(
+              emittedAt: t,
+              toolName: 'fs.write',
+              callId: 'c-1',
+              ok: true,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallCompleted(
+              emittedAt: t,
+              toolName: 'fs.read',
+              callId: 'c-2',
+              ok: true,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ToolCallCompleted(
+              emittedAt: otherTime,
+              toolName: 'fs.read',
+              callId: 'c-1',
+              ok: true,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a.toString(),
+        'ToolCallCompleted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1, ok: true)',
+      );
     });
 
     test('ThinkingDelta equality, hashCode, toString', () {
@@ -338,18 +512,67 @@ void main() {
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(equals(ThinkingDelta(emittedAt: t, delta: 'other'))));
-      expect(a, isNot(equals(ThinkingDelta(emittedAt: otherTime, delta: 'thinking...'))));
-      expect(a.toString(), 'ThinkingDelta(emittedAt: 2026-08-24 07:30:00.000Z, delta: thinking...)');
+      expect(
+        a,
+        isNot(
+          equals(ThinkingDelta(emittedAt: otherTime, delta: 'thinking...')),
+        ),
+      );
+      expect(
+        a.toString(),
+        'ThinkingDelta(emittedAt: 2026-08-24 07:30:00.000Z, delta: thinking...)',
+      );
     });
 
     test('SteeringInjected equality, hashCode, toString', () {
-      final a = SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: otherTime);
-      final b = SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: otherTime);
+      final a = SteeringInjected(
+        emittedAt: t,
+        content: 'new direction',
+        injectedAt: otherTime,
+      );
+      final b = SteeringInjected(
+        emittedAt: t,
+        content: 'new direction',
+        injectedAt: otherTime,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(SteeringInjected(emittedAt: t, content: 'other direction', injectedAt: otherTime))));
-      expect(a, isNot(equals(SteeringInjected(emittedAt: t, content: 'new direction', injectedAt: t))));
-      expect(a, isNot(equals(SteeringInjected(emittedAt: otherTime, content: 'new direction', injectedAt: otherTime))));
+      expect(
+        a,
+        isNot(
+          equals(
+            SteeringInjected(
+              emittedAt: t,
+              content: 'other direction',
+              injectedAt: otherTime,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            SteeringInjected(
+              emittedAt: t,
+              content: 'new direction',
+              injectedAt: t,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            SteeringInjected(
+              emittedAt: otherTime,
+              content: 'new direction',
+              injectedAt: otherTime,
+            ),
+          ),
+        ),
+      );
       expect(
         a.toString(),
         'SteeringInjected(emittedAt: 2026-08-24 07:30:00.000Z, content: new direction, injectedAt: 2026-08-24 09:15:00.000Z)',
@@ -357,24 +580,103 @@ void main() {
     });
 
     test('ProviderError equality, hashCode, toString', () {
-      final a = ProviderError(emittedAt: t, providerName: 'openai', error: '401 unauthorized');
-      final b = ProviderError(emittedAt: t, providerName: 'openai', error: '401 unauthorized');
+      final a = ProviderError(
+        emittedAt: t,
+        providerName: 'openai',
+        error: '401 unauthorized',
+      );
+      final b = ProviderError(
+        emittedAt: t,
+        providerName: 'openai',
+        error: '401 unauthorized',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(ProviderError(emittedAt: t, providerName: 'anthropic', error: '401 unauthorized'))));
-      expect(a, isNot(equals(ProviderError(emittedAt: t, providerName: 'openai', error: '429 rate-limited'))));
-      expect(a, isNot(equals(ProviderError(emittedAt: otherTime, providerName: 'openai', error: '401 unauthorized'))));
-      expect(a.toString(), 'ProviderError(emittedAt: 2026-08-24 07:30:00.000Z, providerName: openai, error: 401 unauthorized)');
+      expect(
+        a,
+        isNot(
+          equals(
+            ProviderError(
+              emittedAt: t,
+              providerName: 'anthropic',
+              error: '401 unauthorized',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ProviderError(
+              emittedAt: t,
+              providerName: 'openai',
+              error: '429 rate-limited',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            ProviderError(
+              emittedAt: otherTime,
+              providerName: 'openai',
+              error: '401 unauthorized',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a.toString(),
+        'ProviderError(emittedAt: 2026-08-24 07:30:00.000Z, providerName: openai, error: 401 unauthorized)',
+      );
     });
 
     test('MissionStarted equality, hashCode, toString', () {
-      final a = MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: otherTime);
-      final b = MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: otherTime);
+      final a = MissionStarted(
+        emittedAt: t,
+        missionId: 'm-7',
+        startedAt: otherTime,
+      );
+      final b = MissionStarted(
+        emittedAt: t,
+        missionId: 'm-7',
+        startedAt: otherTime,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(MissionStarted(emittedAt: t, missionId: 'm-8', startedAt: otherTime))));
-      expect(a, isNot(equals(MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: t))));
-      expect(a, isNot(equals(MissionStarted(emittedAt: otherTime, missionId: 'm-7', startedAt: otherTime))));
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionStarted(
+              emittedAt: t,
+              missionId: 'm-8',
+              startedAt: otherTime,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(MissionStarted(emittedAt: t, missionId: 'm-7', startedAt: t)),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionStarted(
+              emittedAt: otherTime,
+              missionId: 'm-7',
+              startedAt: otherTime,
+            ),
+          ),
+        ),
+      );
       expect(
         a.toString(),
         'MissionStarted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, startedAt: 2026-08-24 09:15:00.000Z)',
@@ -382,20 +684,83 @@ void main() {
     });
 
     test('MissionCompleted equality, hashCode, toString', () {
-      final a = MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: 'all goals met');
-      final b = MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: 'all goals met');
+      final a = MissionCompleted(
+        emittedAt: t,
+        missionId: 'm-7',
+        status: 'success',
+        summary: 'all goals met',
+      );
+      final b = MissionCompleted(
+        emittedAt: t,
+        missionId: 'm-7',
+        status: 'success',
+        summary: 'all goals met',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
-      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-8', status: 'success', summary: 'all goals met'))));
-      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'fail', summary: 'all goals met'))));
-      expect(a, isNot(equals(MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'success', summary: null))));
-      expect(a, isNot(equals(MissionCompleted(emittedAt: otherTime, missionId: 'm-7', status: 'success', summary: 'all goals met'))));
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionCompleted(
+              emittedAt: t,
+              missionId: 'm-8',
+              status: 'success',
+              summary: 'all goals met',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionCompleted(
+              emittedAt: t,
+              missionId: 'm-7',
+              status: 'fail',
+              summary: 'all goals met',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionCompleted(
+              emittedAt: t,
+              missionId: 'm-7',
+              status: 'success',
+              summary: null,
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            MissionCompleted(
+              emittedAt: otherTime,
+              missionId: 'm-7',
+              status: 'success',
+              summary: 'all goals met',
+            ),
+          ),
+        ),
+      );
       expect(
         a.toString(),
         'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: success, summary: all goals met)',
       );
       expect(
-        MissionCompleted(emittedAt: t, missionId: 'm-7', status: 'cancelled', summary: null).toString(),
+        MissionCompleted(
+          emittedAt: t,
+          missionId: 'm-7',
+          status: 'cancelled',
+          summary: null,
+        ).toString(),
         'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: cancelled, summary: null)',
       );
     });
@@ -407,7 +772,6 @@ void main() {
       final completed = TurnCompleted(emittedAt: t, reason: 'same');
       expect(started == completed, isFalse);
       expect(completed == started, isFalse);
-
     });
   });
 
@@ -439,23 +803,27 @@ void main() {
       expect(event.change.emittedAt, isNot(equals(event.emittedAt)));
     });
 
-    test('describe(EngineEvent) switch routes PlanChanged to plan_changed(next plan id)', () {
-      String describe(EngineEvent e) => switch (e) {
-        TurnStarted(:final turnId) => 'turn_started($turnId)',
-        TurnCompleted(:final reason) => 'turn_completed($reason)',
-        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
-        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-        SteeringInjected(:final content) => 'steering_injected($content)',
-        ProviderError(:final providerName) => 'provider_error($providerName)',
-        MissionStarted(:final missionId) => 'mission_started($missionId)',
-        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-      };
+    test(
+      'describe(EngineEvent) switch routes PlanChanged to plan_changed(next plan id)',
+      () {
+        String describe(EngineEvent e) => switch (e) {
+          TurnStarted(:final turnId) => 'turn_started($turnId)',
+          TurnCompleted(:final reason) => 'turn_completed($reason)',
+          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+          ToolCallCompleted(:final toolName) =>
+            'tool_call_completed($toolName)',
+          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          SteeringInjected(:final content) => 'steering_injected($content)',
+          ProviderError(:final providerName) => 'provider_error($providerName)',
+          MissionStarted(:final missionId) => 'mission_started($missionId)',
+          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        };
 
-      final event = PlanChanged(emittedAt: emitted, change: change());
-      expect(describe(event), 'plan_changed(p-2)');
-    });
+        final event = PlanChanged(emittedAt: emitted, change: change());
+        expect(describe(event), 'plan_changed(p-2)');
+      },
+    );
 
     test('PlanChanged value semantics (born with spec 066 pattern)', () {
       final a = PlanChanged(emittedAt: emitted, change: change());
@@ -464,17 +832,24 @@ void main() {
       expect(a.hashCode, b.hashCode);
       expect(
         a,
-        isNot(equals(PlanChanged(
-          emittedAt: DateTime.utc(2026, 8, 24, 9, 15, 0),
-          change: change(),
-        ))),
+        isNot(
+          equals(
+            PlanChanged(
+              emittedAt: DateTime.utc(2026, 8, 24, 9, 15, 0),
+              change: change(),
+            ),
+          ),
+        ),
       );
       final otherChange = PlanChangedEvent(
         emittedAt: applied,
         previous: previous,
         next: PlanState(id: 'p-9', steps: []),
       );
-      expect(a, isNot(equals(PlanChanged(emittedAt: emitted, change: otherChange))));
+      expect(
+        a,
+        isNot(equals(PlanChanged(emittedAt: emitted, change: otherChange))),
+      );
       expect(
         a.toString(),
         'PlanChanged(emittedAt: 2026-08-24 07:30:00.000Z, change: '

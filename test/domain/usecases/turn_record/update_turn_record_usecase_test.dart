@@ -23,8 +23,9 @@ void main() {
   group('UpdateTurnRecordUseCase', () {
     final tTurnRecord = MockTurnRecord();
     test('should call repository.update and return result', () async {
-      when(() => mockRepository.update(any()))
-          .thenAnswer((_) async => tTurnRecord);
+      when(
+        () => mockRepository.update(any()),
+      ).thenAnswer((_) async => tTurnRecord);
       final result = await useCase.call(
         UpdateParams<String, TurnRecordPatch>(id: '1', data: TurnRecordPatch()),
       );

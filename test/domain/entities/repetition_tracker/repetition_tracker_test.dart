@@ -11,29 +11,65 @@ import 'package:zuraffa_agent/src/domain/entities/repetition_tracker/repetition_
 void main() {
   group('RepetitionTracker value object (U1..U6)', () {
     test('U1: value equality across id, maxCalls and window', () {
-      const a = RepetitionTracker(id: 'default', maxCalls: 3, window: Duration(seconds: 30));
-      const b = RepetitionTracker(id: 'default', maxCalls: 3, window: Duration(seconds: 30));
+      const a = RepetitionTracker(
+        id: 'default',
+        maxCalls: 3,
+        window: Duration(seconds: 30),
+      );
+      const b = RepetitionTracker(
+        id: 'default',
+        maxCalls: 3,
+        window: Duration(seconds: 30),
+      );
       expect(a, equals(b));
     });
 
     test('U2: equal instances have equal hashCodes', () {
-      const a = RepetitionTracker(id: 'rt-1', maxCalls: 5, window: Duration(seconds: 60));
-      const b = RepetitionTracker(id: 'rt-1', maxCalls: 5, window: Duration(seconds: 60));
+      const a = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 5,
+        window: Duration(seconds: 60),
+      );
+      const b = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 5,
+        window: Duration(seconds: 60),
+      );
       expect(a.hashCode, equals(b.hashCode));
     });
 
     test('U3: differing id, maxCalls or window makes instances unequal', () {
-      const base = RepetitionTracker(id: 'rt-1', maxCalls: 5, window: Duration(seconds: 60));
-      const otherId = RepetitionTracker(id: 'rt-2', maxCalls: 5, window: Duration(seconds: 60));
-      const otherMaxCalls = RepetitionTracker(id: 'rt-1', maxCalls: 6, window: Duration(seconds: 60));
-      const otherWindow = RepetitionTracker(id: 'rt-1', maxCalls: 5, window: Duration(seconds: 61));
+      const base = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 5,
+        window: Duration(seconds: 60),
+      );
+      const otherId = RepetitionTracker(
+        id: 'rt-2',
+        maxCalls: 5,
+        window: Duration(seconds: 60),
+      );
+      const otherMaxCalls = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 6,
+        window: Duration(seconds: 60),
+      );
+      const otherWindow = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 5,
+        window: Duration(seconds: 61),
+      );
       expect(base, isNot(equals(otherId)));
       expect(base, isNot(equals(otherMaxCalls)));
       expect(base, isNot(equals(otherWindow)));
     });
 
     test('U4: isRepetition is false at maxCalls-1 and true at maxCalls', () {
-      const tracker = RepetitionTracker(id: 'rt-1', maxCalls: 3, window: Duration(seconds: 60));
+      const tracker = RepetitionTracker(
+        id: 'rt-1',
+        maxCalls: 3,
+        window: Duration(seconds: 60),
+      );
       expect(tracker.isRepetition(0), isFalse);
       expect(tracker.isRepetition(2), isFalse);
       expect(tracker.isRepetition(3), isTrue);

@@ -68,8 +68,8 @@ class LLMBasedContextCompressor implements ContextCompressor {
     this.settings = const ContextCompressionSettings(),
     EpisodicMemoryStore? store,
     CompactionSummarizer? fallbackSummarizer,
-  })  : store = store ?? EpisodicMemoryStore(),
-        fallbackSummarizer = fallbackSummarizer ?? const HeuristicSummarizer();
+  }) : store = store ?? EpisodicMemoryStore(),
+       fallbackSummarizer = fallbackSummarizer ?? const HeuristicSummarizer();
 
   @override
   Future<CompressionResult> compress(List<AgentMessage> messages) async {
@@ -82,16 +82,18 @@ class LLMBasedContextCompressor implements ContextCompressor {
         strategy: CompressionStrategy.none,
       );
     }
-    final compressed =
-        messages.sublist(0, messages.length - settings.keepRecentMessages);
-    final preserved =
-        messages.sublist(messages.length - settings.keepRecentMessages);
+    final compressed = messages.sublist(
+      0,
+      messages.length - settings.keepRecentMessages,
+    );
+    final preserved = messages.sublist(
+      messages.length - settings.keepRecentMessages,
+    );
 
     try {
-      final response = await client.generate(LlmRequest(
-        systemPrompt: _snapshotSystemPrompt,
-        messages: compressed,
-      ));
+      final response = await client.generate(
+        LlmRequest(systemPrompt: _snapshotSystemPrompt, messages: compressed),
+      );
       final snapshot = response.content;
       if (!_isValidSnapshot(snapshot)) {
         return await _heuristicFallback(compressed, preserved);
@@ -109,7 +111,8 @@ class LLMBasedContextCompressor implements ContextCompressor {
     }
   }
 
-  static const _snapshotSystemPrompt = 'You are a context compressor. '
+  static const _snapshotSystemPrompt =
+      'You are a context compressor. '
       'Summarize the conversation so far into a single XML <state_snapshot> '
       'document with exactly these five sections, each preserving key '
       'decisions, file state, and plan progress: <overall_goal>, '
@@ -128,7 +131,10 @@ class LLMBasedContextCompressor implements ContextCompressor {
       snapshot.contains('<state_snapshot') &&
       _sectionTags.every(snapshot.contains);
 
-  EpisodicMemory _storeSnapshot(String snapshot, List<AgentMessage> compressed) {
+  EpisodicMemory _storeSnapshot(
+    String snapshot,
+    List<AgentMessage> compressed,
+  ) {
     final memory = EpisodicMemory(
       id: 'mem_${DateTime.now().microsecondsSinceEpoch}',
       summary: snapshot,
@@ -158,13 +164,15 @@ class LLMBasedContextCompressor implements ContextCompressor {
     final snapshot = StringBuffer('<state_snapshot>');
     snapshot.write('<overall_goal>continue the mission</overall_goal>');
     snapshot.write(
-        '<key_knowledge>${summary.decisions.join('; ')}</key_knowledge>');
+      '<key_knowledge>${summary.decisions.join('; ')}</key_knowledge>',
+    );
     snapshot.write('<file_system_state>see key knowledge</file_system_state>');
     snapshot.write('<recent_actions>');
     snapshot.write([...summary.toolNames, ...summary.keyResults].join('; '));
     snapshot.write('</recent_actions>');
     snapshot.write(
-        '<current_plan>${summary.planState ?? 'continue'}</current_plan>');
+      '<current_plan>${summary.planState ?? 'continue'}</current_plan>',
+    );
     snapshot.write('</state_snapshot>');
 
     final memory = _storeSnapshot(snapshot.toString(), compressed);

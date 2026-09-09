@@ -15,9 +15,7 @@ import '../../../domain/entities/planner/plan_mode.dart';
 import '../../../domain/entities/planner/plan_state.dart';
 import '../../../domain/services/planner_service.dart';
 
-class PlannerProvider
-    with Loggable, FailureHandler
-    implements PlannerService {
+class PlannerProvider with Loggable, FailureHandler implements PlannerService {
   PlannerProvider();
 
   @override

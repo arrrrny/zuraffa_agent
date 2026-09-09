@@ -7,7 +7,11 @@ final class ProviderError extends EngineEvent {
   final String providerName;
   final String error;
 
-  const ProviderError({required this.emittedAt, required this.providerName, required this.error});
+  const ProviderError({
+    required this.emittedAt,
+    required this.providerName,
+    required this.error,
+  });
 
   @override
   bool operator ==(Object other) =>

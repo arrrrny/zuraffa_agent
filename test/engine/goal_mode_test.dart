@@ -18,16 +18,16 @@ import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient({required this.completions, this.throwOnCall})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   final int? throwOnCall;
@@ -49,36 +49,37 @@ class FakeToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'ok:$toolName',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'ok:$toolName',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 class ScriptedPlanner implements ToolCallPlanner {
@@ -118,7 +119,11 @@ ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
     ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 const loop10 = EngineLoop(
@@ -144,22 +149,23 @@ void main() {
   MissionRunner makeRunner({
     required List<EngineEvent> events,
     StopPolicy policy = defaultPolicy,
-  }) =>
-      MissionRunner(
-        executor: EngineLoopExecutor(
-          loop10,
-          ScriptedLlmClient(completions: const []),
-        ),
-        toolDispatcher: FakeToolDispatcher(),
-        stopPolicy: policy,
-        onEvent: events.add,
-        clock: () => fakeNow,
-      );
+  }) => MissionRunner(
+    executor: EngineLoopExecutor(
+      loop10,
+      ScriptedLlmClient(completions: const []),
+    ),
+    toolDispatcher: FakeToolDispatcher(),
+    stopPolicy: policy,
+    onEvent: events.add,
+    clock: () => fakeNow,
+  );
 
   group('spec 071 — goal mode', () {
     test('goal achieved on turn 1 stops the mission early', () async {
       final events = <EngineEvent>[];
-      final llm = ScriptedLlmClient(completions: [completionOf('answer ready')]);
+      final llm = ScriptedLlmClient(
+        completions: [completionOf('answer ready')],
+      );
       final runner = MissionRunner(
         executor: EngineLoopExecutor(loop10, llm),
         toolDispatcher: FakeToolDispatcher(),
@@ -167,8 +173,9 @@ void main() {
         onEvent: events.add,
         clock: () => fakeNow,
       );
-      final evaluator =
-          RuleEvaluator((t) => t.any((m) => m.role == 'assistant'));
+      final evaluator = RuleEvaluator(
+        (t) => t.any((m) => m.role == 'assistant'),
+      );
 
       final result = await runner.run(
         missionId: 'm1',
@@ -188,7 +195,8 @@ void main() {
     test('goal evaluation sees tool results within the same turn', () async {
       final events = <EngineEvent>[];
       final llm = ScriptedLlmClient(
-          completions: [completionOf('need tool', finish: 'tool_calls')]);
+        completions: [completionOf('need tool', finish: 'tool_calls')],
+      );
       final runner = MissionRunner(
         executor: EngineLoopExecutor(loop10, llm),
         toolDispatcher: FakeToolDispatcher(),
@@ -205,7 +213,11 @@ void main() {
         goalEvaluator: evaluator,
         planner: ScriptedPlanner({
           1: const [
-            ToolCall(toolName: 'search', arguments: {}, executionMode: 'sequential'),
+            ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential',
+            ),
           ],
         }),
       );
@@ -215,12 +227,18 @@ void main() {
       expect(result.status, MissionStatus.goalAchieved);
       expect(result.turnsUsed, 1);
       expect(llm.callCount, 1);
-      expect(result.transcript.map((m) => m.role), ['user', 'assistant', 'tool']);
+      expect(result.transcript.map((m) => m.role), [
+        'user',
+        'assistant',
+        'tool',
+      ]);
     });
 
     test('goal met on the natural-stop turn reports goalAchieved', () async {
       final events = <EngineEvent>[];
-      final llm = ScriptedLlmClient(completions: [completionOf('final answer')]);
+      final llm = ScriptedLlmClient(
+        completions: [completionOf('final answer')],
+      );
       final runner = MissionRunner(
         executor: EngineLoopExecutor(loop10, llm),
         toolDispatcher: FakeToolDispatcher(),
@@ -242,42 +260,48 @@ void main() {
       expect((events.last as MissionCompleted).status, 'goalAchieved');
     });
 
-    test('unmet goal leaves the mission to its natural stop, evaluator consulted every turn',
-        () async {
-      final events = <EngineEvent>[];
-      final llm = ScriptedLlmClient(completions: [
-        completionOf('a', finish: 'tool_calls'),
-        completionOf('b', finish: 'tool_calls'),
-        completionOf('c'),
-      ]);
-      final runner = MissionRunner(
-        executor: EngineLoopExecutor(loop10, llm),
-        toolDispatcher: FakeToolDispatcher(),
-        stopPolicy: defaultPolicy,
-        onEvent: events.add,
-        clock: () => fakeNow,
-      );
-      final evaluator = RuleEvaluator((_) => false);
+    test(
+      'unmet goal leaves the mission to its natural stop, evaluator consulted every turn',
+      () async {
+        final events = <EngineEvent>[];
+        final llm = ScriptedLlmClient(
+          completions: [
+            completionOf('a', finish: 'tool_calls'),
+            completionOf('b', finish: 'tool_calls'),
+            completionOf('c'),
+          ],
+        );
+        final runner = MissionRunner(
+          executor: EngineLoopExecutor(loop10, llm),
+          toolDispatcher: FakeToolDispatcher(),
+          stopPolicy: defaultPolicy,
+          onEvent: events.add,
+          clock: () => fakeNow,
+        );
+        final evaluator = RuleEvaluator((_) => false);
 
-      final result = await runner.run(
-        missionId: 'm1',
-        messages: const [ChatMessage(role: 'user', content: 'go')],
-        goal: goal,
-        goalEvaluator: evaluator,
-      );
+        final result = await runner.run(
+          missionId: 'm1',
+          messages: const [ChatMessage(role: 'user', content: 'go')],
+          goal: goal,
+          goalEvaluator: evaluator,
+        );
 
-      expect(result.status, MissionStatus.completed);
-      expect(result.goalAchieved, isFalse);
-      expect(result.turnsUsed, 3);
-      expect(evaluator.invocations, 3);
-    });
+        expect(result.status, MissionStatus.completed);
+        expect(result.goalAchieved, isFalse);
+        expect(result.turnsUsed, 3);
+        expect(evaluator.invocations, 3);
+      },
+    );
 
     test('budget exhaustion overrides goal mode', () async {
       final events = <EngineEvent>[];
-      final llm = ScriptedLlmClient(completions: [
-        completionOf('a', finish: 'tool_calls'),
-        completionOf('b', finish: 'tool_calls'),
-      ]);
+      final llm = ScriptedLlmClient(
+        completions: [
+          completionOf('a', finish: 'tool_calls'),
+          completionOf('b', finish: 'tool_calls'),
+        ],
+      );
       final runner = MissionRunner(
         executor: EngineLoopExecutor(loop10, llm),
         toolDispatcher: FakeToolDispatcher(),
@@ -352,7 +376,9 @@ void main() {
     });
 
     test('evaluator receives an unmodifiable transcript view', () async {
-      final llm = ScriptedLlmClient(completions: [completionOf('answer ready')]);
+      final llm = ScriptedLlmClient(
+        completions: [completionOf('answer ready')],
+      );
       final runner = MissionRunner(
         executor: EngineLoopExecutor(loop10, llm),
         toolDispatcher: FakeToolDispatcher(),
@@ -360,7 +386,9 @@ void main() {
         onEvent: (_) {},
         clock: () => fakeNow,
       );
-      final evaluator = RuleEvaluator((t) => t.any((m) => m.role == 'assistant'));
+      final evaluator = RuleEvaluator(
+        (t) => t.any((m) => m.role == 'assistant'),
+      );
 
       await runner.run(
         missionId: 'm1',
@@ -371,8 +399,9 @@ void main() {
 
       expect(evaluator.lastTranscript, isNotNull);
       expect(
-        () => evaluator.lastTranscript!
-            .add(const ChatMessage(role: 'user', content: 'nope')),
+        () => evaluator.lastTranscript!.add(
+          const ChatMessage(role: 'user', content: 'nope'),
+        ),
         throwsUnsupportedError,
       );
     });

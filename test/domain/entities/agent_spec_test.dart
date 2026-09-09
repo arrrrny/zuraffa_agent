@@ -54,10 +54,7 @@ void main() {
 
     test('copyWith creates new instance with overrides', () {
       final original = makeSpec();
-      final updated = original.copyWith(
-        tools: ['new_tool'],
-        budget: 'premium',
-      );
+      final updated = original.copyWith(tools: ['new_tool'], budget: 'premium');
 
       expect(updated.tools, ['new_tool']);
       expect(updated.budget, 'premium');

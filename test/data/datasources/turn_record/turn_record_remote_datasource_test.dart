@@ -10,35 +10,28 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart'
-    show
-        DeleteParams,
-        ListQueryParams,
-        QueryParams,
-        UpdateParams;
+    show DeleteParams, ListQueryParams, QueryParams, UpdateParams;
 
 import 'package:zuraffa_agent/src/domain/entities/turn_record/turn_record.dart';
 import 'package:zuraffa_agent/src/data/datasources/turn_record/turn_record_datasource.dart';
 import 'package:zuraffa_agent/src/data/datasources/turn_record/turn_record_remote_datasource.dart';
 
 TurnRecord make(String id, {int turnNumber = 1}) => TurnRecord(
-      id: id,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(0),
-      turnNumber: turnNumber,
-      messageEntryIds: const ['m1'],
-      toolInvocationEntryIds: const ['t1'],
-      stopReason: 'stop',
-      startedAt: DateTime.fromMillisecondsSinceEpoch(0),
-      endedAt: DateTime.fromMillisecondsSinceEpoch(10),
-      durationMs: 10,
-    );
+  id: id,
+  timestamp: DateTime.fromMillisecondsSinceEpoch(0),
+  turnNumber: turnNumber,
+  messageEntryIds: const ['m1'],
+  toolInvocationEntryIds: const ['t1'],
+  stopReason: 'stop',
+  startedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  endedAt: DateTime.fromMillisecondsSinceEpoch(10),
+  durationMs: 10,
+);
 
 void main() {
   group('TurnRecordRemoteDataSource — contract', () {
     test('is a TurnRecordDataSource', () {
-      expect(
-        TurnRecordRemoteDataSource(),
-        isA<TurnRecordDataSource>(),
-      );
+      expect(TurnRecordRemoteDataSource(), isA<TurnRecordDataSource>());
     });
 
     test('create upserts and returns the stored entity', () async {
@@ -76,10 +69,7 @@ void main() {
       await ds.create(make('a', turnNumber: 1));
 
       final updated = await ds.update(
-        UpdateParams(
-          id: 'a',
-          data: TurnRecordPatch().withTurnNumber(9),
-        ),
+        UpdateParams(id: 'a', data: TurnRecordPatch().withTurnNumber(9)),
       );
       expect(updated.turnNumber, 9);
 
@@ -91,10 +81,7 @@ void main() {
       final ds = TurnRecordRemoteDataSource();
       expect(
         () => ds.update(
-          UpdateParams(
-            id: 'ghost',
-            data: TurnRecordPatch().withTurnNumber(2),
-          ),
+          UpdateParams(id: 'ghost', data: TurnRecordPatch().withTurnNumber(2)),
         ),
         throwsA(isA<StateError>()),
       );

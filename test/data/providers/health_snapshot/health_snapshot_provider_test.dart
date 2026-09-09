@@ -10,15 +10,39 @@ import 'package:zuraffa_agent/src/data/providers/health_snapshot/health_snapshot
 void main() {
   group('arrarrny/zuraffa_agent#5 - HealthSnapshot value equality', () {
     test('HealthSnapshot equality is value-based across all fields', () {
-      final a = HealthSnapshot(id: 'id-a', chainId: 'ref-1', capturedAt: 10, healthyProviders: 10, trippedProviders: 10);
-      final b = HealthSnapshot(id: 'id-a', chainId: 'ref-1', capturedAt: 10, healthyProviders: 10, trippedProviders: 10);
+      final a = HealthSnapshot(
+        id: 'id-a',
+        chainId: 'ref-1',
+        capturedAt: 10,
+        healthyProviders: 10,
+        trippedProviders: 10,
+      );
+      final b = HealthSnapshot(
+        id: 'id-a',
+        chainId: 'ref-1',
+        capturedAt: 10,
+        healthyProviders: 10,
+        trippedProviders: 10,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('HealthSnapshot inequality differs when a field changes', () {
-      final a = HealthSnapshot(id: 'id-a', chainId: 'ref-1', capturedAt: 10, healthyProviders: 10, trippedProviders: 10);
-      final b = HealthSnapshot(id: 'id-b', chainId: 'ref-2', capturedAt: 20, healthyProviders: 20, trippedProviders: 20);
+      final a = HealthSnapshot(
+        id: 'id-a',
+        chainId: 'ref-1',
+        capturedAt: 10,
+        healthyProviders: 10,
+        trippedProviders: 10,
+      );
+      final b = HealthSnapshot(
+        id: 'id-b',
+        chainId: 'ref-2',
+        capturedAt: 20,
+        healthyProviders: 20,
+        trippedProviders: 20,
+      );
       expect(a == b, isFalse);
     });
   });
@@ -29,16 +53,19 @@ void main() {
       expect(provider, isA<HealthSnapshotService>());
     });
 
-    test('HealthSnapshotProvider.current returns the active chain snapshot', () async {
-      final provider = HealthSnapshotProvider();
-      final snapshot = await provider.current(NoParams());
-      expect(snapshot, isA<HealthSnapshot>());
-      expect(snapshot.id, 'default');
-      expect(snapshot.chainId, 'chain-0');
-      expect(snapshot.capturedAt, greaterThanOrEqualTo(0));
-      expect(snapshot.healthyProviders, greaterThanOrEqualTo(0));
-      expect(snapshot.trippedProviders, greaterThanOrEqualTo(0));
-    });
+    test(
+      'HealthSnapshotProvider.current returns the active chain snapshot',
+      () async {
+        final provider = HealthSnapshotProvider();
+        final snapshot = await provider.current(NoParams());
+        expect(snapshot, isA<HealthSnapshot>());
+        expect(snapshot.id, 'default');
+        expect(snapshot.chainId, 'chain-0');
+        expect(snapshot.capturedAt, greaterThanOrEqualTo(0));
+        expect(snapshot.healthyProviders, greaterThanOrEqualTo(0));
+        expect(snapshot.trippedProviders, greaterThanOrEqualTo(0));
+      },
+    );
 
     test('HealthSnapshotProvider.count returns 1', () async {
       final provider = HealthSnapshotProvider();

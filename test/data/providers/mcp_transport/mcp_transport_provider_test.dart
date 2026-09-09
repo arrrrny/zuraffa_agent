@@ -15,46 +15,111 @@ import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
 void main() {
   group('arrarrny/zuraffa_agent#4 - McpTransport value equality', () {
     test('McpTransport equality is value-based across all fields', () {
-      final a = McpTransport(id: 'id-a', transportType: 'sse', endpoint: 'http://localhost:8080/sse', authRequired: true);
-      final b = McpTransport(id: 'id-a', transportType: 'sse', endpoint: 'http://localhost:8080/sse', authRequired: true);
+      final a = McpTransport(
+        id: 'id-a',
+        transportType: 'sse',
+        endpoint: 'http://localhost:8080/sse',
+        authRequired: true,
+      );
+      final b = McpTransport(
+        id: 'id-a',
+        transportType: 'sse',
+        endpoint: 'http://localhost:8080/sse',
+        authRequired: true,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('McpTransport inequality differs when a field changes', () {
-      final a = McpTransport(id: 'id-a', transportType: 'sse', endpoint: 'http://localhost:8080/sse', authRequired: true);
-      final b = McpTransport(id: 'id-b', transportType: 'stdio', endpoint: 'http://localhost:8080/sse', authRequired: false);
+      final a = McpTransport(
+        id: 'id-a',
+        transportType: 'sse',
+        endpoint: 'http://localhost:8080/sse',
+        authRequired: true,
+      );
+      final b = McpTransport(
+        id: 'id-b',
+        transportType: 'stdio',
+        endpoint: 'http://localhost:8080/sse',
+        authRequired: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('McpTransport inequality detected per-field: id', () {
-      final a = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://x', authRequired: false);
-      final b = McpTransport(id: '2', transportType: 'sse', endpoint: 'http://x', authRequired: false);
+      final a = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://x',
+        authRequired: false,
+      );
+      final b = McpTransport(
+        id: '2',
+        transportType: 'sse',
+        endpoint: 'http://x',
+        authRequired: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('McpTransport inequality detected per-field: transportType', () {
-      final a = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://x', authRequired: false);
-      final b = McpTransport(id: '1', transportType: 'stdio', endpoint: 'http://x', authRequired: false);
+      final a = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://x',
+        authRequired: false,
+      );
+      final b = McpTransport(
+        id: '1',
+        transportType: 'stdio',
+        endpoint: 'http://x',
+        authRequired: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('McpTransport inequality detected per-field: endpoint', () {
-      final a = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://a', authRequired: false);
-      final b = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://b', authRequired: false);
+      final a = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://a',
+        authRequired: false,
+      );
+      final b = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://b',
+        authRequired: false,
+      );
       expect(a == b, isFalse);
     });
 
     test('McpTransport inequality detected per-field: authRequired', () {
-      final a = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://x', authRequired: true);
-      final b = McpTransport(id: '1', transportType: 'sse', endpoint: 'http://x', authRequired: false);
+      final a = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://x',
+        authRequired: true,
+      );
+      final b = McpTransport(
+        id: '1',
+        transportType: 'sse',
+        endpoint: 'http://x',
+        authRequired: false,
+      );
       expect(a == b, isFalse);
     });
   });
 
   group('arrarrny/zuraffa_agent#4 - McpTransport toString', () {
     test('toString includes id, transportType, and endpoint', () {
-      final t = McpTransport(id: 'sse-1', transportType: 'sse', endpoint: 'http://localhost:9000/mcp', authRequired: true);
+      final t = McpTransport(
+        id: 'sse-1',
+        transportType: 'sse',
+        endpoint: 'http://localhost:9000/mcp',
+        authRequired: true,
+      );
       final s = t.toString();
       expect(s, contains('sse-1'));
       expect(s, contains('sse'));
@@ -84,7 +149,9 @@ void main() {
         endpoint: 'http://localhost:8080/sse',
         authRequired: true,
       );
-      final transport = await McpTransportProvider(injected).current(NoParams());
+      final transport = await McpTransportProvider(
+        injected,
+      ).current(NoParams());
       expect(transport, same(injected));
     });
 
@@ -125,7 +192,10 @@ void main() {
     });
 
     test('accepts optional bearerToken', () {
-      final t = IoSseMcpTransport(endpoint: 'http://localhost:8080/sse', bearerToken: 'tok-123');
+      final t = IoSseMcpTransport(
+        endpoint: 'http://localhost:8080/sse',
+        bearerToken: 'tok-123',
+      );
       expect(t.isOpen, isFalse);
     });
   });
@@ -158,7 +228,10 @@ void main() {
     });
 
     test('accepts non-empty args list', () {
-      final t = IoStdioMcpTransport(executable: 'node', args: ['server.js', '--port', '3000']);
+      final t = IoStdioMcpTransport(
+        executable: 'node',
+        args: ['server.js', '--port', '3000'],
+      );
       expect(t.isOpen, isFalse);
     });
   });

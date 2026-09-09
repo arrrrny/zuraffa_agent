@@ -26,10 +26,15 @@ class OversizedResultPolicy {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is OversizedResultPolicy &&
-          runtimeType == other.runtimeType && id == other.id && thresholdBytes == other.thresholdBytes && summaryMaxChars == other.summaryMaxChars && artifactStore == other.artifactStore);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          thresholdBytes == other.thresholdBytes &&
+          summaryMaxChars == other.summaryMaxChars &&
+          artifactStore == other.artifactStore);
 
   @override
-  int get hashCode => Object.hash(id, thresholdBytes, summaryMaxChars, artifactStore);
+  int get hashCode =>
+      Object.hash(id, thresholdBytes, summaryMaxChars, artifactStore);
 
   @override
   String toString() =>

@@ -50,10 +50,10 @@ enum RiskTier {
   /// Numeric severity ordering: 0 (safe) < 1 (confirm) < 2 (admin).
   /// Useful for sorting tool lists by risk and for policy comparisons.
   int get severity => switch (this) {
-        RiskTier.safe => 0,
-        RiskTier.confirm => 1,
-        RiskTier.admin => 2,
-      };
+    RiskTier.safe => 0,
+    RiskTier.confirm => 1,
+    RiskTier.admin => 2,
+  };
 
   /// True for [confirm] and [admin] — the engine must pause dispatch
   /// and request an approval callback before running the tool.
@@ -69,12 +69,15 @@ enum RiskTier {
   /// failure, never a silent [RiskTier.safe] fallback that would
   /// under-classify a dangerous tool.
   static RiskTier fromString(String value) => switch (value) {
-        'safe' => RiskTier.safe,
-        'confirm' => RiskTier.confirm,
-        'admin' => RiskTier.admin,
-        _ => throw ArgumentError.value(
-            value, 'value', 'unknown RiskTier — expected safe, confirm or admin'),
-      };
+    'safe' => RiskTier.safe,
+    'confirm' => RiskTier.confirm,
+    'admin' => RiskTier.admin,
+    _ => throw ArgumentError.value(
+      value,
+      'value',
+      'unknown RiskTier — expected safe, confirm or admin',
+    ),
+  };
 }
 
 /// Execution mode for an [AgentTool] — R3.1 "sequential/parallel execution
@@ -92,11 +95,14 @@ enum ExecutionMode {
   /// 'parallel' — exact match). Throws [ArgumentError] for anything
   /// else — same typed-failure discipline as [RiskTier.fromString].
   static ExecutionMode fromString(String value) => switch (value) {
-        'sequential' => ExecutionMode.sequential,
-        'parallel' => ExecutionMode.parallel,
-        _ => throw ArgumentError.value(
-            value, 'value', 'unknown ExecutionMode — expected sequential or parallel'),
-      };
+    'sequential' => ExecutionMode.sequential,
+    'parallel' => ExecutionMode.parallel,
+    _ => throw ArgumentError.value(
+      value,
+      'value',
+      'unknown ExecutionMode — expected sequential or parallel',
+    ),
+  };
 }
 
 /// AgentTool value object (declaration).
@@ -181,37 +187,65 @@ class AgentTool {
   factory AgentTool.fromJson(Map<String, dynamic> json) {
     final idRaw = json['id'];
     if (idRaw is! String) {
-      throw ArgumentError.value(idRaw, 'id', 'AgentTool.id must be a non-null string');
+      throw ArgumentError.value(
+        idRaw,
+        'id',
+        'AgentTool.id must be a non-null string',
+      );
     }
     final descriptionRaw = json['description'];
     if (descriptionRaw is! String) {
-      throw ArgumentError.value(descriptionRaw, 'description', 'AgentTool.description must be a non-null string');
+      throw ArgumentError.value(
+        descriptionRaw,
+        'description',
+        'AgentTool.description must be a non-null string',
+      );
     }
     RiskTier tier;
     final tierRaw = json['riskTier'] ?? 'safe';
     if (tierRaw is! String) {
-      throw ArgumentError.value(tierRaw, 'riskTier', 'AgentTool.riskTier must be a tier-name string');
+      throw ArgumentError.value(
+        tierRaw,
+        'riskTier',
+        'AgentTool.riskTier must be a tier-name string',
+      );
     }
     try {
       tier = RiskTier.fromString(tierRaw);
     } on ArgumentError catch (e) {
-      throw ArgumentError.value(e.invalidValue, 'riskTier', 'AgentTool.riskTier: ${e.message}');
+      throw ArgumentError.value(
+        e.invalidValue,
+        'riskTier',
+        'AgentTool.riskTier: ${e.message}',
+      );
     }
     ExecutionMode mode;
     final modeRaw = json['executionMode'] ?? 'sequential';
     if (modeRaw is! String) {
-      throw ArgumentError.value(modeRaw, 'executionMode', 'AgentTool.executionMode must be a mode-name string');
+      throw ArgumentError.value(
+        modeRaw,
+        'executionMode',
+        'AgentTool.executionMode must be a mode-name string',
+      );
     }
     try {
       mode = ExecutionMode.fromString(modeRaw);
     } on ArgumentError catch (e) {
-      throw ArgumentError.value(e.invalidValue, 'executionMode', 'AgentTool.executionMode: ${e.message}');
+      throw ArgumentError.value(
+        e.invalidValue,
+        'executionMode',
+        'AgentTool.executionMode: ${e.message}',
+      );
     }
     Map<String, dynamic>? schema;
     final schemaRaw = json['paramsSchema'];
     if (schemaRaw != null) {
       if (schemaRaw is! Map) {
-        throw ArgumentError.value(schemaRaw, 'paramsSchema', 'AgentTool.paramsSchema must be a JSON object when present');
+        throw ArgumentError.value(
+          schemaRaw,
+          'paramsSchema',
+          'AgentTool.paramsSchema must be a JSON object when present',
+        );
       }
       schema = Map<String, dynamic>.from(schemaRaw);
     }
@@ -272,12 +306,12 @@ class AgentTool {
   /// order-sensitively (JSON-Schema arrays are ordered).
   @override
   int get hashCode => Object.hash(
-        id,
-        description,
-        riskTier,
-        executionMode,
-        _foldHash(paramsSchema),
-      );
+    id,
+    description,
+    riskTier,
+    executionMode,
+    _foldHash(paramsSchema),
+  );
 
   /// Order-independent hash of a (possibly nested) schema value: maps
   /// fold as a commutative sum of per-entry hashes, lists fold

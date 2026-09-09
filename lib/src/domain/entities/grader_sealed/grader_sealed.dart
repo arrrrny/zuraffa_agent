@@ -26,7 +26,11 @@ class GraderSealed {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GraderSealed &&
-          runtimeType == other.runtimeType && id == other.id && graderType == other.graderType && expectedHash == other.expectedHash && schemaId == other.schemaId);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          graderType == other.graderType &&
+          expectedHash == other.expectedHash &&
+          schemaId == other.schemaId);
 
   @override
   int get hashCode => Object.hash(id, graderType, expectedHash, schemaId);

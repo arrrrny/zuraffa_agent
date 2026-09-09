@@ -12,43 +12,115 @@ import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 void main() {
   group('arrarrny/zuraffa_agent#4 - ToolRegistry value equality', () {
     test('ToolRegistry equality is value-based across all fields', () {
-      final a = ToolRegistry(id: 'id-a', toolNames: const ['a','b'], ddToolCount: 10, generatedToolCount: 10, mcpToolCount: 10);
-      final b = ToolRegistry(id: 'id-a', toolNames: const ['a','b'], ddToolCount: 10, generatedToolCount: 10, mcpToolCount: 10);
+      final a = ToolRegistry(
+        id: 'id-a',
+        toolNames: const ['a', 'b'],
+        ddToolCount: 10,
+        generatedToolCount: 10,
+        mcpToolCount: 10,
+      );
+      final b = ToolRegistry(
+        id: 'id-a',
+        toolNames: const ['a', 'b'],
+        ddToolCount: 10,
+        generatedToolCount: 10,
+        mcpToolCount: 10,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('ToolRegistry inequality differs when a field changes', () {
-      final a = ToolRegistry(id: 'id-a', toolNames: const ['a','b'], ddToolCount: 10, generatedToolCount: 10, mcpToolCount: 10);
-      final b = ToolRegistry(id: 'id-b', toolNames: const ['a','b','c'], ddToolCount: 20, generatedToolCount: 20, mcpToolCount: 20);
+      final a = ToolRegistry(
+        id: 'id-a',
+        toolNames: const ['a', 'b'],
+        ddToolCount: 10,
+        generatedToolCount: 10,
+        mcpToolCount: 10,
+      );
+      final b = ToolRegistry(
+        id: 'id-b',
+        toolNames: const ['a', 'b', 'c'],
+        ddToolCount: 20,
+        generatedToolCount: 20,
+        mcpToolCount: 20,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolRegistry inequality detected per-field: id', () {
-      final a = ToolRegistry(id: 'id-1', toolNames: const [], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
-      final b = ToolRegistry(id: 'id-2', toolNames: const [], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
+      final a = ToolRegistry(
+        id: 'id-1',
+        toolNames: const [],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
+      final b = ToolRegistry(
+        id: 'id-2',
+        toolNames: const [],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolRegistry inequality detected per-field: toolNames', () {
-      final a = ToolRegistry(id: 'id', toolNames: const ['x'], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
-      final b = ToolRegistry(id: 'id', toolNames: const ['x','y'], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
+      final a = ToolRegistry(
+        id: 'id',
+        toolNames: const ['x'],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
+      final b = ToolRegistry(
+        id: 'id',
+        toolNames: const ['x', 'y'],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolRegistry inequality detected per-field: ddToolCount', () {
-      final a = ToolRegistry(id: 'id', toolNames: const [], ddToolCount: 1, generatedToolCount: 0, mcpToolCount: 0);
-      final b = ToolRegistry(id: 'id', toolNames: const [], ddToolCount: 2, generatedToolCount: 0, mcpToolCount: 0);
+      final a = ToolRegistry(
+        id: 'id',
+        toolNames: const [],
+        ddToolCount: 1,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
+      final b = ToolRegistry(
+        id: 'id',
+        toolNames: const [],
+        ddToolCount: 2,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
       expect(a == b, isFalse);
     });
 
     test('ToolRegistry empty toolNames list is valid', () {
-      final r = ToolRegistry(id: 'empty', toolNames: const [], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
+      final r = ToolRegistry(
+        id: 'empty',
+        toolNames: const [],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
       expect(r.toolNames, isEmpty);
     });
 
     test('ToolRegistry zero counts are valid', () {
-      final r = ToolRegistry(id: 'zero', toolNames: const ['t'], ddToolCount: 0, generatedToolCount: 0, mcpToolCount: 0);
+      final r = ToolRegistry(
+        id: 'zero',
+        toolNames: const ['t'],
+        ddToolCount: 0,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
       expect(r.ddToolCount, 0);
       expect(r.generatedToolCount, 0);
       expect(r.mcpToolCount, 0);
@@ -57,7 +129,13 @@ void main() {
 
   group('arrarrny/zuraffa_agent#4 - ToolRegistry toString', () {
     test('toString includes id and toolNames', () {
-      final r = ToolRegistry(id: 'my-reg', toolNames: const ['fs.read','web.fetch'], ddToolCount: 1, generatedToolCount: 2, mcpToolCount: 3);
+      final r = ToolRegistry(
+        id: 'my-reg',
+        toolNames: const ['fs.read', 'web.fetch'],
+        ddToolCount: 1,
+        generatedToolCount: 2,
+        mcpToolCount: 3,
+      );
       final s = r.toString();
       expect(s, contains('my-reg'));
       expect(s, contains('fs.read'));
@@ -70,20 +148,34 @@ void main() {
       expect(provider, isA<ToolRegistryService>());
     });
 
-    test('ToolRegistryProvider.current returns the active registry snapshot', () async {
-      final registry = await ToolRegistryProvider().current(NoParams());
-      expect(registry, isA<ToolRegistry>());
-      expect(registry.id, 'default');
-      expect(registry.toolNames, isNotEmpty);
-      expect(
-        registry.toolNames.length,
-        registry.ddToolCount + registry.generatedToolCount + registry.mcpToolCount,
-      );
-    });
+    test(
+      'ToolRegistryProvider.current returns the active registry snapshot',
+      () async {
+        final registry = await ToolRegistryProvider().current(NoParams());
+        expect(registry, isA<ToolRegistry>());
+        expect(registry.id, 'default');
+        expect(registry.toolNames, isNotEmpty);
+        expect(
+          registry.toolNames.length,
+          registry.ddToolCount +
+              registry.generatedToolCount +
+              registry.mcpToolCount,
+        );
+      },
+    );
 
     test('ToolRegistryProvider.current honours an injected registry', () async {
-      final injected = ToolRegistry(id: 'custom', toolNames: const ['x'], ddToolCount: 1, generatedToolCount: 0, mcpToolCount: 0);
-      expect(await ToolRegistryProvider(injected).current(NoParams()), equals(injected));
+      final injected = ToolRegistry(
+        id: 'custom',
+        toolNames: const ['x'],
+        ddToolCount: 1,
+        generatedToolCount: 0,
+        mcpToolCount: 0,
+      );
+      expect(
+        await ToolRegistryProvider(injected).current(NoParams()),
+        equals(injected),
+      );
     });
 
     test('ToolRegistryProvider.count returns 1', () async {

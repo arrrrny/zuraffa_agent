@@ -10,26 +10,22 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart'
-    show
-        DeleteParams,
-        ListQueryParams,
-        QueryParams,
-        UpdateParams;
+    show DeleteParams, ListQueryParams, QueryParams, UpdateParams;
 
 import 'package:zuraffa_agent/src/domain/entities/usage_ledger_entry/usage_ledger_entry.dart';
 import 'package:zuraffa_agent/src/data/datasources/usage_ledger_entry/usage_ledger_entry_datasource.dart';
 import 'package:zuraffa_agent/src/data/datasources/usage_ledger_entry/usage_ledger_entry_remote_datasource.dart';
 
 UsageLedgerEntry make(String id, {int inputTokens = 10}) => UsageLedgerEntry(
-      id: id,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(0),
-      callId: 'call-$id',
-      turnNumber: 1,
-      inputTokens: inputTokens,
-      outputTokens: 5,
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0,
-    );
+  id: id,
+  timestamp: DateTime.fromMillisecondsSinceEpoch(0),
+  callId: 'call-$id',
+  turnNumber: 1,
+  inputTokens: inputTokens,
+  outputTokens: 5,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+);
 
 void main() {
   group('UsageLedgerEntryRemoteDataSource — contract', () {
@@ -139,7 +135,10 @@ void main() {
       final a = UsageLedgerEntryRemoteDataSource(path: path);
       await a.create(make('p2', inputTokens: 10));
       await a.update(
-        UpdateParams(id: 'p2', data: UsageLedgerEntryPatch().withInputTokens(99)),
+        UpdateParams(
+          id: 'p2',
+          data: UsageLedgerEntryPatch().withInputTokens(99),
+        ),
       );
 
       final b = UsageLedgerEntryRemoteDataSource(path: path);

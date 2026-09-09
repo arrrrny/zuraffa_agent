@@ -16,14 +16,15 @@ class RecordedTrafficProvider
   final RecordedTraffic _active;
 
   RecordedTrafficProvider([RecordedTraffic? active])
-      : _active = active ??
-            const RecordedTraffic(
-              id: 'default',
-              missionId: 'mission-1',
-              llmCallCount: 0,
-              toolCallCount: 0,
-              recordedAt: 0,
-            );
+    : _active =
+          active ??
+          const RecordedTraffic(
+            id: 'default',
+            missionId: 'mission-1',
+            llmCallCount: 0,
+            toolCallCount: 0,
+            recordedAt: 0,
+          );
 
   @override
   Future<RecordedTraffic> current(NoParams params) async => _active;

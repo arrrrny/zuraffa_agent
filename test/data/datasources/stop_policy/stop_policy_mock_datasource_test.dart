@@ -16,35 +16,41 @@ void main() {
       expect(StopPolicyMockDatasource(), isA<StopPolicyDatasource>());
     });
 
-    test('U5: a fresh mock current() returns StopPolicy.defaultPolicy', () async {
-      final ds = StopPolicyMockDatasource();
-      expect(await ds.current(), equals(StopPolicy.defaultPolicy));
-    });
+    test(
+      'U5: a fresh mock current() returns StopPolicy.defaultPolicy',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        expect(await ds.current(), equals(StopPolicy.defaultPolicy));
+      },
+    );
 
-    test('A3 + U6: update(policy) then current() returns exactly the policy written', () async {
-      final ds = StopPolicyMockDatasource();
-      const strict = StopPolicy(
-        id: 'strict',
-        maxTurns: 3,
-        wallClockTimeout: Duration(seconds: 30),
-        repetitionThreshold: 2,
-        enabled: true,
-      );
-      final returned = await ds.update(strict);
-      expect(returned, equals(strict));
-      expect(await ds.current(), equals(strict));
+    test(
+      'A3 + U6: update(policy) then current() returns exactly the policy written',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        const strict = StopPolicy(
+          id: 'strict',
+          maxTurns: 3,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 2,
+          enabled: true,
+        );
+        final returned = await ds.update(strict);
+        expect(returned, equals(strict));
+        expect(await ds.current(), equals(strict));
 
-      // edge-2: full replace — a changed id makes the old id unreachable.
-      const relaxed = StopPolicy(
-        id: 'relaxed',
-        maxTurns: 50,
-        wallClockTimeout: Duration.zero,
-        repetitionThreshold: 5,
-      );
-      await ds.update(relaxed);
-      expect(await ds.current(), equals(relaxed));
-      expect(await ds.current(), isNot(equals(strict)));
-    });
+        // edge-2: full replace — a changed id makes the old id unreachable.
+        const relaxed = StopPolicy(
+          id: 'relaxed',
+          maxTurns: 50,
+          wallClockTimeout: Duration.zero,
+          repetitionThreshold: 5,
+        );
+        await ds.update(relaxed);
+        expect(await ds.current(), equals(relaxed));
+        expect(await ds.current(), isNot(equals(strict)));
+      },
+    );
 
     test('U7: reset() on the mock restores the default', () async {
       final ds = StopPolicyMockDatasource();

@@ -29,16 +29,16 @@ const _turns = 200;
 
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient({required this.completions})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   int callCount = 0;
@@ -51,7 +51,10 @@ class ScriptedLlmClient extends LlmClientProvider {
 }
 
 class FakeToolDispatcher implements ToolDispatcher {
-  final List<({String toolName, Map<String, dynamic> arguments, bool isInternalMission})> calls = [];
+  final List<
+    ({String toolName, Map<String, dynamic> arguments, bool isInternalMission})
+  >
+  calls = [];
 
   @override
   Future<ToolDispatchResult> dispatch({
@@ -76,13 +79,26 @@ class FakeToolDispatcher implements ToolDispatcher {
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async => [for (final c in calls) await dispatch(toolName: c.toolName, arguments: c.arguments, isInternalMission: isInternalMission)];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
-  List<String> validateSchema({required Map<String, dynamic> schema, required Map<String, dynamic> arguments}) => const [];
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 class ScriptedPlanner implements ToolCallPlanner {
@@ -90,82 +106,101 @@ class ScriptedPlanner implements ToolCallPlanner {
   final int perTurn;
 
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async {
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async {
     // Model only wants tools when it explicitly asked (finishReason == 'tool_calls').
     // On the natural stop turn it returns nothing, which ends the mission.
     if (completion.finishReason != 'tool_calls') return const [];
     return [
       for (var i = 0; i < perTurn; i++)
-        const ToolCall(toolName: 'search', arguments: {'q': 'x'}, executionMode: 'sequential'),
+        const ToolCall(
+          toolName: 'search',
+          arguments: {'q': 'x'},
+          executionMode: 'sequential',
+        ),
     ];
   }
 }
 
-ChatCompletion completionOf(String content, {String finish = 'stop'}) => ChatCompletion(
+ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
+    ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 void main() {
-  test('A2: a 200-call mission completes with no event loss or state corruption', () async {
-    final events = <EngineEvent>[];
-    final dispatcher = FakeToolDispatcher();
+  test(
+    'A2: a 200-call mission completes with no event loss or state corruption',
+    () async {
+      final events = <EngineEvent>[];
+      final dispatcher = FakeToolDispatcher();
 
-    // First 199 turns ask for a tool call; the 200th is the natural stop.
-    final completions = [
-      for (var i = 0; i < _turns - 1; i++) completionOf('turn-$i', finish: 'tool_calls'),
-      completionOf('final-answer'),
-    ];
+      // First 199 turns ask for a tool call; the 200th is the natural stop.
+      final completions = [
+        for (var i = 0; i < _turns - 1; i++)
+          completionOf('turn-$i', finish: 'tool_calls'),
+        completionOf('final-answer'),
+      ];
 
-    // Both budgets must allow the full 200 turns, else the loop stops early.
-    const loop = EngineLoop(
-      id: 'loop-200',
-      sessionId: 's1',
-      maxTurns: 250,
-      wallClockTimeoutMs: 600000,
-      repetitionThreshold: 1000,
-    );
-    const policy = StopPolicy(
-      id: 'wide',
-      maxTurns: 250,
-      wallClockTimeout: Duration.zero,
-      repetitionThreshold: 1000,
-    );
+      // Both budgets must allow the full 200 turns, else the loop stops early.
+      const loop = EngineLoop(
+        id: 'loop-200',
+        sessionId: 's1',
+        maxTurns: 250,
+        wallClockTimeoutMs: 600000,
+        repetitionThreshold: 1000,
+      );
+      const policy = StopPolicy(
+        id: 'wide',
+        maxTurns: 250,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 1000,
+      );
 
-    final runner = MissionRunner(
-      executor: EngineLoopExecutor(loop, ScriptedLlmClient(completions: completions)),
-      toolDispatcher: dispatcher,
-      stopPolicy: policy,
-      onEvent: events.add,
-    );
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(
+          loop,
+          ScriptedLlmClient(completions: completions),
+        ),
+        toolDispatcher: dispatcher,
+        stopPolicy: policy,
+        onEvent: events.add,
+      );
 
-    final result = await runner.run(
-      missionId: 'm200',
-      messages: const [ChatMessage(role: 'user', content: 'go')],
-      planner: ScriptedPlanner(1),
-    );
+      final result = await runner.run(
+        missionId: 'm200',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: ScriptedPlanner(1),
+      );
 
-    // Terminal state.
-    expect(result.status, MissionStatus.completed);
-    expect(result.turnsUsed, _turns);
-    expect(result.summary, 'final-answer');
-    expect(events.first, isA<MissionStarted>());
-    expect(events.last, isA<MissionCompleted>());
+      // Terminal state.
+      expect(result.status, MissionStatus.completed);
+      expect(result.turnsUsed, _turns);
+      expect(result.summary, 'final-answer');
+      expect(events.first, isA<MissionStarted>());
+      expect(events.last, isA<MissionCompleted>());
 
-    // No event loss: every turn emits TurnStarted/TurnCompleted; tool calls on
-    // turns 1..199 emit ToolCallStarted/ToolCallCompleted; the final turn does not.
-    expect(events.whereType<TurnStarted>().length, _turns);
-    expect(events.whereType<TurnCompleted>().length, _turns);
-    expect(events.whereType<ToolCallStarted>().length, _turns - 1);
-    expect(events.whereType<ToolCallCompleted>().length, _turns - 1);
-    expect(events.length, 1 + _turns * 2 + (_turns - 1) * 2 + 1);
+      // No event loss: every turn emits TurnStarted/TurnCompleted; tool calls on
+      // turns 1..199 emit ToolCallStarted/ToolCallCompleted; the final turn does not.
+      expect(events.whereType<TurnStarted>().length, _turns);
+      expect(events.whereType<TurnCompleted>().length, _turns);
+      expect(events.whereType<ToolCallStarted>().length, _turns - 1);
+      expect(events.whereType<ToolCallCompleted>().length, _turns - 1);
+      expect(events.length, 1 + _turns * 2 + (_turns - 1) * 2 + 1);
 
-    // No state corruption: every tool call was dispatched once, transcript grows
-    // by exactly two messages per tool turn + one on the final turn.
-    expect(dispatcher.calls, hasLength(_turns - 1));
-    expect(result.transcript.length, 1 + (_turns - 1) * 2 + 1);
-    expect(result.transcript.last.role, 'assistant');
-    expect(result.transcript.last.content, 'final-answer');
-  });
+      // No state corruption: every tool call was dispatched once, transcript grows
+      // by exactly two messages per tool turn + one on the final turn.
+      expect(dispatcher.calls, hasLength(_turns - 1));
+      expect(result.transcript.length, 1 + (_turns - 1) * 2 + 1);
+      expect(result.transcript.last.role, 'assistant');
+      expect(result.transcript.last.content, 'final-answer');
+    },
+  );
 }

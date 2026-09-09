@@ -28,10 +28,16 @@ class ToolRegistry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ToolRegistry &&
-          runtimeType == other.runtimeType && id == other.id && toolNames == other.toolNames && ddToolCount == other.ddToolCount && generatedToolCount == other.generatedToolCount && mcpToolCount == other.mcpToolCount);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          toolNames == other.toolNames &&
+          ddToolCount == other.ddToolCount &&
+          generatedToolCount == other.generatedToolCount &&
+          mcpToolCount == other.mcpToolCount);
 
   @override
-  int get hashCode => Object.hash(id, toolNames, ddToolCount, generatedToolCount, mcpToolCount);
+  int get hashCode =>
+      Object.hash(id, toolNames, ddToolCount, generatedToolCount, mcpToolCount);
 
   @override
   String toString() =>

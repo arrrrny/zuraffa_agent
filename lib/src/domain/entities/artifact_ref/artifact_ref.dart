@@ -7,11 +7,13 @@ part 'artifact_ref.zorphy.dart';
 part 'artifact_ref.g.dart';
 
 /// ArtifactRef entity
-@Zorphy(kind: ZorphyKind.valueObject, generateJson: true, generateCompareTo: true)
+@Zorphy(
+  kind: ZorphyKind.valueObject,
+  generateJson: true,
+  generateCompareTo: true,
+)
 abstract class $ArtifactRef {
-
   String get kind;
   String get id;
   String? get uri;
 }
-

@@ -28,10 +28,16 @@ class RecordedTraffic {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RecordedTraffic &&
-          runtimeType == other.runtimeType && id == other.id && missionId == other.missionId && llmCallCount == other.llmCallCount && toolCallCount == other.toolCallCount && recordedAt == other.recordedAt);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          missionId == other.missionId &&
+          llmCallCount == other.llmCallCount &&
+          toolCallCount == other.toolCallCount &&
+          recordedAt == other.recordedAt);
 
   @override
-  int get hashCode => Object.hash(id, missionId, llmCallCount, toolCallCount, recordedAt);
+  int get hashCode =>
+      Object.hash(id, missionId, llmCallCount, toolCallCount, recordedAt);
 
   @override
   String toString() =>

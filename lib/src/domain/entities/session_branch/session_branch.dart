@@ -28,10 +28,16 @@ class SessionBranch {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SessionBranch &&
-          runtimeType == other.runtimeType && id == other.id && sessionId == other.sessionId && forkedFromEntryId == other.forkedFromEntryId && forkedAt == other.forkedAt && isActive == other.isActive);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          sessionId == other.sessionId &&
+          forkedFromEntryId == other.forkedFromEntryId &&
+          forkedAt == other.forkedAt &&
+          isActive == other.isActive);
 
   @override
-  int get hashCode => Object.hash(id, sessionId, forkedFromEntryId, forkedAt, isActive);
+  int get hashCode =>
+      Object.hash(id, sessionId, forkedFromEntryId, forkedAt, isActive);
 
   @override
   String toString() =>

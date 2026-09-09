@@ -68,23 +68,23 @@ class _SubscriberEntry {
 /// emitter.onEvent = bus.publish;             // the bridge
 /// ```
 class EngineEventBus {
-  EngineEventBus({void Function(Object error, EngineEvent event)?
-      onSubscriberError})
-      : _onSubscriberError = onSubscriberError;
+  EngineEventBus({
+    void Function(Object error, EngineEvent event)? onSubscriberError,
+  }) : _onSubscriberError = onSubscriberError;
 
   final void Function(Object error, EngineEvent event)? _onSubscriberError;
   final List<_SubscriberEntry> _entries = [];
 
   /// Number of live subscriptions.
-  int get subscriberCount =>
-      _entries.where((e) => e.active).length;
+  int get subscriberCount => _entries.where((e) => e.active).length;
 
   /// Subscribes [handler] to events of exactly type [T]. Subscribe with
   /// `EngineEvent` itself to receive every event (the wildcard). All
   /// union members are final classes, so exact-type matching is
   /// unambiguous.
   EngineEventSubscription subscribe<T extends EngineEvent>(
-      void Function(T) handler) {
+    void Function(T) handler,
+  ) {
     final entry = _SubscriberEntry(
       type: T,
       invoke: (EngineEvent event) => handler(event as T),

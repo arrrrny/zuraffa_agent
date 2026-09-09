@@ -28,10 +28,16 @@ class SubAgentContext {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SubAgentContext &&
-          runtimeType == other.runtimeType && id == other.id && subAgentSpecId == other.subAgentSpecId && sessionId == other.sessionId && toolAllowlist == other.toolAllowlist && budgetTurns == other.budgetTurns);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          subAgentSpecId == other.subAgentSpecId &&
+          sessionId == other.sessionId &&
+          toolAllowlist == other.toolAllowlist &&
+          budgetTurns == other.budgetTurns);
 
   @override
-  int get hashCode => Object.hash(id, subAgentSpecId, sessionId, toolAllowlist, budgetTurns);
+  int get hashCode =>
+      Object.hash(id, subAgentSpecId, sessionId, toolAllowlist, budgetTurns);
 
   @override
   String toString() =>

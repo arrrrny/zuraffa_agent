@@ -25,50 +25,81 @@ const _explicitConfig = ProviderConfig(
 void main() {
   group('arrarrny/zuraffa_agent#5 - ProviderConfig value equality', () {
     test('ProviderConfig equality is value-based across all fields', () {
-      final a = ProviderConfig(id: 'id-a', providerKind: 'openai', baseUrl: 'https://api.example.com', models: const ['a','b'], timeoutMs: 10);
-      final b = ProviderConfig(id: 'id-a', providerKind: 'openai', baseUrl: 'https://api.example.com', models: const ['a','b'], timeoutMs: 10);
+      final a = ProviderConfig(
+        id: 'id-a',
+        providerKind: 'openai',
+        baseUrl: 'https://api.example.com',
+        models: const ['a', 'b'],
+        timeoutMs: 10,
+      );
+      final b = ProviderConfig(
+        id: 'id-a',
+        providerKind: 'openai',
+        baseUrl: 'https://api.example.com',
+        models: const ['a', 'b'],
+        timeoutMs: 10,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('ProviderConfig inequality differs when a field changes', () {
-      final a = ProviderConfig(id: 'id-a', providerKind: 'openai', baseUrl: 'https://api.example.com', models: const ['a','b'], timeoutMs: 10);
-      final b = ProviderConfig(id: 'id-b', providerKind: 'anthropic', baseUrl: 'https://api.anthropic.com', models: const ['a','b','c'], timeoutMs: 20);
+      final a = ProviderConfig(
+        id: 'id-a',
+        providerKind: 'openai',
+        baseUrl: 'https://api.example.com',
+        models: const ['a', 'b'],
+        timeoutMs: 10,
+      );
+      final b = ProviderConfig(
+        id: 'id-b',
+        providerKind: 'anthropic',
+        baseUrl: 'https://api.anthropic.com',
+        models: const ['a', 'b', 'c'],
+        timeoutMs: 20,
+      );
       expect(a == b, isFalse);
     });
   });
 
   group('spec 106 - fail-closed provider configuration (issue #117)', () {
     test(
-        'U1: constructing without a configuration throws ArgumentError naming it',
-        () {
-      expect(
-        () => ProviderConfigProvider(),
-        throwsA(
-          predicate((Object e) =>
-              e is ArgumentError &&
-              e.message.toString().contains('ProviderConfig')),
-        ),
-      );
-    });
+      'U1: constructing without a configuration throws ArgumentError naming it',
+      () {
+        expect(
+          () => ProviderConfigProvider(),
+          throwsA(
+            predicate(
+              (Object e) =>
+                  e is ArgumentError &&
+                  e.message.toString().contains('ProviderConfig'),
+            ),
+          ),
+        );
+      },
+    );
 
-    test('U2: a configured provider serves the injected config verbatim',
-        () async {
-      final provider = ProviderConfigProvider(_explicitConfig);
-      expect(provider, isA<ProviderConfigService>());
-      final config = await provider.current(NoParams());
-      expect(config, same(_explicitConfig));
-      expect(config.baseUrl, 'https://llm.example.internal/api');
-      expect(config.models, ['internal/model']);
-      expect(await provider.count(NoParams()), 1);
-    });
+    test(
+      'U2: a configured provider serves the injected config verbatim',
+      () async {
+        final provider = ProviderConfigProvider(_explicitConfig);
+        expect(provider, isA<ProviderConfigService>());
+        final config = await provider.current(NoParams());
+        expect(config, same(_explicitConfig));
+        expect(config.baseUrl, 'https://llm.example.internal/api');
+        expect(config.models, ['internal/model']);
+        expect(await provider.count(NoParams()), 1);
+      },
+    );
 
-    test('A1: explicit construction never trips the fail-closed path',
-        () async {
-      // Constructing with a configuration must not throw on that path.
-      final provider = ProviderConfigProvider(_explicitConfig);
-      final config = await provider.current(NoParams());
-      expect(config.id, 'explicit');
-    });
+    test(
+      'A1: explicit construction never trips the fail-closed path',
+      () async {
+        // Constructing with a configuration must not throw on that path.
+        final provider = ProviderConfigProvider(_explicitConfig);
+        final config = await provider.current(NoParams());
+        expect(config.id, 'explicit');
+      },
+    );
   });
 }

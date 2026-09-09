@@ -21,7 +21,7 @@ class StopPolicyMockDatasource
     with Loggable, FailureHandler
     implements StopPolicyDatasource {
   StopPolicyMockDatasource({StopPolicy? initial})
-      : _policy = initial ?? StopPolicy.defaultPolicy;
+    : _policy = initial ?? StopPolicy.defaultPolicy;
 
   StopPolicy _policy;
 

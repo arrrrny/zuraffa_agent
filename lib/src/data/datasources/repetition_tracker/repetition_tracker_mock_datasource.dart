@@ -26,8 +26,8 @@ class RepetitionTrackerMockDatasource
   RepetitionTrackerMockDatasource({
     RepetitionTracker config = const RepetitionTracker(id: 'default'),
     DateTime Function()? clock,
-  })  : _config = config,
-        _clock = clock ?? DateTime.now;
+  }) : _config = config,
+       _clock = clock ?? DateTime.now;
 
   final RepetitionTracker _config;
   final DateTime Function() _clock;

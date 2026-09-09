@@ -75,11 +75,7 @@ void main() {
           cacheReadTokens: 100,
           cacheWriteTokens: 25,
         ),
-        model: Model(
-          provider: 'openai',
-          modelId: 'gpt-4',
-          contextWindow: 8192,
-        ),
+        model: Model(provider: 'openai', modelId: 'gpt-4', contextWindow: 8192),
       ),
     ];
   }
@@ -89,7 +85,11 @@ void main() {
       for (final entry in makeEntrySet()) {
         final json = entry.toJson();
         final restored = SessionTreeEntry.fromJson(json);
-        expect(restored.toJson(), json, reason: 'Entry ${entry.id} JSON mismatch');
+        expect(
+          restored.toJson(),
+          json,
+          reason: 'Entry ${entry.id} JSON mismatch',
+        );
       }
     });
 
@@ -99,7 +99,11 @@ void main() {
         final json1 = entry.toJson();
         final restored = SessionTreeEntry.fromJson(json1);
         final json2 = restored.toJson();
-        expect(json2, json1, reason: 'Double round-trip of ${entry.id} diverged');
+        expect(
+          json2,
+          json1,
+          reason: 'Double round-trip of ${entry.id} diverged',
+        );
       }
     });
   });

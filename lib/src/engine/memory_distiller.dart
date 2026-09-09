@@ -36,17 +36,20 @@ class DistillationPolicy {
   /// Maximum promotions per distill run; null means uncapped.
   final int? maxPerSession;
 
-  DistillationPolicy({
-    this.salienceThreshold = 0.7,
-    this.maxPerSession,
-  }) {
+  DistillationPolicy({this.salienceThreshold = 0.7, this.maxPerSession}) {
     if (salienceThreshold < 0.0 || salienceThreshold > 1.0) {
       throw ArgumentError.value(
-          salienceThreshold, 'salienceThreshold', 'must be within 0.0..1.0');
+        salienceThreshold,
+        'salienceThreshold',
+        'must be within 0.0..1.0',
+      );
     }
     if (maxPerSession != null && maxPerSession! < 1) {
       throw ArgumentError.value(
-          maxPerSession, 'maxPerSession', 'must be at least 1 when set');
+        maxPerSession,
+        'maxPerSession',
+        'must be at least 1 when set',
+      );
     }
   }
 
@@ -118,8 +121,8 @@ class DistillationReport {
     required List<String> promoted,
     required List<SkippedRecord> skipped,
     required this.sessionRemaining,
-  })  : promoted = List.unmodifiable(promoted),
-        skipped = List.unmodifiable(skipped);
+  }) : promoted = List.unmodifiable(promoted),
+       skipped = List.unmodifiable(skipped);
 
   @override
   bool operator ==(Object other) =>
@@ -135,9 +138,11 @@ class DistillationReport {
       List.generate(a.length, (i) => a[i] == b[i]).every((eq) => eq);
 
   @override
-  int get hashCode =>
-      Object.hash(Object.hashAll(promoted), Object.hashAll(skipped),
-          sessionRemaining);
+  int get hashCode => Object.hash(
+    Object.hashAll(promoted),
+    Object.hashAll(skipped),
+    sessionRemaining,
+  );
 
   @override
   String toString() =>
@@ -149,7 +154,7 @@ class DistillationReport {
 /// (spec 077).
 class MemoryDistiller {
   MemoryDistiller({required this.system, DistillationPolicy? policy})
-      : policy = policy ?? DistillationPolicy();
+    : policy = policy ?? DistillationPolicy();
 
   /// The memory system being distilled — public surface only.
   final AgentMemorySystem system;
@@ -175,15 +180,16 @@ class MemoryDistiller {
 
     // Rank: salience desc, createdAt asc (older first), then insertion
     // order — a total, deterministic order.
-    final indexed = <(MemoryRecord, int)>[
-      for (var i = 0; i < candidates.length; i++) (candidates[i], i),
-    ]..sort((a, b) {
-        final bySalience = b.$1.salience.compareTo(a.$1.salience);
-        if (bySalience != 0) return bySalience;
-        final byAge = a.$1.createdAt.compareTo(b.$1.createdAt);
-        if (byAge != 0) return byAge;
-        return a.$2.compareTo(b.$2);
-      });
+    final indexed =
+        <(MemoryRecord, int)>[
+          for (var i = 0; i < candidates.length; i++) (candidates[i], i),
+        ]..sort((a, b) {
+          final bySalience = b.$1.salience.compareTo(a.$1.salience);
+          if (bySalience != 0) return bySalience;
+          final byAge = a.$1.createdAt.compareTo(b.$1.createdAt);
+          if (byAge != 0) return byAge;
+          return a.$2.compareTo(b.$2);
+        });
 
     // Seed known long-term contents ONCE, then grow it as records are
     // promoted — same-content siblings dedupe mid-run for free, without
@@ -215,8 +221,7 @@ class MemoryDistiller {
     return DistillationReport(
       promoted: promoted,
       skipped: skipped,
-      sessionRemaining:
-          system.sessionMemory.forSession(sessionId).length,
+      sessionRemaining: system.sessionMemory.forSession(sessionId).length,
     );
   }
 

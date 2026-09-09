@@ -39,11 +39,7 @@ class PlanState {
   /// returns null in that case.
   final String? currentStepId;
 
-  const PlanState({
-    required this.id,
-    required this.steps,
-    this.currentStepId,
-  });
+  const PlanState({required this.id, required this.steps, this.currentStepId});
 
   /// Total number of steps in the plan.
   int get totalSteps => steps.length;
@@ -72,8 +68,7 @@ class PlanState {
 
   /// True when every step is terminal (completed or cancelled) and the
   /// plan is non-empty — i.e. the mission's plan has played out.
-  bool get isComplete =>
-      steps.isNotEmpty && steps.every((s) => s.isTerminal);
+  bool get isComplete => steps.isNotEmpty && steps.every((s) => s.isTerminal);
 
   /// The step [currentStepId] points at, or null when unset, empty,
   /// or dangling.
@@ -89,11 +84,8 @@ class PlanState {
   /// Returns a new snapshot with [newSteps] replacing the list. The
   /// receiver's list is untouched. Used by the write_todos tool path
   /// when the model rewrites the whole plan in one call.
-  PlanState withSteps(List<PlanStep> newSteps) => PlanState(
-        id: id,
-        steps: List.of(newSteps),
-        currentStepId: currentStepId,
-      );
+  PlanState withSteps(List<PlanStep> newSteps) =>
+      PlanState(id: id, steps: List.of(newSteps), currentStepId: currentStepId);
 
   /// Returns a new snapshot where the step with [updated.id] is
   /// replaced by [updated]. Steps with unknown ids are ignored — the
@@ -111,11 +103,7 @@ class PlanState {
       }
     }
     if (!replaced) return this;
-    return PlanState(
-      id: id,
-      steps: next,
-      currentStepId: currentStepId,
-    );
+    return PlanState(id: id, steps: next, currentStepId: currentStepId);
   }
 
   /// Returns a new snapshot where the step with [stepId] has its
@@ -150,8 +138,7 @@ class PlanState {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, Object.hashAll(steps), currentStepId);
+  int get hashCode => Object.hash(id, Object.hashAll(steps), currentStepId);
 
   @override
   String toString() =>

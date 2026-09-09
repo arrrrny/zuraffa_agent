@@ -28,10 +28,11 @@ import '../../datasources/stop_policy/stop_policy_mock_datasource.dart';
 /// provider -> datasource (id-less live read). Construct with a custom
 /// [datasource] to swap the backend; construct parameterless for the
 /// default in-memory wiring.
-class StopPolicyProvider with Loggable, FailureHandler
+class StopPolicyProvider
+    with Loggable, FailureHandler
     implements StopPolicyService {
   StopPolicyProvider({StopPolicyDatasource? datasource})
-      : _datasource = datasource ?? StopPolicyMockDatasource();
+    : _datasource = datasource ?? StopPolicyMockDatasource();
 
   final StopPolicyDatasource _datasource;
 

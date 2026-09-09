@@ -16,11 +16,8 @@ class GraderSealedProvider
   final GraderSealed _active;
 
   GraderSealedProvider([GraderSealed? active])
-      : _active = active ??
-            const GraderSealed(
-              id: 'default',
-              graderType: 'exact',
-            );
+    : _active =
+          active ?? const GraderSealed(id: 'default', graderType: 'exact');
 
   @override
   Future<GraderSealed> current(NoParams params) async => _active;

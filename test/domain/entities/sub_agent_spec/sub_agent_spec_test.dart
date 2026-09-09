@@ -24,8 +24,7 @@ void main() {
           systemPrompt: 'You are an explorer.',
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('name')),
+          isA<ArgumentError>().having((e) => e.name, 'name', contains('name')),
         ),
       );
     });
@@ -38,8 +37,11 @@ void main() {
           systemPrompt: 'You are an explorer.',
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('description')),
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('description'),
+          ),
         ),
       );
     });
@@ -52,8 +54,11 @@ void main() {
           systemPrompt: '',
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('systemPrompt')),
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('systemPrompt'),
+          ),
         ),
       );
     });
@@ -81,8 +86,7 @@ void main() {
           tools: ['fs.read', ''],
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('tools')),
+          isA<ArgumentError>().having((e) => e.name, 'name', contains('tools')),
         ),
       );
     });
@@ -96,8 +100,11 @@ void main() {
           subAgents: ['explore', ''],
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('subAgents')),
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('subAgents'),
+          ),
         ),
       );
     });
@@ -133,8 +140,11 @@ void main() {
           maxTurns: 0,
         ),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('maxTurns')),
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('maxTurns'),
+          ),
         ),
       );
       final boundary = SubAgentSpec(
@@ -157,7 +167,10 @@ void main() {
         ),
         throwsA(
           isA<ArgumentError>().having(
-              (e) => e.name, 'name', contains('contextWindowTokens')),
+            (e) => e.name,
+            'name',
+            contains('contextWindowTokens'),
+          ),
         ),
       );
       final boundary = SubAgentSpec(
@@ -169,38 +182,44 @@ void main() {
       expect(boundary.contextWindowTokens, 1);
     });
 
-    test('U8: negative wallClockTimeout throws; Duration.zero and null valid', () {
-      expect(
-        () => SubAgentSpec(
+    test(
+      'U8: negative wallClockTimeout throws; Duration.zero and null valid',
+      () {
+        expect(
+          () => SubAgentSpec(
+            name: 'x',
+            description: 'x',
+            systemPrompt: 'x',
+            wallClockTimeout: const Duration(seconds: -1),
+          ),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.name,
+              'name',
+              contains('wallClockTimeout'),
+            ),
+          ),
+        );
+        // Duration.zero is the documented "no wall-clock limit" sentinel — valid.
+        final zero = SubAgentSpec(
           name: 'x',
           description: 'x',
           systemPrompt: 'x',
-          wallClockTimeout: const Duration(seconds: -1),
-        ),
-        throwsA(
-          isA<ArgumentError>().having(
-              (e) => e.name, 'name', contains('wallClockTimeout')),
-        ),
-      );
-      // Duration.zero is the documented "no wall-clock limit" sentinel — valid.
-      final zero = SubAgentSpec(
-        name: 'x',
-        description: 'x',
-        systemPrompt: 'x',
-        wallClockTimeout: Duration.zero,
-      );
-      expect(zero.wallClockTimeout, Duration.zero);
-      expect(zero.hasBudgets, isTrue);
-      // Null (inherit from parent) is valid and leaves hasBudgets to other
-      // fields.
-      final unset = SubAgentSpec(
-        name: 'x',
-        description: 'x',
-        systemPrompt: 'x',
-      );
-      expect(unset.wallClockTimeout, isNull);
-      expect(unset.hasBudgets, isFalse);
-    });
+          wallClockTimeout: Duration.zero,
+        );
+        expect(zero.wallClockTimeout, Duration.zero);
+        expect(zero.hasBudgets, isTrue);
+        // Null (inherit from parent) is valid and leaves hasBudgets to other
+        // fields.
+        final unset = SubAgentSpec(
+          name: 'x',
+          description: 'x',
+          systemPrompt: 'x',
+        );
+        expect(unset.wallClockTimeout, isNull);
+        expect(unset.hasBudgets, isFalse);
+      },
+    );
   });
 
   group('spec 036 — SubAgentSpec inheritance 1-cycle check (FR-004)', () {
@@ -214,7 +233,10 @@ void main() {
         ),
         throwsA(
           isA<ArgumentError>().having(
-              (e) => e.name, 'name', contains('extendsSpec')),
+            (e) => e.name,
+            'name',
+            contains('extendsSpec'),
+          ),
         ),
       );
     });
@@ -232,66 +254,87 @@ void main() {
     });
   });
 
-  group('spec 036 — characterization pins (FR-005/FR-006, shipped behavior)', () {
-    test('U10 pin: isLeaf/isRoot across the four canonical shapes', () {
-      // root+leaf, root+branch, child+leaf are covered by the pre-existing
-      // provider suite; this pin completes child+branch and holds the matrix.
-      final rootLeaf = SubAgentSpec(
-          name: 'a', description: 'd', systemPrompt: 's');
-      final rootBranch = SubAgentSpec(
-          name: 'b', description: 'd', systemPrompt: 's', subAgents: ['a']);
-      final childLeaf = SubAgentSpec(
-          name: 'c', description: 'd', systemPrompt: 's', extendsSpec: 'a');
-      final childBranch = SubAgentSpec(
+  group(
+    'spec 036 — characterization pins (FR-005/FR-006, shipped behavior)',
+    () {
+      test('U10 pin: isLeaf/isRoot across the four canonical shapes', () {
+        // root+leaf, root+branch, child+leaf are covered by the pre-existing
+        // provider suite; this pin completes child+branch and holds the matrix.
+        final rootLeaf = SubAgentSpec(
+          name: 'a',
+          description: 'd',
+          systemPrompt: 's',
+        );
+        final rootBranch = SubAgentSpec(
+          name: 'b',
+          description: 'd',
+          systemPrompt: 's',
+          subAgents: ['a'],
+        );
+        final childLeaf = SubAgentSpec(
+          name: 'c',
+          description: 'd',
+          systemPrompt: 's',
+          extendsSpec: 'a',
+        );
+        final childBranch = SubAgentSpec(
           name: 'd2',
           description: 'd',
           systemPrompt: 's',
           extendsSpec: 'b',
-          subAgents: ['a', 'c']);
-      expect(rootLeaf.isRoot, isTrue);
-      expect(rootLeaf.isLeaf, isTrue);
-      expect(rootBranch.isRoot, isTrue);
-      expect(rootBranch.isLeaf, isFalse);
-      expect(childLeaf.isRoot, isFalse);
-      expect(childLeaf.isLeaf, isTrue);
-      expect(childBranch.isRoot, isFalse);
-      expect(childBranch.isLeaf, isFalse);
-    });
+          subAgents: ['a', 'c'],
+        );
+        expect(rootLeaf.isRoot, isTrue);
+        expect(rootLeaf.isLeaf, isTrue);
+        expect(rootBranch.isRoot, isTrue);
+        expect(rootBranch.isLeaf, isFalse);
+        expect(childLeaf.isRoot, isFalse);
+        expect(childLeaf.isLeaf, isTrue);
+        expect(childBranch.isRoot, isFalse);
+        expect(childBranch.isLeaf, isFalse);
+      });
 
-    test('U12 pin: equality/hashCode with non-const, independently built lists', () {
-      // FR-006: two specs equal in all ten fields, lists built separately at
-      // runtime (distinct instances, equal contents) must be == and hash
-      // equally. The pre-existing provider test used const literals, which
-      // canonicalize to identical instances — this pin exercises the
-      // element-wise comparison for real.
-      final a = SubAgentSpec(
-        name: 'verify',
-        description: 'Verifier.',
-        systemPrompt: 'Verify strictly.',
-        extendsSpec: 'base',
-        tools: ['fs.read', 'fs.write'],
-        subAgents: ['explore'],
-        riskTier: RiskTier.admin,
-        maxTurns: 5,
-        wallClockTimeout: const Duration(seconds: 30),
-        contextWindowTokens: 8000,
+      test(
+        'U12 pin: equality/hashCode with non-const, independently built lists',
+        () {
+          // FR-006: two specs equal in all ten fields, lists built separately at
+          // runtime (distinct instances, equal contents) must be == and hash
+          // equally. The pre-existing provider test used const literals, which
+          // canonicalize to identical instances — this pin exercises the
+          // element-wise comparison for real.
+          final a = SubAgentSpec(
+            name: 'verify',
+            description: 'Verifier.',
+            systemPrompt: 'Verify strictly.',
+            extendsSpec: 'base',
+            tools: ['fs.read', 'fs.write'],
+            subAgents: ['explore'],
+            riskTier: RiskTier.admin,
+            maxTurns: 5,
+            wallClockTimeout: const Duration(seconds: 30),
+            contextWindowTokens: 8000,
+          );
+          final b = SubAgentSpec(
+            name: 'verify',
+            description: 'Verifier.',
+            systemPrompt: 'Verify strictly.',
+            extendsSpec: 'base',
+            tools: ['fs.read', 'fs.write'],
+            subAgents: ['explore'],
+            riskTier: RiskTier.admin,
+            maxTurns: 5,
+            wallClockTimeout: const Duration(seconds: 30),
+            contextWindowTokens: 8000,
+          );
+          expect(
+            identical(a.tools, b.tools),
+            isFalse,
+            reason: 'the pin must use distinct list instances',
+          );
+          expect(a, equals(b));
+          expect(a.hashCode, b.hashCode);
+        },
       );
-      final b = SubAgentSpec(
-        name: 'verify',
-        description: 'Verifier.',
-        systemPrompt: 'Verify strictly.',
-        extendsSpec: 'base',
-        tools: ['fs.read', 'fs.write'],
-        subAgents: ['explore'],
-        riskTier: RiskTier.admin,
-        maxTurns: 5,
-        wallClockTimeout: const Duration(seconds: 30),
-        contextWindowTokens: 8000,
-      );
-      expect(identical(a.tools, b.tools), isFalse,
-          reason: 'the pin must use distinct list instances');
-      expect(a, equals(b));
-      expect(a.hashCode, b.hashCode);
-    });
-  });
+    },
+  );
 }

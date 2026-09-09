@@ -25,7 +25,7 @@ class YamlAgentSpecProvider
         active,
         'spec',
         'YamlAgentSpecProvider requires an injected YamlAgentSpec — '
-        'no default is provided (issue #117)',
+            'no default is provided (issue #117)',
       );
     }
     return active;

@@ -10,15 +10,35 @@ import 'package:zuraffa_agent/src/data/providers/grader_sealed/grader_sealed_pro
 void main() {
   group('arrarrny/zuraffa_agent#7 - GraderSealed value equality', () {
     test('GraderSealed equality is value-based across all fields', () {
-      final a = GraderSealed(id: 'id-a', graderType: 'exact', expectedHash: null, schemaId: null);
-      final b = GraderSealed(id: 'id-a', graderType: 'exact', expectedHash: null, schemaId: null);
+      final a = GraderSealed(
+        id: 'id-a',
+        graderType: 'exact',
+        expectedHash: null,
+        schemaId: null,
+      );
+      final b = GraderSealed(
+        id: 'id-a',
+        graderType: 'exact',
+        expectedHash: null,
+        schemaId: null,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('GraderSealed inequality differs when a field changes', () {
-      final a = GraderSealed(id: 'id-a', graderType: 'exact', expectedHash: null, schemaId: null);
-      final b = GraderSealed(id: 'id-b', graderType: 'schema', expectedHash: null, schemaId: null);
+      final a = GraderSealed(
+        id: 'id-a',
+        graderType: 'exact',
+        expectedHash: null,
+        schemaId: null,
+      );
+      final b = GraderSealed(
+        id: 'id-b',
+        graderType: 'schema',
+        expectedHash: null,
+        schemaId: null,
+      );
       expect(a == b, isFalse);
     });
   });
@@ -29,12 +49,15 @@ void main() {
       expect(provider, isA<GraderSealedService>());
     });
 
-    test('GraderSealedProvider.current returns the active grader snapshot', () async {
-      final grader = await GraderSealedProvider().current(NoParams());
-      expect(grader, isA<GraderSealed>());
-      expect(grader.id, 'default');
-      expect(grader.graderType, 'exact');
-    });
+    test(
+      'GraderSealedProvider.current returns the active grader snapshot',
+      () async {
+        final grader = await GraderSealedProvider().current(NoParams());
+        expect(grader, isA<GraderSealed>());
+        expect(grader.id, 'default');
+        expect(grader.graderType, 'exact');
+      },
+    );
 
     test('GraderSealedProvider.current honors an injected snapshot', () async {
       final injected = const GraderSealed(id: 'g-1', graderType: 'schema');

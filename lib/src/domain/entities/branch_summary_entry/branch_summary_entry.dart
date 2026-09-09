@@ -9,10 +9,8 @@ part 'branch_summary_entry.g.dart';
 /// BranchSummaryEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $BranchSummaryEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
   String get summary;
 }
-

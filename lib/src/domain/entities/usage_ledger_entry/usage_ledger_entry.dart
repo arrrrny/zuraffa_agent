@@ -9,7 +9,6 @@ part 'usage_ledger_entry.g.dart';
 /// UsageLedgerEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $UsageLedgerEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
@@ -20,4 +19,3 @@ abstract class $UsageLedgerEntry {
   int get cacheReadTokens;
   int get cacheWriteTokens;
 }
-

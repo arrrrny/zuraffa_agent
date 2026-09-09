@@ -16,14 +16,15 @@ class EngineLoopProvider
   final EngineLoop _active;
 
   EngineLoopProvider([EngineLoop? active])
-      : _active = active ??
-            const EngineLoop(
-              id: 'default',
-              sessionId: '',
-              maxTurns: 50,
-              wallClockTimeoutMs: 600000,
-              repetitionThreshold: 3,
-            );
+    : _active =
+          active ??
+          const EngineLoop(
+            id: 'default',
+            sessionId: '',
+            maxTurns: 50,
+            wallClockTimeoutMs: 600000,
+            repetitionThreshold: 3,
+          );
 
   @override
   Future<EngineLoop> current(NoParams params) async => _active;

@@ -9,11 +9,9 @@ part 'sub_agent_type.g.dart';
 /// SubAgentType entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $SubAgentType {
-
   String get id;
   String get name;
   String get specRef;
   List<String> get allowlist;
   String get budgetProfile;
 }
-

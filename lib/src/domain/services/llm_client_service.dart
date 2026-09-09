@@ -7,10 +7,11 @@
 // provider can @override them without ambiguity.
 
 import 'package:zuraffa/zuraffa.dart'
-    hide CompactionStrategy,
-    // zuraffa >=6.2.0 also ships an agent-runtime LlmClient; this package's
-    // domain entity (spec 051) is the one in scope here.
-    LlmClient;
+    hide
+        CompactionStrategy,
+        // zuraffa >=6.2.0 also ships an agent-runtime LlmClient; this package's
+        // domain entity (spec 051) is the one in scope here.
+        LlmClient;
 
 import '../entities/llm_client/llm_client.dart';
 

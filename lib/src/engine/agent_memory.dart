@@ -34,7 +34,10 @@ class MemorySource {
   MemorySource({this.sessionId, this.missionId, this.agentName}) {
     if (sessionId == null && missionId == null && agentName == null) {
       throw ArgumentError.value(
-          this, 'source', 'a memory source needs a session, mission, or agent');
+        this,
+        'source',
+        'a memory source needs a session, mission, or agent',
+      );
     }
   }
 
@@ -74,10 +77,10 @@ class MemoryRecord {
     required this.source,
     DateTime? createdAt,
     double salience = 0.5,
-  })  : content = _validatedContent(content),
-        tags = Set.unmodifiable(tags),
-        createdAt = (createdAt ?? DateTime.now()).toUtc(),
-        salience = _validatedSalience(salience);
+  }) : content = _validatedContent(content),
+       tags = Set.unmodifiable(tags),
+       createdAt = (createdAt ?? DateTime.now()).toUtc(),
+       salience = _validatedSalience(salience);
 
   static String _validatedContent(String content) {
     if (content.trim().isEmpty) {
@@ -88,7 +91,11 @@ class MemoryRecord {
 
   static double _validatedSalience(double salience) {
     if (salience < 0.0 || salience > 1.0) {
-      throw ArgumentError.value(salience, 'salience', 'must be within 0.0..1.0');
+      throw ArgumentError.value(
+        salience,
+        'salience',
+        'must be within 0.0..1.0',
+      );
     }
     return salience;
   }
@@ -109,9 +116,14 @@ class MemoryRecord {
       a.length == b.length && a.containsAll(b);
 
   @override
-  int get hashCode =>
-      Object.hash(id, content, Object.hashAllUnordered(tags), source,
-          createdAt, salience);
+  int get hashCode => Object.hash(
+    id,
+    content,
+    Object.hashAllUnordered(tags),
+    source,
+    createdAt,
+    salience,
+  );
 
   @override
   String toString() =>
@@ -198,8 +210,7 @@ class RecallHit {
   int get hashCode => Object.hash(record, layer);
 
   @override
-  String toString() =>
-      'RecallHit(layer: ${layer.name}, record: ${record.id})';
+  String toString() => 'RecallHit(layer: ${layer.name}, record: ${record.id})';
 }
 
 // Layer 1 — long-term store --------------------------------------------------
@@ -244,8 +255,10 @@ class LongTermMemoryStore {
   }
 
   /// Exact-match tag filter, ranked like [search].
-  List<MemoryRecord> byTag(String tag) =>
-      _ranked([for (final r in _records) if (r.tags.contains(tag)) r]);
+  List<MemoryRecord> byTag(String tag) => _ranked([
+    for (final r in _records)
+      if (r.tags.contains(tag)) r,
+  ]);
 
   /// The [n] most recently created records (createdAt desc).
   List<MemoryRecord> latest(int n) {
@@ -310,9 +323,8 @@ class SessionMemoryStore {
 
   /// Every record across every session, in session-then-insertion order —
   /// the search surface the facade's recall uses.
-  List<MemoryRecord> get all => List.unmodifiable([
-        for (final session in _bySession.values) ...session,
-      ]);
+  List<MemoryRecord> get all =>
+      List.unmodifiable([for (final session in _bySession.values) ...session]);
 
   bool contains(String id) => byId(id) != null;
 
@@ -341,23 +353,34 @@ class MemoryGraph {
   /// Adds a directed link. Self-links throw [ArgumentError]; a repeated
   /// (from, to, type) replaces the earlier link (new note/createdAt)
   /// instead of duplicating.
-  void link(String fromRecordId, String toRecordId, MemoryLinkType type,
-      {String? note}) {
+  void link(
+    String fromRecordId,
+    String toRecordId,
+    MemoryLinkType type, {
+    String? note,
+  }) {
     if (fromRecordId == toRecordId) {
       throw ArgumentError.value(
-          fromRecordId, 'fromRecordId', 'a memory cannot link to itself');
+        fromRecordId,
+        'fromRecordId',
+        'a memory cannot link to itself',
+      );
     }
-    _links.removeWhere((l) =>
-        l.fromRecordId == fromRecordId &&
-        l.toRecordId == toRecordId &&
-        l.type == type);
-    _links.add(MemoryLink(
-      fromRecordId: fromRecordId,
-      toRecordId: toRecordId,
-      type: type,
-      createdAt: DateTime.now().toUtc(),
-      note: note,
-    ));
+    _links.removeWhere(
+      (l) =>
+          l.fromRecordId == fromRecordId &&
+          l.toRecordId == toRecordId &&
+          l.type == type,
+    );
+    _links.add(
+      MemoryLink(
+        fromRecordId: fromRecordId,
+        toRecordId: toRecordId,
+        type: type,
+        createdAt: DateTime.now().toUtc(),
+        note: note,
+      ),
+    );
   }
 
   /// All links, insertion order.
@@ -365,15 +388,15 @@ class MemoryGraph {
 
   /// Links where [recordId] is EITHER endpoint, in insertion order.
   List<MemoryLink> neighborsOf(String recordId) => List.unmodifiable([
-        for (final l in _links)
-          if (l.fromRecordId == recordId || l.toRecordId == recordId) l,
-      ]);
+    for (final l in _links)
+      if (l.fromRecordId == recordId || l.toRecordId == recordId) l,
+  ]);
 
   /// All links of [type].
   List<MemoryLink> linksOf(MemoryLinkType type) => List.unmodifiable([
-        for (final l in _links)
-          if (l.type == type) l,
-      ]);
+    for (final l in _links)
+      if (l.type == type) l,
+  ]);
 
   /// All `contradicts` links — the contradiction surface.
   List<MemoryLink> contradictions() => linksOf(MemoryLinkType.contradicts);
@@ -395,9 +418,9 @@ class AgentMemorySystem {
     LongTermMemoryStore? longTerm,
     SessionMemoryStore? sessions,
     MemoryGraph? graph,
-  })  : longTermMemory = longTerm ?? LongTermMemoryStore(),
-        sessionMemory = sessions ?? SessionMemoryStore(),
-        graph = graph ?? MemoryGraph();
+  }) : longTermMemory = longTerm ?? LongTermMemoryStore(),
+       sessionMemory = sessions ?? SessionMemoryStore(),
+       graph = graph ?? MemoryGraph();
 
   final LongTermMemoryStore longTermMemory;
   final SessionMemoryStore sessionMemory;
@@ -412,14 +435,20 @@ class AgentMemorySystem {
   MemoryRecord remember(MemoryRecord record, {String? sessionId}) {
     if (sessionId == null) {
       if (sessionMemory.contains(record.id)) {
-        throw ArgumentError.value(record.id, 'record.id',
-            'memory id already used in session memory');
+        throw ArgumentError.value(
+          record.id,
+          'record.id',
+          'memory id already used in session memory',
+        );
       }
       longTermMemory.remember(record);
     } else {
       if (longTermMemory.contains(record.id)) {
-        throw ArgumentError.value(record.id, 'record.id',
-            'memory id already used in long-term memory');
+        throw ArgumentError.value(
+          record.id,
+          'record.id',
+          'memory id already used in long-term memory',
+        );
       }
       sessionMemory.remember(sessionId, record);
     }
@@ -438,8 +467,7 @@ class AgentMemorySystem {
         RecallHit(record: r, layer: MemoryLayer.session),
     ];
     hits.sort((a, b) {
-      final bySalience =
-          b.record.salience.compareTo(a.record.salience);
+      final bySalience = b.record.salience.compareTo(a.record.salience);
       if (bySalience != 0) return bySalience;
       return b.record.createdAt.compareTo(a.record.createdAt);
     });
@@ -460,11 +488,18 @@ class AgentMemorySystem {
 
   /// Adds a cross-reference link after validating BOTH endpoints exist in
   /// either layer (graph integrity — the graph never dangles from here).
-  void link(String fromRecordId, String toRecordId, MemoryLinkType type,
-      {String? note}) {
+  void link(
+    String fromRecordId,
+    String toRecordId,
+    MemoryLinkType type, {
+    String? note,
+  }) {
     if (fromRecordId == toRecordId) {
       throw ArgumentError.value(
-          fromRecordId, 'fromRecordId', 'a memory cannot link to itself');
+        fromRecordId,
+        'fromRecordId',
+        'a memory cannot link to itself',
+      );
     }
     _requireKnown(fromRecordId, 'fromRecordId');
     _requireKnown(toRecordId, 'toRecordId');
@@ -474,7 +509,10 @@ class AgentMemorySystem {
   void _requireKnown(String id, String paramName) {
     if (!longTermMemory.contains(id) && !sessionMemory.contains(id)) {
       throw ArgumentError.value(
-          id, paramName, 'cannot link an unknown memory record');
+        id,
+        paramName,
+        'cannot link an unknown memory record',
+      );
     }
   }
 
@@ -484,8 +522,9 @@ class AgentMemorySystem {
   List<(MemoryLink, MemoryRecord?, MemoryLayer?)> linked(String recordId) {
     final results = <(MemoryLink, MemoryRecord?, MemoryLayer?)>[];
     for (final link in graph.neighborsOf(recordId)) {
-      final neighborId =
-          link.fromRecordId == recordId ? link.toRecordId : link.fromRecordId;
+      final neighborId = link.fromRecordId == recordId
+          ? link.toRecordId
+          : link.fromRecordId;
       final record = longTermMemory.byId(neighborId);
       MemoryLayer? layer;
       if (record != null) {
@@ -511,7 +550,10 @@ class AgentMemorySystem {
     if (sessionRecord == null) {
       if (longTermMemory.contains(recordId)) {
         throw ArgumentError.value(
-            recordId, 'recordId', 'already a long-term memory');
+          recordId,
+          'recordId',
+          'already a long-term memory',
+        );
       }
       throw ArgumentError.value(recordId, 'recordId', 'unknown memory record');
     }

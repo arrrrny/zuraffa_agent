@@ -9,11 +9,9 @@ part 'model_change_entry.g.dart';
 /// ModelChangeEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $ModelChangeEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
   String get modelId;
   String get provider;
 }
-

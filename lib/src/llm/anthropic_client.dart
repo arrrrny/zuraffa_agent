@@ -83,19 +83,18 @@ class AnthropicClient implements LlmClient {
           usage = usage.copyWith(
             inputTokens:
                 ((message['usage'] as Map?)?['input_tokens'] as num?)
-                        ?.toInt() ??
-                    usage.inputTokens,
+                    ?.toInt() ??
+                usage.inputTokens,
             cachedTokens:
-                ((message['usage'] as Map?)?['cache_read_input_tokens']
-                        as num?)
+                ((message['usage'] as Map?)?['cache_read_input_tokens'] as num?)
                     ?.toInt() ??
                 usage.cachedTokens,
           );
         case 'content_block_start':
           final block = (event['content_block'] as Map?) ?? const {};
           if (block['type'] == 'tool_use') {
-            toolBuffers[(event['index'] as num?)?.toInt() ?? 0] =
-                _AnthropicToolBuffer(
+            toolBuffers[(event['index'] as num?)?.toInt() ??
+                0] = _AnthropicToolBuffer(
               id: (block['id'] as String?) ?? '',
               name: (block['name'] as String?) ?? '',
             );
@@ -121,23 +120,27 @@ class AnthropicClient implements LlmClient {
               }
           }
         case 'content_block_stop':
-          final buffer = toolBuffers.remove((event['index'] as num?)?.toInt() ?? 0);
+          final buffer = toolBuffers.remove(
+            (event['index'] as num?)?.toInt() ?? 0,
+          );
           if (buffer != null) {
-            yield LlmResponseChunk(toolCalls: [
-              LlmToolCall(
-                id: buffer.id,
-                name: buffer.name,
-                arguments: _parseArguments(buffer.arguments),
-              ),
-            ]);
+            yield LlmResponseChunk(
+              toolCalls: [
+                LlmToolCall(
+                  id: buffer.id,
+                  name: buffer.name,
+                  arguments: _parseArguments(buffer.arguments),
+                ),
+              ],
+            );
           }
         case 'message_delta':
           final delta = (event['delta'] as Map?) ?? const {};
           finishReason =
               _normalizeStopReason(delta['stop_reason'] as String?) ??
-                  finishReason;
-          final outTokens =
-              ((event['usage'] as Map?)?['output_tokens'] as num?)?.toInt();
+              finishReason;
+          final outTokens = ((event['usage'] as Map?)?['output_tokens'] as num?)
+              ?.toInt();
           if (outTokens != null) {
             usage = usage.copyWith(outputTokens: outTokens);
           }
@@ -162,16 +165,17 @@ class AnthropicClient implements LlmClient {
   Future<void> close() async {}
 
   LlmHttpRequest _httpRequest(String body) => LlmHttpRequest(
-        uri: Uri.parse('$baseUrl${baseUrl.endsWith('/') ? '' : '/'}messages'),
-        headers: {
-          'x-api-key': ?apiKey,
-          'anthropic-version': apiVersion,
-          'content-type': 'application/json',
-        },
-        body: body,
-      );
+    uri: Uri.parse('$baseUrl${baseUrl.endsWith('/') ? '' : '/'}messages'),
+    headers: {
+      'x-api-key': ?apiKey,
+      'anthropic-version': apiVersion,
+      'content-type': 'application/json',
+    },
+    body: body,
+  );
 
-  Map<String, dynamic> _buildBody(LlmRequest request, {bool stream = false}) => {
+  Map<String, dynamic> _buildBody(LlmRequest request, {bool stream = false}) =>
+      {
         'model': model,
         'max_tokens': request.maxTokens ?? 4096,
         if (request.systemPrompt != null) 'system': request.systemPrompt,
@@ -291,11 +295,13 @@ class AnthropicClient implements LlmClient {
         case 'thinking':
           thinking = (b['thinking'] as String?) ?? thinking;
         case 'tool_use':
-          toolCalls.add(LlmToolCall(
-            id: (b['id'] as String?) ?? '',
-            name: (b['name'] as String?) ?? '',
-            arguments: _parseArguments(b['input']),
-          ));
+          toolCalls.add(
+            LlmToolCall(
+              id: (b['id'] as String?) ?? '',
+              name: (b['name'] as String?) ?? '',
+              arguments: _parseArguments(b['input']),
+            ),
+          );
       }
     }
     final usage = (json['usage'] as Map?) ?? const {};
@@ -306,8 +312,7 @@ class AnthropicClient implements LlmClient {
       usage: LlmUsage(
         inputTokens: (usage['input_tokens'] as num?)?.toInt() ?? 0,
         outputTokens: (usage['output_tokens'] as num?)?.toInt() ?? 0,
-        cachedTokens:
-            (usage['cache_read_input_tokens'] as num?)?.toInt() ?? 0,
+        cachedTokens: (usage['cache_read_input_tokens'] as num?)?.toInt() ?? 0,
       ),
       finishReason:
           _normalizeStopReason(json['stop_reason'] as String?) ?? 'stop',

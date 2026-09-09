@@ -23,16 +23,16 @@ const kThinking = 'The user wants the weather; I should call the search tool.';
 
 class ThinkingLlmClient extends LlmClientProvider {
   ThinkingLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   int calls = 0;
 
@@ -58,41 +58,37 @@ class OkToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'sunny',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'sunny',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      [
-        for (final c in calls)
-          await dispatch(
-            toolName: c.toolName,
-            arguments: c.arguments,
-            isInternalMission: isInternalMission,
-          )
-      ];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }
 
 class OneShotPlanner implements ToolCallPlanner {
@@ -100,58 +96,61 @@ class OneShotPlanner implements ToolCallPlanner {
   Future<List<ToolCall>> plan(
     ChatCompletion completion,
     List<ChatMessage> transcript,
-  ) async =>
-      completion.finishReason == 'tool_calls'
-          ? const [
-              ToolCall(
-                toolName: 'search',
-                arguments: {'q': 'weather'},
-                executionMode: 'sequential',
-              )
-            ]
-          : const [];
+  ) async => completion.finishReason == 'tool_calls'
+      ? const [
+          ToolCall(
+            toolName: 'search',
+            arguments: {'q': 'weather'},
+            executionMode: 'sequential',
+          ),
+        ]
+      : const [];
 }
 
 void main() {
-  test('A4: a completed turn leaves the assistant message carrying its thinking '
-      'block next to the tool result', () async {
-    const loop = EngineLoop(
-      id: 'loop-4',
-      sessionId: 's4',
-      maxTurns: 4,
-      wallClockTimeoutMs: 600000,
-      repetitionThreshold: 10,
-    );
-    const policy = StopPolicy(
-      id: 'cap4',
-      maxTurns: 4,
-      wallClockTimeout: Duration.zero,
-      repetitionThreshold: 10,
-    );
+  test(
+    'A4: a completed turn leaves the assistant message carrying its thinking '
+    'block next to the tool result',
+    () async {
+      const loop = EngineLoop(
+        id: 'loop-4',
+        sessionId: 's4',
+        maxTurns: 4,
+        wallClockTimeoutMs: 600000,
+        repetitionThreshold: 10,
+      );
+      const policy = StopPolicy(
+        id: 'cap4',
+        maxTurns: 4,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 10,
+      );
 
-    final runner = MissionRunner(
-      executor: EngineLoopExecutor(loop, ThinkingLlmClient()),
-      toolDispatcher: OkToolDispatcher(),
-      stopPolicy: policy,
-      onEvent: (_) {},
-    );
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(loop, ThinkingLlmClient()),
+        toolDispatcher: OkToolDispatcher(),
+        stopPolicy: policy,
+        onEvent: (_) {},
+      );
 
-    final result = await runner.run(
-      missionId: 'm4',
-      messages: const [ChatMessage(role: 'user', content: 'weather?')],
-      planner: OneShotPlanner(),
-    );
+      final result = await runner.run(
+        missionId: 'm4',
+        messages: const [ChatMessage(role: 'user', content: 'weather?')],
+        planner: OneShotPlanner(),
+      );
 
-    final assistantMessages =
-        result.transcript.where((m) => m.role == 'assistant').toList();
-    expect(assistantMessages.first.thinking, kThinking);
+      final assistantMessages = result.transcript
+          .where((m) => m.role == 'assistant')
+          .toList();
+      expect(assistantMessages.first.thinking, kThinking);
 
-    // "next to tool calls": the thinking-bearing assistant message is
-    // immediately followed by the tool-role result of that same turn.
-    final index = result.transcript.indexOf(assistantMessages.first);
-    expect(result.transcript[index + 1].role, 'tool');
+      // "next to tool calls": the thinking-bearing assistant message is
+      // immediately followed by the tool-role result of that same turn.
+      final index = result.transcript.indexOf(assistantMessages.first);
+      expect(result.transcript[index + 1].role, 'tool');
 
-    // A turn without reasoning carries no thinking block.
-    expect(assistantMessages.last.thinking, isNull);
-  });
+      // A turn without reasoning carries no thinking block.
+      expect(assistantMessages.last.thinking, isNull);
+    },
+  );
 }

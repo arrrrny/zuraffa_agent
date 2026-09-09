@@ -91,7 +91,8 @@ class DefaultLoopDetector implements LoopDetector {
       _lastDiagnosisTurn = _turns;
       diagnosisCalls++;
       final verdict = await _diagnose();
-      if (verdict.isStagnant && verdict.confidence >= config.stagnationThreshold) {
+      if (verdict.isStagnant &&
+          verdict.confidence >= config.stagnationThreshold) {
         _detected = true;
         _latchedReason = 'stagnation';
         _latchedConfidence = verdict.confidence;
@@ -119,24 +120,29 @@ class DefaultLoopDetector implements LoopDetector {
 
   Future<_StagnationVerdict> _diagnose() async {
     try {
-      final response = await client!.generate(LlmRequest(
-        systemPrompt: 'You are a mission-progress monitor. Judge whether the '
-            'agent is stuck in cognitive stagnation (repeating reasoning or '
-            'actions without making progress). Answer ONLY with a JSON '
-            'object: {"isStagnant": bool, "confidence": number between 0 and '
-            '1, "reason": string}.',
-        messages: List.unmodifiable(_window),
-      ));
+      final response = await client!.generate(
+        LlmRequest(
+          systemPrompt:
+              'You are a mission-progress monitor. Judge whether the '
+              'agent is stuck in cognitive stagnation (repeating reasoning or '
+              'actions without making progress). Answer ONLY with a JSON '
+              'object: {"isStagnant": bool, "confidence": number between 0 and '
+              '1, "reason": string}.',
+          messages: List.unmodifiable(_window),
+        ),
+      );
       final decoded = jsonDecode(response.content);
       if (decoded is! Map) {
         return _StagnationVerdict.error(
-            'diagnosis response is not a JSON object');
+          'diagnosis response is not a JSON object',
+        );
       }
       final isStagnant = decoded['isStagnant'];
       final confidence = decoded['confidence'];
       if (isStagnant is! bool || confidence is! num) {
         return _StagnationVerdict.error(
-            'diagnosis verdict missing isStagnant(bool)/confidence(number)');
+          'diagnosis verdict missing isStagnant(bool)/confidence(number)',
+        );
       }
       return _StagnationVerdict(
         isStagnant: isStagnant,
@@ -164,9 +170,8 @@ class _StagnationVerdict {
   }) : error = null;
 
   const _StagnationVerdict.error(String message)
-      : isStagnant = false,
-        confidence = 0,
-        reason = '',
-        error = message;
-
+    : isStagnant = false,
+      confidence = 0,
+      reason = '',
+      error = message;
 }

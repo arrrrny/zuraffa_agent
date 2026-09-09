@@ -16,13 +16,14 @@ class ReplayCliSurfaceProvider
   final ReplayCliSurface _active;
 
   ReplayCliSurfaceProvider([ReplayCliSurface? active])
-      : _active = active ??
-            const ReplayCliSurface(
-              id: 'default',
-              missionId: 'mission-0',
-              graderMatrixId: 'grader-0',
-              verbosity: 'normal',
-            );
+    : _active =
+          active ??
+          const ReplayCliSurface(
+            id: 'default',
+            missionId: 'mission-0',
+            graderMatrixId: 'grader-0',
+            verbosity: 'normal',
+          );
 
   @override
   Future<ReplayCliSurface> current(NoParams params) async => _active;

@@ -27,7 +27,7 @@ class ProviderConfigProvider
         active,
         'config',
         'ProviderConfigProvider requires an injected ProviderConfig — '
-        'no default is provided (issue #117)',
+            'no default is provided (issue #117)',
       );
     }
     return active;

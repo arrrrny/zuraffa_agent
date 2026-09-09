@@ -43,8 +43,11 @@ class _CountingClient implements McpClient {
   }
 
   @override
-  Future<McpCallResult> callTool(String name, Map<String, dynamic> args, {McpCallOptions? options}) async =>
-      const McpCallError(code: 'not-implemented', message: 'stub');
+  Future<McpCallResult> callTool(
+    String name,
+    Map<String, dynamic> args, {
+    McpCallOptions? options,
+  }) async => const McpCallError(code: 'not-implemented', message: 'stub');
 
   @override
   Stream<void> get onToolsChanged => _toolsChangedController.stream;
@@ -73,9 +76,7 @@ void main() {
     test('first call hits the underlying client', () async {
       final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
       final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
       final cache = ToolListingCache(
         client: client,
         maxAge: const Duration(seconds: 60),
@@ -87,33 +88,34 @@ void main() {
       await cache.dispose();
     });
 
-    test('second call within TTL returns the cached value (no second listTools)', () async {
-      var now = DateTime.utc(2026, 8, 27, 10, 0, 0);
-      final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
-      final cache = ToolListingCache(
-        client: client,
-        maxAge: const Duration(seconds: 60),
-        now: () => now,
-      );
-      await cache.getOrRefresh();
-      // Advance time by 30s (still within TTL).
-      now = now.add(const Duration(seconds: 30));
-      final tools = await cache.getOrRefresh();
-      expect(tools.map((t) => t.name), ['a']);
-      expect(client.listToolsCallCount, 1); // still 1, no re-list
-      expect(cache.hasFreshEntry, isTrue);
-      await cache.dispose();
-    });
+    test(
+      'second call within TTL returns the cached value (no second listTools)',
+      () async {
+        var now = DateTime.utc(2026, 8, 27, 10, 0, 0);
+        final client = _CountingClient(transport);
+        client.nextTools = const [
+          McpToolDescriptor(name: 'a', description: 'A'),
+        ];
+        final cache = ToolListingCache(
+          client: client,
+          maxAge: const Duration(seconds: 60),
+          now: () => now,
+        );
+        await cache.getOrRefresh();
+        // Advance time by 30s (still within TTL).
+        now = now.add(const Duration(seconds: 30));
+        final tools = await cache.getOrRefresh();
+        expect(tools.map((t) => t.name), ['a']);
+        expect(client.listToolsCallCount, 1); // still 1, no re-list
+        expect(cache.hasFreshEntry, isTrue);
+        await cache.dispose();
+      },
+    );
 
     test('after TTL expiry, the next call re-lists', () async {
       var now = DateTime.utc(2026, 8, 27, 10, 0, 0);
       final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
       final cache = ToolListingCache(
         client: client,
         maxAge: const Duration(seconds: 60),
@@ -137,9 +139,7 @@ void main() {
     test('explicit invalidate() forces the next call to re-list', () async {
       final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
       final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
       final cache = ToolListingCache(
         client: client,
         maxAge: const Duration(seconds: 60),
@@ -157,9 +157,7 @@ void main() {
     test('onToolsChanged from the client invalidates the cache', () async {
       final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
       final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
       final cache = ToolListingCache(
         client: client,
         maxAge: const Duration(seconds: 60),
@@ -185,9 +183,7 @@ void main() {
     test('dispose() cancels the onToolsChanged subscription', () async {
       final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
       final client = _CountingClient(transport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'a', description: 'A'),
-      ];
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
       final cache = ToolListingCache(
         client: client,
         maxAge: const Duration(seconds: 60),

@@ -19,14 +19,10 @@ class SteeringQueueProvider
   final List<SteeringQueue> _queues;
 
   SteeringQueueProvider([SteeringQueue? active])
-      : _queues = [
-          active ??
-              SteeringQueue(
-                id: 'queue-default',
-                pending: [],
-                processedCount: 0,
-              ),
-        ];
+    : _queues = [
+        active ??
+            SteeringQueue(id: 'queue-default', pending: [], processedCount: 0),
+      ];
 
   @override
   Future<SteeringQueue> current(NoParams params) async => _queues.last;

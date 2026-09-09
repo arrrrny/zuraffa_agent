@@ -8,7 +8,12 @@ final class ToolCallCompleted extends EngineEvent {
   final String callId;
   final bool ok;
 
-  const ToolCallCompleted({required this.emittedAt, required this.toolName, required this.callId, required this.ok});
+  const ToolCallCompleted({
+    required this.emittedAt,
+    required this.toolName,
+    required this.callId,
+    required this.ok,
+  });
 
   @override
   bool operator ==(Object other) =>

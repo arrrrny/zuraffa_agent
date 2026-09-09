@@ -178,7 +178,10 @@ void main() {
       );
       expect(
         () => client.registerTool(
-          descriptor: const McpToolDescriptor(name: 'a', description: 'A again'),
+          descriptor: const McpToolDescriptor(
+            name: 'a',
+            description: 'A again',
+          ),
           callback: (args) async => {},
         ),
         throwsA(isA<ArgumentError>()),

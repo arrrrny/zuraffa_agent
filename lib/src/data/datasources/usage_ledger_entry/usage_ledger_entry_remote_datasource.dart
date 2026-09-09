@@ -21,19 +21,17 @@ class UsageLedgerEntryRemoteDataSource
   final Map<String, UsageLedgerEntry> _mem = <String, UsageLedgerEntry>{};
 
   UsageLedgerEntryRemoteDataSource({this.path})
-      : _storage = path == null
-            ? null
-            : JsonlEntityStorage<UsageLedgerEntry>(
-                path: path,
-                fromJson: UsageLedgerEntry.fromJson,
-                toJson: (r) => r.toJson(),
-                getId: (r) => r.id,
-              );
+    : _storage = path == null
+          ? null
+          : JsonlEntityStorage<UsageLedgerEntry>(
+              path: path,
+              fromJson: UsageLedgerEntry.fromJson,
+              toJson: (r) => r.toJson(),
+              getId: (r) => r.id,
+            );
 
   @override
-  Future<UsageLedgerEntry> get(
-    QueryParams<UsageLedgerEntry> params,
-  ) async {
+  Future<UsageLedgerEntry> get(QueryParams<UsageLedgerEntry> params) async {
     final id = params.params?['id'] as String?;
     final found = await _read(id);
     if (found == null) {

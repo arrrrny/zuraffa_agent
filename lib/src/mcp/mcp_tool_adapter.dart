@@ -57,11 +57,7 @@ class McpToolAdapter {
     required this.serverId,
     Duration maxAge = const Duration(seconds: 60),
     required DateTime Function() now,
-  }) : _cache = ToolListingCache(
-          client: client,
-          maxAge: maxAge,
-          now: now,
-        );
+  }) : _cache = ToolListingCache(client: client, maxAge: maxAge, now: now);
 
   /// Build the fully-qualified registry name for an MCP tool.
   ///

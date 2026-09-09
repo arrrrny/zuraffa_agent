@@ -19,7 +19,11 @@ void main() {
       ];
       // Fixture precondition: count the trues explicitly so a future edit
       // cannot silently drift the arithmetic again (misfire #3 root cause).
-      expect(outcomes.where((p) => p).length, 6, reason: 'fixture must hold 6 trues');
+      expect(
+        outcomes.where((p) => p).length,
+        6,
+        reason: 'fixture must hold 6 trues',
+      );
       expect(outcomes.length, 10);
       final viaRun = PassAtK.fromResults(outcomes, k: 3);
       final direct = PassAtK.compute(n: 10, c: 6, k: 3);
@@ -34,8 +38,11 @@ void main() {
       expect(
         () => PassAtK.fromResults(const [], k: 1),
         throwsA(
-          isA<ArgumentError>()
-              .having((e) => e.name, 'name', contains('outcomes')),
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('outcomes'),
+          ),
         ),
       );
     });
@@ -71,8 +78,11 @@ void main() {
       final result = PassAtK.compute(n: 5, c: 1, k: 2);
       expect(result.value, closeTo(0.4, 1e-9));
       final t = result.value;
-      expect(result.meetsThreshold(t), isTrue,
-          reason: 't == value must meet (inclusive >=)');
+      expect(
+        result.meetsThreshold(t),
+        isTrue,
+        reason: 't == value must meet (inclusive >=)',
+      );
       expect(result.meetsThreshold(t - 1e-9), isTrue);
       expect(result.meetsThreshold(t + 1e-9), isFalse);
       // Endpoints of the valid range: 0.0 and 1.0 are exact doubles.
@@ -86,8 +96,11 @@ void main() {
         expect(
           () => result.meetsThreshold(bad),
           throwsA(
-            isA<ArgumentError>()
-                .having((e) => e.name, 'name', contains('threshold')),
+            isA<ArgumentError>().having(
+              (e) => e.name,
+              'name',
+              contains('threshold'),
+            ),
           ),
           reason: 'threshold $bad must be rejected',
         );
@@ -102,8 +115,11 @@ void main() {
       var previous = PassAtK.compute(n: 20, c: 4, k: 1).value;
       for (var k = 2; k <= 16; k++) {
         final current = PassAtK.compute(n: 20, c: 4, k: k).value;
-        expect(current >= previous, isTrue,
-            reason: 'pass@k decreased from k=${k - 1} to k=$k');
+        expect(
+          current >= previous,
+          isTrue,
+          reason: 'pass@k decreased from k=${k - 1} to k=$k',
+        );
         previous = current;
       }
       // Certainty begins at k = n-c+1 (the k-th product term hits zero:

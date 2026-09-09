@@ -30,10 +30,23 @@ class CompactionStrategy {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CompactionStrategy &&
-          runtimeType == other.runtimeType && id == other.id && sessionId == other.sessionId && retainEntryIds == other.retainEntryIds && summarizeEntryIds == other.summarizeEntryIds && artifactRefs == other.artifactRefs && compactedAt == other.compactedAt);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          sessionId == other.sessionId &&
+          retainEntryIds == other.retainEntryIds &&
+          summarizeEntryIds == other.summarizeEntryIds &&
+          artifactRefs == other.artifactRefs &&
+          compactedAt == other.compactedAt);
 
   @override
-  int get hashCode => Object.hash(id, sessionId, retainEntryIds, summarizeEntryIds, artifactRefs, compactedAt);
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    retainEntryIds,
+    summarizeEntryIds,
+    artifactRefs,
+    compactedAt,
+  );
 
   @override
   String toString() =>

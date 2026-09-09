@@ -67,7 +67,11 @@ class SwarmTask {
   final SubAgentSpec spec;
   final String mission;
 
-  const SwarmTask({required this.id, required this.spec, required this.mission});
+  const SwarmTask({
+    required this.id,
+    required this.spec,
+    required this.mission,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -82,7 +86,8 @@ class SwarmTask {
   int get hashCode => Object.hash(id, spec, mission);
 
   @override
-  String toString() => 'SwarmTask(id: $id, spec: ${spec.name}, mission: $mission)';
+  String toString() =>
+      'SwarmTask(id: $id, spec: ${spec.name}, mission: $mission)';
 }
 
 /// One member's outcome inside a swarm run.
@@ -159,12 +164,12 @@ class SwarmResult {
 
   @override
   int get hashCode => Object.hash(
-        strategy,
-        status,
-        Object.hashAll(results),
-        winner,
-        completedCount,
-      );
+    strategy,
+    status,
+    Object.hashAll(results),
+    winner,
+    completedCount,
+  );
 
   @override
   String toString() =>
@@ -177,7 +182,7 @@ class SwarmResult {
 /// service with strategy-based aggregation.
 class AgentSwarm {
   AgentSwarm({required SubAgentDispatchService dispatchService})
-      : _dispatchService = dispatchService;
+    : _dispatchService = dispatchService;
 
   final SubAgentDispatchService _dispatchService;
 
@@ -204,7 +209,11 @@ class AgentSwarm {
     bool adminGranted = false,
   }) async {
     if (tasks.isEmpty) {
-      throw ArgumentError.value(tasks, 'tasks', 'a swarm needs at least one task');
+      throw ArgumentError.value(
+        tasks,
+        'tasks',
+        'a swarm needs at least one task',
+      );
     }
     final ids = tasks.map((t) => t.id).toSet();
     if (ids.length != tasks.length) {
@@ -216,7 +225,11 @@ class AgentSwarm {
     }
     if (strategy == SwarmStrategy.quorum) {
       if (quorum == null) {
-        throw ArgumentError.value(quorum, 'quorum', 'quorum strategy requires a quorum size');
+        throw ArgumentError.value(
+          quorum,
+          'quorum',
+          'quorum strategy requires a quorum size',
+        );
       }
       if (quorum < 1 || quorum > tasks.length) {
         throw ArgumentError.value(
@@ -267,39 +280,46 @@ class AgentSwarm {
           return;
         }
         successes++;
-        if (strategy == SwarmStrategy.firstCompleted && !completer.isCompleted) {
+        if (strategy == SwarmStrategy.firstCompleted &&
+            !completer.isCompleted) {
           subscription?.cancel();
-          completer.complete(SwarmResult(
-            strategy: strategy,
-            status: SwarmStatus.firstCompleted,
-            results: [result],
-            winner: result,
-            completedCount: 1,
-          ));
+          completer.complete(
+            SwarmResult(
+              strategy: strategy,
+              status: SwarmStatus.firstCompleted,
+              results: [result],
+              winner: result,
+              completedCount: 1,
+            ),
+          );
         } else if (strategy == SwarmStrategy.quorum &&
             successes == quorum &&
             !completer.isCompleted) {
           subscription?.cancel();
-          completer.complete(SwarmResult(
-            strategy: strategy,
-            status: SwarmStatus.quorumReached,
-            results: List.of(collected),
-            winner: null,
-            completedCount: successes,
-          ));
+          completer.complete(
+            SwarmResult(
+              strategy: strategy,
+              status: SwarmStatus.quorumReached,
+              results: List.of(collected),
+              winner: null,
+              completedCount: successes,
+            ),
+          );
         }
       },
       onDone: () {
         if (completer.isCompleted) return;
-        completer.complete(SwarmResult(
-          strategy: strategy,
-          status: strategy == SwarmStrategy.firstCompleted
-              ? SwarmStatus.partialFailure
-              : SwarmStatus.quorumFailed,
-          results: List.of(collected),
-          winner: null,
-          completedCount: successes,
-        ));
+        completer.complete(
+          SwarmResult(
+            strategy: strategy,
+            status: strategy == SwarmStrategy.firstCompleted
+                ? SwarmStatus.partialFailure
+                : SwarmStatus.quorumFailed,
+            results: List.of(collected),
+            winner: null,
+            completedCount: successes,
+          ),
+        );
       },
       onError: (Object e, StackTrace st) {
         if (!completer.isCompleted) completer.completeError(e, st);

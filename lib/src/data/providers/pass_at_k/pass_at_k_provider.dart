@@ -11,13 +11,11 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/pass_at_k/pass_at_k.dart';
 import '../../../domain/services/pass_at_k_service.dart';
 
-class PassAtKProvider
-    with Loggable, FailureHandler
-    implements PassAtKService {
+class PassAtKProvider with Loggable, FailureHandler implements PassAtKService {
   final PassAtK _snapshot;
 
   PassAtKProvider({int n = 10, int c = 1, int k = 1})
-      : _snapshot = PassAtK.compute(n: n, c: c, k: k);
+    : _snapshot = PassAtK.compute(n: n, c: c, k: k);
 
   @override
   Future<PassAtK> current(NoParams params) async => _snapshot;

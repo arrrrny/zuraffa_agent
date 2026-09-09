@@ -7,10 +7,7 @@ class StoreOpenResult {
   final int loadedEntriesCount;
   final JsonlTear? tearReport;
 
-  const StoreOpenResult({
-    required this.loadedEntriesCount,
-    this.tearReport,
-  });
+  const StoreOpenResult({required this.loadedEntriesCount, this.tearReport});
 }
 
 /// Diagnostic information when a corrupt JSONL tail is salvaged.

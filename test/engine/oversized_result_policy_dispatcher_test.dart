@@ -36,16 +36,16 @@ import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 // self-contained.
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient({required this.completions})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   int callCount = 0;
@@ -63,7 +63,10 @@ class ScriptedPlanner implements ToolCallPlanner {
   int _count = 0;
 
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async {
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async {
     _count++;
     return planByCall[_count] ?? const [];
   }
@@ -78,37 +81,41 @@ class FakeBigToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: payload,
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: payload,
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
     ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 const _testPolicy = OversizedResultPolicy(
@@ -129,31 +136,37 @@ const _smallPolicy = OversizedResultPolicy(
 void main() {
   group('R3#3 / SC-003 — oversized-result loop wiring', () {
     group('enforceOversizedResultPolicyOnDispatch (unit)', () {
-      test('a successful result exceeding the threshold is rewritten as summary + artifactRef', () async {
-        final store = InMemoryArtifactStore(
-          config: const ArtifactServiceConfig(thresholdBytes: 100),
-        );
-        final result = ToolDispatchResult(
-          success: true,
-          result: 'x' * 200,
-          error: '',
-          artifactRefs: const [],
-        );
+      test(
+        'a successful result exceeding the threshold is rewritten as summary + artifactRef',
+        () async {
+          final store = InMemoryArtifactStore(
+            config: const ArtifactServiceConfig(thresholdBytes: 100),
+          );
+          final result = ToolDispatchResult(
+            success: true,
+            result: 'x' * 200,
+            error: '',
+            artifactRefs: const [],
+          );
 
-        final out = await enforceOversizedResultPolicyOnDispatch(
-          result: result,
-          policy: _smallPolicy,
-          artifactService: store,
-        );
+          final out = await enforceOversizedResultPolicyOnDispatch(
+            result: result,
+            policy: _smallPolicy,
+            artifactService: store,
+          );
 
-        expect(out.result, isNot(equals('x' * 200))); // summarized, not the full body
-        expect(out.artifactRefs, hasLength(1));
-        final artifact = await store.fetch(
-          ArtifactRef(kind: 'artifact', id: out.artifactRefs.first),
-        );
-        expect(artifact, isNotNull);
-        expect(utf8.decode(artifact!.data), equals('x' * 200));
-      });
+          expect(
+            out.result,
+            isNot(equals('x' * 200)),
+          ); // summarized, not the full body
+          expect(out.artifactRefs, hasLength(1));
+          final artifact = await store.fetch(
+            ArtifactRef(kind: 'artifact', id: out.artifactRefs.first),
+          );
+          expect(artifact, isNotNull);
+          expect(utf8.decode(artifact!.data), equals('x' * 200));
+        },
+      );
 
       test('a result within the threshold is unchanged', () async {
         final store = InMemoryArtifactStore(
@@ -200,60 +213,69 @@ void main() {
     });
 
     group('OversizedResultPolicyDispatcher (integration through MissionRunner)', () {
-      test('a 2 MB tool result reaches the model transcript as a summary only, with artifactRef recorded', () async {
-        final store = InMemoryArtifactStore(
-          config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
-        );
-        final big = 'x' * (2 * 1024 * 1024); // 2 MB
-        final dispatcher = OversizedResultPolicyDispatcher(
-          inner: FakeBigToolDispatcher(big),
-          policyService: OversizedResultPolicyProvider(_testPolicy),
-          artifactService: store,
-        );
-        final loop = const EngineLoop(
-          id: 'l',
-          sessionId: 's',
-          maxTurns: 5,
-          wallClockTimeoutMs: 0,
-          repetitionThreshold: 0,
-        );
-        final runner = MissionRunner(
-          executor: EngineLoopExecutor(
-            loop,
-            ScriptedLlmClient(
-              completions: [completionOf('thinking'), completionOf('done')],
-            ),
-          ),
-          toolDispatcher: dispatcher,
-          stopPolicy: const StopPolicy(
-            id: 't',
+      test(
+        'a 2 MB tool result reaches the model transcript as a summary only, with artifactRef recorded',
+        () async {
+          final store = InMemoryArtifactStore(
+            config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
+          );
+          final big = 'x' * (2 * 1024 * 1024); // 2 MB
+          final dispatcher = OversizedResultPolicyDispatcher(
+            inner: FakeBigToolDispatcher(big),
+            policyService: OversizedResultPolicyProvider(_testPolicy),
+            artifactService: store,
+          );
+          final loop = const EngineLoop(
+            id: 'l',
+            sessionId: 's',
             maxTurns: 5,
-            wallClockTimeout: Duration.zero,
-            repetitionThreshold: 5,
-          ),
-          onEvent: (_) {},
-        );
+            wallClockTimeoutMs: 0,
+            repetitionThreshold: 0,
+          );
+          final runner = MissionRunner(
+            executor: EngineLoopExecutor(
+              loop,
+              ScriptedLlmClient(
+                completions: [completionOf('thinking'), completionOf('done')],
+              ),
+            ),
+            toolDispatcher: dispatcher,
+            stopPolicy: const StopPolicy(
+              id: 't',
+              maxTurns: 5,
+              wallClockTimeout: Duration.zero,
+              repetitionThreshold: 5,
+            ),
+            onEvent: (_) {},
+          );
 
-        final result = await runner.run(
-          missionId: 'm',
-          messages: const [ChatMessage(role: 'user', content: 'go')],
-          planner: ScriptedPlanner({
-            1: [const ToolCall(toolName: 'big', arguments: {}, executionMode: 'sequential')],
-          }),
-        );
+          final result = await runner.run(
+            missionId: 'm',
+            messages: const [ChatMessage(role: 'user', content: 'go')],
+            planner: ScriptedPlanner({
+              1: [
+                const ToolCall(
+                  toolName: 'big',
+                  arguments: {},
+                  executionMode: 'sequential',
+                ),
+              ],
+            }),
+          );
 
-        // The tool-role message in the transcript must NOT contain the 2 MB body.
-        final toolMsg = result.transcript.firstWhere((m) => m.role == 'tool');
-        expect(toolMsg.content.length, lessThan(big.length));
-        expect(toolMsg.content, isNot(equals(big)));
+          // The tool-role message in the transcript must NOT contain the 2 MB body.
+          final toolMsg = result.transcript.firstWhere((m) => m.role == 'tool');
+          expect(toolMsg.content.length, lessThan(big.length));
+          expect(toolMsg.content, isNot(equals(big)));
 
-        // The full body is retrievable from the store by the recorded artifactRef.
-        final refs = await store.list();
-        expect(refs, hasLength(1));
-        final artifact = await store.fetch(refs.first);
-        expect(artifact, isNotNull);
-        expect(utf8.decode(artifact!.data), equals(big));
-      });
+          // The full body is retrievable from the store by the recorded artifactRef.
+          final refs = await store.list();
+          expect(refs, hasLength(1));
+          final artifact = await store.fetch(refs.first);
+          expect(artifact, isNotNull);
+          expect(utf8.decode(artifact!.data), equals(big));
+        },
+      );
     });
   });
 }

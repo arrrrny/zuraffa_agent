@@ -16,14 +16,16 @@ import 'package:zuraffa/zuraffa.dart' hide ToolResult;
 import '../../../domain/entities/tool_result/tool_result.dart';
 import '../../../domain/services/tool_result_service.dart';
 
-class ToolResultProvider with Loggable, FailureHandler implements ToolResultService {
+class ToolResultProvider
+    with Loggable, FailureHandler
+    implements ToolResultService {
   /// Default result returned when no tool result has been emitted yet.
   static const ToolResult empty = ToolResult(content: '');
 
   final List<ToolResult> _results;
 
   ToolResultProvider([List<ToolResult>? results])
-      : _results = List<ToolResult>.of(results ?? const <ToolResult>[]);
+    : _results = List<ToolResult>.of(results ?? const <ToolResult>[]);
 
   /// Records [result] as the latest emitted tool result and returns it.
   ToolResult emit(ToolResult result) {

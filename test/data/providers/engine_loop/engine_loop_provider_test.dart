@@ -10,15 +10,39 @@ import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_provide
 void main() {
   group('arrarrny/zuraffa_agent#2 - EngineLoop value equality', () {
     test('EngineLoop equality is value-based across all fields', () {
-      final a = EngineLoop(id: 'id-a', sessionId: 'sess-1', maxTurns: 10, wallClockTimeoutMs: 10, repetitionThreshold: 10);
-      final b = EngineLoop(id: 'id-a', sessionId: 'sess-1', maxTurns: 10, wallClockTimeoutMs: 10, repetitionThreshold: 10);
+      final a = EngineLoop(
+        id: 'id-a',
+        sessionId: 'sess-1',
+        maxTurns: 10,
+        wallClockTimeoutMs: 10,
+        repetitionThreshold: 10,
+      );
+      final b = EngineLoop(
+        id: 'id-a',
+        sessionId: 'sess-1',
+        maxTurns: 10,
+        wallClockTimeoutMs: 10,
+        repetitionThreshold: 10,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('EngineLoop inequality differs when a field changes', () {
-      final a = EngineLoop(id: 'id-a', sessionId: 'sess-1', maxTurns: 10, wallClockTimeoutMs: 10, repetitionThreshold: 10);
-      final b = EngineLoop(id: 'id-b', sessionId: 'sess-2', maxTurns: 20, wallClockTimeoutMs: 20, repetitionThreshold: 20);
+      final a = EngineLoop(
+        id: 'id-a',
+        sessionId: 'sess-1',
+        maxTurns: 10,
+        wallClockTimeoutMs: 10,
+        repetitionThreshold: 10,
+      );
+      final b = EngineLoop(
+        id: 'id-b',
+        sessionId: 'sess-2',
+        maxTurns: 20,
+        wallClockTimeoutMs: 20,
+        repetitionThreshold: 20,
+      );
       expect(a == b, isFalse);
     });
   });

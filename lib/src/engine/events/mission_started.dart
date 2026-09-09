@@ -7,7 +7,11 @@ final class MissionStarted extends EngineEvent {
   final String missionId;
   final DateTime startedAt;
 
-  const MissionStarted({required this.emittedAt, required this.missionId, required this.startedAt});
+  const MissionStarted({
+    required this.emittedAt,
+    required this.missionId,
+    required this.startedAt,
+  });
 
   @override
   bool operator ==(Object other) =>

@@ -41,6 +41,7 @@ class CircuitBreaker {
     return clock.now().difference(lastFailure).inMilliseconds >=
         cooldownWindowMs;
   }
+
   int get consecutiveFailures => _consecutiveFailures;
 
   void recordSuccess() {

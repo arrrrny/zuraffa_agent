@@ -174,11 +174,7 @@ Future<CompactionResult> compact(
     );
     return CompactionResult(
       entry: entry,
-      summary: CompactionSummary(
-        decisions: [],
-        toolNames: [],
-        keyResults: [],
-      ),
+      summary: CompactionSummary(decisions: [], toolNames: [], keyResults: []),
     );
   }
 
@@ -268,10 +264,7 @@ class HeuristicSummarizer implements CompactionSummarizer {
     }).toList();
 
     // Merge with previous summary if present.
-    final mergedDecisions = [
-      ...?previousSummary?.decisions,
-      ...decisions,
-    ];
+    final mergedDecisions = [...?previousSummary?.decisions, ...decisions];
     final mergedToolNames = {
       ...?previousSummary?.toolNames,
       ...toolNames,

@@ -10,15 +10,39 @@ import 'package:zuraffa_agent/src/data/providers/fallback_chain/fallback_chain_p
 void main() {
   group('arrarrny/zuraffa_agent#5 - FallbackChain value equality', () {
     test('FallbackChain equality is value-based across all fields', () {
-      final a = FallbackChain(id: 'id-a', providerIds: const ['a','b'], currentProviderIndex: 10, advances: 10, lastErrorClass: null);
-      final b = FallbackChain(id: 'id-a', providerIds: const ['a','b'], currentProviderIndex: 10, advances: 10, lastErrorClass: null);
+      final a = FallbackChain(
+        id: 'id-a',
+        providerIds: const ['a', 'b'],
+        currentProviderIndex: 10,
+        advances: 10,
+        lastErrorClass: null,
+      );
+      final b = FallbackChain(
+        id: 'id-a',
+        providerIds: const ['a', 'b'],
+        currentProviderIndex: 10,
+        advances: 10,
+        lastErrorClass: null,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('FallbackChain inequality differs when a field changes', () {
-      final a = FallbackChain(id: 'id-a', providerIds: const ['a','b'], currentProviderIndex: 10, advances: 10, lastErrorClass: null);
-      final b = FallbackChain(id: 'id-b', providerIds: const ['a','b','c'], currentProviderIndex: 20, advances: 20, lastErrorClass: null);
+      final a = FallbackChain(
+        id: 'id-a',
+        providerIds: const ['a', 'b'],
+        currentProviderIndex: 10,
+        advances: 10,
+        lastErrorClass: null,
+      );
+      final b = FallbackChain(
+        id: 'id-b',
+        providerIds: const ['a', 'b', 'c'],
+        currentProviderIndex: 20,
+        advances: 20,
+        lastErrorClass: null,
+      );
       expect(a == b, isFalse);
     });
   });
@@ -29,20 +53,28 @@ void main() {
       expect(provider, isA<FallbackChainService>());
     });
 
-    test('FallbackChainProvider.current returns the active chain snapshot', () async {
-      final chain = await FallbackChainProvider().current(NoParams());
-      expect(chain, isA<FallbackChain>());
-      expect(chain.id, 'default');
-      expect(chain.providerIds, isNotEmpty);
-      expect(chain.currentProviderIndex, inInclusiveRange(0, chain.providerIds.length - 1));
-      expect(chain.advances, greaterThanOrEqualTo(0));
-    });
+    test(
+      'FallbackChainProvider.current returns the active chain snapshot',
+      () async {
+        final chain = await FallbackChainProvider().current(NoParams());
+        expect(chain, isA<FallbackChain>());
+        expect(chain.id, 'default');
+        expect(chain.providerIds, isNotEmpty);
+        expect(
+          chain.currentProviderIndex,
+          inInclusiveRange(0, chain.providerIds.length - 1),
+        );
+        expect(chain.advances, greaterThanOrEqualTo(0));
+      },
+    );
 
-    test('U5: default chain ids carry no vendor id (spec 106, issue #117)',
-        () async {
-      final chain = await FallbackChainProvider().current(NoParams());
-      expect(chain.providerIds, isNot(contains('kilo')));
-    });
+    test(
+      'U5: default chain ids carry no vendor id (spec 106, issue #117)',
+      () async {
+        final chain = await FallbackChainProvider().current(NoParams());
+        expect(chain.providerIds, isNot(contains('kilo')));
+      },
+    );
 
     test('FallbackChainProvider.count returns 1', () async {
       expect(await FallbackChainProvider().count(NoParams()), 1);

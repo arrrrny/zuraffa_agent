@@ -24,16 +24,16 @@ const _runs = 10;
 
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient({required this.completions})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   int callCount = 0;
@@ -46,7 +46,10 @@ class ScriptedLlmClient extends LlmClientProvider {
 }
 
 class FakeToolDispatcher implements ToolDispatcher {
-  final List<({String toolName, Map<String, dynamic> arguments, bool isInternalMission})> calls = [];
+  final List<
+    ({String toolName, Map<String, dynamic> arguments, bool isInternalMission})
+  >
+  calls = [];
 
   @override
   Future<ToolDispatchResult> dispatch({
@@ -71,50 +74,90 @@ class FakeToolDispatcher implements ToolDispatcher {
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async => [for (final c in calls) await dispatch(toolName: c.toolName, arguments: c.arguments, isInternalMission: isInternalMission)];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
-  List<String> validateSchema({required Map<String, dynamic> schema, required Map<String, dynamic> arguments}) => const [];
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 class ScriptedPlanner implements ToolCallPlanner {
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async {
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async {
     if (completion.finishReason != 'tool_calls') return const [];
-    return const [ToolCall(toolName: 'search', arguments: {'q': 'x'}, executionMode: 'sequential')];
+    return const [
+      ToolCall(
+        toolName: 'search',
+        arguments: {'q': 'x'},
+        executionMode: 'sequential',
+      ),
+    ];
   }
 }
 
-ChatCompletion completionOf(String content, {String finish = 'stop'}) => ChatCompletion(
+ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
+    ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 /// Exhaustive, content-bearing key for one event — stands in for a serialized
 /// event stream. Covers every subtype of the sealed EngineEvent union.
 String eventKey(EngineEvent e) => switch (e) {
-      MissionStarted(:final emittedAt, :final missionId, :final startedAt) =>
-        'MissionStarted|$emittedAt|$missionId|$startedAt',
-      MissionCompleted(:final emittedAt, :final missionId, :final status, :final summary) =>
-        'MissionCompleted|$emittedAt|$missionId|$status|$summary',
-      TurnStarted(:final emittedAt, :final turnId) => 'TurnStarted|$emittedAt|$turnId',
-      TurnCompleted(:final emittedAt, :final reason) => 'TurnCompleted|$emittedAt|$reason',
-      ToolCallStarted(:final emittedAt, :final toolName, :final callId) =>
-        'ToolCallStarted|$emittedAt|$toolName|$callId',
-      ToolCallCompleted(:final emittedAt, :final toolName, :final callId, :final ok) =>
-        'ToolCallCompleted|$emittedAt|$toolName|$callId|$ok',
-      ThinkingDelta(:final emittedAt, :final delta) => 'ThinkingDelta|$emittedAt|$delta',
-      SteeringInjected(:final emittedAt, :final content, :final injectedAt) =>
-        'SteeringInjected|$emittedAt|$content|$injectedAt',
-      ProviderError(:final emittedAt, :final providerName, :final error) =>
-        'ProviderError|$emittedAt|$providerName|$error',
-      PlanChanged(:final emittedAt, :final change) =>
-        'PlanChanged|$emittedAt|${change.previous.id}|${change.next.id}',
-    };
+  MissionStarted(:final emittedAt, :final missionId, :final startedAt) =>
+    'MissionStarted|$emittedAt|$missionId|$startedAt',
+  MissionCompleted(
+    :final emittedAt,
+    :final missionId,
+    :final status,
+    :final summary,
+  ) =>
+    'MissionCompleted|$emittedAt|$missionId|$status|$summary',
+  TurnStarted(:final emittedAt, :final turnId) =>
+    'TurnStarted|$emittedAt|$turnId',
+  TurnCompleted(:final emittedAt, :final reason) =>
+    'TurnCompleted|$emittedAt|$reason',
+  ToolCallStarted(:final emittedAt, :final toolName, :final callId) =>
+    'ToolCallStarted|$emittedAt|$toolName|$callId',
+  ToolCallCompleted(
+    :final emittedAt,
+    :final toolName,
+    :final callId,
+    :final ok,
+  ) =>
+    'ToolCallCompleted|$emittedAt|$toolName|$callId|$ok',
+  ThinkingDelta(:final emittedAt, :final delta) =>
+    'ThinkingDelta|$emittedAt|$delta',
+  SteeringInjected(:final emittedAt, :final content, :final injectedAt) =>
+    'SteeringInjected|$emittedAt|$content|$injectedAt',
+  ProviderError(:final emittedAt, :final providerName, :final error) =>
+    'ProviderError|$emittedAt|$providerName|$error',
+  PlanChanged(:final emittedAt, :final change) =>
+    'PlanChanged|$emittedAt|${change.previous.id}|${change.next.id}',
+};
 
 void main() {
   test('A3: 10 identical runs produce a byte-identical event stream', () async {
@@ -131,11 +174,22 @@ void main() {
       ];
       final runner = MissionRunner(
         executor: EngineLoopExecutor(
-          const EngineLoop(id: 'l', sessionId: 's', maxTurns: 50, wallClockTimeoutMs: 60000, repetitionThreshold: 5),
+          const EngineLoop(
+            id: 'l',
+            sessionId: 's',
+            maxTurns: 50,
+            wallClockTimeoutMs: 60000,
+            repetitionThreshold: 5,
+          ),
           ScriptedLlmClient(completions: completions),
         ),
         toolDispatcher: FakeToolDispatcher(),
-        stopPolicy: const StopPolicy(id: 'p', maxTurns: 50, wallClockTimeout: Duration.zero, repetitionThreshold: 5),
+        stopPolicy: const StopPolicy(
+          id: 'p',
+          maxTurns: 50,
+          wallClockTimeout: Duration.zero,
+          repetitionThreshold: 5,
+        ),
         onEvent: events.add,
         clock: fixedClock,
       );
@@ -158,7 +212,11 @@ void main() {
     // Every run's serialized event stream equals the first.
     final first = streams.first.join('\n');
     for (var i = 1; i < _runs; i++) {
-      expect(streams[i].join('\n'), first, reason: 'run $i stream diverged from run 0');
+      expect(
+        streams[i].join('\n'),
+        first,
+        reason: 'run $i stream diverged from run 0',
+      );
     }
 
     // And the terminal outcome is identical across runs.

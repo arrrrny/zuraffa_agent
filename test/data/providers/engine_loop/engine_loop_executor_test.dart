@@ -12,16 +12,16 @@ import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executo
 
 class FakeLlmClient extends LlmClientProvider {
   FakeLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async {
@@ -48,32 +48,32 @@ void main() {
     );
     final executor = EngineLoopExecutor(loop, FakeLlmClient());
 
-    test('runTurn delegates to the LLM client and returns the completion', () async {
-      final completion = await executor.runTurn(
-        const [ChatMessage(role: 'user', content: 'hi')],
-        turnNumber: 1,
-      );
-      expect(completion.content, 'turn-1');
-      expect(completion.finishReason, 'stop');
-      expect(completion.usage.totalTokens, 2);
-    });
+    test(
+      'runTurn delegates to the LLM client and returns the completion',
+      () async {
+        final completion = await executor.runTurn(const [
+          ChatMessage(role: 'user', content: 'hi'),
+        ], turnNumber: 1);
+        expect(completion.content, 'turn-1');
+        expect(completion.finishReason, 'stop');
+        expect(completion.usage.totalTokens, 2);
+      },
+    );
 
     test('runTurn throws when turnNumber exceeds maxTurns', () async {
       expect(
-        () => executor.runTurn(
-          const [ChatMessage(role: 'user', content: 'hi')],
-          turnNumber: 4,
-        ),
+        () => executor.runTurn(const [
+          ChatMessage(role: 'user', content: 'hi'),
+        ], turnNumber: 4),
         throwsA(isA<StateError>()),
       );
     });
 
     test('runTurn throws for non-positive turnNumber', () async {
       expect(
-        () => executor.runTurn(
-          const [ChatMessage(role: 'user', content: 'hi')],
-          turnNumber: 0,
-        ),
+        () => executor.runTurn(const [
+          ChatMessage(role: 'user', content: 'hi'),
+        ], turnNumber: 0),
         throwsA(isA<StateError>()),
       );
     });

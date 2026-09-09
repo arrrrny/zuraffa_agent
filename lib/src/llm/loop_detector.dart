@@ -63,10 +63,10 @@ class LoopDetectorResult {
 
   /// The no-detection result.
   const LoopDetectorResult.continue_(this.turnNumber)
-      : isLoop = false,
-        reason = '',
-        confidence = 0,
-        diagnosisError = null;
+    : isLoop = false,
+      reason = '',
+      confidence = 0,
+      diagnosisError = null;
 
   @override
   bool operator ==(Object other) =>
@@ -84,7 +84,8 @@ class LoopDetectorResult {
       Object.hash(isLoop, reason, confidence, turnNumber, diagnosisError);
 
   @override
-  String toString() => 'LoopDetectorResult(isLoop: $isLoop, reason: '
+  String toString() =>
+      'LoopDetectorResult(isLoop: $isLoop, reason: '
       '$reason, confidence: $confidence, turn: $turnNumber)';
 }
 

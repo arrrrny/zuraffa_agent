@@ -22,8 +22,9 @@ void main() {
   group('GetToolInvocationRecordUseCase', () {
     final tToolInvocationRecord = MockToolInvocationRecord();
     test('should call repository.get and return result', () async {
-      when(() => mockRepository.get(any()))
-          .thenAnswer((_) async => tToolInvocationRecord);
+      when(
+        () => mockRepository.get(any()),
+      ).thenAnswer((_) async => tToolInvocationRecord);
       final result = await useCase.call(
         QueryParams<ToolInvocationRecord>(
           filter: Eq(ToolInvocationRecordFields.id, '1'),

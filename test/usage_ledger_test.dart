@@ -31,11 +31,7 @@ UsageEntry _entry({
       cacheReadTokens: cacheReadTokens,
       cacheWriteTokens: cacheWriteTokens,
     ),
-    model: Model(
-      provider: provider,
-      modelId: modelId,
-      contextWindow: 8192,
-    ),
+    model: Model(provider: provider, modelId: modelId, contextWindow: 8192),
   );
 }
 

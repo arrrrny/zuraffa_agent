@@ -10,15 +10,35 @@ import 'package:zuraffa_agent/src/data/providers/replay_cli_surface/replay_cli_s
 void main() {
   group('arrarrny/zuraffa_agent#7 - ReplayCliSurface value equality', () {
     test('ReplayCliSurface equality is value-based across all fields', () {
-      final a = ReplayCliSurface(id: 'id-a', missionId: 'ref-1', graderMatrixId: 'ref-1', verbosity: 'info');
-      final b = ReplayCliSurface(id: 'id-a', missionId: 'ref-1', graderMatrixId: 'ref-1', verbosity: 'info');
+      final a = ReplayCliSurface(
+        id: 'id-a',
+        missionId: 'ref-1',
+        graderMatrixId: 'ref-1',
+        verbosity: 'info',
+      );
+      final b = ReplayCliSurface(
+        id: 'id-a',
+        missionId: 'ref-1',
+        graderMatrixId: 'ref-1',
+        verbosity: 'info',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('ReplayCliSurface inequality differs when a field changes', () {
-      final a = ReplayCliSurface(id: 'id-a', missionId: 'ref-1', graderMatrixId: 'ref-1', verbosity: 'info');
-      final b = ReplayCliSurface(id: 'id-b', missionId: 'ref-2', graderMatrixId: 'ref-2', verbosity: 'info');
+      final a = ReplayCliSurface(
+        id: 'id-a',
+        missionId: 'ref-1',
+        graderMatrixId: 'ref-1',
+        verbosity: 'info',
+      );
+      final b = ReplayCliSurface(
+        id: 'id-b',
+        missionId: 'ref-2',
+        graderMatrixId: 'ref-2',
+        verbosity: 'info',
+      );
       expect(a == b, isFalse);
     });
   });
@@ -29,15 +49,18 @@ void main() {
       expect(provider, isA<ReplayCliSurfaceService>());
     });
 
-    test('ReplayCliSurfaceProvider.current returns the active replay CLI surface', () async {
-      final provider = ReplayCliSurfaceProvider();
-      final surface = await provider.current(NoParams());
-      expect(surface, isA<ReplayCliSurface>());
-      expect(surface.id, 'default');
-      expect(surface.missionId, 'mission-0');
-      expect(surface.graderMatrixId, 'grader-0');
-      expect(surface.verbosity, 'normal');
-    });
+    test(
+      'ReplayCliSurfaceProvider.current returns the active replay CLI surface',
+      () async {
+        final provider = ReplayCliSurfaceProvider();
+        final surface = await provider.current(NoParams());
+        expect(surface, isA<ReplayCliSurface>());
+        expect(surface.id, 'default');
+        expect(surface.missionId, 'mission-0');
+        expect(surface.graderMatrixId, 'grader-0');
+        expect(surface.verbosity, 'normal');
+      },
+    );
 
     test('ReplayCliSurfaceProvider.count returns 1', () async {
       final provider = ReplayCliSurfaceProvider();

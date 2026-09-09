@@ -130,23 +130,27 @@ class SuiteGate {
       // (Zero-run entries previously reached PassAtK.compute with k=0 and
       // crashed; an incomplete run must veto, not throw.)
       if (s == null || s.n == 0) {
-        rows.add(TaskGateResult(
-          taskId: taskId,
-          passAtK: 0.0,
-          passed: false,
-          detail: s == null ? 'no samples recorded' : 'zero runs recorded',
-        ));
+        rows.add(
+          TaskGateResult(
+            taskId: taskId,
+            passAtK: 0.0,
+            passed: false,
+            detail: s == null ? 'no samples recorded' : 'zero runs recorded',
+          ),
+        );
         incompleteIds.add(taskId);
         continue;
       }
       final k = suite.k <= s.n ? suite.k : s.n;
       final value = PassAtK.compute(n: s.n, c: s.c, k: k).value;
-      rows.add(TaskGateResult(
-        taskId: taskId,
-        passAtK: value,
-        passed: value >= suite.gateThreshold,
-        detail: 'n=${s.n} c=${s.c} k=$k',
-      ));
+      rows.add(
+        TaskGateResult(
+          taskId: taskId,
+          passAtK: value,
+          passed: value >= suite.gateThreshold,
+          detail: 'n=${s.n} c=${s.c} k=$k',
+        ),
+      );
     }
 
     final score = rows.isEmpty

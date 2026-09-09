@@ -41,11 +41,7 @@
 /// - [halfOpen] — probing. A limited number of trial requests are
 ///   allowed; success → [closed] (when halfOpenSuccesses ≥
 ///   halfOpenThreshold), failure → [open] (with reset).
-enum CircuitBreakerState {
-  closed,
-  open,
-  halfOpen;
-}
+enum CircuitBreakerState { closed, open, halfOpen }
 
 /// CircuitBreaker value object (immutable snapshot).
 ///
@@ -308,7 +304,8 @@ class CircuitBreaker {
       'halfOpenThreshold': halfOpenThreshold,
     };
     if (openedAt != null) json['openedAt'] = openedAt!.toIso8601String();
-    if (lastFailureAt != null) json['lastFailureAt'] = lastFailureAt!.toIso8601String();
+    if (lastFailureAt != null)
+      json['lastFailureAt'] = lastFailureAt!.toIso8601String();
     return json;
   }
 
@@ -323,13 +320,21 @@ class CircuitBreaker {
   factory CircuitBreaker.fromJson(Map<String, dynamic> json) {
     final idRaw = json['id'];
     if (idRaw is! String || idRaw.isEmpty) {
-      throw ArgumentError.value(idRaw, 'id', 'CircuitBreaker.id must be a non-empty string');
+      throw ArgumentError.value(
+        idRaw,
+        'id',
+        'CircuitBreaker.id must be a non-empty string',
+      );
     }
 
     int requireInt(String key, {int min = 0}) {
       final value = json[key];
       if (value is! int || value < min) {
-        throw ArgumentError.value(value, key, 'CircuitBreaker.$key must be an int >= $min');
+        throw ArgumentError.value(
+          value,
+          key,
+          'CircuitBreaker.$key must be an int >= $min',
+        );
       }
       return value;
     }
@@ -341,31 +346,50 @@ class CircuitBreaker {
 
     final cooldownRaw = json['cooldown'];
     if (cooldownRaw is! int || cooldownRaw <= 0) {
-      throw ArgumentError.value(cooldownRaw, 'cooldown', 'CircuitBreaker.cooldown must be positive microseconds');
+      throw ArgumentError.value(
+        cooldownRaw,
+        'cooldown',
+        'CircuitBreaker.cooldown must be positive microseconds',
+      );
     }
     final cooldown = Duration(microseconds: cooldownRaw);
 
     final stateRaw = json['state'] ?? 'closed';
     if (stateRaw is! String) {
-      throw ArgumentError.value(stateRaw, 'state', 'CircuitBreaker.state must be a state-name string');
+      throw ArgumentError.value(
+        stateRaw,
+        'state',
+        'CircuitBreaker.state must be a state-name string',
+      );
     }
     final state = switch (stateRaw) {
       'closed' => CircuitBreakerState.closed,
       'open' => CircuitBreakerState.open,
       'halfOpen' => CircuitBreakerState.halfOpen,
       _ => throw ArgumentError.value(
-          stateRaw, 'state', 'unknown CircuitBreakerState — expected closed, open or halfOpen'),
+        stateRaw,
+        'state',
+        'unknown CircuitBreakerState — expected closed, open or halfOpen',
+      ),
     };
 
     DateTime? optionalTimestamp(String key) {
       final value = json[key];
       if (value == null) return null;
       if (value is! String) {
-        throw ArgumentError.value(value, key, 'CircuitBreaker.$key must be an ISO-8601 string when present');
+        throw ArgumentError.value(
+          value,
+          key,
+          'CircuitBreaker.$key must be an ISO-8601 string when present',
+        );
       }
       final parsed = DateTime.tryParse(value);
       if (parsed == null) {
-        throw ArgumentError.value(value, key, 'CircuitBreaker.$key is not a parseable ISO-8601 timestamp');
+        throw ArgumentError.value(
+          value,
+          key,
+          'CircuitBreaker.$key is not a parseable ISO-8601 timestamp',
+        );
       }
       return parsed;
     }
@@ -400,16 +424,16 @@ class CircuitBreaker {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        state,
-        failureCount,
-        failureThreshold,
-        openedAt,
-        cooldown,
-        halfOpenSuccesses,
-        halfOpenThreshold,
-        lastFailureAt,
-      );
+    id,
+    state,
+    failureCount,
+    failureThreshold,
+    openedAt,
+    cooldown,
+    halfOpenSuccesses,
+    halfOpenThreshold,
+    lastFailureAt,
+  );
 
   @override
   String toString() =>

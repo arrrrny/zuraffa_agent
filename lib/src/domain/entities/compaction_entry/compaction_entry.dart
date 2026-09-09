@@ -9,7 +9,6 @@ part 'compaction_entry.g.dart';
 /// CompactionEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $CompactionEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
@@ -17,4 +16,3 @@ abstract class $CompactionEntry {
   int get tokensBefore;
   int get tokensAfter;
 }
-

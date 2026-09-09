@@ -18,17 +18,18 @@ class ToolInvocationRecordRemoteDataSource
     implements ToolInvocationRecordDataSource {
   final String? path;
   final JsonlEntityStorage<ToolInvocationRecord>? _storage;
-  final Map<String, ToolInvocationRecord> _mem = <String, ToolInvocationRecord>{};
+  final Map<String, ToolInvocationRecord> _mem =
+      <String, ToolInvocationRecord>{};
 
   ToolInvocationRecordRemoteDataSource({this.path})
-      : _storage = path == null
-            ? null
-            : JsonlEntityStorage<ToolInvocationRecord>(
-                path: path,
-                fromJson: ToolInvocationRecord.fromJson,
-                toJson: (r) => r.toJson(),
-                getId: (r) => r.id,
-              );
+    : _storage = path == null
+          ? null
+          : JsonlEntityStorage<ToolInvocationRecord>(
+              path: path,
+              fromJson: ToolInvocationRecord.fromJson,
+              toJson: (r) => r.toJson(),
+              getId: (r) => r.id,
+            );
 
   @override
   Future<ToolInvocationRecord> get(

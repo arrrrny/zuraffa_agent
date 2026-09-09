@@ -9,7 +9,6 @@ part 'turn_record.g.dart';
 /// TurnRecord entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $TurnRecord {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
@@ -21,4 +20,3 @@ abstract class $TurnRecord {
   DateTime get endedAt;
   int get durationMs;
 }
-

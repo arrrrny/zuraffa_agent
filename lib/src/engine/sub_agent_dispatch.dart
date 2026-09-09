@@ -46,8 +46,8 @@ class AllowlistToolDispatcher implements ToolDispatcher {
   AllowlistToolDispatcher({
     required ToolDispatcher inner,
     required Set<String> allowlist,
-  })  : _inner = inner,
-        _allowlist = allowlist;
+  }) : _inner = inner,
+       _allowlist = allowlist;
 
   final ToolDispatcher _inner;
   final Set<String> _allowlist;
@@ -78,27 +78,28 @@ class AllowlistToolDispatcher implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      _inner.validateSchema(schema: schema, arguments: arguments);
+  }) => _inner.validateSchema(schema: schema, arguments: arguments);
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      _inner.checkRiskTier(riskTier: riskTier, isInternalMission: isInternalMission);
+  }) => _inner.checkRiskTier(
+    riskTier: riskTier,
+    isInternalMission: isInternalMission,
+  );
 }
 
 /// Terminal status of a sub-agent dispatch.
@@ -160,13 +161,13 @@ class SubAgentDispatchResult {
 
   @override
   int get hashCode => Object.hash(
-        instanceId,
-        specName,
-        status,
-        resultSummary,
-        instance,
-        context,
-      );
+    instanceId,
+    specName,
+    status,
+    resultSummary,
+    instance,
+    context,
+  );
 
   @override
   String toString() =>
@@ -184,11 +185,11 @@ class SubAgentDispatchService {
     ArtifactService? artifactService,
     OversizedResultPolicyService? policyService,
     int fallbackMaxTurns = 10,
-  })  : _toolDispatcher = toolDispatcher,
-        _llmClient = llmClient,
-        _fallbackMaxTurns = fallbackMaxTurns,
-        artifactService = artifactService ?? InMemoryArtifactStore(),
-        policyService = policyService ?? OversizedResultPolicyProvider();
+  }) : _toolDispatcher = toolDispatcher,
+       _llmClient = llmClient,
+       _fallbackMaxTurns = fallbackMaxTurns,
+       artifactService = artifactService ?? InMemoryArtifactStore(),
+       policyService = policyService ?? OversizedResultPolicyProvider();
 
   final ToolDispatcher _toolDispatcher;
   final LlmClientProvider _llmClient;

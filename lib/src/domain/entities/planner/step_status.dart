@@ -28,5 +28,6 @@ enum StepStatus {
 
   /// True for [completed] and [cancelled] — the step will never
   /// transition again. A plan is complete when every step is terminal.
-  bool get isTerminal => this == StepStatus.completed || this == StepStatus.cancelled;
+  bool get isTerminal =>
+      this == StepStatus.completed || this == StepStatus.cancelled;
 }

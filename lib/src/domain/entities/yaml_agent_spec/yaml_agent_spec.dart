@@ -40,13 +40,17 @@ class YamlAgentSpec {
       }
     }
     if (extendsSpecId != null && !parentOf.containsKey(extendsSpecId)) {
-      errors.add("unknown parent spec '$extendsSpecId' referenced by spec '$id'");
+      errors.add(
+        "unknown parent spec '$extendsSpecId' referenced by spec '$id'",
+      );
     }
     final chain = <String>[];
     var current = extendsSpecId;
     while (current != null) {
       if (chain.contains(current)) {
-        errors.add("cyclic inheritance in spec '$id': ${[...chain, current].join(' -> ')}");
+        errors.add(
+          "cyclic inheritance in spec '$id': ${[...chain, current].join(' -> ')}",
+        );
         break;
       }
       chain.add(current);
@@ -59,10 +63,16 @@ class YamlAgentSpec {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is YamlAgentSpec &&
-          runtimeType == other.runtimeType && id == other.id && name == other.name && extendsSpecId == other.extendsSpecId && toolAllowlist == other.toolAllowlist && systemPrompt == other.systemPrompt);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          extendsSpecId == other.extendsSpecId &&
+          toolAllowlist == other.toolAllowlist &&
+          systemPrompt == other.systemPrompt);
 
   @override
-  int get hashCode => Object.hash(id, name, extendsSpecId, toolAllowlist, systemPrompt);
+  int get hashCode =>
+      Object.hash(id, name, extendsSpecId, toolAllowlist, systemPrompt);
 
   @override
   String toString() =>

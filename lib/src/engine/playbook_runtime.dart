@@ -38,11 +38,9 @@ import 'tool_dispatcher.dart';
 /// - [constrainResponse] — applies the mechanical response constraints to
 ///   the final response text.
 class PlaybookRuntime {
-  PlaybookRuntime({
-    required Playbook playbook,
-    DateTime Function()? clock,
-  })  : _playbook = playbook,
-        _clock = clock ?? DateTime.now;
+  PlaybookRuntime({required Playbook playbook, DateTime Function()? clock})
+    : _playbook = playbook,
+      _clock = clock ?? DateTime.now;
 
   final Playbook _playbook;
   final DateTime Function() _clock;
@@ -60,19 +58,24 @@ class PlaybookRuntime {
     final messages = <SteeringMessage>[];
     for (var i = 0; i < _playbook.steering.length; i++) {
       final entry = _playbook.steering[i];
-      messages.add(SteeringMessage(
-        id: entry.id ?? 'pb-${_playbook.id}-steer-$i',
-        content: entry.content,
-        injectedAt: _clock(),
-      ));
+      messages.add(
+        SteeringMessage(
+          id: entry.id ?? 'pb-${_playbook.id}-steer-$i',
+          content: entry.content,
+          injectedAt: _clock(),
+        ),
+      );
     }
     final language = _playbook.response.language;
     if (language != null) {
-      messages.add(SteeringMessage(
-        id: 'pb-${_playbook.id}-lang',
-        content: "[playbook:${_playbook.id}] Respond in language '$language'.",
-        injectedAt: _clock(),
-      ));
+      messages.add(
+        SteeringMessage(
+          id: 'pb-${_playbook.id}-lang',
+          content:
+              "[playbook:${_playbook.id}] Respond in language '$language'.",
+          injectedAt: _clock(),
+        ),
+      );
     }
     return messages;
   }
@@ -94,10 +97,7 @@ class PlaybookRuntime {
   /// dispatcher never sees them — and delegates everything else unchanged.
   /// An `off` (or absent) gate wraps without refusing anything.
   ToolDispatcher gateDispatcher(ToolDispatcher inner) =>
-      PlaybookToolGateDispatcher(
-        inner: inner,
-        gate: _playbook.toolGate,
-      );
+      PlaybookToolGateDispatcher(inner: inner, gate: _playbook.toolGate);
 
   /// Applies the playbook's mechanical response constraint to a final
   /// response (FR-005): with `maxChars` set, a response longer than the cap
@@ -130,8 +130,8 @@ class PlaybookToolGateDispatcher implements ToolDispatcher {
   PlaybookToolGateDispatcher({
     required ToolDispatcher inner,
     required PlaybookToolGate gate,
-  })  : _inner = inner,
-        _gate = gate;
+  }) : _inner = inner,
+       _gate = gate;
 
   final ToolDispatcher _inner;
   final PlaybookToolGate _gate;
@@ -173,25 +173,26 @@ class PlaybookToolGateDispatcher implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      _inner.validateSchema(schema: schema, arguments: arguments);
+  }) => _inner.validateSchema(schema: schema, arguments: arguments);
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      _inner.checkRiskTier(riskTier: riskTier, isInternalMission: isInternalMission);
+  }) => _inner.checkRiskTier(
+    riskTier: riskTier,
+    isInternalMission: isInternalMission,
+  );
 }

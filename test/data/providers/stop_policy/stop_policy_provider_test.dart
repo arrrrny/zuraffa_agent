@@ -24,50 +24,71 @@ void main() {
       expect(StopPolicyProvider(), isA<StopPolicyService>());
     });
 
-    test('U11: parameterless StopPolicyProvider() keeps compiling (default wiring)', () {
-      final provider = StopPolicyProvider();
-      expect(provider, isNotNull);
-    });
+    test(
+      'U11: parameterless StopPolicyProvider() keeps compiling (default wiring)',
+      () {
+        final provider = StopPolicyProvider();
+        expect(provider, isNotNull);
+      },
+    );
 
-    test('A1: a fresh chain returns the default policy from current()', () async {
-      final provider = StopPolicyProvider();
-      expect(await provider.current(NoParams()), equals(StopPolicy.defaultPolicy));
-    });
+    test(
+      'A1: a fresh chain returns the default policy from current()',
+      () async {
+        final provider = StopPolicyProvider();
+        expect(
+          await provider.current(NoParams()),
+          equals(StopPolicy.defaultPolicy),
+        );
+      },
+    );
 
-    test('A2 + A5: a policy seeded into the datasource is served by current(NoParams())', () async {
-      final ds = StopPolicyMockDatasource();
-      const strict = StopPolicy(
-        id: 'strict',
-        maxTurns: 3,
-        wallClockTimeout: Duration(seconds: 30),
-        repetitionThreshold: 2,
-      );
-      await ds.update(strict);
+    test(
+      'A2 + A5: a policy seeded into the datasource is served by current(NoParams())',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        const strict = StopPolicy(
+          id: 'strict',
+          maxTurns: 3,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 2,
+        );
+        await ds.update(strict);
 
-      final provider = StopPolicyProvider(datasource: ds);
-      expect(await provider.current(NoParams()), equals(strict));
-    });
+        final provider = StopPolicyProvider(datasource: ds);
+        expect(await provider.current(NoParams()), equals(strict));
+      },
+    );
 
-    test('A4: reset() restores the documented default through the whole chain', () async {
-      final ds = StopPolicyMockDatasource();
-      final provider = StopPolicyProvider(datasource: ds);
+    test(
+      'A4: reset() restores the documented default through the whole chain',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        final provider = StopPolicyProvider(datasource: ds);
 
-      const strict = StopPolicy(
-        id: 'strict',
-        maxTurns: 3,
-        wallClockTimeout: Duration(seconds: 30),
-        repetitionThreshold: 2,
-      );
-      await ds.update(strict);
-      expect(await provider.current(NoParams()), equals(strict));
+        const strict = StopPolicy(
+          id: 'strict',
+          maxTurns: 3,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 2,
+        );
+        await ds.update(strict);
+        expect(await provider.current(NoParams()), equals(strict));
 
-      await ds.reset();
-      expect(await provider.current(NoParams()), equals(StopPolicy.defaultPolicy));
-    });
+        await ds.reset();
+        expect(
+          await provider.current(NoParams()),
+          equals(StopPolicy.defaultPolicy),
+        );
+      },
+    );
 
     test('U12: defaultPolicy(NoParams) returns the canonical constant', () {
       final provider = StopPolicyProvider();
-      expect(provider.defaultPolicy(NoParams()), equals(StopPolicy.defaultPolicy));
+      expect(
+        provider.defaultPolicy(NoParams()),
+        equals(StopPolicy.defaultPolicy),
+      );
     });
 
     test('A5: the provider serves reads through the datasource seam', () async {

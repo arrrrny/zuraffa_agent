@@ -25,7 +25,7 @@ class AgentMessageProvider
   final List<AgentMessage> _messages;
 
   AgentMessageProvider([List<AgentMessage>? messages])
-      : _messages = List<AgentMessage>.of(messages ?? const <AgentMessage>[]);
+    : _messages = List<AgentMessage>.of(messages ?? const <AgentMessage>[]);
 
   /// Appends [message] to the in-memory log and returns it.
   AgentMessage append(AgentMessage message) {

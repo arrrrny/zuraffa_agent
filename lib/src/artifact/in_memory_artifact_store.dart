@@ -16,9 +16,9 @@ import 'artifact_service.dart';
 /// In-memory implementation of [ArtifactService].
 class InMemoryArtifactStore implements ArtifactService {
   InMemoryArtifactStore({ArtifactServiceConfig? config})
-      : _config = config ?? const ArtifactServiceConfig(),
-        _store = <String, Artifact>{},
-        _uuid = const Uuid();
+    : _config = config ?? const ArtifactServiceConfig(),
+      _store = <String, Artifact>{},
+      _uuid = const Uuid();
 
   final ArtifactServiceConfig _config;
   final Map<String, Artifact> _store;
@@ -35,11 +35,7 @@ class InMemoryArtifactStore implements ArtifactService {
     final id = _uuid.v4();
     final sizeBytes = data.length;
 
-    final ref = ArtifactRef(
-      kind: 'artifact',
-      id: id,
-      uri: 'artifact://$id',
-    );
+    final ref = ArtifactRef(kind: 'artifact', id: id, uri: 'artifact://$id');
 
     final artifact = Artifact(refId: id, data: data);
     _store[id] = artifact;
@@ -70,17 +66,22 @@ class InMemoryArtifactStore implements ArtifactService {
   @override
   Future<List<ArtifactRef>> list() async {
     return _store.values
-        .map((a) => ArtifactRef(
-              kind: 'artifact',
-              id: a.refId,
-              uri: 'artifact://${a.refId}',
-            ))
+        .map(
+          (a) => ArtifactRef(
+            kind: 'artifact',
+            id: a.refId,
+            uri: 'artifact://${a.refId}',
+          ),
+        )
         .toList();
   }
 
   String _summarize(List<int> data, String mimeType, int sizeBytes) {
     final previewLength = min(data.length, 512);
-    final preview = utf8.decode(data.sublist(0, previewLength), allowMalformed: true);
+    final preview = utf8.decode(
+      data.sublist(0, previewLength),
+      allowMalformed: true,
+    );
     final truncated = data.length > previewLength ? '... (truncated)' : '';
 
     return '''Artifact Summary:

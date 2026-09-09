@@ -26,7 +26,11 @@ class ReplayDiff {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ReplayDiff &&
-          runtimeType == other.runtimeType && id == other.id && missionId == other.missionId && driftDetected == other.driftDetected && diffSummary == other.diffSummary);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          missionId == other.missionId &&
+          driftDetected == other.driftDetected &&
+          diffSummary == other.diffSummary);
 
   @override
   int get hashCode => Object.hash(id, missionId, driftDetected, diffSummary);

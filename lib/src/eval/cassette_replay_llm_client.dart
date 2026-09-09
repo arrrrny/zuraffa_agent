@@ -23,18 +23,19 @@ class CassetteReplayLlmClient extends LlmClientProvider {
     required List<Map<String, dynamic>> completions,
     this.eventOrder = const [],
     ProviderConfig? config,
-  })  : _completions = List.unmodifiable(completions),
-        super(
-          config: config ??
-              const ProviderConfig(
-                id: 'cassette-replay',
-                providerKind: 'replay',
-                baseUrl: 'cassette://replay',
-                models: ['replay'],
-                timeoutMs: 1,
-              ),
-          apiKey: 'replay-no-key',
-        );
+  }) : _completions = List.unmodifiable(completions),
+       super(
+         config:
+             config ??
+             const ProviderConfig(
+               id: 'cassette-replay',
+               providerKind: 'replay',
+               baseUrl: 'cassette://replay',
+               models: ['replay'],
+               timeoutMs: 1,
+             ),
+         apiKey: 'replay-no-key',
+       );
 
   /// Builds a replay client from [mission]'s cassette.
   ///

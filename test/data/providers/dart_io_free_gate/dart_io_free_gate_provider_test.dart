@@ -10,15 +10,35 @@ import 'package:zuraffa_agent/src/data/providers/dart_io_free_gate/dart_io_free_
 void main() {
   group('arrarrny/zuraffa_agent#7 - DartIoFreeGate value equality', () {
     test('DartIoFreeGate equality is value-based across all fields', () {
-      final a = DartIoFreeGate(id: 'id-a', gateName: 'dart_io_free', enforcedPaths: const ['a','b'], violationCount: 10);
-      final b = DartIoFreeGate(id: 'id-a', gateName: 'dart_io_free', enforcedPaths: const ['a','b'], violationCount: 10);
+      final a = DartIoFreeGate(
+        id: 'id-a',
+        gateName: 'dart_io_free',
+        enforcedPaths: const ['a', 'b'],
+        violationCount: 10,
+      );
+      final b = DartIoFreeGate(
+        id: 'id-a',
+        gateName: 'dart_io_free',
+        enforcedPaths: const ['a', 'b'],
+        violationCount: 10,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('DartIoFreeGate inequality differs when a field changes', () {
-      final a = DartIoFreeGate(id: 'id-a', gateName: 'dart_io_free', enforcedPaths: const ['a','b'], violationCount: 10);
-      final b = DartIoFreeGate(id: 'id-b', gateName: 'dart_io_free', enforcedPaths: const ['a','b','c'], violationCount: 20);
+      final a = DartIoFreeGate(
+        id: 'id-a',
+        gateName: 'dart_io_free',
+        enforcedPaths: const ['a', 'b'],
+        violationCount: 10,
+      );
+      final b = DartIoFreeGate(
+        id: 'id-b',
+        gateName: 'dart_io_free',
+        enforcedPaths: const ['a', 'b', 'c'],
+        violationCount: 20,
+      );
       expect(a == b, isFalse);
     });
   });

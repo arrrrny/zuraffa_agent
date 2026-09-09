@@ -28,18 +28,24 @@ void main() {
       expect(UiTreePayload.mimeType, 'ui/tree+json');
     });
 
-    test('UiTreePayload is constructible with vocabularyId + schemaVersion + tree', () {
-      final payload = UiTreePayload(
-        vocabularyId: 'shadcn-ui@1.0.0',
-        schemaVersion: '1.0.0',
-        tree: {'type': 'Card', 'props': {'title': 'hi'}},
-      );
-      expect(payload.vocabularyId, 'shadcn-ui@1.0.0');
-      expect(payload.schemaVersion, '1.0.0');
-      expect(payload.tree['type'], 'Card');
-      expect(payload.depth, 1);
-      expect(payload.nodeCount, 1);
-    });
+    test(
+      'UiTreePayload is constructible with vocabularyId + schemaVersion + tree',
+      () {
+        final payload = UiTreePayload(
+          vocabularyId: 'shadcn-ui@1.0.0',
+          schemaVersion: '1.0.0',
+          tree: {
+            'type': 'Card',
+            'props': {'title': 'hi'},
+          },
+        );
+        expect(payload.vocabularyId, 'shadcn-ui@1.0.0');
+        expect(payload.schemaVersion, '1.0.0');
+        expect(payload.tree['type'], 'Card');
+        expect(payload.depth, 1);
+        expect(payload.nodeCount, 1);
+      },
+    );
 
     test('computeDepth returns 1 for a leaf node (no children)', () {
       final depth = UiTreePayload.computeDepth({'type': 'Text'});
@@ -56,9 +62,9 @@ void main() {
             'children': [
               {'type': 'Text'},
               {'type': 'Text'},
-            ]
+            ],
           },
-        ]
+        ],
       };
       // Column (1) → Row (2) → Text (3) → max depth 3.
       expect(UiTreePayload.computeDepth(tree), 3);
@@ -74,9 +80,9 @@ void main() {
             'children': [
               {'type': 'Text'},
               {'type': 'Text'},
-            ]
+            ],
           },
-        ]
+        ],
       };
       // Column + Text + Row + Text + Text = 5 nodes.
       expect(UiTreePayload.computeNodeCount(tree), 5);
@@ -108,14 +114,20 @@ void main() {
       final treeA = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'hi'}},
-        ]
+          {
+            'type': 'Text',
+            'props': {'value': 'hi'},
+          },
+        ],
       };
       final treeB = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'hi'}},
-        ]
+          {
+            'type': 'Text',
+            'props': {'value': 'hi'},
+          },
+        ],
       };
       final a = UiTreePayload(
         vocabularyId: 'shadcn-ui@1.0.0',

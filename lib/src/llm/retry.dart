@@ -50,7 +50,10 @@ Future<LlmHttpResponse> sendWithRetry({
         // Spec 084 FR-005: terminal, attempt-annotated — same type and
         // cause as the underlying failure, plus the count.
         throw LlmNetworkException(
-            provider: provider, cause: e.cause, attempts: attempt);
+          provider: provider,
+          cause: e.cause,
+          attempts: attempt,
+        );
       }
       await clock.sleep(_delayFor(attempt, config, jitter));
       continue;
@@ -67,8 +70,8 @@ Future<LlmHttpResponse> sendWithRetry({
       );
     }
     await clock.sleep(
-        _retryAfterMs(response.headers) ??
-            _delayFor(attempt, config, jitter));
+      _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter),
+    );
   }
 }
 
@@ -117,7 +120,10 @@ Future<LlmStreamResponse> openStreamWithRetry({
       if (attempt >= config.maxAttempts) {
         // Spec 084 FR-005: terminal, attempt-annotated (stream parity).
         throw LlmNetworkException(
-            provider: provider, cause: e.cause, attempts: attempt);
+          provider: provider,
+          cause: e.cause,
+          attempts: attempt,
+        );
       }
       await clock.sleep(_delayFor(attempt, config, jitter));
       continue;
@@ -134,6 +140,7 @@ Future<LlmStreamResponse> openStreamWithRetry({
       );
     }
     await clock.sleep(
-        _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter));
+      _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter),
+    );
   }
 }

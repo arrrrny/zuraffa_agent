@@ -60,7 +60,9 @@ class AgentHookPipeline {
   // beforeModelCall
   // -------------------------------------------------------------------
 
-  Future<ModelCallHookContext> beforeModelCall(ModelCallHookContext context) async {
+  Future<ModelCallHookContext> beforeModelCall(
+    ModelCallHookContext context,
+  ) async {
     var current = context;
     for (final hook in _hooks) {
       final result = await hook.beforeModelCall(current);
@@ -68,7 +70,9 @@ class AgentHookPipeline {
         case HookAction.continue_:
           break;
         case HookAction.modify:
-          current = ModelCallHookContext(request: result.request ?? current.request);
+          current = ModelCallHookContext(
+            request: result.request ?? current.request,
+          );
         case HookAction.abort:
           _abort(hook, result.abortReason);
         case HookAction.deny:
@@ -83,7 +87,9 @@ class AgentHookPipeline {
   // onModelChunk (streaming observation)
   // -------------------------------------------------------------------
 
-  Future<ModelChunkHookContext> onModelChunk(ModelChunkHookContext context) async {
+  Future<ModelChunkHookContext> onModelChunk(
+    ModelChunkHookContext context,
+  ) async {
     final current = context;
     for (final hook in _hooks) {
       final result = await hook.onModelChunk(current);
@@ -103,7 +109,9 @@ class AgentHookPipeline {
   // afterModelCall — may modify the response or request a retry
   // -------------------------------------------------------------------
 
-  Future<ModelCallDecision> afterModelCall(AfterModelCallHookContext context) async {
+  Future<ModelCallDecision> afterModelCall(
+    AfterModelCallHookContext context,
+  ) async {
     var current = context;
     var retry = false;
     for (final hook in _hooks) {
@@ -140,7 +148,8 @@ class AgentHookPipeline {
           break;
         case HookAction.modify:
           current = ToolCallHookContext(
-              toolCall: result.toolCall ?? current.toolCall);
+            toolCall: result.toolCall ?? current.toolCall,
+          );
         case HookAction.deny:
           return ToolCallDecision.denied(
             current,
@@ -161,7 +170,8 @@ class AgentHookPipeline {
   // -------------------------------------------------------------------
 
   Future<AfterToolCallHookContext> afterToolCall(
-      AfterToolCallHookContext context) async {
+    AfterToolCallHookContext context,
+  ) async {
     var current = context;
     for (final hook in _hooks) {
       final result = await hook.afterToolCall(current);
@@ -189,7 +199,8 @@ class AgentHookPipeline {
   // -------------------------------------------------------------------
 
   Future<TurnCompletionHookContext> onTurnCompletion(
-      TurnCompletionHookContext context) async {
+    TurnCompletionHookContext context,
+  ) async {
     final current = context;
     for (final hook in _hooks) {
       final result = await hook.onTurnCompletion(current);
@@ -210,7 +221,8 @@ class AgentHookPipeline {
   // -------------------------------------------------------------------
 
   Future<PersistStateHookContext> beforePersistState(
-      PersistStateHookContext context) async {
+    PersistStateHookContext context,
+  ) async {
     var current = context;
     for (final hook in _hooks) {
       final result = await hook.beforePersistState(current);
@@ -219,7 +231,8 @@ class AgentHookPipeline {
           break;
         case HookAction.modify:
           current = PersistStateHookContext(
-              messages: result.messages ?? current.messages);
+            messages: result.messages ?? current.messages,
+          );
         case HookAction.abort:
           _abort(hook, result.abortReason);
         case HookAction.deny:

@@ -49,10 +49,7 @@ void main() {
 
     test('copyWith creates new instance with overrides', () {
       final original = makeSuite();
-      final updated = original.copyWith(
-        name: 'updated-suite',
-        k: 10,
-      );
+      final updated = original.copyWith(name: 'updated-suite', k: 10);
 
       expect(updated.name, 'updated-suite');
       expect(updated.k, 10);

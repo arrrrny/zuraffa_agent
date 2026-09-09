@@ -22,8 +22,9 @@ void main() {
   group('GetUsageLedgerEntryUseCase', () {
     final tUsageLedgerEntry = MockUsageLedgerEntry();
     test('should call repository.get and return result', () async {
-      when(() => mockRepository.get(any()))
-          .thenAnswer((_) async => tUsageLedgerEntry);
+      when(
+        () => mockRepository.get(any()),
+      ).thenAnswer((_) async => tUsageLedgerEntry);
       final result = await useCase.call(
         QueryParams<UsageLedgerEntry>(
           filter: Eq(UsageLedgerEntryFields.id, '1'),

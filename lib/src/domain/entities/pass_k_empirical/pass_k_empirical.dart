@@ -28,12 +28,16 @@ class PassKEmpirical {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PassKEmpirical &&
-          runtimeType == other.runtimeType && id == other.id && taskId == other.taskId && k == other.k && successCount == other.successCount && empiricalRate == other.empiricalRate);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          taskId == other.taskId &&
+          k == other.k &&
+          successCount == other.successCount &&
+          empiricalRate == other.empiricalRate);
 
   @override
   int get hashCode => Object.hash(id, taskId, k, successCount, empiricalRate);
 
   @override
-  String toString() =>
-      'PassKEmpirical(id: $id, taskId: $taskId, k: $k)';
+  String toString() => 'PassKEmpirical(id: $id, taskId: $taskId, k: $k)';
 }

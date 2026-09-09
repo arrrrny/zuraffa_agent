@@ -9,10 +9,8 @@ part 'thinking_level_change_entry.g.dart';
 /// ThinkingLevelChangeEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $ThinkingLevelChangeEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
   String get thinkingLevel;
 }
-

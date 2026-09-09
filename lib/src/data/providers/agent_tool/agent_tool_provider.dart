@@ -32,7 +32,7 @@ class AgentToolProvider
   final List<AgentTool> _tools;
 
   AgentToolProvider([List<AgentTool>? tools])
-      : _tools = List<AgentTool>.of(tools ?? const <AgentTool>[]);
+    : _tools = List<AgentTool>.of(tools ?? const <AgentTool>[]);
 
   /// Registers [tool] in the in-memory registry and returns it.
   AgentTool register(AgentTool tool) {

@@ -14,11 +14,7 @@ class AgentMessage {
   final String role;
   final List<Object> parts;
 
-  AgentMessage({
-    required this.id,
-    required this.role,
-    required this.parts,
-  }) {
+  AgentMessage({required this.id, required this.role, required this.parts}) {
     // Construction-time validation (spec 041, FR-001): a message without
     // identity or role is unaddressable in the session tree.
     if (id.isEmpty) {
@@ -95,6 +91,5 @@ class AgentMessage {
   }
 
   @override
-  String toString() =>
-      'AgentMessage(id: $id, role: $role, parts: $parts)';
+  String toString() => 'AgentMessage(id: $id, role: $role, parts: $parts)';
 }

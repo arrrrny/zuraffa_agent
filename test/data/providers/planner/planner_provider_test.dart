@@ -38,18 +38,17 @@ void main() {
     String id,
     String description, {
     StepStatus status = StepStatus.pending,
-  }) =>
-      PlanStep(id: id, description: description, status: status);
+  }) => PlanStep(id: id, description: description, status: status);
 
   PlanState threeTodos() => PlanState(
-        id: 'mission-1',
-        steps: [
-          step('s1', 'Understand the codebase'),
-          step('s2', 'Write the failing test'),
-          step('s3', 'Make it green'),
-        ],
-        currentStepId: 's1',
-      );
+    id: 'mission-1',
+    steps: [
+      step('s1', 'Understand the codebase'),
+      step('s2', 'Write the failing test'),
+      step('s3', 'Make it green'),
+    ],
+    currentStepId: 's1',
+  );
 
   group('StepStatus', () {
     test('has pending / inProgress / completed / cancelled', () {
@@ -206,8 +205,10 @@ void main() {
       expect(plan.inProgressCount, 1);
       expect(plan.pendingCount, 0);
       expect(plan.progressFraction, closeTo(2 / 3, 1e-9));
-      expect(plan.steps.firstWhere((s) => s.id == 's3').status,
-          StepStatus.inProgress);
+      expect(
+        plan.steps.firstWhere((s) => s.id == 's3').status,
+        StepStatus.inProgress,
+      );
     });
 
     test('value equality holds for identical snapshots', () {
@@ -215,8 +216,10 @@ void main() {
       final b = threeTodos().markStep('s1', StepStatus.completed);
       expect(a, b);
       expect(a.hashCode, b.hashCode);
-      expect(threeTodos(),
-          isNot(threeTodos().markStep('s1', StepStatus.completed)));
+      expect(
+        threeTodos(),
+        isNot(threeTodos().markStep('s1', StepStatus.completed)),
+      );
     });
   });
 
@@ -268,14 +271,12 @@ void main() {
     });
 
     test('toolsForInjection returns write_todos for auto and must', () {
-      expect(
-        const Planner(mode: PlanMode.auto).toolsForInjection(),
-        [WriteTodosTool.declaration],
-      );
-      expect(
-        const Planner(mode: PlanMode.must).toolsForInjection(),
-        [WriteTodosTool.declaration],
-      );
+      expect(const Planner(mode: PlanMode.auto).toolsForInjection(), [
+        WriteTodosTool.declaration,
+      ]);
+      expect(const Planner(mode: PlanMode.must).toolsForInjection(), [
+        WriteTodosTool.declaration,
+      ]);
     });
 
     test('toolsForInjection is empty for none', () {

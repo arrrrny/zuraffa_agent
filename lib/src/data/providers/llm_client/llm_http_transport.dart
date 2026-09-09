@@ -22,7 +22,11 @@ class LlmTransportException implements Exception {
   final String body;
   final String message;
 
-  LlmTransportException({this.statusCode, required this.body, required this.message});
+  LlmTransportException({
+    this.statusCode,
+    required this.body,
+    required this.message,
+  });
 
   @override
   String toString() =>
@@ -57,7 +61,8 @@ ChatCompletion parseChatCompletionResponse(Map<String, dynamic> json) {
     );
   }
   final choice = choices[0] as Map<String, dynamic>;
-  final message = choice['message'] as Map<String, dynamic>? ?? <String, dynamic>{};
+  final message =
+      choice['message'] as Map<String, dynamic>? ?? <String, dynamic>{};
   final content = (message['content'] as String?) ?? '';
   if (content.isEmpty) {
     throw LlmTransportException(
@@ -104,7 +109,7 @@ class LlmHttpTransport {
   final HttpClient Function() clientFactory;
 
   LlmHttpTransport({HttpClient Function()? clientFactory})
-      : clientFactory = clientFactory ?? (() => HttpClient());
+    : clientFactory = clientFactory ?? (() => HttpClient());
 
   /// Sends a chat-completion request and returns the parsed completion.
   ///
@@ -133,11 +138,15 @@ class LlmHttpTransport {
       final request = await client.postUrl(uri);
       request.headers.set('Content-Type', 'application/json');
       request.headers.set('Authorization', 'Bearer $apiKey');
-      request.write(jsonEncode(buildChatCompletionRequest(
-        model: model,
-        messages: messages,
-        stream: stream,
-      )));
+      request.write(
+        jsonEncode(
+          buildChatCompletionRequest(
+            model: model,
+            messages: messages,
+            stream: stream,
+          ),
+        ),
+      );
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {

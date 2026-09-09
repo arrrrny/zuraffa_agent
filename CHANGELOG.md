@@ -1,3 +1,8 @@
+## 0.3.1
+
+- **Built on the published `zuraffa` framework (^6.2.2)** — fleet-wide
+  constraint sync. No API changes.
+
 ## 0.3.0
 
 - **Fail-closed configuration** (issue #117): `ProviderConfigProvider` and

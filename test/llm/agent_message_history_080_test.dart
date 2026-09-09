@@ -25,11 +25,11 @@ import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memor
 import 'package:zuraffa_agent/src/llm/agent_message_history.dart';
 
 EpisodicMemory _memory(String id, String goal) => EpisodicMemory(
-      id: id,
-      summary:
-          '<state_snapshot><overall_goal>$goal</overall_goal></state_snapshot>',
-      messages: [UserMessage.text('older-$goal')],
-    );
+  id: id,
+  summary:
+      '<state_snapshot><overall_goal>$goal</overall_goal></state_snapshot>',
+  messages: [UserMessage.text('older-$goal')],
+);
 
 void main() {
   const groupName = 'spec 080 — AgentMessageHistory';
@@ -39,23 +39,26 @@ void main() {
     // Group A — equality (FR-001 / FR-002)
     // ----------------------------------------------------------------
     group('equality', () {
-      test('U1: equal histories (same message instances + same memory instances) are ==', () {
-        final msg1 = UserMessage.text('hello');
-        final msg2 = AssistantMessage.text('hi');
-        final mem1 = _memory('snap-1', 'g1');
-        final a = AgentMessageHistory(
-          messages: [msg1, msg2],
-          episodicMemories: [mem1],
-        );
-        // Same instances in a separate history wrapper.
-        final b = AgentMessageHistory(
-          messages: [msg1, msg2],
-          episodicMemories: [mem1],
-        );
+      test(
+        'U1: equal histories (same message instances + same memory instances) are ==',
+        () {
+          final msg1 = UserMessage.text('hello');
+          final msg2 = AssistantMessage.text('hi');
+          final mem1 = _memory('snap-1', 'g1');
+          final a = AgentMessageHistory(
+            messages: [msg1, msg2],
+            episodicMemories: [mem1],
+          );
+          // Same instances in a separate history wrapper.
+          final b = AgentMessageHistory(
+            messages: [msg1, msg2],
+            episodicMemories: [mem1],
+          );
 
-        expect(a == b, isTrue);
-        expect(b == a, isTrue);
-      });
+          expect(a == b, isTrue);
+          expect(b == a, isTrue);
+        },
+      );
 
       test('U2: appending a message breaks ==', () {
         final a = AgentMessageHistory(
@@ -88,14 +91,8 @@ void main() {
       test('U4: hashCode agrees with ==', () {
         final msg = UserMessage.text('x');
         final mem = _memory('s', 'g');
-        final a = AgentMessageHistory(
-          messages: [msg],
-          episodicMemories: [mem],
-        );
-        final b = AgentMessageHistory(
-          messages: [msg],
-          episodicMemories: [mem],
-        );
+        final a = AgentMessageHistory(messages: [msg], episodicMemories: [mem]);
+        final b = AgentMessageHistory(messages: [msg], episodicMemories: [mem]);
         final c = AgentMessageHistory(
           messages: [UserMessage.text('different')],
           episodicMemories: [mem],
@@ -113,32 +110,35 @@ void main() {
     // Group B — JSON round-trip (FR-003 / FR-004)
     // ----------------------------------------------------------------
     group('JSON round-trip', () {
-      test('U5: toJson → fromJson preserves structural shape (lossless round-trip)', () {
-        // Note: AgentMessage subclasses inherit Object identity equality
-        // (no == override in scope for this spec), so the round-trip is
-        // asserted structurally (counts, roles, content text, memory id)
-        // rather than via ==.
-        final original = AgentMessageHistory(
-          messages: [UserMessage.text('hello'), AssistantMessage.text('hi')],
-          episodicMemories: [_memory('snap-1', 'g1')],
-        );
+      test(
+        'U5: toJson → fromJson preserves structural shape (lossless round-trip)',
+        () {
+          // Note: AgentMessage subclasses inherit Object identity equality
+          // (no == override in scope for this spec), so the round-trip is
+          // asserted structurally (counts, roles, content text, memory id)
+          // rather than via ==.
+          final original = AgentMessageHistory(
+            messages: [UserMessage.text('hello'), AssistantMessage.text('hi')],
+            episodicMemories: [_memory('snap-1', 'g1')],
+          );
 
-        final json = original.toJson();
-        final rebuilt = AgentMessageHistory.fromJson(json);
+          final json = original.toJson();
+          final rebuilt = AgentMessageHistory.fromJson(json);
 
-        expect(rebuilt.messages, hasLength(2));
-        expect(rebuilt.episodicMemories, hasLength(1));
-        // First message is a UserMessage with TextBlock 'hello'.
-        final firstMsg = rebuilt.messages[0] as UserMessage;
-        expect((firstMsg.content.first as TextBlock).text, 'hello');
-        // Second message is an AssistantMessage with TextBlock 'hi'.
-        final secondMsg = rebuilt.messages[1] as AssistantMessage;
-        expect((secondMsg.content.first as TextBlock).text, 'hi');
-        // Memory preserved.
-        expect(rebuilt.episodicMemories.first.id, 'snap-1');
-        // Summaries still derivable.
-        expect(rebuilt.memorySummaries, original.memorySummaries);
-      });
+          expect(rebuilt.messages, hasLength(2));
+          expect(rebuilt.episodicMemories, hasLength(1));
+          // First message is a UserMessage with TextBlock 'hello'.
+          final firstMsg = rebuilt.messages[0] as UserMessage;
+          expect((firstMsg.content.first as TextBlock).text, 'hello');
+          // Second message is an AssistantMessage with TextBlock 'hi'.
+          final secondMsg = rebuilt.messages[1] as AssistantMessage;
+          expect((secondMsg.content.first as TextBlock).text, 'hi');
+          // Memory preserved.
+          expect(rebuilt.episodicMemories.first.id, 'snap-1');
+          // Summaries still derivable.
+          expect(rebuilt.memorySummaries, original.memorySummaries);
+        },
+      );
 
       test('U6: empty history round-trips', () {
         const original = AgentMessageHistory();
@@ -183,21 +183,18 @@ void main() {
         expect(truncated.messages, hasLength(2));
       });
 
-      test(
-        'U9: truncate(0).episodicMemories == receiver.episodicMemories',
-        () {
-          final original = AgentMessageHistory(
-            messages: [UserMessage.text('first'), UserMessage.text('second')],
-            episodicMemories: [_memory('snap-1', 'g1')],
-          );
+      test('U9: truncate(0).episodicMemories == receiver.episodicMemories', () {
+        final original = AgentMessageHistory(
+          messages: [UserMessage.text('first'), UserMessage.text('second')],
+          episodicMemories: [_memory('snap-1', 'g1')],
+        );
 
-          final truncated = original.truncate(0);
+        final truncated = original.truncate(0);
 
-          // Memories survive even when active window is fully evicted.
-          expect(truncated.episodicMemories == original.episodicMemories, isTrue);
-          expect(truncated.messages, isEmpty);
-        },
-      );
+        // Memories survive even when active window is fully evicted.
+        expect(truncated.episodicMemories == original.episodicMemories, isTrue);
+        expect(truncated.messages, isEmpty);
+      });
     });
 
     // ----------------------------------------------------------------
@@ -205,18 +202,12 @@ void main() {
     // ----------------------------------------------------------------
     group('fromJson error paths', () {
       test('U10: missing messages throws ArgumentError naming messages', () {
-        const json = <String, dynamic>{
-          'episodicMemories': <dynamic>[],
-        };
+        const json = <String, dynamic>{'episodicMemories': <dynamic>[]};
 
         expect(
           () => AgentMessageHistory.fromJson(json),
           throwsA(
-            isA<ArgumentError>().having(
-              (e) => e.name,
-              'name',
-              'messages',
-            ),
+            isA<ArgumentError>().having((e) => e.name, 'name', 'messages'),
           ),
         );
       });
@@ -230,49 +221,49 @@ void main() {
         expect(
           () => AgentMessageHistory.fromJson(json),
           throwsA(
-            isA<ArgumentError>().having(
-              (e) => e.name,
-              'name',
-              'messages',
-            ),
+            isA<ArgumentError>().having((e) => e.name, 'name', 'messages'),
           ),
         );
       });
 
-      test('U12: missing episodicMemories throws ArgumentError naming episodicMemories', () {
-        const json = <String, dynamic>{
-          'messages': <dynamic>[],
-        };
+      test(
+        'U12: missing episodicMemories throws ArgumentError naming episodicMemories',
+        () {
+          const json = <String, dynamic>{'messages': <dynamic>[]};
 
-        expect(
-          () => AgentMessageHistory.fromJson(json),
-          throwsA(
-            isA<ArgumentError>().having(
-              (e) => e.name,
-              'name',
-              'episodicMemories',
+          expect(
+            () => AgentMessageHistory.fromJson(json),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.name,
+                'name',
+                'episodicMemories',
+              ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
 
-      test('U13: malformed inner message (not a Map) throws ArgumentError naming messages[0]', () {
-        final json = <String, dynamic>{
-          'messages': <dynamic>['not a map'],
-          'episodicMemories': <dynamic>[],
-        };
+      test(
+        'U13: malformed inner message (not a Map) throws ArgumentError naming messages[0]',
+        () {
+          final json = <String, dynamic>{
+            'messages': <dynamic>['not a map'],
+            'episodicMemories': <dynamic>[],
+          };
 
-        expect(
-          () => AgentMessageHistory.fromJson(json),
-          throwsA(
-            isA<ArgumentError>().having(
-              (e) => e.name,
-              'name',
-              contains('messages[0]'),
+          expect(
+            () => AgentMessageHistory.fromJson(json),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.name,
+                'name',
+                contains('messages[0]'),
+              ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
 
       test(
         'U14: malformed inner memory (missing id) throws ArgumentError naming episodicMemories[0]',

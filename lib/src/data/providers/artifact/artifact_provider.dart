@@ -19,22 +19,25 @@ import '../../../domain/services/artifact_service.dart';
 ///
 /// Returns constructed/in-memory defaults so the engine stays free of platform
 /// I/O. Real persistence is wired by the consuming application.
-class ArtifactProvider with Loggable, FailureHandler implements ArtifactService {
+class ArtifactProvider
+    with Loggable, FailureHandler
+    implements ArtifactService {
   static const int _kDefaultThresholdBytes = 65536;
 
   final List<ArtifactRef> _refs;
   final int _thresholdBytes;
 
   ArtifactProvider([List<ArtifactRef>? refs, int? thresholdBytes])
-      : _refs = refs ??
-            [
-              ArtifactRef(
-                kind: 'file',
-                id: 'artifact-0',
-                uri: 'file:///tmp/artifact-0',
-              ),
-            ],
-        _thresholdBytes = thresholdBytes ?? _kDefaultThresholdBytes;
+    : _refs =
+          refs ??
+          [
+            ArtifactRef(
+              kind: 'file',
+              id: 'artifact-0',
+              uri: 'file:///tmp/artifact-0',
+            ),
+          ],
+      _thresholdBytes = thresholdBytes ?? _kDefaultThresholdBytes;
 
   @override
   Future<List<ArtifactRef>> list(NoParams params) async => _refs;

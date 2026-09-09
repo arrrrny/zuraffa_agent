@@ -10,15 +10,35 @@ import 'package:zuraffa_agent/src/data/providers/replay_diff/replay_diff_provide
 void main() {
   group('arrarrny/zuraffa_agent#7 - ReplayDiff value equality', () {
     test('ReplayDiff equality is value-based across all fields', () {
-      final a = ReplayDiff(id: 'id-a', missionId: 'ref-1', driftDetected: true, diffSummary: null);
-      final b = ReplayDiff(id: 'id-a', missionId: 'ref-1', driftDetected: true, diffSummary: null);
+      final a = ReplayDiff(
+        id: 'id-a',
+        missionId: 'ref-1',
+        driftDetected: true,
+        diffSummary: null,
+      );
+      final b = ReplayDiff(
+        id: 'id-a',
+        missionId: 'ref-1',
+        driftDetected: true,
+        diffSummary: null,
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('ReplayDiff inequality differs when a field changes', () {
-      final a = ReplayDiff(id: 'id-a', missionId: 'ref-1', driftDetected: true, diffSummary: null);
-      final b = ReplayDiff(id: 'id-b', missionId: 'ref-2', driftDetected: false, diffSummary: null);
+      final a = ReplayDiff(
+        id: 'id-a',
+        missionId: 'ref-1',
+        driftDetected: true,
+        diffSummary: null,
+      );
+      final b = ReplayDiff(
+        id: 'id-b',
+        missionId: 'ref-2',
+        driftDetected: false,
+        diffSummary: null,
+      );
       expect(a == b, isFalse);
     });
   });

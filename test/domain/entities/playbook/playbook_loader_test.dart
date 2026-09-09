@@ -50,22 +50,22 @@ const _deJson = <String, dynamic>{
 };
 
 Playbook _expectedGermany() => Playbook(
-      id: 'pb-de-001',
-      name: 'germany',
-      description: 'Country playbook for Germany market missions',
-      domain: 'country',
-      country: 'DE',
-      steering: [
-        const PlaybookSteering(id: 's1', content: 'Greet in German.'),
-        const PlaybookSteering(content: 'Cite GDPR for personal data.'),
-        const PlaybookSteering(content: 'Greet in German.'),
-      ],
-      toolGate: const PlaybookToolGate(
-        mode: PlaybookGateMode.allowlist,
-        allowed: ['search', 'fetch'],
-      ),
-      response: const PlaybookResponse(language: 'de', maxChars: 2000),
-    );
+  id: 'pb-de-001',
+  name: 'germany',
+  description: 'Country playbook for Germany market missions',
+  domain: 'country',
+  country: 'DE',
+  steering: [
+    const PlaybookSteering(id: 's1', content: 'Greet in German.'),
+    const PlaybookSteering(content: 'Cite GDPR for personal data.'),
+    const PlaybookSteering(content: 'Greet in German.'),
+  ],
+  toolGate: const PlaybookToolGate(
+    mode: PlaybookGateMode.allowlist,
+    allowed: ['search', 'fetch'],
+  ),
+  response: const PlaybookResponse(language: 'de', maxChars: 2000),
+);
 
 void main() {
   final loader = PlaybookLoader();
@@ -106,22 +106,22 @@ description: Just identity.
     });
 
     group('rejects', () {
-      Matcher rejectsNamed(String field) => throwsA(isA<ArgumentError>()
-          .having((e) => e.name, 'name', contains(field)));
+      Matcher rejectsNamed(String field) => throwsA(
+        isA<ArgumentError>().having((e) => e.name, 'name', contains(field)),
+      );
 
       test('U12: non-map top level and bad identity are rejected', () {
         // Top level must be a mapping — a list or a scalar is not a
         // playbook document.
-        expect(() => loader.loadYaml('- one\n- two\n'),
-            rejectsNamed('document'));
+        expect(
+          () => loader.loadYaml('- one\n- two\n'),
+          rejectsNamed('document'),
+        );
         expect(() => loader.loadYaml('42'), rejectsNamed('document'));
 
         // Identity keys are required strings.
         expect(
-          () => loader.loadJson({
-            'name': 'germany',
-            'description': 'desc',
-          }),
+          () => loader.loadJson({'name': 'germany', 'description': 'desc'}),
           rejectsNamed('id'),
         );
         expect(
@@ -133,98 +133,109 @@ description: Just identity.
           rejectsNamed('id'),
         );
         expect(
-          () => loader.loadJson({
-            'id': 'pb-1',
-            'description': 'desc',
-          }),
+          () => loader.loadJson({'id': 'pb-1', 'description': 'desc'}),
           rejectsNamed('name'),
         );
         expect(
-          () => loader.loadJson({
-            'id': 'pb-1',
-            'name': 'germany',
-          }),
+          () => loader.loadJson({'id': 'pb-1', 'name': 'germany'}),
           rejectsNamed('description'),
         );
       });
 
       test('U13: malformed steering section is rejected', () {
         Map<String, dynamic> withSteering(Object? steering) => {
-              'id': 'pb-1',
-              'name': 'germany',
-              'description': 'desc',
-              'steering': steering,
-            };
+          'id': 'pb-1',
+          'name': 'germany',
+          'description': 'desc',
+          'steering': steering,
+        };
 
         // steering must be a list of entries...
-        expect(() => loader.loadJson(withSteering('not-a-list')),
-            rejectsNamed('steering'));
+        expect(
+          () => loader.loadJson(withSteering('not-a-list')),
+          rejectsNamed('steering'),
+        );
         // ...and each entry must be a mapping...
-        expect(() => loader.loadJson(withSteering([42])),
-            rejectsNamed('steering'));
+        expect(
+          () => loader.loadJson(withSteering([42])),
+          rejectsNamed('steering'),
+        );
         // ...carrying non-empty content (missing key)...
-        expect(() => loader.loadJson(withSteering([
+        expect(
+          () => loader.loadJson(
+            withSteering([
               {'id': 's1'},
-            ])),
-            rejectsNamed('content'));
+            ]),
+          ),
+          rejectsNamed('content'),
+        );
         // ...and non-empty content (blank value) — pinned end-to-end through
         // the aggregate constructor (cycle 2's U4 red proved that rule).
-        expect(() => loader.loadJson(withSteering([
+        expect(
+          () => loader.loadJson(
+            withSteering([
               {'content': ''},
-            ])),
-            rejectsNamed('content'));
+            ]),
+          ),
+          rejectsNamed('content'),
+        );
       });
 
       test('U14: malformed toolGating section is rejected', () {
         Map<String, dynamic> withGate(Map<String, dynamic> gate) => {
-              'id': 'pb-1',
-              'name': 'germany',
-              'description': 'desc',
-              'toolGating': gate,
-            };
+          'id': 'pb-1',
+          'name': 'germany',
+          'description': 'desc',
+          'toolGating': gate,
+        };
 
         // mode vocabulary is closed: off | allowlist | blocklist.
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'whitelist',
-            'allowed': ['search'],
-          })),
+          () => loader.loadJson(
+            withGate({
+              'mode': 'whitelist',
+              'allowed': ['search'],
+            }),
+          ),
           rejectsNamed('mode'),
         );
         // gate lists must be lists...
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'allowlist',
-            'allowed': 'oops',
-          })),
+          () => loader.loadJson(
+            withGate({'mode': 'allowlist', 'allowed': 'oops'}),
+          ),
           rejectsNamed('allowed'),
         );
         // ...of tool names (strings)...
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'allowlist',
-            'allowed': [42],
-          })),
+          () => loader.loadJson(
+            withGate({
+              'mode': 'allowlist',
+              'allowed': [42],
+            }),
+          ),
           rejectsNamed('allowed'),
         );
         // ...never blank (blank tool id through the document path — the
         // aggregate's U5 rule pinned end-to-end).
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'blocklist',
-            'blocked': [''],
-          })),
+          () => loader.loadJson(
+            withGate({
+              'mode': 'blocklist',
+              'blocked': [''],
+            }),
+          ),
           rejectsNamed('blocked'),
         );
       });
 
       test('U15: malformed response section is rejected', () {
         Map<String, dynamic> withResponse(Map<String, dynamic> response) => {
-              'id': 'pb-1',
-              'name': 'germany',
-              'description': 'desc',
-              'response': response,
-            };
+          'id': 'pb-1',
+          'name': 'germany',
+          'description': 'desc',
+          'response': response,
+        };
 
         // maxChars must be an integer...
         expect(
@@ -250,27 +261,31 @@ description: Just identity.
 
       test('U17: inconsistent gate documents are rejected at load', () {
         Map<String, dynamic> withGate(Map<String, dynamic> gate) => {
-              'id': 'pb-1',
-              'name': 'germany',
-              'description': 'desc',
-              'toolGating': gate,
-            };
+          'id': 'pb-1',
+          'name': 'germany',
+          'description': 'desc',
+          'toolGating': gate,
+        };
 
         // A non-empty irrelevant list is loader drift — the value-object's
         // U6 rule, surfaced through the loader (end-to-end observable).
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'allowlist',
-            'allowed': ['search'],
-            'blocked': ['shell'],
-          })),
+          () => loader.loadJson(
+            withGate({
+              'mode': 'allowlist',
+              'allowed': ['search'],
+              'blocked': ['shell'],
+            }),
+          ),
           rejectsNamed('blocked'),
         );
         expect(
-          () => loader.loadJson(withGate({
-            'mode': 'off',
-            'allowed': ['search'],
-          })),
+          () => loader.loadJson(
+            withGate({
+              'mode': 'off',
+              'allowed': ['search'],
+            }),
+          ),
           rejectsNamed('allowed'),
         );
       });

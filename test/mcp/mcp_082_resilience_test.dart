@@ -71,8 +71,11 @@ class _ReconnectableClient implements McpClient {
   }
 
   @override
-  Future<McpCallResult> callTool(String name, Map<String, dynamic> args, {McpCallOptions? options}) async =>
-      const McpCallError(code: 'not-implemented', message: 'stub');
+  Future<McpCallResult> callTool(
+    String name,
+    Map<String, dynamic> args, {
+    McpCallOptions? options,
+  }) async => const McpCallError(code: 'not-implemented', message: 'stub');
 
   @override
   Stream<void> get onToolsChanged => const Stream.empty();
@@ -105,70 +108,80 @@ const _inProcTransport = McpTransport(
 DateTime _t0() => DateTime.utc(2026, 8, 29);
 
 Map<String, dynamic> _listingPayload() => {
-      'tools': [
-        {'name': 'fs.read', 'description': 'Read a file'},
-      ],
-    };
+  'tools': [
+    {'name': 'fs.read', 'description': 'Read a file'},
+  ],
+};
 
 void main() {
   group('spec 082 — recovery emission (FR-004)', () {
-    test('T1: SSE drop mid-call → recovery → onReconnected fires exactly once',
-        () async {
-      final wire = FakeMcpWire();
-      final delays = <Duration>[];
-      final client = SseMcpClient(
-        transport: _sseTransport,
-        wireFactory: (_) => wire,
-        now: _t0,
-        delay: (d) async => delays.add(d),
-      );
-      var events = 0;
-      client.onReconnected.listen((_) => events++);
+    test(
+      'T1: SSE drop mid-call → recovery → onReconnected fires exactly once',
+      () async {
+        final wire = FakeMcpWire();
+        final delays = <Duration>[];
+        final client = SseMcpClient(
+          transport: _sseTransport,
+          wireFactory: (_) => wire,
+          now: _t0,
+          delay: (d) async => delays.add(d),
+        );
+        var events = 0;
+        client.onReconnected.listen((_) => events++);
 
-      await client.connect();
-      await Future<void>.delayed(Duration.zero);
-      expect(events, 0,
-          reason: 'the initial connect must not fire onReconnected');
+        await client.connect();
+        await Future<void>.delayed(Duration.zero);
+        expect(
+          events,
+          0,
+          reason: 'the initial connect must not fire onReconnected',
+        );
 
-      wire.enqueueNext(const TransportDropped());
-      wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
-      final result = await client.callTool('fs.read', {});
-      expect(result, isA<McpCallOk>());
-      await Future<void>.delayed(Duration.zero);
-      expect(events, 1, reason: 'exactly one event for one recovery');
-      expect(delays.length, 1, reason: 'one backoff delay for one recovery');
+        wire.enqueueNext(const TransportDropped());
+        wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
+        final result = await client.callTool('fs.read', {});
+        expect(result, isA<McpCallOk>());
+        await Future<void>.delayed(Duration.zero);
+        expect(events, 1, reason: 'exactly one event for one recovery');
+        expect(delays.length, 1, reason: 'one backoff delay for one recovery');
 
-      // A plain successful call with no drop must not fire again.
-      wire.enqueueNext(const McpWireResponseOk({'content': 'again'}));
-      await client.callTool('fs.read', {});
-      await Future<void>.delayed(Duration.zero);
-      expect(events, 1,
-          reason: 'a successful call without a drop is not a recovery');
-    });
+        // A plain successful call with no drop must not fire again.
+        wire.enqueueNext(const McpWireResponseOk({'content': 'again'}));
+        await client.callTool('fs.read', {});
+        await Future<void>.delayed(Duration.zero);
+        expect(
+          events,
+          1,
+          reason: 'a successful call without a drop is not a recovery',
+        );
+      },
+    );
 
-    test('T2: stdio drop mid-call → recovery → onReconnected fires once',
-        () async {
-      final wire = FakeMcpWire();
-      final client = StdioMcpClient(
-        transport: _stdioTransport,
-        wireFactory: () => wire,
-        now: _t0,
-        delay: (d) async {},
-      );
-      var events = 0;
-      client.onReconnected.listen((_) => events++);
+    test(
+      'T2: stdio drop mid-call → recovery → onReconnected fires once',
+      () async {
+        final wire = FakeMcpWire();
+        final client = StdioMcpClient(
+          transport: _stdioTransport,
+          wireFactory: () => wire,
+          now: _t0,
+          delay: (d) async {},
+        );
+        var events = 0;
+        client.onReconnected.listen((_) => events++);
 
-      await client.connect();
-      await Future<void>.delayed(Duration.zero);
-      expect(events, 0);
+        await client.connect();
+        await Future<void>.delayed(Duration.zero);
+        expect(events, 0);
 
-      wire.enqueueNext(const TransportDropped());
-      wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
-      final result = await client.callTool('shell.run', {});
-      expect(result, isA<McpCallOk>());
-      await Future<void>.delayed(Duration.zero);
-      expect(events, 1);
-    });
+        wire.enqueueNext(const TransportDropped());
+        wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
+        final result = await client.callTool('shell.run', {});
+        expect(result, isA<McpCallOk>());
+        await Future<void>.delayed(Duration.zero);
+        expect(events, 1);
+      },
+    );
   });
 
   group('spec 082 — cache invalidation on reconnect (FR-005)', () {
@@ -186,8 +199,11 @@ void main() {
 
       await cache.getOrRefresh();
       await cache.getOrRefresh();
-      expect(client.listToolsCallCount, 1,
-          reason: 'TTL-fresh entry is served without re-listing');
+      expect(
+        client.listToolsCallCount,
+        1,
+        reason: 'TTL-fresh entry is served without re-listing',
+      );
 
       // Still far inside the TTL when the transport recovers.
       now = now.add(const Duration(seconds: 1));
@@ -195,51 +211,61 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       await cache.getOrRefresh();
-      expect(client.listToolsCallCount, 2,
-          reason: 'a recovery invalidates the cache despite fresh TTL');
+      expect(
+        client.listToolsCallCount,
+        2,
+        reason: 'a recovery invalidates the cache despite fresh TTL',
+      );
       await cache.dispose();
     });
 
-    test('T4: end-to-end — drop + recovery → the cache re-lists (SC-002)',
-        () async {
-      final wire = FakeMcpWire();
-      final client = SseMcpClient(
-        transport: _sseTransport,
-        wireFactory: (_) => wire,
-        now: _t0,
-        delay: (d) async {},
-      );
-      await client.connect();
+    test(
+      'T4: end-to-end — drop + recovery → the cache re-lists (SC-002)',
+      () async {
+        final wire = FakeMcpWire();
+        final client = SseMcpClient(
+          transport: _sseTransport,
+          wireFactory: (_) => wire,
+          now: _t0,
+          delay: (d) async {},
+        );
+        await client.connect();
 
-      var now = _t0();
-      final cache = ToolListingCache(
-        client: client,
-        maxAge: const Duration(seconds: 60),
-        now: () => now,
-      );
+        var now = _t0();
+        final cache = ToolListingCache(
+          client: client,
+          maxAge: const Duration(seconds: 60),
+          now: () => now,
+        );
 
-      // Prime the cache (ListTools send #1).
-      wire.enqueueNext(McpWireResponseOk(_listingPayload()));
-      await cache.getOrRefresh();
+        // Prime the cache (ListTools send #1).
+        wire.enqueueNext(McpWireResponseOk(_listingPayload()));
+        await cache.getOrRefresh();
 
-      // A drop mid-call, then a successful retry (CallTool sends), then the
-      // post-recovery re-list (ListTools send #2).
-      wire.enqueueNext(const TransportDropped());
-      wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
-      wire.enqueueNext(McpWireResponseOk(_listingPayload()));
+        // A drop mid-call, then a successful retry (CallTool sends), then the
+        // post-recovery re-list (ListTools send #2).
+        wire.enqueueNext(const TransportDropped());
+        wire.enqueueNext(const McpWireResponseOk({'content': 'ok'}));
+        wire.enqueueNext(McpWireResponseOk(_listingPayload()));
 
-      final result = await client.callTool('fs.read', {});
-      expect(result, isA<McpCallOk>());
+        final result = await client.callTool('fs.read', {});
+        expect(result, isA<McpCallOk>());
 
-      now = now.add(const Duration(seconds: 1)); // deep inside the TTL
-      await cache.getOrRefresh();
+        now = now.add(const Duration(seconds: 1)); // deep inside the TTL
+        await cache.getOrRefresh();
 
-      final listCalls =
-          wire.sentRequests.whereType<McpWireRequestListTools>().length;
-      expect(listCalls, 2,
-          reason: 'the recovery must invalidate the cache and force a '
-              're-list even though the TTL had not expired');
-    });
+        final listCalls = wire.sentRequests
+            .whereType<McpWireRequestListTools>()
+            .length;
+        expect(
+          listCalls,
+          2,
+          reason:
+              'the recovery must invalidate the cache and force a '
+              're-list even though the TTL had not expired',
+        );
+      },
+    );
   });
 
   group('spec 082 — in-proc signal is silent (FR-004)', () {
@@ -274,9 +300,12 @@ void main() {
       }
       expect(delays.length, 8);
       for (final d in delays) {
-        expect(d.inMilliseconds, lessThanOrEqualTo(1000),
-            reason:
-                '${d.inMilliseconds}ms exceeds the cap — jitter must be clamped');
+        expect(
+          d.inMilliseconds,
+          lessThanOrEqualTo(1000),
+          reason:
+              '${d.inMilliseconds}ms exceeds the cap — jitter must be clamped',
+        );
       }
     });
 
@@ -296,35 +325,46 @@ void main() {
       expect(result, isA<McpCallError>());
       expect((result as McpCallError).code, 'transport-error');
       expect(client.state, McpClientState.failed);
-      expect(delays.length, McpReconnectPolicyConfig.sse.maxAttempts,
-          reason: 'exactly maxAttempts backoff delays per failure episode');
+      expect(
+        delays.length,
+        McpReconnectPolicyConfig.sse.maxAttempts,
+        reason: 'exactly maxAttempts backoff delays per failure episode',
+      );
 
       // No zombie reconnects after the terminal failure.
       final result2 = await client.callTool('fs.read', {});
       expect((result2 as McpCallError).code, 'client-not-connected');
-      expect(delays.length, McpReconnectPolicyConfig.sse.maxAttempts,
-          reason: 'a post-failure call must not schedule further delays');
-    });
-
-    test('T7: TTL boundary — an entry aged exactly maxAge is stale (FR-006)',
-        () async {
-      final client = _ReconnectableClient(_inProcTransport);
-      client.nextTools = const [
-        McpToolDescriptor(name: 'fs.read', description: 'Read a file'),
-      ];
-      var now = _t0();
-      final cache = ToolListingCache(
-        client: client,
-        maxAge: const Duration(seconds: 60),
-        now: () => now,
+      expect(
+        delays.length,
+        McpReconnectPolicyConfig.sse.maxAttempts,
+        reason: 'a post-failure call must not schedule further delays',
       );
-
-      await cache.getOrRefresh();
-      now = now.add(const Duration(seconds: 60)); // exactly maxAge
-      await cache.getOrRefresh();
-      expect(client.listToolsCallCount, 2,
-          reason: 'freshness is age < maxAge — age == maxAge is stale');
-      await cache.dispose();
     });
+
+    test(
+      'T7: TTL boundary — an entry aged exactly maxAge is stale (FR-006)',
+      () async {
+        final client = _ReconnectableClient(_inProcTransport);
+        client.nextTools = const [
+          McpToolDescriptor(name: 'fs.read', description: 'Read a file'),
+        ];
+        var now = _t0();
+        final cache = ToolListingCache(
+          client: client,
+          maxAge: const Duration(seconds: 60),
+          now: () => now,
+        );
+
+        await cache.getOrRefresh();
+        now = now.add(const Duration(seconds: 60)); // exactly maxAge
+        await cache.getOrRefresh();
+        expect(
+          client.listToolsCallCount,
+          2,
+          reason: 'freshness is age < maxAge — age == maxAge is stale',
+        );
+        await cache.dispose();
+      },
+    );
   });
 }
