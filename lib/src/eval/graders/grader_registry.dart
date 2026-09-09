@@ -9,7 +9,15 @@ class GraderRegistry {
   final Map<String, Grader> _graders = {};
 
   void register(Grader grader, {String? id}) {
-    _graders[id ?? grader.id] = grader;
+    final effectiveId = id ?? grader.id;
+    if (_graders.containsKey(effectiveId)) {
+      throw ArgumentError.value(
+        effectiveId,
+        'id',
+        'a grader is already registered as "$effectiveId"',
+      );
+    }
+    _graders[effectiveId] = grader;
   }
 
   /// Resolves a grader by binding id. An unknown id throws a `StateError`

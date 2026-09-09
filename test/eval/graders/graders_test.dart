@@ -163,6 +163,21 @@ void main() {
       );
     });
 
+    test('U8b: registering a duplicate id fails loudly', () {
+      final registry = GraderRegistry()
+        ..register(const ExactMatchGrader(expected: 'x'), id: 'dup');
+      expect(
+        () =>
+            registry.register(const ExactMatchGrader(expected: 'y'), id: 'dup'),
+        throwsA(
+          predicate(
+            (Object e) =>
+                e is ArgumentError && e.message.toString().contains('dup'),
+          ),
+        ),
+      );
+    });
+
     test('U9: evaluate-in-bulk returns one verdict per binding id', () async {
       final registry = GraderRegistry()
         ..register(RegexGrader(pattern: RegExp('Paris')), id: 'paris')
