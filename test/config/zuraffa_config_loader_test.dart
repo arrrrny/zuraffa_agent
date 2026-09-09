@@ -163,6 +163,38 @@ engine_loop:
     });
   });
 
+  group('spec 107 — fromEnv provider pair (PR #143 review)', () {
+    test('U10b: base URL without model fails naming the missing variable', () {
+      expect(
+        () => ZuraffaConfigLoader.fromEnv({
+          'ZFA_PROVIDER_BASE_URL': 'https://env.example.internal/api',
+        }),
+        throwsA(
+          predicate(
+            (Object e) =>
+                e is ArgumentError &&
+                e.toString().contains('ZFA_PROVIDER_MODEL'),
+          ),
+        ),
+      );
+    });
+
+    test('U10c: model without base URL fails naming the missing variable', () {
+      expect(
+        () => ZuraffaConfigLoader.fromEnv({
+          'ZFA_PROVIDER_MODEL': 'internal/model',
+        }),
+        throwsA(
+          predicate(
+            (Object e) =>
+                e is ArgumentError &&
+                e.toString().contains('ZFA_PROVIDER_BASE_URL'),
+          ),
+        ),
+      );
+    });
+  });
+
   _readmeAcceptance();
 }
 
@@ -193,3 +225,5 @@ void _readmeAcceptance() {
     },
   );
 }
+
+// PR #143 review finding — half-configured provider env must fail loudly.

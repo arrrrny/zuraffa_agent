@@ -87,13 +87,27 @@ class ZuraffaConfigLoader {
 
     final baseUrl = v(ZuraffaEnvVars.providerBaseUrl);
     final providerModel = v(ZuraffaEnvVars.providerModel);
+    // Base URL and model are a required pair — a half-configured provider
+    // (e.g. models: ['']) would otherwise pass startup validation while
+    // being unusable (spec 107 review finding, PR #143).
+    if ((baseUrl == null) != (providerModel == null)) {
+      final missing = baseUrl == null
+          ? ZuraffaEnvVars.providerBaseUrl
+          : ZuraffaEnvVars.providerModel;
+      throw ArgumentError.value(
+        null,
+        missing,
+        'must be set together with the other provider variable '
+        '(both or neither)',
+      );
+    }
     final providerConfig = baseUrl == null
         ? null
         : ProviderConfig(
             id: 'env',
             providerKind: v(ZuraffaEnvVars.providerKind) ?? 'openai',
             baseUrl: baseUrl,
-            models: [providerModel ?? ''],
+            models: [providerModel!],
             timeoutMs: intVar(ZuraffaEnvVars.providerTimeoutMs) ?? 30000,
           );
 
