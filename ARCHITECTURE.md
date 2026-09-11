@@ -43,3 +43,57 @@ append, get, active-leaf pointer, delete, close.
   value-level migrations are deferred; the meta box carries a
   `schemaVersion` stamp making the persisted version observable. A box
   without a stamp is legacy and is stamped forward at open.
+
+## Structured logging (spec 112, issue #119)
+
+The engine adopts `package:logging` behind the `AgentLog` facade
+(`lib/src/logging/agent_log.dart`). The engine never prints — delivery is
+always consumer-injected.
+
+### Logger hierarchy
+
+Every engine record is emitted through a named logger under the pinned
+`zuraffa.agent.` parent (spec 112 FR-001):
+
+| Subsystem | Logger name | Covers |
+| --------- | ----------- | ------ |
+| `llm` | `zuraffa.agent.llm` | provider clients, transport, retry/backoff |
+| `mcp` | `zuraffa.agent.mcp` | MCP transports, reconnect, call results |
+| `engine` | `zuraffa.agent.engine` | mission/turn loop, runner lifecycle |
+| `eval` | `zuraffa.agent.eval` | eval harness, graders, suites |
+| `session` | `zuraffa.agent.session` | session storage, migration |
+| `eventBus` | `zuraffa.agent.eventBus` | EngineEventBus delivery diagnostics |
+
+Off-hierarchy names are refused (`ArgumentError`) so consumer routing by
+name stays reliable.
+
+### Level policy
+
+| Event class | Level | Examples |
+| ----------- | ----- | -------- |
+| transport bytes | `FINE` | wire payloads, framing details |
+| lifecycle | `INFO` | mission start/complete, turn outcomes |
+| resilience | `WARNING` | retry scheduled, breaker open |
+| terminal failure | `SEVERE` | provider dead, mission failed terminally |
+
+### Recommended consumer sink configuration
+
+```dart
+import 'package:logging/logging.dart';
+import 'package:zuraffa_agent/zuraffa_agent.dart';
+
+void main() {
+  ZuraffaLogging.install(
+    level: Level.WARNING, // or Level.ALL for verbose transport traces
+    onRecord: (record) {
+      // Format: time LEVEL [logger] message
+      // Forward to stderr, a file, or a telemetry pipeline here.
+    },
+  );
+}
+```
+
+`install` replaces any previous sink (never stacks). `MemoryLogSink`
+(`lib/src/logging/memory_log_sink.dart`) is an in-memory collector for
+tests and buffered forwarding. Before `install`, emission is silent,
+never throws, and costs an `isLoggable` check (spec 112 FR-004).

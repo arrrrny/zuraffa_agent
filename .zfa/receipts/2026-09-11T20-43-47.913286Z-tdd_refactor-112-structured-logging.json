@@ -1,0 +1,30 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd refactor",
+  "target": "112-structured-logging",
+  "repro": "zfa tdd refactor",
+  "at": "2026-09-11T20:43:47.913286Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "sanctioned": true,
+    "refactor": true,
+    "passes": [
+      "build",
+      "format",
+      "fix"
+    ],
+    "feature": "112-structured-logging"
+  },
+  "files": [
+    {
+      "path": "lib/tdd/112-structured-logging/a6_subject.dart",
+      "action": "update",
+      "sha256": "ee65b563a227887592261c951f1604f3e42a26415950749402ba773c0a382df8",
+      "bytes": 3593,
+      "snapshot": "// Hand-stepped acceptance subject (spec 112, AC-6): a mission run emits\n// INFO lifecycle records (start + terminal status) on the engine logger.\n// Returns the mission lifecycle messages.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';\nimport 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';\nimport 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';\nimport 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';\nimport 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';\nimport 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';\nimport 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';\nimport 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';\nimport 'package:zuraffa_agent/src/engine/mission_runner.dart';\nimport 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';\nimport 'package:zuraffa_agent/src/llm/llm_client.dart';\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\nimport 'package:zuraffa_agent/src/logging/memory_log_sink.dart';\n\nclass _A6Client extends LlmClientProvider {\n  _A6Client()\n    : super(\n        config: const ProviderConfig(\n          id: 'kilo',\n          providerKind: 'openai',\n          baseUrl: 'https://example.invalid/v1',\n          models: ['test-model'],\n          timeoutMs: 1,\n        ),\n        apiKey: 'test-key',\n      );\n  @override\n  Future<ChatCompletion> complete(List<ChatMessage> messages) async =>\n      const ChatCompletion(\n        content: 'done',\n        finishReason: 'stop',\n        usage: TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),\n      );\n}\n\nclass _A6Dispatcher implements ToolDispatcher {\n  @override\n  Future<ToolDispatchResult> dispatch({\n    required String toolName,\n    required Map<String, dynamic> arguments,\n    required bool isInternalMission,\n  }) async => throw UnimplementedError('no tools in A6');\n  @override\n  Future<List<ToolDispatchResult>> dispatchBatch({\n    required List<ToolCall> calls,\n    required bool isInternalMission,\n  }) async => const <ToolDispatchResult>[];\n  @override\n  List<String> validateSchema({\n    required Map<String, dynamic> schema,\n    required Map<String, dynamic> arguments,\n  }) => const [];\n  @override\n  bool checkRiskTier({\n    required String riskTier,\n    required bool isInternalMission,\n  }) => true;\n}\n\nFuture<List<String>> subject_a6() async {\n  ZuraffaLogging.reset();\n  final sink = MemoryLogSink();\n  ZuraffaLogging.install(level: Level.INFO, onRecord: sink.add);\n  final runner = MissionRunner(\n    executor: EngineLoopExecutor(\n      const EngineLoop(\n        id: 'loop-a6',\n        sessionId: 's-a6',\n        maxTurns: 10,\n        wallClockTimeoutMs: 60000,\n        repetitionThreshold: 5,\n      ),\n      _A6Client(),\n    ),\n    toolDispatcher: _A6Dispatcher(),\n    stopPolicy: const StopPolicy(\n      id: 'test',\n      maxTurns: 10,\n      wallClockTimeout: Duration.zero,\n      repetitionThreshold: 5,\n    ),\n    onEvent: (_) {},\n    clock: () => DateTime.fromMillisecondsSinceEpoch(0),\n  );\n  await runner.run(\n    missionId: 'm-a6',\n    messages: const [ChatMessage(role: 'user', content: 'go')],\n  );\n  ZuraffaLogging.reset();\n  final missionRecords = sink.records\n      .where((r) => r.loggerName == 'zuraffa.agent.engine')\n      .toList();\n  return missionRecords.map((r) => r.message).toList();\n}\n"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

@@ -37,18 +37,18 @@ class HiveSessionStorage implements SessionStorage {
     // the stamp makes the persisted version observable. A box without a
     // stamp is legacy (pre-versioning) and is stamped forward.
     final existing = _metaBox.get(_schemaVersionKey);
-    final schemaVersion =
-        existing == null ? SessionSchema.currentVersion : int.parse(existing);
-    await _metaBox.put(
-        _schemaVersionKey, '${SessionSchema.currentVersion}');
+    final schemaVersion = existing == null
+        ? SessionSchema.currentVersion
+        : int.parse(existing);
+    await _metaBox.put(_schemaVersionKey, '${SessionSchema.currentVersion}');
 
     return StoreOpenResult(
       loadedEntriesCount: _entryBox.length,
       schemaVersion: SessionSchema.currentVersion,
       migratedFromVersion:
           existing == null || schemaVersion < SessionSchema.currentVersion
-              ? schemaVersion
-              : null,
+          ? schemaVersion
+          : null,
     );
   }
 

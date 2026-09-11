@@ -1,0 +1,23 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd verify-red",
+  "target": "A1",
+  "repro": "zfa tdd verify-red",
+  "at": "2026-09-11T18:43:07.857471Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "112-structured-logging"
+  },
+  "files": [
+    {
+      "path": "specs/112-structured-logging/tdd/cycle-log.md",
+      "action": "update",
+      "sha256": "9a5f9e2fe9072aebc9184351e53a3a66a18f05789603bc23d4886e981f1be2b3",
+      "bytes": 3335,
+      "snapshot": "# Cycle Log\n\nAppend only. Newest last. Every entry's `red` block is the evidence that the test existed and failed before the implementation.\n\n## Cycle: A1 (error)\n\n- behavior: A1\n- kind: error\n- outcome: load-error\n- criterion: AC-1\n- test: test/\n- command: `/Users/arrrrny/.local/bin/zfa tdd verify-red A1 --feature 112-structured-logging --project /Users/arrrrny/Developer/zuraffa_agent`\n- exit: 1\n- at: 2026-09-11T18:37:51.028028Z\n- output:\n```\nzfa tdd verify-red: behavior A1\n   feature: 112-structured-logging\n   test: test/tdd/112-structured-logging/a1_test.dart\n   command: dart test {file} --plain-name \\\"<test name>\\\"\n   runner exit: 1\n   classification: load-error\nverify-red: behavior=A1 classification=load-error certified=false feature=112-structured-logging\n\nzfa tdd verify-red: classification load-error — restore the missing test file or import, then re-run `zfa tdd verify-red <behavior-id>`\n   no evidence written\n```\n\n- schema: 1\n- prev-hash: genesis\n- hash: 2bf1fc5f3a6c1cf64d15e3a9ccc7d49909c631ab662df6eea7f636531e5f3cb0\n\n## Cycle: A1 (red)\n\n- behavior: A1\n- kind: red\n- classification: assertionFailure\n- subject-hash: a5dc24fa1eb1ae3dcbf95d30acb7ce29ecbf4f019dc499819203cd2c2af5a32b\n- criterion: AC-1\n- test: test/tdd/112-structured-logging/a1_test.dart\n- command: `dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/a1_test.dart --plain-name \"both records arrive at the sink carrying logger names `zuraffa.agent.llm`\"`\n- exit: 1\n- at: 2026-09-11T18:43:07.854099Z\n- output:\n```\n00:00 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/a1_test.dart                                                                                                  \n00:01 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/a1_test.dart                                                                                                  \n00:01 +0: A1 (AC-1) A1 — both records arrive at the sink carrying logger names `zuraffa.agent.llm`                                                                                                     \n00:01 +0 -1: A1 (AC-1) A1 — both records arrive at the sink carrying logger names `zuraffa.agent.llm` [E]                                                                                              \n  Expected: not <Instance of 'UnimplementedError'>\n    Actual: UnimplementedError:<UnimplementedError: subject_a1 not implemented>\n  \n  package:matcher                                    expect\n  test/tdd/112-structured-logging/a1_test.dart 30:7  main.<fn>.<fn>\n  \n\nTo run this test again: dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/a1_test.dart -p vm --plain-name 'A1 (AC-1) A1 — both records arrive at the sink carrying logger names `zuraffa.agent.llm`'\n\n00:01 +0 -1: Some tests failed.                                                                                                                                                                        \n\nConsider enabling the flag chain-stack-traces to receive more detailed exceptions.\nFor example, 'dart test --chain-stack-traces'.\n```\n\n- schema: 1\n- prev-hash: 2bf1fc5f3a6c1cf64d15e3a9ccc7d49909c631ab662df6eea7f636531e5f3cb0\n- hash: 8e6b6cdb09de0ebe7074e3d0a4a9d8a5e8e2e30377bf2ddbff29ff59c435baf6\n\n"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

@@ -43,6 +43,7 @@ import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../logging/agent_log.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
@@ -264,6 +265,8 @@ class MissionRunner {
     _onEvent(
       MissionStarted(emittedAt: start, missionId: missionId, startedAt: start),
     );
+    // Spec 112 FR-005: mission lifecycle INFO — id + outcome only.
+    AgentLog.missionInfo(missionId: missionId, outcome: 'started');
 
     final transcript = List<ChatMessage>.of(messages);
     var turnsUsed = 0;
@@ -367,12 +370,7 @@ class MissionRunner {
         final toolContent = sanitizer == null
             ? rawContent
             : sanitizer.sanitize(rawContent).content;
-        transcript.add(
-          ChatMessage(
-            role: 'tool',
-            content: toolContent,
-          ),
-        );
+        transcript.add(ChatMessage(role: 'tool', content: toolContent));
         _onEvent(
           ToolCallCompleted(
             emittedAt: _clock(),
@@ -439,6 +437,7 @@ class MissionRunner {
         summary: summary,
       ),
     );
+    AgentLog.missionInfo(missionId: missionId, outcome: status.name);
 
     return MissionResult(
       missionId: missionId,

@@ -9,8 +9,8 @@
 import 'session_storage.dart';
 
 /// A single migration step: from the map's registered version to the next.
-typedef SessionMigrationStep = Map<String, dynamic> Function(
-    Map<String, dynamic> raw);
+typedef SessionMigrationStep =
+    Map<String, dynamic> Function(Map<String, dynamic> raw);
 
 /// Registry + runner for session-schema migrations (spec 110).
 class SessionMigrator {
@@ -34,16 +34,11 @@ class SessionMigrator {
   /// schema version. The steps are deliberately conservative — the real
   /// historical divergences don't exist yet; the machinery is the
   /// deliverable, so the next schema change is a one-function addition.
-  static SessionMigrator standard() => SessionMigrator(
-        migrations: {
-          1: _stamp(2),
-          2: _stamp(3),
-        },
-      );
+  static SessionMigrator standard() =>
+      SessionMigrator(migrations: {1: _stamp(2), 2: _stamp(3)});
 
   static SessionMigrationStep _stamp(int version) =>
-      (raw) => Map<String, dynamic>.of(raw)
-        ..['schemaVersion'] = version;
+      (raw) => Map<String, dynamic>.of(raw)..['schemaVersion'] = version;
 
   /// Migrates one raw entry map from its version to the registry's current
   /// version, applying every registered step in order. A map already at the
@@ -51,8 +46,9 @@ class SessionMigrator {
   /// version greater than current is rejected — downgrade is not supported.
   Map<String, dynamic> migrate(Map<String, dynamic> raw) {
     final existing = raw['schemaVersion'];
-    final from =
-        existing is int ? existing : SessionMigrator.oldestSupportedVersion;
+    final from = existing is int
+        ? existing
+        : SessionMigrator.oldestSupportedVersion;
     if (from > currentVersion) {
       throw StateError(
         'session entry schemaVersion $from is newer than the supported '
@@ -65,9 +61,7 @@ class SessionMigrator {
     for (var v = from; v < currentVersion; v++) {
       final step = migrations[v];
       if (step == null) {
-        throw StateError(
-          'no migration registered from session schema v$v',
-        );
+        throw StateError('no migration registered from session schema v$v');
       }
       step(out);
       out['schemaVersion'] = v + 1;

@@ -1,0 +1,13 @@
+{
+  "schema": "contract-blocked.v1",
+  "behavior": "contract:A11",
+  "feature": "112-structured-logging",
+  "kind": "contract",
+  "contract": "AgentLog.missionInfo",
+  "classification": "blocked",
+  "command": "dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a11_test.dart --plain-name \"AgentLog.missionInfo(missionId, outcome) -> void (usecase contract)\"",
+  "exit_code": 1,
+  "output_excerpt": "00:00 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a11_test.dart\n00:01 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a11_test.dart\n00:02 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a11_test.dart\n00:02 +0: contract:A11 (AgentLog.missionInfo) contract:A11 — AgentLog.missionInfo(missionId, outcome) -> void (usecase contract)\n00:02 +0 -1: contract:A11 (AgentLog.missionInfo) contract:A11 — AgentLog.missionInfo(missionId, outcome) -> void (usecase contract) [E]",
+  "blocked_at": "2026-09-11T20:18:00.734664Z",
+  "reason": "the declared contract is not satisfied by the implementation — the cycle is BLOCKED and cannot proceed to GREEN (issue #1007)"
+}
