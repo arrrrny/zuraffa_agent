@@ -1,0 +1,1 @@
+{"entries":[{"files":["lib/tdd/113-eventbus-error-observability/a1_subject.dart","lib/tdd/113-eventbus-error-observability/a2_subject.dart","lib/tdd/113-eventbus-error-observability/a3_subject.dart","lib/tdd/113-eventbus-error-observability/a4_subject.dart"],"captured_at":"2026-09-11T21:22:21.377721Z","command":"dart format lib/"}]}

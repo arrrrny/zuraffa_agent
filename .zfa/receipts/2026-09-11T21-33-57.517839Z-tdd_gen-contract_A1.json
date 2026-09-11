@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A1",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T21:33:57.517839Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "113-eventbus-error-observability"
+ },
+ "files": [
+  {
+   "path": "test/tdd/113-eventbus-error-observability/contract_a1_test.dart",
+   "action": "create",
+   "sha256": "a6eef5e1a81ef55ea7274a1715363427ea56ef1fa462f44c4deebd215bed3004",
+   "bytes": 2575
+  },
+  {
+   "path": "lib/tdd/113-eventbus-error-observability/contract_a1_subject.dart",
+   "action": "create",
+   "sha256": "9b1084ede38db89a2cd3a0229a9ef72b633b1296b447ab3504fe1746fa5385ed",
+   "bytes": 1457
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

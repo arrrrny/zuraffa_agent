@@ -1,0 +1,29 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "A1",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T21:18:57.315796Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "113-eventbus-error-observability"
+ },
+ "files": [
+  {
+   "path": "test/tdd/113-eventbus-error-observability/a1_test.dart",
+   "action": "create",
+   "sha256": "0fd0a6ca85a563eadf593fbd1e39faa255e64a0f91a98eee0eab9896bc2d711a",
+   "bytes": 1170,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen A1` (spec 044-test-tdd-generation).\n//\n// behavior_id: A1\n// source_criterion: AC-1\n// kind: acceptance\n// description: the later subscriber still receives the event and a SEVERE\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/113-eventbus-error-observability/a1_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\nlibrary;\n\nimport 'package:test/test.dart';\nimport 'package:zuraffa_agent/tdd/113-eventbus-error-observability/a1_subject.dart' as subject;\n\nvoid main() {\n  group('A1 (AC-1)', () {\n    test('A1 \u2014 the later subscriber still receives the event and a SEVERE', () {\n      final Object? result = (() {\n        try {\n          subject.subject_a1();\n          return null;\n        } on UnimplementedError catch (error) {\n          return error;\n        }\n      })();\n      expect(result, isNot(isA<UnimplementedError>()));\n    });\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/113-eventbus-error-observability/a1_subject.dart",
+   "action": "create",
+   "sha256": "e6531e8d11ddfe355a1a67349edb18255504f74da154565fa781269e51b9c114",
+   "bytes": 1795
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}
