@@ -37,3 +37,4 @@ export 'src/mcp/mcp_tool_adapter.dart';
 // Structured logging (spec 112, issue #119).
 export 'src/logging/agent_log.dart';
 export 'src/logging/memory_log_sink.dart';
+export 'src/session_lock.dart';

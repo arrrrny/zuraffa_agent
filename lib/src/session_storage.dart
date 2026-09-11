@@ -57,6 +57,10 @@ abstract interface class SessionStorage {
   /// Retrieves all persisted entries in the session store.
   Future<List<SessionTreeEntry>> getEntries();
 
+  /// Lazy entry stream (spec 114, issue #136): iterate without
+  /// materializing the whole store; early exit stops the pull.
+  Stream<SessionTreeEntry> entries();
+
   /// Gets the currently active leaf entry identifier.
   Future<String?> getActiveLeafId();
 

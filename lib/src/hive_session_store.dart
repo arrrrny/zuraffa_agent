@@ -2,6 +2,12 @@
 //
 // Hand-written integration glue against zfa-generated entity types only.
 // Uses dart:io indirectly via hive_ce (quarantined per Constitution VII).
+//
+// SINGLE-WRITER CONTRACT (spec 114, issue #136): Hive boxes are NOT safe
+// for cross-process access — one writer per box per process. There is no
+// cross-process lock here (the JSONL store has SessionLock); open a
+// second process against the same box files only for read-only tooling,
+// and never concurrently.
 
 import 'package:hive_ce/hive.dart';
 
@@ -65,6 +71,15 @@ class HiveSessionStorage implements SessionStorage {
   @override
   Future<List<SessionTreeEntry>> getEntries() async {
     return _entryBox.values.toList();
+  }
+
+  @override
+  Stream<SessionTreeEntry> entries() async* {
+    // Lazy pull by key index — no full values materialization.
+    for (var i = 0; i < _entryBox.length; i++) {
+      final entry = _entryBox.getAt(i);
+      if (entry != null) yield entry;
+    }
   }
 
   @override

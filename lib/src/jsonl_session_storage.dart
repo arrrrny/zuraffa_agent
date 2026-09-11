@@ -9,6 +9,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:synchronized/synchronized.dart';
+
+import 'session_lock.dart';
 import 'session_migrator.dart';
 import 'session_storage.dart';
 import 'types.dart';
@@ -19,16 +22,28 @@ import 'types.dart';
 /// Each line is a JSON-serialized [SessionTreeEntry]. The active leaf ID
 /// is stored as the first line with a special `_meta` wrapper.
 class JsonlSessionStorage implements SessionStorage {
-  JsonlSessionStorage(this.path);
+  JsonlSessionStorage(this.path, {SessionLock? lock})
+    : _lock = lock ?? SessionLock(path);
 
   final String path;
+
+  /// The advisory single-writer lock (spec 114 FR-002), held from init
+  /// until close.
+  final SessionLock _lock;
+
+  /// Process-wide mutation mutex (spec 114 FR-001): interleaved
+  /// same-isolate mutations serialize here.
+  final Lock _mutex = Lock();
 
   final Map<String, SessionTreeEntry> _entries = {};
   String _activeLeafId = '';
   bool _dirty = false;
+  bool _initialized = false;
 
   @override
   Future<StoreOpenResult> init() async {
+    await _lock.acquire();
+    _initialized = true;
     final file = File(path);
     if (!await file.exists()) {
       // Fresh store: born at the current schema version (spec 110).
@@ -161,16 +176,18 @@ class JsonlSessionStorage implements SessionStorage {
   });
 
   @override
-  Future<void> appendEntry(SessionTreeEntry entry) async {
-    _entries[entry.id] = entry;
-    _dirty = true;
+  Future<void> appendEntry(SessionTreeEntry entry) {
+    return _mutex.synchronized(() async {
+      _entries[entry.id] = entry;
+      _dirty = true;
 
-    // Streaming append — write only the new line, not the full file.
-    final file = File(path);
-    final sink = file.openWrite(mode: FileMode.append);
-    sink.writeln(jsonEncode(entry.toJson()));
-    await sink.flush();
-    await sink.close();
+      // Streaming append — write only the new line, not the full file.
+      final file = File(path);
+      final sink = file.openWrite(mode: FileMode.append);
+      sink.writeln(jsonEncode(entry.toJson()));
+      await sink.flush();
+      await sink.close();
+    });
   }
 
   @override
@@ -184,33 +201,56 @@ class JsonlSessionStorage implements SessionStorage {
   }
 
   @override
+  Stream<SessionTreeEntry> entries() async* {
+    for (final entry in List.of(_entries.values)) {
+      yield entry;
+    }
+  }
+
+  @override
   Future<String?> getActiveLeafId() async {
     return _activeLeafId.isEmpty ? null : _activeLeafId;
   }
 
   @override
-  Future<void> setActiveLeafId(String leafId) async {
-    _activeLeafId = leafId;
-    _dirty = true;
+  Future<void> setActiveLeafId(String leafId) {
+    return _mutex.synchronized(() async {
+      _activeLeafId = leafId;
+      _dirty = true;
+    });
   }
 
   @override
-  Future<void> deleteEntries(Set<String> entryIds) async {
-    for (final id in entryIds) {
-      _entries.remove(id);
-    }
-    _dirty = true;
+  Future<void> deleteEntries(Set<String> entryIds) {
+    return _mutex.synchronized(() async {
+      for (final id in entryIds) {
+        _entries.remove(id);
+      }
+      _dirty = true;
+    });
   }
 
   @override
-  Future<void> close() async {
-    if (!_dirty) return;
+  Future<void> close() {
+    return _mutex.synchronized(() async {
+      if (!_dirty) {
+        if (_initialized) await _lock.release();
+        return;
+      }
+      await _flushLocked();
+      if (_initialized) await _lock.release();
+    });
+  }
 
+  /// Caller must hold [_mutex]. Pre-114 body of [close].
+  Future<void> _flushLocked() async {
     // Rewrite file with current state (after deletions or leaf changes).
+    // The schema header is PRESERVED (spec 114): a headerless rewrite
+    // forced a legacy migration on every post-close open.
     final file = File(path);
     final sink = file.openWrite();
 
-    // Write active leaf meta as first line.
+    sink.writeln(_headerLine());
     sink.writeln(jsonEncode({'_meta': true, 'activeLeafId': _activeLeafId}));
 
     for (final entry in _entries.values) {

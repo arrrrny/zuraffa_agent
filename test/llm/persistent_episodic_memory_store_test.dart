@@ -12,7 +12,7 @@ import 'package:zuraffa_agent/src/types.dart';
 /// Minimal in-memory SessionStorage fake (the port contract; real backends
 /// are the hive/jsonl IO adapters, out of scope for this spec).
 class InMemorySessionStorage implements SessionStorage {
-  final List<SessionTreeEntry> entries = [];
+  final List<SessionTreeEntry> storedEntries = [];
   String? activeLeafId;
 
   @override
@@ -20,18 +20,25 @@ class InMemorySessionStorage implements SessionStorage {
       const StoreOpenResult(loadedEntriesCount: 0);
 
   @override
-  Future<void> appendEntry(SessionTreeEntry entry) async => entries.add(entry);
+  Future<void> appendEntry(SessionTreeEntry entry) async => storedEntries.add(entry);
 
   @override
   Future<SessionTreeEntry?> getEntry(String id) async {
-    for (final e in entries) {
+    for (final e in storedEntries) {
       if (e.id == id) return e;
     }
     return null;
   }
 
   @override
-  Future<List<SessionTreeEntry>> getEntries() async => List.of(entries);
+  Future<List<SessionTreeEntry>> getEntries() async => List.of(storedEntries);
+
+  @override
+  Stream<SessionTreeEntry> entries() async* {
+    for (final e in List.of(storedEntries)) {
+      yield e;
+    }
+  }
 
   @override
   Future<String?> getActiveLeafId() async => activeLeafId;
@@ -41,7 +48,7 @@ class InMemorySessionStorage implements SessionStorage {
 
   @override
   Future<void> deleteEntries(Set<String> entryIds) async =>
-      entries.removeWhere((e) => entryIds.contains(e.id));
+      storedEntries.removeWhere((e) => entryIds.contains(e.id));
 
   @override
   Future<void> close() async {}
@@ -63,8 +70,8 @@ void main() {
         );
         await store.add(memory);
 
-        expect(storage.entries, hasLength(1));
-        final entry = storage.entries.single;
+        expect(storage.storedEntries, hasLength(1));
+        final entry = storage.storedEntries.single;
         expect(entry, isA<CustomTreeEntry>());
         final record = (entry as CustomTreeEntry).record;
         expect(record.customType, 'episodic_memory');
@@ -154,7 +161,7 @@ void main() {
           EpisodicMemory(id: 'snap-5', summary: 's5', messages: const []),
         );
         expect(
-          storage.entries.whereType<CustomTreeEntry>().map((e) => e.record.id),
+          storage.storedEntries.whereType<CustomTreeEntry>().map((e) => e.record.id),
           contains('snap-5'),
         );
       },

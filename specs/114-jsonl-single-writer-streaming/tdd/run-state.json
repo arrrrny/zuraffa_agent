@@ -1,0 +1,17 @@
+{
+ "feature": "114-jsonl-single-writer-streaming",
+ "behavior_states": {
+  "A1": "green",
+  "A2": "green",
+  "A3": "green",
+  "A4": "green",
+  "U1": "green",
+  "U2": "done",
+  "U3": "done",
+  "U4": "done",
+  "contract:A1": "done",
+  "contract:A2": "done",
+  "contract:A3": "done"
+ },
+ "dropped": []
+}

@@ -111,6 +111,9 @@ void main() {
         }),
       );
 
+      // Single-writer contract (spec 114): close before reopening.
+      await storage.close();
+
       final reopened = JsonlSessionStorage(path);
       final result = await reopened.init();
       expect(result.schemaVersion, SessionSchema.currentVersion);
