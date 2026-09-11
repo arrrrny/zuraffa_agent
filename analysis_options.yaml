@@ -1,6 +1,10 @@
 include: package:lints/recommended.yaml
 
 analyzer:
+  exclude:
+    # Federated Flutter packages — each analyzes in its own context
+    # (the root package is pure Dart; spec 115).
+    - packages/**
   language:
     strict-casts: true
     strict-inference: true

@@ -1,0 +1,27 @@
+name: zuraffa_agent_platform_interface
+description: >-
+  Method-channel implementation of the zuraffa_agent AgentPlatform seam
+  for Android, iOS and macOS hosts.
+version: 0.1.0
+homepage: https://zuraffa.com
+repository: https://github.com/arrrrny/zuraffa_agent
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.44.0"
+
+flutter:
+  # Dart-only federated interface: the android/ios/macos packages carry
+  # the native plugin declarations.
+
+dependencies:
+  flutter:
+    sdk: flutter
+  zuraffa_agent:
+    path: ../..
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

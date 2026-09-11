@@ -1,0 +1,29 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:00:06.769927Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "test/tdd/115-agent-platform-packages/contract_a2_test.dart",
+   "action": "create",
+   "sha256": "c70c2eac080a5b341a01881f9e1be6af40d5456661d815ece128ae790d5a180a",
+   "bytes": 2372,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen contract:A2` (issue #1007, contract lane).\n//\n// behavior_id: contract:A2\n// source_criterion: AgentPlatform.secureRead\n// kind: contract\n// description: AgentPlatform.secureRead(key) -> Future<String?> (usecase contract)\n//\n// CONTRACT TEST (issue #1007): this is NOT an implementation test \u2014 it\n// proves the implementation at `../../../lib/tdd/115-agent-platform-packages/contract_a2_subject.dart`\n// satisfies the DECLARED contract above. The body enumerates the\n// contract's cases; every case must hold for the contract to be\n// satisfied. While the method is deliberately unimplemented the test\n// fails through an assertion and `zfa tdd verify-red` reports BLOCKED\n// (never RED): a failing contract test blocks the cycle from proceeding\n// to GREEN until the implementation satisfies the contract.\nlibrary;\n\nimport 'package:test/test.dart';\nimport '../../../lib/tdd/115-agent-platform-packages/contract_a2_subject.dart' as subject;\n\nvoid main() {\n  group('contract:A2 (AgentPlatform.secureRead)', () {\n    test('contract:A2 \\u2014 AgentPlatform.secureRead(key) -> Future<String?> (usecase contract)', () {\n      // Case 1 of 2 \u2014 signature: the declared method\n      // `AgentPlatform.secureRead(dynamic key) -> Future<String?>` is\n      // exposed by the implementation subject.\n      final impl = subject.secureRead;\n      expect(impl, isNotNull,\n          reason: 'AgentPlatform.secureRead must be exposed with the declared '\n              'signature `(dynamic key) -> Future<String?>`');\n\n      // Case 2 of 2 \u2014 implementation: invoking the declared\n      // method does not throw UnimplementedError.\n      final Object? outcome = _captured(() => impl(null));\n      expect(outcome, isNot(isA<UnimplementedError>()),\n          reason: 'AgentPlatform.secureRead is not implemented \u2014 the declared '\n              'contract is unsatisfied, so the cycle is BLOCKED and cannot '\n              'proceed to GREEN (issue #1007)');\n    });\n  });\n}\n\n/// Captures an [UnimplementedError] thrown by an unimplemented contract\n/// seam (or a scaffold placeholder argument) as the assertion's actual\n/// value, so the blocked state fails through an assertion (never an\n/// uncaught error).\nObject? _captured(Object? Function() invoke) {\n  try {\n    return invoke();\n  } on UnimplementedError catch (error) {\n    return error;\n  }\n}\n\n"
+  },
+  {
+   "path": "lib/tdd/115-agent-platform-packages/contract_a2_subject.dart",
+   "action": "create",
+   "sha256": "4d294358dd228a5022029a391ca7cf73379351a590499c0153d10cdc61a0ce5f",
+   "bytes": 1642
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

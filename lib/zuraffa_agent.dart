@@ -38,3 +38,8 @@ export 'src/mcp/mcp_tool_adapter.dart';
 export 'src/logging/agent_log.dart';
 export 'src/logging/memory_log_sink.dart';
 export 'src/session_lock.dart';
+
+// Host platform seam (spec 115).
+export 'src/platform/agent_home_resolver.dart';
+export 'src/platform/agent_platform.dart';
+export 'src/platform/secure_store.dart';

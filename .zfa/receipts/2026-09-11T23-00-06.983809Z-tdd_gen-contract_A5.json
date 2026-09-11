@@ -1,0 +1,29 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A5",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:00:06.983809Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "test/tdd/115-agent-platform-packages/contract_a5_test.dart",
+   "action": "create",
+   "sha256": "61279066fc8c6bc4f59f8011abe257260293a6a0a8f43d8ec535d66984f5cacb",
+   "bytes": 2380,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen contract:A5` (issue #1007, contract lane).\n//\n// behavior_id: contract:A5\n// source_criterion: AgentHomeResolver.compose\n// kind: contract\n// description: AgentHomeResolver.compose(home) -> AgentHomeLayout (usecase contract)\n//\n// CONTRACT TEST (issue #1007): this is NOT an implementation test \u2014 it\n// proves the implementation at `../../../lib/tdd/115-agent-platform-packages/contract_a5_subject.dart`\n// satisfies the DECLARED contract above. The body enumerates the\n// contract's cases; every case must hold for the contract to be\n// satisfied. While the method is deliberately unimplemented the test\n// fails through an assertion and `zfa tdd verify-red` reports BLOCKED\n// (never RED): a failing contract test blocks the cycle from proceeding\n// to GREEN until the implementation satisfies the contract.\nlibrary;\n\nimport 'package:test/test.dart';\nimport '../../../lib/tdd/115-agent-platform-packages/contract_a5_subject.dart' as subject;\n\nvoid main() {\n  group('contract:A5 (AgentHomeResolver.compose)', () {\n    test('contract:A5 \\u2014 AgentHomeResolver.compose(home) -> AgentHomeLayout (usecase contract)', () {\n      // Case 1 of 2 \u2014 signature: the declared method\n      // `AgentHomeResolver.compose(dynamic home) -> AgentHomeLayout` is\n      // exposed by the implementation subject.\n      final impl = subject.compose;\n      expect(impl, isNotNull,\n          reason: 'AgentHomeResolver.compose must be exposed with the declared '\n              'signature `(dynamic home) -> AgentHomeLayout`');\n\n      // Case 2 of 2 \u2014 implementation: invoking the declared\n      // method does not throw UnimplementedError.\n      final Object? outcome = _captured(() => impl(null));\n      expect(outcome, isNot(isA<UnimplementedError>()),\n          reason: 'AgentHomeResolver.compose is not implemented \u2014 the declared '\n              'contract is unsatisfied, so the cycle is BLOCKED and cannot '\n              'proceed to GREEN (issue #1007)');\n    });\n  });\n}\n\n/// Captures an [UnimplementedError] thrown by an unimplemented contract\n/// seam (or a scaffold placeholder argument) as the assertion's actual\n/// value, so the blocked state fails through an assertion (never an\n/// uncaught error).\nObject? _captured(Object? Function() invoke) {\n  try {\n    return invoke();\n  } on UnimplementedError catch (error) {\n    return error;\n  }\n}\n\n"
+  },
+  {
+   "path": "lib/tdd/115-agent-platform-packages/contract_a5_subject.dart",
+   "action": "create",
+   "sha256": "9f16772e64371cbe4e5339bbe263476e1bc0fc07597e98b152d4a8b12a6bc994",
+   "bytes": 1128
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

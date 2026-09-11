@@ -1,0 +1,29 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A4",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:00:06.914792Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "test/tdd/115-agent-platform-packages/contract_a4_test.dart",
+   "action": "create",
+   "sha256": "6b36ad13a2b378939ee1834033aaad947cf39e0ee0b6c5b59b163839306082ad",
+   "bytes": 2376,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen contract:A4` (issue #1007, contract lane).\n//\n// behavior_id: contract:A4\n// source_criterion: AgentPlatform.secureDelete\n// kind: contract\n// description: AgentPlatform.secureDelete(key) -> Future<void> (usecase contract)\n//\n// CONTRACT TEST (issue #1007): this is NOT an implementation test \u2014 it\n// proves the implementation at `../../../lib/tdd/115-agent-platform-packages/contract_a4_subject.dart`\n// satisfies the DECLARED contract above. The body enumerates the\n// contract's cases; every case must hold for the contract to be\n// satisfied. While the method is deliberately unimplemented the test\n// fails through an assertion and `zfa tdd verify-red` reports BLOCKED\n// (never RED): a failing contract test blocks the cycle from proceeding\n// to GREEN until the implementation satisfies the contract.\nlibrary;\n\nimport 'package:test/test.dart';\nimport '../../../lib/tdd/115-agent-platform-packages/contract_a4_subject.dart' as subject;\n\nvoid main() {\n  group('contract:A4 (AgentPlatform.secureDelete)', () {\n    test('contract:A4 \\u2014 AgentPlatform.secureDelete(key) -> Future<void> (usecase contract)', () {\n      // Case 1 of 2 \u2014 signature: the declared method\n      // `AgentPlatform.secureDelete(dynamic key) -> Future<void>` is\n      // exposed by the implementation subject.\n      final impl = subject.secureDelete;\n      expect(impl, isNotNull,\n          reason: 'AgentPlatform.secureDelete must be exposed with the declared '\n              'signature `(dynamic key) -> Future<void>`');\n\n      // Case 2 of 2 \u2014 implementation: invoking the declared\n      // method does not throw UnimplementedError.\n      final Object? outcome = _captured(() => impl(null));\n      expect(outcome, isNot(isA<UnimplementedError>()),\n          reason: 'AgentPlatform.secureDelete is not implemented \u2014 the declared '\n              'contract is unsatisfied, so the cycle is BLOCKED and cannot '\n              'proceed to GREEN (issue #1007)');\n    });\n  });\n}\n\n/// Captures an [UnimplementedError] thrown by an unimplemented contract\n/// seam (or a scaffold placeholder argument) as the assertion's actual\n/// value, so the blocked state fails through an assertion (never an\n/// uncaught error).\nObject? _captured(Object? Function() invoke) {\n  try {\n    return invoke();\n  } on UnimplementedError catch (error) {\n    return error;\n  }\n}\n\n"
+  },
+  {
+   "path": "lib/tdd/115-agent-platform-packages/contract_a4_subject.dart",
+   "action": "create",
+   "sha256": "5cd532042ff8afd02edccdce4c0e249e3e63e0f01a730e54d50d841df7888d25",
+   "bytes": 1613
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}
