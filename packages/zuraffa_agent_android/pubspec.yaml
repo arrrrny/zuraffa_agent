@@ -21,7 +21,5 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  zuraffa_agent:
-    path: ../..
-  zuraffa_agent_platform_interface:
-    path: ../zuraffa_agent_platform_interface
+  zuraffa_agent: ^0.5.0
+  zuraffa_agent_platform_interface: ^0.1.0

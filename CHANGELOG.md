@@ -1,3 +1,19 @@
+## 0.5.0
+
+- **Structured logging** (issue #119): `package:logging` facade with named
+  subsystem loggers, level policy, and consumer-injected sinks (spec 112).
+- **EngineEventBus error observability** (issue #134): default SEVERE route
+  plus `EngineEventSubscriberError` so subscriber failures are observable
+  instead of swallowed (spec 113).
+- **JsonlSessionStorage** (issue #136): single-writer lock + streaming
+  `entries()` for session persistence (spec 114).
+- **Federated platform packages** (spec 115): `zuraffa_agent_android`,
+  `zuraffa_agent_ios`, `zuraffa_agent_macos` over
+  `zuraffa_agent_platform_interface` — the method-channel `AgentPlatform`
+  seam.
+- **Runnable example** (issue #111): minimal agent host app.
+- All specs refined to the latest zfa template conformance (zuraffa-1.0).
+
 ## 0.4.0
 
 - **Tool-result sanitization** (issue #118): `ToolResultSanitizer` with six
