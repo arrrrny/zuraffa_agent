@@ -43,21 +43,25 @@ keyed by task id.
   (`strategy`, `status`, `results`, `winner`, `completedCount`), each with
   `==`/`hashCode`/`toString`. Duplicate task ids are rejected with
   `ArgumentError` at `run()` (member instances key on task id).
+  traces: AgentSwarm.fr1
 - **FR-002**: The system MUST satisfy this requirement: Concurrent fan-out: every task's dispatch starts EAGERLY
   (all futures created before any is awaited — overlap is provable: a
   probe observing in-flight dispatches sees `maxActive == tasks.length`).
   Each member runs on a synthesized `SubAgentInstance(id: task.id,
   subAgentSpecId: spec.name, parentSessionId: 'swarm', totalRuns: 0)`.
+  traces: AgentSwarm.fr2
 - **FR-003**: The system MUST satisfy this requirement: `allCompleted` (default): await every member; `status ==
   completed` iff every member's dispatch status is `completed`, else
   `partialFailure`; `results` in TASK order; `completedCount` = successful
   members; `winner` null.
+  traces: AgentSwarm.fr3
 - **FR-004**: The system MUST satisfy this requirement: `firstCompleted`: the first member to finish with dispatch
   status `completed` wins — `status == firstCompleted`, `winner` set,
   `results == [winner]`, `completedCount == 1`. If every member finishes
   without a single completion: `partialFailure`, `winner` null, all
   results, `completedCount == 0`. Non-winning members are NOT cancelled
   (documented; they run to completion detached).
+  traces: AgentSwarm.fr4
 - **FR-005**: The system MUST satisfy this requirement: `quorum`: `quorum` (k) is REQUIRED for this strategy and
   must satisfy `1 <= k <= tasks.length` (`ArgumentError` otherwise, as is
   a missing k). The k-th successful member triggers
@@ -65,13 +69,17 @@ keyed by task id.
   completion-ordered results collected up to and including that member;
   if all members finish with fewer than k successes: `quorumFailed` with
   all results and the true success count.
+  traces: AgentSwarm.fr5
 - **FR-006**: The system MUST satisfy this requirement: Pass-through wiring: `onEvent`, `clock`, `adminGranted`
   forwarded to every member dispatch; member `MissionStarted.missionId ==
   task.id` (the caller can attribute every event to its swarm member).
+  traces: AgentSwarm.fr6
 - **FR-007**: The system MUST satisfy this requirement: Empty swarm is a caller bug: `run(tasks: [])` throws
   `ArgumentError`.
+  traces: AgentSwarm.fr7
 - **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 937/2 at `52ee56a` + new tests).
+  traces: AgentSwarm.fr8
 
 ## Verification
 
@@ -115,3 +123,10 @@ keyed by task id.
    **Type**: acceptance
 10. **Given** the feature implementation under its clean-architecture seams **When** value objects carry house semantics **Then** the pinned regression test passes (`test/engine/agent_swarm_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `AgentSwarm`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

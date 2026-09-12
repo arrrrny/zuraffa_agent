@@ -88,6 +88,9 @@ request returns the advertised descriptors and a `tools/call` request
 round-trips arguments and returns the tool's result payload; a second
 request after the first proves the connection is a session, not a one-shot.
 
+**Acceptance Scenarios**:
+
+1. **Given** a running mock subprocess server speaking JSON-RPC over stdio, **When** a `tools/list` request is sent and then a `tools/call` request with arguments, **Then** the advertised descriptors return, the call round-trips arguments and result payload, and the second request succeeds — proving the connection is a session, not a one-shot.
 ### US2 — Talk to a real SSE MCP server (P1)
 
 As the engine, I am pointed at a networked MCP server's SSE endpoint; the
@@ -101,6 +104,9 @@ mock's advertised payload; a `tools/call` POST round-trips arguments and
 result; the Authorization header carries the bearer token when one is
 configured.
 
+**Acceptance Scenarios**:
+
+2. **Given** a local mock HTTP server speaking the SSE dialect, **When** a transport opens against it, **Then** it reports open, a `tools/list` POST returns the advertised payload, a `tools/call` POST round-trips arguments and result, and the Authorization header carries the configured bearer token.
 ### US3 — Server-pushed notifications surface (P2)
 
 As the engine, I learn when a server's tool list changes: servers push a
@@ -113,6 +119,9 @@ line, and a mock SSE server emitting a tools-changed event, each produce a
 unrecognized notification methods and malformed lines/events are ignored
 without breaking the session.
 
+**Acceptance Scenarios**:
+
+3. **Given** a mock stdio server writing a tools-changed notification line (and a mock SSE server emitting a tools-changed event), **When** the notifications arrive, **Then** a `toolsChanged` observation appears on the transport's notification stream, while unrecognized methods and malformed lines are ignored without breaking the session.
 ### US4 — Drops and lifecycle are observable and safe (P1)
 
 As the engine's reconnect machinery, I must be able to trust the wire's
@@ -127,6 +136,9 @@ HTTP endpoint that answers non-200 (or refuses the connection) fails with
 a typed error naming the status; send-before-open fails typed; double
 open and double close are no-ops that do not throw.
 
+**Acceptance Scenarios**:
+
+4. **Given** a stdio child that exits and an HTTP endpoint that answers non-200 or refuses the connection, **When** the transport is used, **Then** the exit flips the open signal off and fails the next send with a typed error, the HTTP failure fails with a typed error naming the status, send-before-open fails typed, and double open/double close are no-ops.
 ### US5 — The last stubs are gone (P2 — the issue #107 hygiene acceptance)
 
 As a maintainer, I can grep the library and find zero outstanding TODOs, so
@@ -137,6 +149,9 @@ definition of done is mechanically checkable.
 adapter files are the only dart:io consumers added and both remain on the
 purity allowlist; `dart analyze` is clean; the full suite is green.
 
+**Acceptance Scenarios**:
+
+5. **Given** the implementation tree, **When** `rg "TODO|FIXME|HACK" lib/` runs, **Then** it returns zero hits, the two adapter files are the only dart:io consumers (both allowlisted), `dart analyze` is clean, and the full suite is green.
 ## Edge cases
 
 - A stdout line that is not valid JSON (log noise from a chatty child) is
@@ -156,43 +171,51 @@ purity allowlist; `dart analyze` is clean; the full suite is green.
 
 ### Functional requirements
 
-- **FR-001** (US1): `IoStdioMcpTransport.open` spawns `{executable}` with
+- **FR-001**: `IoStdioMcpTransport.open` spawns `{executable}` with
   `{args}` and completes only once the process is running; the transport
   reports open afterwards. Opening is idempotent.
-- **FR-002** (US1): `send` serializes the typed request as a single-line
+  traces: IoStdioMcpTranspo.fr1
+- **FR-002**: `send` serializes the typed request as a single-line
   JSON-RPC 2.0 request (generated monotonically increasing id), writes it
   to the child's stdin, and completes with `McpWireResponseOk` carrying the
   response `result` map, or `McpWireResponseError` carrying the response's
   error code and message. Concurrent sends are matched by id.
-- **FR-003** (US3, US4): stdout lines that are valid JSON-RPC notifications
+  traces: IoStdioMcpTranspo.fr2
+- **FR-003**: stdout lines that are valid JSON-RPC notifications
   with method `notifications/tools/list_changed` are emitted as
   `McpWireNotificationToolsChanged` on `notifications`; all other valid
   notifications and any unparseable line are ignored; process exit turns
   `isOpen` off, completes pending sends with a typed failure, and closes
   the notification stream.
-- **FR-004** (US2): `IoSseMcpTransport.open` issues a GET on `{endpoint}`
+  traces: IoStdioMcpTranspo.fr3
+- **FR-004**: `IoSseMcpTransport.open` issues a GET on `{endpoint}`
   with `Accept: text/event-stream` (and `Authorization: Bearer <token>`
   when a token is configured); a 200 response leaves the transport open;
   any other status fails the open with a typed error naming the status.
   Opening is idempotent.
-- **FR-005** (US2): `send` POSTs the JSON-RPC 2.0 request (generated id, no
+  traces: IoStdioMcpTranspo.fr4
+- **FR-005**: `send` POSTs the JSON-RPC 2.0 request (generated id, no
   wire-level id exposed) to `{endpoint}` with the same auth header; the
   response body's `result` map completes the send as
   `McpWireResponseOk`, and its error object completes it as
   `McpWireResponseError`; non-2xx POST statuses fail the send typed.
-- **FR-006** (US3): SSE `data:` events whose JSON is a notification with
+  traces: IoStdioMcpTranspo.fr5
+- **FR-006**: SSE `data:` events whose JSON is a notification with
   method `notifications/tools/list_changed` are emitted as
   `McpWireNotificationToolsChanged`; comment/keep-alive lines and
   unrecognized events are ignored.
-- **FR-007** (US4): both transports: `close` is idempotent, terminates the
+  traces: IoStdioMcpTranspo.fr6
+- **FR-007**: both transports: `close` is idempotent, terminates the
   subprocess / closes the HTTP connection, and closes the notification
   stream; `send` before `open` (or after `close`/exit) fails with a typed
   error; no method throws `UnimplementedError` or an `Error` (as opposed to
   a typed failure) under any lifecycle ordering.
-- **FR-008** (US5): the implementation introduces dart:io usage only inside
+  traces: IoStdioMcpTranspo.fr7
+- **FR-008**: the implementation introduces dart:io usage only inside
   the two `io_*` adapter files (already on the allowlist) and test files;
   after this spec `rg "TODO|FIXME|HACK" lib/` returns zero hits and
   `dart analyze` is clean.
+  traces: IoStdioMcpTranspo.fr8
 
 ### Key entities
 
@@ -258,3 +281,10 @@ purity allowlist; `dart analyze` is clean; the full suite is green.
 - Foundational for (per issue #107): MCP call timeout / retry / circuit
   breaker (issue #120), wire validation (issue #131), sandboxing + identity
   verification (issue #137) — all need real transports to test against.
+
+## Layer Contracts
+
+**Domain**:
+
+- `IoStdioMcpTranspo`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

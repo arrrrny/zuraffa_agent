@@ -60,10 +60,15 @@ As the engine, the plan state persists across turns and is visible in the agent 
 ### Functional Requirements
 
 - **FR-001**: A `write_todos` tool MUST be injectable into the agent.
+  traces: plannerTodoSystem.fr1
 - **FR-002**: Plan state MUST track steps with status (pending, in_progress, completed, cancelled).
+  traces: plannerTodoSystem.fr2
 - **FR-003**: Plan mode MUST be configurable (none, auto, must).
+  traces: plannerTodoSystem.fr3
 - **FR-004**: Plan state MUST persist across turns.
+  traces: plannerTodoSystem.fr4
 - **FR-005**: Plan changes MUST emit PlanChangedEvent.
+  traces: plannerTodoSystem.fr5
 
 ### Key Entities
 
@@ -72,6 +77,12 @@ As the engine, the plan state persists across turns and is visible in the agent 
 - **PlanStep**: description, status
 - **StepStatus**: pending, in_progress, completed, cancelled
 - **PlanMode**: none, auto, must
+
+## Layer Contracts
+
+**Domain**:
+
+- `plannerTodoSystem`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

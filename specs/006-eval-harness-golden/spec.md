@@ -97,16 +97,27 @@ As CI, the eval runtime executes everywhere — no dart:io imports on the runtim
 ### Functional Requirements
 
 - **FR-001**: The harness MUST record LLM + tool traffic and replay deterministically, detecting input drift.
+  traces: evalHarnessGolden.fr1
 - **FR-002**: Scoring MUST implement pass@k (unbiased estimator) and pass^k (empirical) with per-task breakdowns.
+  traces: evalHarnessGolden.fr2
 - **FR-003**: Graders MUST include exact, schema, and model-judge (recorded) types.
+  traces: evalHarnessGolden.fr3
 - **FR-004**: The harness MUST be consumable by `zfa agent replay` (plugin CLI) and dws_playground suites.
+  traces: evalHarnessGolden.fr4
 - **FR-005**: The eval runtime MUST be dart:io-free (enforced by static gate).
+  traces: evalHarnessGolden.fr5
 
 ### Key Entities
 
 - **GoldenMission**: recorded cassette + task definition + grader bindings.
 - **Suite**: task set + k + gate threshold.
 - **Recorder/Replayer**: pluggable at LlmClient and tool-registry boundaries (no engine internals touched).
+
+## Layer Contracts
+
+**Domain**:
+
+- `evalHarnessGolden`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

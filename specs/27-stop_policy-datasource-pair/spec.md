@@ -73,11 +73,17 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 ### Functional Requirements
 
 - **FR-001**: The `StopPolicy` value object MUST expose the spec-002-exact surface (`id`, `maxTurns`, `wallClockTimeout`, `repetitionThreshold`, `enabled`) with value equality, and MUST carry the canonical default (`maxTurns=100`, `wallClockTimeout=0`, `repetitionThreshold=5`, `enabled=true`) as a single constant.
+  traces: StopPolicyProvide.fr1
 - **FR-002**: The datasource interface MUST define the persistence contract for the single-instance value object: `current()`, `update(policy)`, `reset()` — all asynchronous.
+  traces: StopPolicyProvide.fr2
 - **FR-003**: The mock datasource MUST implement the contract in memory: seeded with the default, `update` fully replaces, `reset` restores the default, `current` returns the live value.
+  traces: StopPolicyProvide.fr3
 - **FR-004**: A concrete repository (`StopPolicyRepositoryImpl`) MUST implement the domain `StopPolicyRepository` (`getCurrent(id)`, `update(policy)`, `reset(id)`) by delegating to the datasource, raising `StateError` on an id mismatch.
+  traces: StopPolicyProvide.fr4
 - **FR-005**: The provider MUST implement the domain `StopPolicyService` (`current(NoParams)`, `defaultPolicy(NoParams)`) by consuming the datasource's id-less `current()` for the live policy (the service surface is id-less by design — `NoParams`), and by returning the canonical default constant for `defaultPolicy`. The repository remains the id-keyed domain-facing seam over the same datasource; both consume the datasource.
+  traces: StopPolicyProvide.fr5
 - **FR-006**: Constructor backward compatibility MUST hold: `StopPolicyProvider()` and `StopPolicyMockDatasource()` parameterless constructions keep compiling; the provider defaults its wiring to a fresh mock datasource.
+  traces: StopPolicyProvide.fr6
 
 ### Key Entities *(include if feature involves data)*
 
@@ -86,6 +92,12 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 - **StopPolicyMockDatasource** (concrete): in-memory implementation seeded with the default.
 - **StopPolicyRepository / StopPolicyRepositoryImpl** (domain interface / data implementation): id-keyed gateway over the datasource.
 - **StopPolicyService / StopPolicyProvider** (domain interface / data implementation): the engine-facing surface — current policy + canonical default.
+
+## Layer Contracts
+
+**Domain**:
+
+- `StopPolicyProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -67,6 +67,9 @@ compaction — without reading source to discover the knobs.
 in the typed sections; `validate()` returns no issues; the runner accepts
 it.
 
+**Acceptance Scenarios**:
+
+1. **Given** a fully-populated configuration document, **When** it loads, **Then** every field is preserved in the typed sections, `validate()` returns no issues, and the runner accepts it.
 ### US2 — Environment-only configuration works (P2)
 
 As a container operator, I configure through environment variables alone;
@@ -77,6 +80,9 @@ ignored.
 corresponding sections populated; partial maps yield partial configurations;
 unknown keys never become sections and never error.
 
+**Acceptance Scenarios**:
+
+2. **Given** an environment map (partial or full), **When** a configuration is produced from it, **Then** the corresponding sections populate, partial maps yield partial configurations, and unknown keys never become sections and never error.
 ### US3 — Bad configuration fails at startup, loudly and completely (P1)
 
 As an operator, a misconfigured engine refuses to start and tells me
@@ -90,6 +96,9 @@ that configuration throws before emitting any event or calling the engine;
 a valid configuration runs the mission unchanged; no configuration at all
 preserves today's behavior.
 
+**Acceptance Scenarios**:
+
+3. **Given** a configuration with multiple problems, **When** `validate()` runs and the runner starts, **Then** the validation names each problem with its section and field, the runner throws before emitting any event or calling the engine, a valid configuration runs the mission unchanged, and no configuration preserves the pre-existing behavior.
 ### US4 — Credentials come from pluggable sources (P2)
 
 As a security reviewer, credentials never live in the configuration
@@ -100,6 +109,9 @@ their own sources (environment, file, vault).
 shipped stub resolves nothing (returns absence) and never throws for
 absence.
 
+**Acceptance Scenarios**:
+
+4. **Given** the resolver interface, **When** it is inspected and exercised with absence, **Then** it exposes the three source kinds and the shipped stub resolves nothing (returns absence) and never throws.
 ## Edge cases
 
 - YAML values of the wrong type for a known field are rejected with a
@@ -117,27 +129,33 @@ absence.
 
 ### Functional requirements
 
-- **FR-001** (US1): `ZuraffaConfig` aggregates the six sections, each
+- **FR-001**: `ZuraffaConfig` aggregates the six sections, each
   optional, each carried verbatim; fully-populated configurations validate
   to an empty issue list.
-- **FR-002** (US1): the YAML loader parses a document into the typed
+  traces: ZuraffaConfig.fr1
+- **FR-002**: the YAML loader parses a document into the typed
   sections with per-field diagnostics for wrong-typed values; unknown keys
   are ignored.
-- **FR-003** (US2): the environment loader maps documented variables to
+  traces: ZuraffaConfig.fr2
+- **FR-003**: the environment loader maps documented variables to
   sections; absent variables leave sections absent; unknown variables are
   ignored.
-- **FR-004** (US3): `validate()` returns typed issues — `missing` (a
+  traces: ZuraffaConfig.fr3
+- **FR-004**: `validate()` returns typed issues — `missing` (a
   section required by another configured section, e.g. a configured engine
   loop with no provider), `outOfRange` (non-positive budgets/limits),
   `incompatible` (sections scoped to different sessions) — each naming its
   section and field.
-- **FR-005** (US3): `MissionRunner.run` with a configuration that fails
+  traces: ZuraffaConfig.fr4
+- **FR-005**: `MissionRunner.run` with a configuration that fails
   validation throws before emitting any event and before any engine
   execution; with a valid configuration it runs unchanged; without a
   configuration, behavior is unchanged.
-- **FR-006** (US4): the `SecretResolver` interface exposes the three source
+  traces: ZuraffaConfig.fr5
+- **FR-006**: the `SecretResolver` interface exposes the three source
   kinds; the shipped stub reports absence for every source without
   throwing.
+  traces: ZuraffaConfig.fr6
 
 ### Key entities
 
@@ -182,3 +200,10 @@ absence.
   feed `ZuraffaConfig` sections into those constructors).
 - Foundational for: #120 (per-server resilience config could extend the
   transport section later).
+
+## Layer Contracts
+
+**Domain**:
+
+- `ZuraffaConfig`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
+

@@ -74,6 +74,9 @@ injected configuration throws immediately with an error naming the missing
 configuration; the same holds for the agent-spec service; a configured
 service returns exactly the configuration that was injected.
 
+**Acceptance Scenarios**:
+
+1. **Given** construction of the provider-configuration service without an injected configuration, **When** the constructor runs, **Then** it throws immediately naming the missing configuration, the same holds for the agent-spec service, and a configured service returns exactly the injected configuration.
 ### US2 — No vendor references ship in the library (P2 — the issue's hygiene acceptance)
 
 As a security reviewer, I can grep the shipped library and find zero
@@ -85,6 +88,9 @@ id over the library returns zero hits; the fallback chain's default ids
 contain no vendor-specific id; the integration test's vendor defaults are
 gone (env-required instead).
 
+**Acceptance Scenarios**:
+
+2. **Given** the library and the fallback chain defaults, **When** a case-insensitive search runs for the gateway host and the model id, **Then** it returns zero hits, the fallback chain's default ids contain no vendor-specific id, and the integration test's vendor defaults are gone (env-required instead).
 ### US3 — Existing consumers keep working when explicit (P1)
 
 As an existing consumer who already injects an explicit configuration,
@@ -95,6 +101,9 @@ interface is unchanged.
 configuration through the same interface; the count surface reports the
 configured set without invention.
 
+**Acceptance Scenarios**:
+
+3. **Given** an explicitly configured provider, **When** the same interface is queried, **Then** it returns the injected configuration and the count surface reports the configured set without invention.
 ## Edge cases
 
 - Constructing with an explicitly-provided configuration must never throw
@@ -110,22 +119,27 @@ configured set without invention.
 
 ### Functional requirements
 
-- **FR-001** (US1): constructing the provider-configuration service without
+- **FR-001**: constructing the provider-configuration service without
   an injected configuration fails at construction with a typed error naming
   the missing configuration.
-- **FR-002** (US1): constructing the agent-spec service without an injected
+  traces: ProviderConfigProvide.fr1
+- **FR-002**: constructing the agent-spec service without an injected
   configuration fails at construction the same way.
-- **FR-003** (US3): a configured service returns the injected configuration
+  traces: ProviderConfigProvide.fr2
+- **FR-003**: a configured service returns the injected configuration
   verbatim through its existing interface; behavior is otherwise unchanged.
-- **FR-004** (US2): after this spec, a case-insensitive search for the
+  traces: ProviderConfigProvide.fr3
+- **FR-004**: after this spec, a case-insensitive search for the
   gateway host and model id returns zero hits in **non-test code** (the
   issue's own scope: `lib/` and tooling) and in the integration test that
   carried the vendor default; the fallback chain's default ids contain no
   vendor id. Inert fixture model strings inside engine unit tests are
   explicitly out of scope — they are literal test data, never routed.
-- **FR-005** (US2): the integration test requires explicit environment
+  traces: ProviderConfigProvide.fr4
+- **FR-005**: the integration test requires explicit environment
   configuration for endpoint/model/token and skips (with a stated reason)
   when they are absent — it never falls back to a default vendor.
+  traces: ProviderConfigProvide.fr5
 
 ### Key entities
 
@@ -169,3 +183,10 @@ configured set without invention.
   consumers a structured way to produce the now-required configurations.
 - Related but out of scope: fallback-chain runtime behavior (spec 008/053),
   value-object validation, secrets resolution (part of #121).
+
+## Layer Contracts
+
+**Domain**:
+
+- `ProviderConfigProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
+

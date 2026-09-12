@@ -1,0 +1,43 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "115-agent-platform-packages",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-12T00:25:42.351100Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "115-agent-platform-packages"
+  },
+  "files": [
+    {
+      "path": "specs/115-agent-platform-packages/tdd/test-list.md",
+      "action": "update",
+      "sha256": "8727767eadf6a7afff8c2f0b4ad098b7e62ed7d5a20210c1555cfaa79ddff2cd",
+      "bytes": 5537
+    },
+    {
+      "path": "specs/115-agent-platform-packages/tdd/traceability.md",
+      "action": "update",
+      "sha256": "c7857ad96c837c159188b4133dcaf6c765ddffe050fde36fafd46e886a95354a",
+      "bytes": 1637,
+      "snapshot": "# Traceability: 115-agent-platform-packages\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:c17e8c0d2d5281bd09a76ff39a48b8704cdac4d3ce884b5276dc2367df985496\nstatements: 11\nautomated: 11\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 72 | 1. **Given** a platform that reports home `/support`, **When** the | A1 | automated |\n| AC-2 | 77 | 2. **Given** a platform that reports an empty home, **When** the resolver | A2 | automated |\n| AC-3 | 96 | 3. **Given** a fake secure store, **When** a key is written then read, | A3 | automated |\n| AC-4 | 99 | 4. **Given** an empty or whitespace key, **When** a secure operation is | A4 | automated |\n| AC-5 | 120 | 5. **Given** the repo tree, **When** the four packages are inspected, | A5 | automated |\n| AC-6 | 126 | 6. **Given** a certified channel fake replaying host responses, **When** | A6 | automated |\n| FR-001 | 136 | - **FR-001**: `AgentPlatform` MUST define the host seam — | U1 | automated |\n| FR-002 | 142 | - **FR-002**: `AgentHomeResolver` MUST compose | U2 | automated |\n| FR-003 | 146 | - **FR-003**: Secure-store operations MUST validate keys (non-empty, | U3 | automated |\n| FR-004 | 151 | - **FR-004**: The federated packages MUST ship with correct pubspec | U4 | automated |\n| FR-005 | 158 | - **FR-005**: The channel contract MUST be exactly: channel | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/115-agent-platform-packages/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/115-agent-platform-packages/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

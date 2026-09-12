@@ -143,42 +143,51 @@ map contains the extra keys.
   named exactly `SKILL.md` or matching `*.skill.md`. Subdirectories
   are NOT recursed (one level — engine integration composes multiple
   directories itself). Non-existent directory → returns `const []`.
+  traces: Skills.fr1
 - **FR-002**: `loadSkills` MUST throw `SkillFormatException` when any
   discovered file has malformed frontmatter — never silently drops
   the file. The exception's `message` names the offending file path
   and the reason (missing opening `---`, missing closing `---`, missing
   `name:` field, ill-formed YAML).
+  traces: Skills.fr2
 - **FR-003**: The system MUST satisfy this requirement: `parseSkill(String content, {required String sourcePath})`
   MUST be a pure function: no `dart:io`, no `Future`, no side effects.
   Same content + sourcePath → same `Skill` (modulo the sourcePath
   field, which is echoed back on the result).
+  traces: Skills.fr3
 - **FR-004**: `parseSkill` MUST parse YAML frontmatter between `---`
   delimiters and extract at minimum `name` and `description` as
   strings. Missing `name` → `SkillFormatException` naming the field.
   Missing `description` → empty string (description is optional in
   practice; many skill files omit it).
+  traces: Skills.fr4
 - **FR-005**: `parseSkill` MUST preserve every additional frontmatter
   key on `Skill.metadata` (a `Map<String, Object?>`). Nested maps,
   lists, numbers, booleans, and null are preserved as-is. The
   top-level `name` and `description` are NOT duplicated into
   `metadata`.
+  traces: Skills.fr5
 - **FR-006**: `parseSkill` MUST treat the markdown body after the
   closing `---` as `Skill.instructions`, stripped of leading/trailing
   whitespace. Empty body → empty string (a skill with no instructions
   is unusual but not malformed).
+  traces: Skills.fr6
 - **FR-007**: `parseSkill` MUST throw `SkillFormatException` when:
   - the content does not start with `---` (no opening delimiter);
   - the opening `---` has no matching closing `---`;
   - the YAML between the delimiters cannot be parsed.
+  traces: Skills.fr7
 - **FR-008**: `formatSkillsForSystemPrompt(List<Skill>)` MUST return
   a string with each skill rendered as `## Skill: {name}\n{description}\n\n{instructions}`,
   skills separated by a blank line, and return the empty string when
   the list is empty. Unchanged from current behavior — pinned.
+  traces: Skills.fr8
 - **FR-009**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline 1073/2 + new).
   Pre-existing analyzer findings on unrelated files (1 warning +
   2 info at HEAD `29b7fef`) are out of scope and explicitly NOT
   regressed.
+  traces: Skills.fr9
 
 ### Key entities
 
@@ -264,3 +273,10 @@ map contains the extra keys.
    **Type**: acceptance
 16. **Given** the feature implementation under its clean-architecture seams **When** U15: two skills render as two ## Skill: blocks separated by a blank line **Then** the pinned regression test passes (`test/skills/skills_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `Skills`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`
+

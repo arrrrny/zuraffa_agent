@@ -110,34 +110,44 @@ id does not move the score.
   (Chen et al. 2021) computed by the `PassAtK` value object with
   `k = min(suite.k, n)` (existing; pinned here with a known value and by
   spec-006/037 tests cited in the test list).
+  traces: SuiteGate.fr1
 - **FR-002**: The system MUST satisfy this requirement: The suite score is the mean of the per-task pass@k values
   over the suite's DECLARED tasks, in the suite's declared order
   (existing; pin — including that sample ids not declared by the suite are
   ignored).
+  traces: SuiteGate.fr2
 - **FR-003**: The system MUST satisfy this requirement: The threshold decision is `>=`: a score exactly equal to
   `gateThreshold` passes (existing 006-A4 pin; re-pinned here).
+  traces: SuiteGate.fr3
 - **FR-004**: The system MUST satisfy this requirement: A declared task with NO samples entry is INCOMPLETE: it
   scores 0.0, is reported as having no samples, and VETOES the gate
   (existing 006-A4 pin).
+  traces: SuiteGate.fr4
 - **FR-005**: The system MUST satisfy this requirement: A declared task whose samples entry has `n == 0` (zero
   runs recorded) is INCOMPLETE: it scores 0.0 with a zero-runs detail,
   VETOES the gate, and `evaluate` does NOT throw.
+  traces: SuiteGate.fr5
 - **FR-006**: The system MUST satisfy this requirement: `GateDecision` exposes `incomplete` (bool) and
   `incompleteTaskIds` (the veto-triggering tasks in suite order) — the
   machine-readable veto surface.
+  traces: SuiteGate.fr6
 - **FR-007**: The system MUST satisfy this requirement: A suite with ZERO declared tasks FAILS the gate
   (fail-closed): `passed == false`, `exitCode == 1`, score 0.0, and the
   report names the reason. (Fixes the fail-open `0.0 >= 0.0` case.)
+  traces: SuiteGate.fr7
 - **FR-008**: The system MUST satisfy this requirement: All-incomplete suites (every declared task missing or
   zero-run) fail with `incomplete == true` and all task ids listed.
+  traces: SuiteGate.fr8
 - **FR-009**: The system MUST satisfy this requirement: The computation stays pure and deterministic: same inputs →
   same decision (no clock, no randomness, no I/O); invalid sample
   arithmetic (`c > n`) still throws `ArgumentError` (a programming error,
   not an incomplete run).
+  traces: SuiteGate.fr9
 - **FR-010**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green, including the unmodified spec-006
   `suite_gate_006_a4_test.dart`.
+  traces: SuiteGate.fr10
 
 ### Key entities
 
@@ -189,3 +199,10 @@ id does not move the score.
    **Type**: acceptance
 11. **Given** the feature implementation under its clean-architecture seams **When** T8 (pin): c > n is a programming error, not an incomplete run **Then** the pinned regression test passes (`test/eval/suite_gate_085_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `SuiteGate`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

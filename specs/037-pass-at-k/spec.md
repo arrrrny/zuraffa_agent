@@ -72,15 +72,26 @@ As a metric consumer, I rely on the estimator's mathematical shape: monotonic no
 ### Functional Requirements
 
 - **FR-001**: `PassAtK.fromResults(List<bool> outcomes, {required int k})` MUST derive n = outcomes.length and c = count of `true`, MUST throw `ArgumentError` on an empty outcome list (with the k range then necessarily invalid) or on k < 1 / k > n, and MUST produce a result identical (n, c, k, value) to `PassAtK.compute` on the derived triple.
+  traces: PassAtKProvide.fr1
 - **FR-002**: Instance method `meetsThreshold(double threshold)` MUST return `value >= threshold` (inclusive at equality) and MUST throw `ArgumentError` when `threshold < 0 || threshold > 1 || threshold.isNaN`.
+  traces: PassAtKProvide.fr2
 - **FR-003**: The estimator MUST remain monotonic non-decreasing in k for `1 <= k <= n - c` (pinned by an invariant sweep test; endpoints and c-monotonicity remain pinned by the existing suite).
+  traces: PassAtKProvide.fr3
 - **FR-004**: `compute`'s existing validation, formula, `binomial` helper, equality-on-(n,c,k), and `toString` MUST keep their shipped semantics (pinned by the 10 pre-existing metric tests, unchanged).
+  traces: PassAtKProvide.fr4
 - **FR-005**: The clean-arch layers (`PassAtKService.current/count`, `PassAtKProvider`) MUST keep their existing signatures and stub behavior; no behavioral change in this feature.
+  traces: PassAtKProvide.fr5
 
 ### Key Entities *(include if feature involves data)*
 
 - **PassAtK** (value object, existing): n/c/k/value + `compute` factory; this feature adds `fromResults` (FR-001) and `meetsThreshold` (FR-002) and changes nothing else.
 - **PassAtKService / PassAtKProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 13 tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `PassAtKProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

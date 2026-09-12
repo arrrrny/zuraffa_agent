@@ -237,6 +237,7 @@ and matches each document's declarations.
   list), and `response` (optional `language` string, optional `maxChars`
   int). Optional metadata (`domain`, `country`) MAY be present and is
   preserved.
+  traces: PlaybookRuntime.fr1
 - **FR-002**: The engine MUST load a playbook document (YAML source or the
   equivalent JSON map) into the typed playbook value object, preserving
   every field. Malformed documents MUST be rejected at load time with typed
@@ -250,36 +251,43 @@ and matches each document's declarations.
   gate list; a `response.maxChars`
   that is not a positive integer; a `response.language` that is not a
   non-empty string.
+  traces: PlaybookRuntime.fr2
 - **FR-003**: The engine MUST apply a loaded playbook's steering section as
   the active steering context: each steering entry becomes a
   `SteeringMessage` (deterministic, playbook-attributable message ids)
   seeded FIFO into the mission's `SteeringQueue` at mission start, drained
   by the existing engine loop, observable as one `SteeringInjected` event
   per entry in document order.
+  traces: PlaybookRuntime.fr3
 - **FR-004**: The engine MUST apply a loaded playbook's tool-gating section
   by wrapping the mission's `ToolDispatcher`: `allowlist` mode refuses
   (typed failure `tool not allowed: <name>`, inner dispatcher never
   invoked) every tool not in `allowed`; `blocklist` mode refuses every tool
   in `blocked`; `off`/absent delegates everything unchanged.
+  traces: PlaybookRuntime.fr4
 - **FR-005**: The engine MUST apply a loaded playbook's response section: a
   `language` constraint is rendered as one playbook-attributable steering
   directive injected with the playbook steering; a `maxChars` constraint
   caps the final response — exactly the first `maxChars` characters
   preserved, followed by a truncation marker naming the playbook id
   (responses at or under `maxChars` pass through unchanged).
+  traces: PlaybookRuntime.fr5
 - **FR-006**: Adding a new playbook MUST require no code change — only a
   new document. The loader, steering seeding, tool gate, and response
   constraint are document-driven; no engine surface may branch on a
   specific playbook's identity or content.
+  traces: PlaybookRuntime.fr6
 - **FR-007**: The playbook application MUST compose with the existing
   engine surfaces only — `SteeringQueue`/`SteeringMessage` (spec 033),
   `ToolDispatcher` (spec 003/047), the engine loop's steering drain (spec
   002/069) — and MUST NOT mutate shared state: steering seeding returns new
   queue snapshots; the gate wraps the dispatcher it is given.
+  traces: PlaybookRuntime.fr7
 - **FR-008**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the changed
   files; full `dart test` green (baseline 1163 passed + new); the runtime
   purity gate holds (no `dart:io` imports in the new files; constitution
   VII).
+  traces: PlaybookRuntime.fr8
 
 ### Key entities
 
@@ -347,3 +355,10 @@ and matches each document's declarations.
   playbook mechanism), sub-agent dispatch budgets (spec 070), playbook
   serving (`raptorr.playbook_get`), authoring UI, hot-reload (issue #104
   out-of-scope list).
+
+## Layer Contracts
+
+**Domain**:
+
+- `PlaybookRuntime`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

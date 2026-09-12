@@ -77,12 +77,19 @@ As a developer, all three clients pass one shared contract-test suite over recor
 ### Functional Requirements
 
 - **FR-001**: The engine MUST provide a unified `LlmClient` interface with `generate()` and `stream()` methods.
+  traces: LlmClien.fr1
 - **FR-002**: OpenAI-compatible, Anthropic, and Gemini clients MUST implement this interface.
+  traces: LlmClien.fr2
 - **FR-003**: All clients MUST support multimodal input (text, image, audio, document) and output.
+  traces: LlmClien.fr3
 - **FR-004**: All clients MUST support streaming with tool call fragment assembly.
+  traces: LlmClien.fr4
 - **FR-005**: All clients MUST track usage (input, output, cached, thought tokens).
+  traces: LlmClien.fr5
 - **FR-006**: All clients MUST implement retry with exponential backoff for 429/5xx.
+  traces: LlmClien.fr6
 - **FR-007**: All clients MUST be vendored from dart_agent_core with attribution; dart_agent_core MUST NOT appear in the dependency graph.
+  traces: LlmClien.fr7
 
 ### Key Entities
 
@@ -90,6 +97,12 @@ As a developer, all three clients pass one shared contract-test suite over recor
 - **LlmResponse**: content, toolCalls, usage, finishReason
 - **LlmResponseChunk**: content, thinking, toolCalls, usage, isComplete
 - **LlmUsage**: inputTokens, outputTokens, cachedTokens, thoughtTokens
+
+## Layer Contracts
+
+**Domain**:
+
+- `LlmClien`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

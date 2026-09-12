@@ -107,31 +107,39 @@ intersection.
 - **FR-001**: The system MUST satisfy this requirement: `UsageLedger` is constructed by defensive copy into an
   unmodifiable list; the caller's later mutations of the source list do
   not affect any previously-computed total, `length`, or sub-ledger.
+  traces: UsageLedge.fr1
 - **FR-002**: The system MUST satisfy this requirement: `UsageLedger.entries` exposes the (unmodifiable) entry
   sequence for inspection; mutation attempts throw `UnsupportedError`.
+  traces: UsageLedge.fr2
 - **FR-003**: The system MUST satisfy this requirement: `UsageLedger.toJson()` serializes the projection as
   `{'entries': [<UsageEntry.toJson>...]}`; `UsageLedger.fromJson` rebuilds
   an equal ledger. Round-trip preserves all five totals, sub-ledgers, and
   the `null`-model case.
+  traces: UsageLedge.fr3
 - **FR-004**: The system MUST satisfy this requirement: Equality is ordered-sequence equality over structurally
   identical entries, defined via the serialized form (equal ledgers have
   equal `toJson`); `hashCode` is consistent with `==`.
+  traces: UsageLedge.fr4
 - **FR-005**: The system MUST satisfy this requirement: Existing aggregate surface is unchanged:
   `totalInputTokens`, `totalOutputTokens`, `totalTokens`,
   `totalCacheReadTokens`, `totalCacheWriteTokens`, `byTurn(int)`,
   `byModel(String)`, `length`, `isEmpty`, `isNotEmpty` behave exactly as
   the T009 tests pinned (regression: the pre-existing
   `test/usage_ledger_test.dart` stays green unmodified).
+  traces: UsageLedge.fr5
 - **FR-006**: The system MUST satisfy this requirement: Sub-ledgers are themselves full projections: `byTurn` /
   `byModel` results support equality, serialization, and chaining
   (`ledger.byModel(m).byTurn(t)` totals equal the entries matching both
   filters).
+  traces: UsageLedge.fr6
 - **FR-007**: The system MUST satisfy this requirement: Edge cases: an empty ledger equals every other empty ledger,
   serializes/round-trips, and reports all totals as 0; `byTurn`/`byModel`
   with no matches return an empty ledger (not an error).
+  traces: UsageLedge.fr7
 - **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green.
+  traces: UsageLedge.fr8
 
 ### Key entities
 
@@ -201,3 +209,10 @@ intersection.
    **Type**: acceptance
 18. **Given** the feature implementation under its clean-architecture seams **When** totalCacheWriteTokens sums correctly **Then** the pinned regression test passes (`test/usage_ledger_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `UsageLedge`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

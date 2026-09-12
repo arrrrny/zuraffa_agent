@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "110-session-schema-versioning",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-12T00:25:41.211452Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "110-session-schema-versioning"
+  },
+  "files": [
+    {
+      "path": "specs/110-session-schema-versioning/tdd/test-list.md",
+      "action": "update",
+      "sha256": "54f2d3abe959f1e2b12bc86ef67bca5bba238c0957712cae971f46f69a249ff7",
+      "bytes": 4797,
+      "snapshot": "# Test List: 110-session-schema-versioning\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | every entry is readable in memory, the open reports `schemaVersion: 3` / `migratedFromVersion: 1`, and the file on disk now carries the v3 header. | AC-1 | PENDING |\n| A2 | the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | AC-2 | PENDING |\n| A3 | the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | AC-3 | PENDING |\n| A4 | the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | AC-4 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U5 | legacy JSONL files (no header) are treated as v1, | FR-001, SessionStorage.fr5 | PENDING |\n| U6 | current-version JSONL files open without migration; | FR-002, SessionStorage.fr6 | PENDING |\n| U9 | new JSONL stores write the header on first init; new | FR-003, SessionStorage.fr3 | PENDING |\n| U7 | `SessionMigrator` exposes the ordered registry | FR-004, SessionStorage.fr4 | PENDING |\n| U5 | `StoreOpenResult` carries `schemaVersion` and, when a | FR-005, SessionStorage.fr5 | PENDING |\n| U6 | the migration policy (version constant, header shape, | FR-006, SessionStorage.fr6 | PENDING |\n\n## Contract loop: contract behaviors\n\nOne per declared entity method, controller method and usecase in `spec.md` Layer Contracts (issue #1007). A contract test proves the implementation satisfies the DECLARED contract — a failing contract test is BLOCKED (never RED) and blocks the cycle from proceeding to GREEN.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| contract:A1 | SessionStorage.fr1(...) -> Result (usecase contract) | SessionStorage.fr1 | PENDING |\n| contract:A2 | SessionStorage.fr2(...) -> Result (usecase contract) | SessionStorage.fr2 | PENDING |\n| contract:A3 | SessionStorage.fr3(...) -> Result (usecase contract) | SessionStorage.fr3 | PENDING |\n| contract:A4 | SessionStorage.fr4(...) -> Result (usecase contract) | SessionStorage.fr4 | PENDING |\n| contract:A5 | SessionStorage.fr5(...) -> Result (usecase contract) | SessionStorage.fr5 | PENDING |\n| contract:A6 | SessionStorage.fr6(...) -> Result (usecase contract) | SessionStorage.fr6 | PENDING |\n\n## Layer contracts\n\n### Domain\n\n- `SessionStorage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A2 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A3 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A4 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: U5 -> unit lane [declared: contract row: SessionStorage, spec line 166]\nroute: U6 -> unit lane [declared: contract row: SessionStorage, spec line 166]\nroute: U9 -> unit lane [declared: contract row: SessionStorage, spec line 166]\nroute: U7 -> unit lane [declared: contract row: SessionStorage, spec line 166]\nroute: contract:A1 -> contract lane [declared: SessionStorage]\nroute: contract:A2 -> contract lane [declared: SessionStorage]\nroute: contract:A3 -> contract lane [declared: SessionStorage]\nroute: contract:A4 -> contract lane [declared: SessionStorage]\nroute: contract:A5 -> contract lane [declared: SessionStorage]\nroute: contract:A6 -> contract lane [declared: SessionStorage]\n\n"
+    },
+    {
+      "path": "specs/110-session-schema-versioning/tdd/traceability.md",
+      "action": "update",
+      "sha256": "8be10f20755e2f216f24be5df7580e8272af0da733b0b34112ad7573f9899969",
+      "bytes": 1981,
+      "snapshot": "# Traceability: 110-session-schema-versioning\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:fba2e58ec43b1fc1cbf88e93b6898d80d58c414a2273a77e80655c0837369e22\nstatements: 10\nautomated: 10\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 70 | 1. **Given** a v1 fixture file (no header, entry maps without version stamps), **When** it opens, **Then** every entry is readable in memory, the open reports `schemaVersion: 3` / `migratedFromVersion: 1`, and the file on disk now carries the v3 header. | A1 | automated |\n| AC-2 | 82 | 2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | A2 | automated |\n| AC-3 | 90 | 2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | A3 | automated |\n| AC-4 | 104 | 2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged. | A4 | automated |\n| FR-001 | 107 | - **FR-001**: legacy JSONL files (no header) are treated as v1, | U5 | automated |\n| FR-002 | 111 | - **FR-002**: current-version JSONL files open without migration; | U6 | automated |\n| FR-003 | 114 | - **FR-003**: new JSONL stores write the header on first init; new | U9 | automated |\n| FR-004 | 117 | - **FR-004**: `SessionMigrator` exposes the ordered registry | U7 | automated |\n| FR-005 | 121 | - **FR-005**: `StoreOpenResult` carries `schemaVersion` and, when a | U5 | automated |\n| FR-006 | 124 | - **FR-006**: the migration policy (version constant, header shape, | U6 | automated |\n\n"
+    },
+    {
+      "path": "specs/110-session-schema-versioning/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/110-session-schema-versioning/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

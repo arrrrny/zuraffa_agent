@@ -86,16 +86,27 @@ As the engine, results beyond a size threshold are summarized with an `artifactR
 ### Functional Requirements
 
 - **FR-001**: One tool registry MUST serve DDA, generated, and remote-MCP tools in a single namespace.
+  traces: toolsAndMcp.fr1
 - **FR-002**: Tool dispatch MUST validate arguments against JSON Schema and support sequential/parallel modes.
+  traces: toolsAndMcp.fr2
 - **FR-003**: `safe|confirm|admin` risk MUST be first-class tool metadata; dispatch MUST enforce approval/permission semantics.
+  traces: toolsAndMcp.fr3
 - **FR-004**: The MCP client MUST implement in-proc, SSE+Bearer (reconnect, auth callback), and stdio transports.
+  traces: toolsAndMcp.fr4
 - **FR-005**: Oversized results MUST be summarized + artifactRef'd before entering model context.
+  traces: toolsAndMcp.fr5
 
 ### Key Entities
 
 - **AgentTool**: name, description, JSON Schema params, risk tier, execution mode, implementation binding.
 - **McpTransport** (sealed): InProc, Sse(bearer/reconnect/auth), Stdio.
 - **ToolResult**: content + structured payload + optional artifactRef.
+
+## Layer Contracts
+
+**Domain**:
+
+- `toolsAndMcp`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

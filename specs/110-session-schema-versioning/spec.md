@@ -65,7 +65,9 @@ stamped entries) so the next open is a native open.
 stamps) opens with every entry readable in memory, reports
 `schemaVersion: 3` / `migratedFromVersion: 1`, and the file on disk now
 carries the v3 header.
+**Acceptance Scenarios**:
 
+1. **Given** a v1 fixture file (no header, entry maps without version stamps), **When** it opens, **Then** every entry is readable in memory, the open reports `schemaVersion: 3` / `migratedFromVersion: 1`, and the file on disk now carries the v3 header.
 ### US2 — Native files open without churn (P1)
 
 As the engine, a current-version file opens with no migration work: the
@@ -75,13 +77,17 @@ preserved.
 **Acceptance**: opening a v3 file reports `schemaVersion: 3` and no
 `migratedFromVersion`; entries load unchanged.
 
-### US3 — New stores are born at the current version (P2)
+**Acceptance Scenarios**:
+
+2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged.
 
 **Acceptance**: `init()` on a non-existent JSONL path creates the file with
 the v3 header; a fresh Hive store stamps its meta box with the current
 version; both report it.
 
-### US4 — The migration registry is the extension point (P2)
+**Acceptance Scenarios**:
+
+2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged.
 
 As a maintainer, the next schema change is one function: add a step to the
 registry, bump the version constant, add a fixture test. The migrator
@@ -91,26 +97,34 @@ chains steps in order (1→2→3) and no-ops when a map is already current.
 map's version to the current version; a v1 map comes out carrying the v3
 stamp through both steps; a map already at the current version is returned
 unchanged.
-
 ## Requirements
 
+**Acceptance Scenarios**:
+
+2. **Given** a v3 file, **When** it opens, **Then** the result reports `schemaVersion: 3` with no `migratedFromVersion` and the entries load unchanged.
 ### Functional requirements
 
-- **FR-001** (US1): legacy JSONL files (no header) are treated as v1,
+- **FR-001**: legacy JSONL files (no header) are treated as v1,
   migrated through the registry to the current version, and rewritten
   atomically with a header before any tear-scan result is produced.
-- **FR-002** (US2): current-version JSONL files open without migration;
+  traces: SessionStorage.fr1
+- **FR-002**: current-version JSONL files open without migration;
   the header line is not surfaced as an entry.
-- **FR-003** (US3): new JSONL stores write the header on first init; new
+  traces: SessionStorage.fr2
+- **FR-003**: new JSONL stores write the header on first init; new
   Hive stores stamp the meta box.
-- **FR-004** (US4): `SessionMigrator` exposes the ordered registry
+  traces: SessionStorage.fr3
+- **FR-004**: `SessionMigrator` exposes the ordered registry
   (`1→2`, `2→3`) and migrates raw entry maps from any registered version to
   the current version; current-version maps are returned unchanged.
+  traces: SessionStorage.fr4
 - **FR-005**: `StoreOpenResult` carries `schemaVersion` and, when a
   migration ran, `migratedFromVersion`.
+  traces: SessionStorage.fr5
 - **FR-006**: the migration policy (version constant, header shape,
   legacy-defaults-to-v1, registry extension steps) is documented in
   `ARCHITECTURE.md`.
+  traces: SessionStorage.fr6
 
 ## Success criteria
 
@@ -144,3 +158,10 @@ unchanged.
 - Builds on: master (post-#145) — JSONL/Hive stores (specs 002/010/076),
   the atomic-rewrite precedent in `JsonlEntityStorage`.
 - Pairs with (out of scope): backup/restore (#135), retention (#135).
+
+## Layer Contracts
+
+**Domain**:
+
+- `SessionStorage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
+

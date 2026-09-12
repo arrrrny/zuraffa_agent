@@ -82,28 +82,39 @@ skipped (with reason), and what remains in the session.
 - **FR-001**: `DistillationPolicy` MUST expose `salienceThreshold`
   (default `0.7`) and `maxPerSession` (`int?`, default null = uncapped),
   with house value semantics.
+  traces: MemoryDistille.fr1
 - **FR-002**: `distill(sessionId)` MUST promote exactly the session
   records with `salience >= threshold`, via the facade's `promote()`
   (identity-preserving: id, content, createdAt, salience unchanged).
+  traces: MemoryDistille.fr2
 - **FR-003**: The system MUST satisfy this requirement: Boundary: `salience == threshold` promotes.
+  traces: MemoryDistille.fr3
 - **FR-004**: The system MUST satisfy this requirement: A record whose normalized content (trim + case-fold) already
   exists in long-term memory MUST be skipped with
   `duplicateOfLongTerm` and MUST remain in session memory.
+  traces: MemoryDistille.fr4
 - **FR-005**: With `maxPerSession` set, promotions MUST be capped to the
   top-N candidates (salience desc, then createdAt asc — older first among
   equals); overflow skipped with `capReached`.
+  traces: MemoryDistille.fr5
 - **FR-006**: Below-threshold records MUST be skipped with
   `belowThreshold` and remain in session memory.
+  traces: MemoryDistille.fr6
 - **FR-007**: `distill` MUST be idempotent — a second run on the same
   session promotes nothing new and adds no long-term duplicates.
+  traces: MemoryDistille.fr7
 - **FR-008**: The system MUST satisfy this requirement: Unknown / empty session → empty report, no throw.
+  traces: MemoryDistille.fr8
 - **FR-009**: `DistillationReport` MUST carry `promoted` (ids, promotion
   order), `skipped` (`SkippedRecord`: id + reason), and `sessionRemaining`
   (records still in session after the run), with house value semantics.
+  traces: MemoryDistille.fr9
 - **FR-010**: The system MUST satisfy this requirement: Composed with the 076 persistent stores, distilled records
   MUST be durable (present after store rebuild).
+  traces: MemoryDistille.fr10
 - **FR-011**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart
   test` green.
+  traces: MemoryDistille.fr11
 
 ### Key entities
 
@@ -151,3 +162,10 @@ skipped (with reason), and what remains in the session.
    **Type**: acceptance
 10. **Given** the feature implementation under its clean-architecture seams **When** distilled knowledge is durable across a store rebuild **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `MemoryDistille`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`, `fr11(...) -> Result`
+

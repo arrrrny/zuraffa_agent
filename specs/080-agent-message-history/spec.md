@@ -137,15 +137,19 @@ key.
   subclass's existing `==`) AND both `episodicMemories` lists are
   element-wise equal (using `EpisodicMemory.==`); `false` otherwise.
   Identity (`identical`) short-circuits to `true`.
+  traces: AgentMessageHistory.fr1
 - **FR-002**: `AgentMessageHistory.hashCode` MUST agree with `==` —
   two equal histories produce equal hashCodes. Implementation via
   `Object.hash(Object.hashAll(messages), Object.hashAll(episodicMemories))`.
+  traces: AgentMessageHistory.fr2
 - **FR-003**: `AgentMessageHistory.toJson()` MUST return a
   `Map<String, dynamic>` of shape `{messages: [for each m in messages: m.toJson()], episodicMemories: [for each em in episodicMemories: em.toJson()]}`.
   An empty history → `{messages: [], episodicMemories: []}`.
+  traces: AgentMessageHistory.fr3
 - **FR-004**: The system MUST satisfy this requirement: `AgentMessageHistory.fromJson(Map<String, dynamic> json)`
   MUST produce a history equal (by FR-001) to the original that was
   serialized with `toJson` — lossless round-trip.
+  traces: AgentMessageHistory.fr4
 - **FR-005**: `AgentMessageHistory.fromJson` MUST throw `ArgumentError`
   naming the offending key when:
   - `messages` is missing or not a `List`;
@@ -158,18 +162,23 @@ key.
     or fails `EpisodicMemory.fromJson` (typed error from the delegate
     propagates — `ArgumentError` is added at this layer naming the
     index of the offending memory).
+  traces: AgentMessageHistory.fr5
 - **FR-006**: `truncate(int keep)` MUST return a new
   `AgentMessageHistory` whose `episodicMemories` field equals
   (by `==`, FR-001) the receiver's — no memory dropped, added, or
   reordered. (Already behaviorally true; this spec pins it via
   equality, not just length.)
+  traces: AgentMessageHistory.fr6
 - **FR-007**: The system MUST satisfy this requirement: existing pure transforms (`appendMessages`, `addMemory`,
   `truncate`) MUST remain pure: return a new value, never mutate the
   receiver. (Already behaviorally true; pinned by an assertion test.)
+  traces: AgentMessageHistory.fr7
 - **FR-008**: existing constructor + `memorySummaries` MUST remain
   unchanged — no signature change, no behavior change.
+  traces: AgentMessageHistory.fr8
 - **FR-009**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline 1089/2 + new).
+  traces: AgentMessageHistory.fr9
 
 ### Key entities
 
@@ -194,6 +203,7 @@ key.
 - **SC-002**: A history with N messages + M memories round-trips
   through `toJson` → `fromJson` to an equal history (US2 /
 - **FR-003**: The system MUST satisfy this requirement: / FR-004).
+  traces: AgentMessageHistory.fr10
 - **SC-003**: `truncate(N)` returns a history whose `episodicMemories`
   field equals (by `==`) the receiver's (US3 / FR-006).
 - **SC-004**: Every malformed-input variant (missing keys, wrong
@@ -259,3 +269,10 @@ key.
    **Type**: acceptance
 17. **Given** the feature implementation under its clean-architecture seams **When** U17: truncate returns a new value; receiver unchanged **Then** the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `AgentMessageHistory`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

@@ -56,22 +56,26 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
   `sessionId?`, `missionId?`, `agentName?` — at least one must be set),
   `createdAt` (UTC), `salience` (`0.0..1.0`, default `0.5` — out of
   range throws `ArgumentError`).
+  traces: AgentMemory.fr1
 - **FR-002**: The system MUST satisfy this requirement: Long-term store: `remember(MemoryRecord)` (same-id
   replaces, insertion order kept), `byId`, `search(String)` —
   case-insensitive substring over content ordered by salience
   (descending), then createdAt (descending), `byTag(String)` — exact
   match, `latest(int)` — most recent by createdAt. Unmodifiable views
   out.
+  traces: AgentMemory.fr2
 - **FR-003**: The system MUST satisfy this requirement: Session store: `remember(sessionId, record)` (a record
   belongs to exactly one session; same-id replaces within it),
   `forSession(sessionId)` (insertion order), `forgetSession(sessionId)`
   (drops the session's records — the evaporate path), `byId` (searches
   all sessions; a record id is globally unique across the store).
+  traces: AgentMemory.fr3
 - **FR-004**: The system MUST satisfy this requirement: `MemoryLinkType`: `supports`, `contradicts`,
   `supersedes`, `derivedFrom`, `relatesTo`. `MemoryLink`:
   `fromRecordId`, `toRecordId`, `type`, `createdAt`, `note?` (house
   value semantics; direction is meaningful — `a supports b` is not
   `b supports a`).
+  traces: AgentMemory.fr4
 - **FR-005**: The system MUST satisfy this requirement: Memory graph: `link(fromId, toId, type)` rejects
   self-links, duplicate links (same from/to/type — idempotent replace
   instead), and links to unknown record ids (`ArgumentError` each —
@@ -80,28 +84,34 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
   endpoint, each tagged with `outgoing: bool`.
   `contradictions()` returns all `contradicts` links. `linksOf(type)`
   filters by type. Unmodifiable views out.
+  traces: AgentMemory.fr5
 - **FR-006**: The system MUST satisfy this requirement: `AgentMemorySystem.remember`: with `sessionId: null`
   writes long-term; with a session id writes session memory. Returns
   the stored record.
+  traces: AgentMemory.fr6
 - **FR-007**: The system MUST satisfy this requirement: `AgentMemorySystem.recall(String query, {int? limit})`:
   searches BOTH stores (content substring, case-insensitive), returns
   `RecallHit` (record + `MemoryLayer.longTerm | .session`) ordered by
   salience desc then createdAt desc, capped by `limit` (default no
   cap); long-term and session hits interleave in one ranking — layer
   is attribution, not partition.
+  traces: AgentMemory.fr7
 - **FR-008**: The system MUST satisfy this requirement: `AgentMemorySystem.link` validates BOTH endpoints
   exist in either store first (graph integrity), then delegates to
   the graph. `linked(recordId)` = `neighborsOf` + resolves each
   neighbor's record and layer (records deleted later resolve to
   `null` — hits carry the link plus the record if still alive).
+  traces: AgentMemory.fr8
 - **FR-009**: The system MUST satisfy this requirement: `promote(sessionRecordId)`: moves a record from session
   memory to long-term (removed from session store, present in
   long-term store, same id and content; createdAt preserved).
   Promoting an unknown id or an already-long-term record throws
   `ArgumentError`. Links survive untouched (graph references ids, not
   stores).
+  traces: AgentMemory.fr9
 - **FR-010**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 915/2 at `fec7889` + new tests).
+  traces: AgentMemory.fr10
 
 ## Verification
 
@@ -148,3 +158,10 @@ spec. Value objects follow the house pattern (plain Dart, `==` /
    **Type**: acceptance
 11. **Given** the feature implementation under its clean-architecture seams **When** remember rejects an id already used in the opposite layer **Then** the pinned regression test passes (`test/engine/agent_memory_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `AgentMemory`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

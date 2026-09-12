@@ -33,10 +33,15 @@ the union-growing spec that 014's header called for.
 ## FRs
 
 - **FR-001**: The system MUST satisfy this requirement: `final class PlanChanged extends EngineEvent` declared as `part of 'engine_event.dart';` carrying `emittedAt: DateTime` (when the engine emitted the event) and `change: PlanChangedEvent` (the domain payload pairing the previous/next `PlanState` snapshots). The two timestamps are distinct concepts: `emittedAt` is the engine emission time; `change.emittedAt` is when the plan change was applied.
+  traces: EngineEven.fr1
 - **FR-002**: The system MUST satisfy this requirement: `engine_event.dart` includes `part 'plan_changed.dart';` and imports the domain `PlanChangedEvent` (no cycle: planner entities import nothing from `engine/events`).
+  traces: EngineEven.fr2
 - **FR-003**: The system MUST satisfy this requirement: The exhaustive `describe(EngineEvent)` switch handles `PlanChanged`, routing to `plan_changed(<next plan id>)`.
+  traces: EngineEven.fr3
 - **FR-004**: The system MUST satisfy this requirement: `PlanChanged` carries value semantics at birth: `==` (identical-or-runtimeType-and-fields, comparing `emittedAt` and `change`), `hashCode` (`Object.hash(emittedAt, change)`), `toString` (`PlanChanged(emittedAt: …, change: …)` delegating to `PlanChangedEvent.toString`).
+  traces: EngineEven.fr4
 - **FR-005**: The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests).
+  traces: EngineEven.fr5
 
 ## Verification
 
@@ -135,3 +140,10 @@ the union-growing spec that 014's header called for.
    **Type**: acceptance
 40. **Given** the feature implementation under its clean-architecture seams **When** PlanChanged value semantics (born with spec 066 pattern) **Then** the pinned regression test passes (`test/engine/events/engine_event_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `EngineEven`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
+

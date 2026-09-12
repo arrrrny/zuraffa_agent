@@ -53,7 +53,9 @@ equality), or by pattern (regex), and the verdict is deterministic.
 reporting expected/actual in the reason; regex passes when the pattern
 matches the output and fails when it does not, naming the pattern in the
 reason.
+**Acceptance Scenarios**:
 
+1. **Given** the exact-match and regex graders with fixed outputs, **When** they grade, **Then** exact-match passes on equality (trim honored) and fails otherwise reporting expected/actual in the reason, and regex passes on match and fails naming the pattern in the reason.
 ### US2 — Structured outputs are graded by path (P1)
 
 As an eval author, I assert on a specific field deep inside a JSON payload
@@ -64,7 +66,9 @@ against the decoded payload and compares the resolved value to an expected
 value; a missing path or mismatched value fails with a reason naming the
 path; a malformed payload fails without throwing.
 
-### US3 — Subjective outputs get a model judge (P2)
+**Acceptance Scenarios**:
+
+2. **Given** a json-path grader and a JSON payload, **When** a documented-subset expression is evaluated, **Then** a matching path yields a passing verdict on value equality, and a missing path, mismatched value, or malformed JSON each fail with a reason naming the problem — never throwing.
 
 As an eval author, for outputs where no deterministic rule exists, an
 LLM judge grades correctness: the judge prompt and the mission output go to
@@ -76,7 +80,9 @@ with the response preserved in the reason.
 `FAIL`-prefixed one a failing verdict with its reason; a garbage completion
 yields a failing verdict whose reason quotes the response.
 
-### US4 — Golden missions bind graders by id (P1)
+**Acceptance Scenarios**:
+
+2. **Given** a json-path grader and a JSON payload, **When** a documented-subset expression is evaluated, **Then** a matching path yields a passing verdict on value equality, and a missing path, mismatched value, or malformed JSON each fail with a reason naming the problem — never throwing.
 
 As the harness, grader bindings are ids; the registry resolves each id to
 its grader instance, and a mission's bindings can be evaluated in bulk.
@@ -84,26 +90,34 @@ its grader instance, and a mission's bindings can be evaluated in bulk.
 **Acceptance**: the registry registers and resolves graders by id; an
 unknown id fails with a typed error naming the id; evaluating a set of
 bindings returns one verdict per binding.
-
 ## Requirements
 
+**Acceptance Scenarios**:
+
+2. **Given** a json-path grader and a JSON payload, **When** a documented-subset expression is evaluated, **Then** a matching path yields a passing verdict on value equality, and a missing path, mismatched value, or malformed JSON each fail with a reason naming the problem — never throwing.
 ### Functional requirements
 
 - **FR-001**: a common `Grader` interface — `id`, `grade(output)` — with a
   single typed `GraderResult` (passed, score?, reason) across all graders.
-- **FR-002** (US1): `ExactMatchGrader(expected)` — equality after optional
+  traces: Grade.fr1
+- **FR-002**: `ExactMatchGrader(expected)` — equality after optional
   trim; reason carries expected and actual on failure.
-- **FR-003** (US1): `RegexGrader(pattern)` — `hasMatch` against the output;
+  traces: Grade.fr2
+- **FR-003**: `RegexGrader(pattern)` — `hasMatch` against the output;
   reason names the pattern on failure.
-- **FR-004** (US2): `JsonPathGrader(path, expected)` — resolves the
+  traces: Grade.fr3
+- **FR-004**: `JsonPathGrader(path, expected)` — resolves the
   documented subset against a JSON string payload; missing path / type
   mismatch / malformed JSON all fail with reasons, never throw.
-- **FR-005** (US3): `LlmJudgeGrader(judgePrompt, complete)` — sends a judge
+  traces: Grade.fr4
+- **FR-005**: `LlmJudgeGrader(judgePrompt, complete)` — sends a judge
   message containing the prompt and the output; parses a strict verdict
   (`PASS`/`FAIL` prefix + reason); unparsable responses fail with the raw
   response preserved.
-- **FR-006** (US4): `GraderRegistry` — register, resolve by id (typed error
+  traces: Grade.fr5
+- **FR-006**: `GraderRegistry` — register, resolve by id (typed error
   for unknown ids), and evaluate a map of id → output in bulk.
+  traces: Grade.fr6
 
 ## Success criteria
 
@@ -133,3 +147,10 @@ bindings returns one verdict per binding.
   objects, `ToolCall` planner seam precedents.
 - Pairs with (out of scope): golden-mission corpus + release gating
   (separate issue).
+
+## Layer Contracts
+
+**Domain**:
+
+- `Grade`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
+

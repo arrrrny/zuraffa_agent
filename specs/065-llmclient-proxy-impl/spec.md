@@ -80,15 +80,25 @@ When the resolved client reports `supportsStreaming`, the client can consume str
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide an LLM client that sends a chat-completion request to a configured OpenAI-compatible gateway and returns a parsed completion.
+  traces: llmclientProxyImpl.fr1
 - **FR-002**: The client MUST route outbound requests through a configurable local HTTP proxy (`proxy_url`) when one is configured, and connect directly when none is set.
+  traces: llmclientProxyImpl.fr2
 - **FR-003**: The client MUST authenticate using a bearer API key sourced from provider configuration.
+  traces: llmclientProxyImpl.fr3
 - **FR-004**: The client MUST accept and forward a target model identifier in the request.
+  traces: llmclientProxyImpl.fr4
 - **FR-005**: The client MUST parse and expose the assistant message content, reasoning/thinking text, finish reason, and token usage from the gateway response.
+  traces: llmclientProxyImpl.fr5
 - **FR-006**: The `LlmClient` data layer MUST resolve the active client (provider, base URL, API key reference, proxy URL, model, capability flags) from configuration instead of throwing `UnimplementedError`.
+  traces: llmclientProxyImpl.fr6
 - **FR-007**: The implementation MUST respect the engine runtime `dart:io` purity gate — any transport using platform I/O MUST be confined to a consciously allowlisted I/O adapter (Constitution VII).
+  traces: llmclientProxyImpl.fr7
 - **FR-008**: The system MUST include an integration test that performs a real completion through the proxy and asserts a valid, non-empty response; the test MUST skip gracefully when the proxy is unreachable.
+  traces: llmclientProxyImpl.fr8
 - **FR-009**: Unit tests MUST cover request construction, proxy selection, and response parsing without any network access.
+  traces: llmclientProxyImpl.fr9
 - **FR-010**: The system MUST satisfy this requirement: The client SHOULD support streamed (SSE) completions when the resolved client advertises `supportsStreaming`.
+  traces: llmclientProxyImpl.fr10
 
 ### Key Entities
 
@@ -96,6 +106,12 @@ When the resolved client reports `supportsStreaming`, the client can consume str
 - **ProviderConfig** (existing value object): `id`, `providerKind`, `baseUrl`, `models`, `timeoutMs` — the serializable config snapshot; the transport's secrets (`apiKey`) and egress (`proxyUrl`) are injected at construction rather than stored on the value object.
 - **ChatMessage / ChatCompletion** (new value objects): request messages (role + content) and a parsed response (content, reasoning, finishReason, usage).
 - **LlmTransport** (new): the I/O boundary that performs the HTTP call through the proxy and parses the response; the only component permitted to touch platform I/O.
+
+## Layer Contracts
+
+**Domain**:
+
+- `llmclientProxyImpl`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

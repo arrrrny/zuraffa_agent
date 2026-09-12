@@ -84,16 +84,27 @@ As the model, I delegate via a first-class dispatch tool (Kimi's `Agent` tool an
 ### Functional Requirements
 
 - **FR-001**: The engine MUST support named sub-agent types with isolated contexts, tool allowlists, and budgets.
+  traces: subagentsAndDeclarative.fr1
 - **FR-002**: Sub-agent instances MUST persist and be resumable across engine restarts.
+  traces: subagentsAndDeclarative.fr2
 - **FR-003**: Agent definitions MUST be expressible as declarative YAML specs with `extends` inheritance and validation diagnostics.
+  traces: subagentsAndDeclarative.fr3
 - **FR-004**: A built-in dispatch tool MUST expose sub-agent delegation to the model.
+  traces: subagentsAndDeclarative.fr4
 - **FR-005**: Context isolation MUST guarantee parent receives result summaries only.
+  traces: subagentsAndDeclarative.fr5
 
 ### Key Entities
 
 - **SubAgentType**: name, spec reference, allowlist, budget profile.
 - **AgentSpec**: YAML document — tools, sub-agents, budgets, system prompt, risk tier, `extends`.
 - **DispatchTool**: built-in delegation tool with instance lifecycle management.
+
+## Layer Contracts
+
+**Domain**:
+
+- `subagentsAndDeclarative`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

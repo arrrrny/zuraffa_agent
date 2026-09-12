@@ -81,17 +81,29 @@ As the persistence layer (health snapshots, chain state across process restarts)
 ### Functional Requirements
 
 - **FR-001**: The system MUST satisfy this requirement: The `CircuitBreaker` value object keeps its spec-exact nine-field surface and all transition semantics — `recordFailure`/`recordSuccess`/`tryHalfOpen` pure snapshot transitions, the `isOpen`/`isClosed`/`isHalfOpen` reads, value equality — unchanged (compile parity with the 12 existing tests).
+  traces: CircuitBreake.fr1
 - **FR-002**: `shouldProbe(DateTime now)` MUST return true iff `state == open && openedAt != null && now.difference(openedAt) >= cooldown` (inclusive boundary); false otherwise (closed, halfOpen, open-with-null-openedAt). It is a pure read — it MUST NOT transition the breaker (calling `tryHalfOpen` remains the coordinator's job).
+  traces: CircuitBreake.fr2
 - **FR-003**: The full recovery cycle MUST hold as a composed regression: trip (threshold failures) → cooldown → halfOpen → threshold successes → closed with `failureCount == 0`; a subsequent single failure stays closed with `failureCount == 1` (fresh streak); threshold fresh failures re-trip; a half-open failure re-trips open with `halfOpenSuccesses == 0` and `openedAt` stamped.
+  traces: CircuitBreake.fr3
 - **FR-004**: `toJson()` MUST emit all nine fields — `id`, `state` (state name), `failureCount`, `failureThreshold`, `cooldown` (microseconds int), `halfOpenSuccesses`, `halfOpenThreshold` always; `openedAt`, `lastFailureAt` only when non-null (ISO-8601) — and `CircuitBreaker.fromJson` MUST round-trip every state exactly (incl. mid-probe halfOpen and open-with-cooldown-remaining), with restored cooldown semantics identical to the original.
+  traces: CircuitBreake.fr4
 - **FR-005**: `fromJson` MUST throw `ArgumentError` naming the field on: missing/ill-typed required fields, unknown state string, negative counters, `failureThreshold`/`halfOpenThreshold` < 1, `cooldown` <= 0, or unparseable timestamps — never a silent default.
+  traces: CircuitBreake.fr5
 - **FR-006**: The system MUST satisfy this requirement: The clean-arch layers (`CircuitBreakerService.current/count`, `CircuitBreakerProvider`) keep their existing signatures and stubs (no behavioral change).
+  traces: CircuitBreake.fr6
 
 ### Key Entities *(include if feature involves data)*
 
 - **CircuitBreaker** (value object, existing scaffold): nine-field surface + transitions (existing, pinned) + NEW `shouldProbe` read + NEW `toJson`/`fromJson`.
 - **CircuitBreakerService / CircuitBreakerProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 12 tests.
 - NOT modified: `lib/src/llm/circuit_breaker.dart` (the LLM-layer runtime breaker — a separate concern from the domain value object; see Assumptions).
+
+## Layer Contracts
+
+**Domain**:
+
+- `CircuitBreake`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

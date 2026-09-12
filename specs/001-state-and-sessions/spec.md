@@ -95,10 +95,15 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 ### Functional Requirements
 
 - **FR-001**: State MUST be granular typed entities (session/message/turn/invocation/usage), defined through Zorphy per constitution IX — no monolithic blob, no untyped map escapes.
+  traces: stateAndSessions.fr1
 - **FR-002**: Sessions MUST form a tree with first-class branch, fork, switch, and resume.
+  traces: stateAndSessions.fr2
 - **FR-003**: Persistence MUST ship Hive (device) and JSONL (debug/CI) datasources behind one storage interface.
+  traces: stateAndSessions.fr3
 - **FR-004**: Compaction MUST be selective and structured (retain/summarize/artifact-ref), never naive truncation.
+  traces: stateAndSessions.fr4
 - **FR-005**: pi_agent assets MUST be merged with attribution; stubs replaced, not shipped.
+  traces: stateAndSessions.fr5
 
 ### Key Entities
 
@@ -107,6 +112,12 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 - **TurnRecord**: one engine turn — its messages and tool invocations in order.
 - **ToolInvocation**: a single tool call with typed parameters and typed result.
 - **UsageLedger**: per-call token accounting consumed by budgets (plugin policy shell).
+
+## Layer Contracts
+
+**Domain**:
+
+- `stateAndSessions`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

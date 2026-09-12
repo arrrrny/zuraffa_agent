@@ -83,12 +83,19 @@ As the registry (collision rejection at registration time) and any hash-based co
 ### Functional Requirements
 
 - **FR-001**: The system MUST satisfy this requirement: The `AgentTool` value object keeps its spec-exact five-field surface — `id`, `description`, `riskTier` (default `safe`), `executionMode` (default `sequential`), `paramsSchema?` — with value equality (deep `_mapEq` on the schema), `requiresConfirmation`, `isAdmin`, and the enum surfaces unchanged (compile parity with the 10 existing tests).
+  traces: agentToolRiskTier.fr1
 - **FR-002**: `RiskTier.fromString(String value)` MUST parse `'safe'`/`'confirm'`/`'admin'` exactly (case-significant) and MUST throw `ArgumentError` naming the input for anything else — never a silent default. `RiskTier.name` (the enum's built-in) round-trips the wire string.
+  traces: agentToolRiskTier.fr2
 - **FR-003**: `ExecutionMode.fromString(String value)` MUST parse `'sequential'`/`'parallel'` with the same typed-failure discipline (consumed by FR-004).
+  traces: agentToolRiskTier.fr3
 - **FR-004**: `toJson()` MUST emit `id`, `description`, `riskTier` (tier name), `executionMode` (mode name) always and `paramsSchema` only when non-null (absent-never-fabricated); `AgentTool.fromJson` MUST round-trip all five fields (schema deep-copied) and MUST throw `ArgumentError` naming the field on missing required keys, unknown tier/mode strings, or a non-map schema.
+  traces: agentToolRiskTier.fr4
 - **FR-005**: The system MUST satisfy this requirement: The dispatch-policy reads (`RiskTier.severity`, `requiresConfirmation`, `isAdmin`) keep their existing semantics — the classification consumed by dispatch/approval (R3.2); pinned by the existing enum tests.
+  traces: agentToolRiskTier.fr5
 - **FR-006**: `hashCode` MUST be consistent with `==`: an order-independent fold over the params schema entries (commutative sum of per-entry hashes, nested maps folded recursively) combined with `Object.hash(id, description, riskTier, executionMode)` — fixing the scaffold's live violation where equal tools with distinct-but-equal schema instances hash differently.
+  traces: agentToolRiskTier.fr6
 - **FR-007**: The system MUST satisfy this requirement: The clean-arch layers (`AgentToolService.current/count`, `AgentToolProvider`) keep their existing signatures and stubs (no behavioral change — the classification + persistence + hash semantics are the deliverable).
+  traces: agentToolRiskTier.fr7
 
 ### Key Entities *(include if feature involves data)*
 
@@ -96,6 +103,12 @@ As the registry (collision rejection at registration time) and any hash-based co
 - **RiskTier** (enum, existing scaffold): safe/confirm/admin + severity + policy getters + NEW `fromString`.
 - **ExecutionMode** (enum, existing scaffold): sequential/parallel + NEW `fromString`.
 - **AgentToolService / AgentToolProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 10 tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `agentToolRiskTier`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

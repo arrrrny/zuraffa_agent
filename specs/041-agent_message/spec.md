@@ -78,18 +78,31 @@ As the persistence layer, messages cross the boundary as role-tagged JSON; the s
 ### Functional Requirements
 
 - **FR-001**: `AgentMessage` MUST reject with `ArgumentError` an empty `id` or empty `role` (message naming the field); `parts` may be any (including empty) list.
+  traces: AgentMessageHistory.fr1
 - **FR-002**: `AgentMessage` equality MUST compare `id`, `role`, and `parts` with ELEMENT-WISE list equality (distinct-but-equal instances compare equal); `hashCode` MUST fold `parts` content (e.g. `Object.hashAll`) so equal messages hash equally.
+  traces: AgentMessageHistory.fr2
 - **FR-003**: The system MUST satisfy this requirement: `AgentMessageHistory.appendMessages` keeps its shipped semantics (new messages appended oldest-first; memories untouched) — pinned, not changed.
+  traces: AgentMessageHistory.fr3
 - **FR-004**: `AgentMessageHistory.truncate(int keep)` MUST return a new history whose `messages` are the LAST `keep` messages (`0` → empty), with `episodicMemories` unchanged; `keep < 0` MUST throw `ArgumentError`; `keep >= length` MUST return a content-equal history.
+  traces: AgentMessageHistory.fr4
 - **FR-005**: The system MUST satisfy this requirement: `addMemory` keeps its shipped semantics (insertion-order append of an episodic memory) — pinned, not changed.
+  traces: AgentMessageHistory.fr5
 - **FR-006**: The sealed `AgentMessage` hierarchy in `lib/src/types.dart` (roles, content parts, JSON round-trips) MUST remain byte-identical — its coverage stays in `types_test.dart` (pinned).
+  traces: AgentMessageHistory.fr6
 - **FR-007**: The clean-arch layers (`AgentMessageService.current/count`, `AgentMessageProvider`) MUST keep their existing signatures and stub behavior; no behavioral change in this feature.
+  traces: AgentMessageHistory.fr7
 
 ### Key Entities *(include if feature involves data)*
 
 - **AgentMessage** (domain value object, existing): 3 fields; this feature adds validation (FR-001) and fixes parts equality/hashCode (FR-002).
 - **AgentMessageHistory** (llm value object, existing): + `truncate` (FR-004); append/addMemory pinned (FR-003/005).
 - **AgentMessageService / AgentMessageProvider** (existing interfaces): unchanged; pinned by the 3 clean-arch tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `AgentMessageHistory`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

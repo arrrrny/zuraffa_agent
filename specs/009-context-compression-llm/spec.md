@@ -60,10 +60,15 @@ As an operator, I configure when compression triggers (token threshold, message 
 ### Functional Requirements
 
 - **FR-001**: The engine MUST compress conversation history when token threshold is exceeded.
+  traces: Types.fr1
 - **FR-002**: Compression MUST use an LLM to generate a structured XML snapshot.
+  traces: Types.fr2
 - **FR-003**: Compressed messages MUST become EpisodicMemory entries.
+  traces: Types.fr3
 - **FR-004**: Recent messages MUST be preserved verbatim after compression.
+  traces: Types.fr4
 - **FR-005**: The engine MUST fall back to heuristic summarization on LLM failure.
+  traces: Types.fr5
 
 ### Key Entities
 
@@ -73,6 +78,12 @@ As an operator, I configure when compression triggers (token threshold, message 
 - **EpisodicMemoryStore**: in-memory store + retrieval (the `retrieve_memory` surface)
 - **CompressionResult**: snapshot, preservedMessages, compressedMessages, memory, strategy
 - **ContextCompressionSettings**: tokenThreshold (default 64000), keepRecentMessages (default 10), messageCountThreshold (optional)
+
+## Layer Contracts
+
+**Domain**:
+
+- `Types`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

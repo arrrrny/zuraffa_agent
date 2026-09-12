@@ -68,10 +68,15 @@ As a plugin developer, each hook point has a typed result that controls engine b
 ### Functional Requirements
 
 - **FR-001**: The engine MUST support registering multiple hooks per lifecycle point.
+  traces: agentHooksPipeline.fr1
 - **FR-002**: Hooks MUST be called in registration order at each lifecycle point.
+  traces: agentHooksPipeline.fr2
 - **FR-003**: Each hook point MUST have typed context and result classes.
+  traces: agentHooksPipeline.fr3
 - **FR-004**: Any hook MUST be able to abort the run with a typed error.
+  traces: agentHooksPipeline.fr4
 - **FR-005**: Hooks MUST be able to modify model calls, tool calls, and tool results.
+  traces: agentHooksPipeline.fr5
 
 ### Key Entities
 
@@ -82,6 +87,12 @@ As a plugin developer, each hook point has a typed result that controls engine b
 - **HookAbortError**: the typed abort error — hookName + reason (FR-004).
 - **ToolCallDecision / ModelCallDecision**: pipeline decision envelopes — deny carries the synthetic tool result without executing; retry tells the engine to call the LLM again.
 - Model/tool value types are the existing engine contracts: `LlmRequest`/`LlmResponse`/`LlmResponseChunk`/`LlmToolCall` (spec 007) and `AgentMessage` (types.dart).
+
+## Layer Contracts
+
+**Domain**:
+
+- `agentHooksPipeline`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

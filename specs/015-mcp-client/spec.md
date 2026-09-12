@@ -73,10 +73,15 @@ As the engine, I list tools from MCP servers and cache the results, with invalid
 ### Functional Requirements
 
 - **FR-001**: The MCP client MUST implement in-proc, SSE+Bearer, and stdio transports.
+  traces: mcpClient.fr1
 - **FR-002**: SSE transport MUST support automatic reconnect with exponential backoff.
+  traces: mcpClient.fr2
 - **FR-003**: SSE transport MUST support auth callback for token rotation.
+  traces: mcpClient.fr3
 - **FR-004**: stdio transport MUST handle process crashes with bounded retries.
+  traces: mcpClient.fr4
 - **FR-005**: Tool listing MUST be cached and invalidated on change notifications.
+  traces: mcpClient.fr5
 
 ### Key Entities
 
@@ -85,6 +90,12 @@ As the engine, I list tools from MCP servers and cache the results, with invalid
 - **InProcTransport**: zero-IPC registry calls
 - **SseTransport**: SSE + Bearer with reconnect
 - **StdioTransport**: process management with restart
+
+## Layer Contracts
+
+**Domain**:
+
+- `mcpClient`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -76,12 +76,19 @@ As the engine operator, I reset the signature store between missions so cross-mi
 ### Functional Requirements
 
 - **FR-001**: The `ToolCallSignature` value object MUST carry `toolName`, `argumentHash`, `version` (default 1) with value equality and hashCode across all three fields.
+  traces: ToolCallSignature.fr1
 - **FR-002**: `ToolCallSignature` MUST derive `id`/`key` from content — a stable canonical string of the form `toolName@version:argumentHash` — identical for equal signatures, different for any differing component.
+  traces: ToolCallSignature.fr2
 - **FR-003**: Constructor backward compatibility MUST hold: `ToolCallSignature(id: ...)` from the anemic scaffold keeps compiling, and a content-only constructor derives the key automatically.
+  traces: ToolCallSignature.fr3
 - **FR-004**: The datasource interface MUST define the persistence contract: `capture(signature)`, `lookup(key)`, `count()`, `reset()` — all asynchronous; plus the scaffolded `current()`/`reset()` semantics folded into the refined surface.
+  traces: ToolCallSignature.fr4
 - **FR-005**: `capture` MUST be idempotent per key — duplicate captures of equal signatures do not grow the store.
+  traces: ToolCallSignature.fr5
 - **FR-006**: `lookup` MUST return the captured signature for a known key and absence (null) for an unknown key — never throw for misses.
+  traces: ToolCallSignature.fr6
 - **FR-007**: The mock datasource MUST implement the contract in memory: a key-addressed map, seeded empty, `reset` clearing all entries.
+  traces: ToolCallSignature.fr7
 
 ### Key Entities *(include if feature involves data)*
 
@@ -89,6 +96,12 @@ As the engine operator, I reset the signature store between missions so cross-mi
 - **ToolCallSignatureDatasource** (interface): capture/lookup/count/reset persistence contract.
 - **ToolCallSignatureMockDatasource** (concrete): in-memory key-addressed reference implementation.
 - **RepetitionTracker** (spec 25): consumes the signature's key as its opaque `String signature` — composition documented on both sides, compiled on neither (independent testability).
+
+## Layer Contracts
+
+**Domain**:
+
+- `ToolCallSignature`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

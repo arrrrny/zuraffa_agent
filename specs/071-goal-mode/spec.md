@@ -41,10 +41,12 @@ prose in three old spec task files); the closest primitives are budget-only
 
 - **FR-001**: The system MUST satisfy this requirement: `Goal` is a house-pattern value object: `id` + `description`,
   with `==`/`hashCode`/`toString`.
+  traces: GoalMode.fr1
 - **FR-002**: The system MUST satisfy this requirement: `GoalEvaluator` is the injected strategy:
   `bool isAchieved(Goal goal, List<ChatMessage> transcript)`. Rule-based in
   tests; an LLM-as-judge implementation plugs in behind the same seam. The
   transcript handed to the evaluator is an unmodifiable view.
+  traces: GoalMode.fr2
 - **FR-003**: The system MUST satisfy this requirement: `run(goal: g, goalEvaluator: e)` (both or neither —
   `ArgumentError` naming the mismatch otherwise). With goal mode active,
   after each turn's tool dispatch and `TurnCompleted` emission, and BEFORE
@@ -52,11 +54,13 @@ prose in three old spec task files); the closest primitives are budget-only
   verdict stops the mission with `MissionStatus.goalAchieved`, `summary`
   set to that turn's assistant content, and `MissionCompleted.status ==
   'goalAchieved'`.
+  traces: GoalMode.fr3
 - **FR-004**: The system MUST satisfy this requirement: Result surface: `MissionResult.goal` (the goal when goal
   mode ran, else null) and `MissionResult.goalAchieved` (true only on the
   `goalAchieved` terminal path; false when goal mode ran but the mission
   ended any other way; false when goal mode was inactive). Value semantics
   (`==`/`hashCode`/`toString`) extended accordingly.
+  traces: GoalMode.fr4
 - **FR-005**: The system MUST satisfy this requirement: Ordering guarantees, load-bearing and mutation-tested:
   (a) evaluation happens AFTER tool dispatch within the turn (an evaluator
   keyed on tool results fires on the SAME turn they land);
@@ -65,13 +69,16 @@ prose in three old spec task files); the closest primitives are budget-only
   (c) the evaluator is consulted once per completed turn (a provider-failed
   turn is never evaluated);
   (d) budgets still win — goal mode never overrides `budgetExhausted`.
+  traces: GoalMode.fr5
 - **FR-006**: The system MUST satisfy this requirement: No new `EngineEvent` subtypes: goal achievement surfaces
   through the terminal `MissionCompleted.status` string only (the sealed
   union grows only from its own spec, per issues #16–#24 / spec 067
   precedent).
+  traces: GoalMode.fr6
 - **FR-007**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 925/2 at `8a5bd83` + new tests; the spec-069 suite must stay
   green through the `MissionResult` surface extension).
+  traces: GoalMode.fr7
 
 ## Verification
 
@@ -110,3 +117,10 @@ prose in three old spec task files); the closest primitives are budget-only
    **Type**: acceptance
 9. **Given** the feature implementation under its clean-architecture seams **When** Goal value semantics **Then** the pinned regression test passes (`test/engine/goal_mode_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `GoalMode`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
+

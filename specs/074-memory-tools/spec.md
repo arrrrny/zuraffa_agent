@@ -49,6 +49,7 @@ sub-agent and swarm stacks.
   declaring `required` arrays, and a description that tells the model
   WHEN to use it. `MemoryTools.declarations` returns all three
   (unmodifiable).
+  traces: MemoryTools.fr1
 
 - **FR-002**: The system MUST satisfy this requirement: `memory_remember` dispatch: builds a `MemoryRecord`
   (auto id `mem-<n>` from a per-dispatcher counter when `id` is not
@@ -57,31 +58,37 @@ sub-agent and swarm stacks.
   0.0..1.0, default 0.5, and writes through `AgentMemorySystem.remember`
   (long-term when no `session_id`, session memory otherwise). Success
   result carries the stored id.
+  traces: MemoryTools.fr2
 
 - **FR-003**: The system MUST satisfy this requirement: Model-shaped failures return `ToolDispatchResult(success:
   false, result: '', error: <reason>, artifactRefs: [])`: missing or
   non-string `content`, whitespace-only content, out-of-range salience,
   unknown tool name. NO exception escapes `dispatch` for argument-shaped
   problems — the agent gets the error text and can retry.
+  traces: MemoryTools.fr3
 
 - **FR-004**: The system MUST satisfy this requirement: `memory_recall` dispatch: returns success with one line
   per hit, `"<layer> | <id> | salience <s> | <content>"`, in the
   system's ranking order, capped by `limit`. Empty/missing query is a
   failure result (not a match-all).
+  traces: MemoryTools.fr4
 
 - **FR-005**: The system MUST satisfy this requirement: `memory_link` dispatch: validates `type` against
   `MemoryLinkType` names (unknown → failure result), then delegates to
   `AgentMemorySystem.link`. Endpoint validation comes from the system
   (unknown ids → failure result carrying the ArgumentError message);
   self-links likewise. Happy path returns success naming the link.
+  traces: MemoryTools.fr5
 
 - **FR-006**: The system MUST satisfy this requirement: `dispatchBatch` dispatches every call sequentially and
   returns one result per call, in order.
+  traces: MemoryTools.fr6
 
 - **FR-007**: The system MUST satisfy this requirement: `validateSchema` checks the required keys per tool
   (`content` for remember, `query` for recall, `from_id`/`to_id`/`type`
   for link) and returns the violation strings (empty list = valid);
   `checkRiskTier` is always true (all memory tools are safe-tier).
+  traces: MemoryTools.fr7
 
 - **FR-008**: The system MUST satisfy this requirement: `MemoryPromptProjection.render({int limit = 10})`: the
   top [limit] long-term memories by salience (desc, createdAt desc) as
@@ -90,9 +97,11 @@ sub-agent and swarm stacks.
   session's notes (insertion order, capped by limit) marked
   `"[session] "`. Empty memory renders an empty list — the caller
   omits the section entirely.
+  traces: MemoryTools.fr8
 
 - **FR-009**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 925/2 at `4dd76e2` + new tests).
+  traces: MemoryTools.fr9
 
 ## Verification
 
@@ -143,3 +152,10 @@ sub-agent and swarm stacks.
    **Type**: acceptance
 14. **Given** the feature implementation under its clean-architecture seams **When** renderWithSession applies limit per layer **Then** the pinned regression test passes (`test/engine/memory_tools_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `MemoryTools`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`
+

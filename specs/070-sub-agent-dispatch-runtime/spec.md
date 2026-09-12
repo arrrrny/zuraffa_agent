@@ -44,6 +44,7 @@ but NEVER its transcript.
   carries the child's `resultSummary` (final assistant content on natural
   completion, else null) and NEVER the child transcript (the Kimi
   LaborMarket pattern — results, not chatter).
+  traces: SubAgentDispatch.fr1
 - **FR-002**: The system MUST satisfy this requirement: Tool allowlist enforcement: the child's tool dispatch is
   wrapped in `AllowlistToolDispatcher(inner, allowlist: spec.tools)`. A call
   whose `toolName` is NOT in the allowlist is refused at the boundary — the
@@ -53,33 +54,40 @@ but NEVER its transcript.
   continues. Allowlisted calls delegate to the inner dispatcher with
   passthrough results. `dispatchBatch` enforces per-call;
   `validateSchema`/`checkRiskTier` delegate unchanged.
+  traces: SubAgentDispatch.fr2
 - **FR-003**: The system MUST satisfy this requirement: Budgets: the child `EngineLoop`/`StopPolicy` pair is built
   from the spec — `maxTurns: spec.maxTurns ?? fallbackMaxTurns` (service
   constructor, default 10) and `wallClockTimeout: spec.wallClockTimeout ??
   Duration.zero` — and the child `MissionRunner` enforces them. Terminal
   child statuses map onto the dispatch result.
+  traces: SubAgentDispatch.fr3
 - **FR-004**: The system MUST satisfy this requirement: Instance bookkeeping: a completed dispatch (any run status)
   returns `result.instance` as a NEW `SubAgentInstance` with
   `totalRuns + 1` and `lastRunOutcome` set to the dispatch status name. The
   input instance is never mutated.
+  traces: SubAgentDispatch.fr4
 - **FR-005**: The system MUST satisfy this requirement: Risk tier gate: when `spec.riskTier == RiskTier.admin` and
   the caller did not pass `adminGranted: true`, the dispatch is refused
   BEFORE any LLM call: status `refusedRiskTier`, `resultSummary` null,
   LLM call count 0, and the instance returned UNCHANGED (a refused dispatch
   is not a run). `safe`/`confirm` tiers never refuse on this gate (confirm
   flows through the tool-level approval callback — out of scope).
+  traces: SubAgentDispatch.fr5
 - **FR-006**: The system MUST satisfy this requirement: Event forwarding: the child mission's `EngineEvent`s flow to
   the caller's optional `onEvent` sink; the child mission id is
   `instance.id` (so `MissionStarted`/`MissionCompleted` correlate with the
   resumable instance).
+  traces: SubAgentDispatch.fr6
 - **FR-007**: The system MUST satisfy this requirement: `SubAgentDispatchResult` is a house-pattern value object
   (`==`/`hashCode`/`toString` over all fields) carrying `instanceId`,
   `specName`, `status`, `resultSummary`, `instance`, and `context` — a
   `SubAgentContext` snapshot (`subAgentSpecId: spec.name`,
   `sessionId: instance.id`, `toolAllowlist: spec.tools`, `budgetTurns` =
   the effective turn cap) that documents the isolation envelope.
+  traces: SubAgentDispatch.fr7
 - **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 925/2 at 069-branch HEAD + new tests).
+  traces: SubAgentDispatch.fr8
 
 ## Verification
 
@@ -131,3 +139,10 @@ but NEVER its transcript.
    **Type**: acceptance
 13. **Given** the feature implementation under its clean-architecture seams **When** SubAgentDispatchResult value semantics and context snapshot **Then** the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `SubAgentDispatch`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

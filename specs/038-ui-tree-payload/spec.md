@@ -78,17 +78,29 @@ As the emitting tool, I construct the payload once and the cost model (depth/nod
 ### Functional Requirements
 
 - **FR-001**: `toJson()` MUST produce a `Map<String, dynamic>` with exactly the keys `mimeType` (the constant `'ui/tree+json'`), `vocabularyId`, `schemaVersion`, and `tree`.
+  traces: UiTreePayloadProvide.fr1
 - **FR-002**: `UiTreePayload.fromJson(Map<String, dynamic> json)` MUST validate: `mimeType` present AND equal to the `mimeType` constant (else `ArgumentError` naming `mimeType`); `vocabularyId`/`schemaVersion` non-empty strings (else `ArgumentError` naming the field); `tree` a `Map<String, dynamic>` (else `ArgumentError` naming `tree`). On success it MUST construct via the standard constructor (inheriting its validation and depth/nodeCount precomputation) so `fromJson(toJson(p)) == p`.
+  traces: UiTreePayloadProvide.fr2
 - **FR-003**: `diff(UiTreePayload other)` MUST return a `UiTreeDiff` value object with: `addedPaths` (paths present in other's tree, absent in this one), `removedPaths` (reverse), `changedPaths` (same path, deep-unequal node maps) — paths are `'root'` or child-index chains like `'0/1'` (the `children` list index path, `/`-joined) — plus `vocabularyChanged` and `schemaChanged` booleans, and a derived `hasChanges` getter (any collection non-empty OR either flag true).
+  traces: UiTreePayloadProvide.fr3
 - **FR-004**: `UiTreeDiff` MUST be a plain value object (equality across all six fields, `toString` summarizing counts) living beside the payload in the same entity file.
+  traces: UiTreePayloadProvide.fr4
 - **FR-005**: The shipped construction validation, `computeDepth`/`computeNodeCount`, `mimeType` constant, and deep equality/hashCode MUST keep their semantics (pinned by the 8 pre-existing payload tests, unchanged).
+  traces: UiTreePayloadProvide.fr5
 - **FR-006**: The clean-arch layers (`UiTreePayloadService.current/count`, `UiTreePayloadProvider`) MUST keep their existing signatures and stub behavior; no behavioral change in this feature.
+  traces: UiTreePayloadProvide.fr6
 
 ### Key Entities *(include if feature involves data)*
 
 - **UiTreePayload** (value object, existing): + `toJson`/`fromJson` (FR-001/002) and `diff` (FR-003); nothing else changes.
 - **UiTreeDiff** (NEW value object, same file): addedPaths/removedPaths/changedPaths + vocabularyChanged/schemaChanged + hasChanges (FR-004).
 - **UiTreePayloadService / UiTreePayloadProvider** (existing interfaces): unchanged; pinned by the 3 clean-arch tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `UiTreePayloadProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 
