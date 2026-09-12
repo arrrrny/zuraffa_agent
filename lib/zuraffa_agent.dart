@@ -43,3 +43,7 @@ export 'src/session_lock.dart';
 export 'src/platform/agent_home_resolver.dart';
 export 'src/platform/agent_platform.dart';
 export 'src/platform/secure_store.dart';
+
+// LLM provider seam (spec 007; used by the example and integrations).
+export 'src/data/providers/llm_client/llm_client_provider.dart';
+export 'src/llm/llm_transport.dart';

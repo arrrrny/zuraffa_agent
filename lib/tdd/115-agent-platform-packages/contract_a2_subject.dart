@@ -13,6 +13,7 @@
 // enumerates the contract's cases and stays BLOCKED (never RED) until
 // every case is satisfied.
 library;
+
 import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 /// Local in-memory fake (pure Dart) — the engine-side contract slice.
@@ -24,12 +25,11 @@ final class _LocalFake implements AgentPlatform {
   @override
   Future<String?> secureRead(String key) async => store[key];
   @override
-  Future<void> secureWrite(String key, String value) async => store[key] = value;
+  Future<void> secureWrite(String key, String value) async =>
+      store[key] = value;
   @override
   Future<void> secureDelete(String key) async => store.remove(key);
 }
-
-
 
 /// Contract seam for `AgentPlatform.secureRead(dynamic key) -> Future<String?>`
 /// (usecase contract, declared in the spec's Layer Contracts

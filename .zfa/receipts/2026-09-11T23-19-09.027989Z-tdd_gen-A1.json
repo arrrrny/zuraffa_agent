@@ -1,0 +1,30 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "A1",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:19:09.027989Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "116-runnable-example"
+ },
+ "files": [
+  {
+   "path": "test/tdd/116-runnable-example/a1_test.dart",
+   "action": "create",
+   "sha256": "54facc81dcda3c445ff3b805006b78e3539a9afc96fe80a5f600da18c516faf1",
+   "bytes": 1343,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen A1` (spec 044-test-tdd-generation).\n//\n// behavior_id: A1\n// source_criterion: AC-1\n// kind: acceptance\n// description: it exits 0 and prints\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/116-runnable-example/a1_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\n\n// zfa:tdd: contract:A1:hand \u2014 hand step completed before first red certification (issue #1411)\n\nlibrary;\n\nimport 'package:test/test.dart';\n\nimport 'package:zuraffa_agent/tdd/116-runnable-example/a1_subject.dart';\n\n\nvoid main() {\n  group('A1 (AC-1)', () {\n    test('A1 \u2014 it exits 0 and prints', () async {\n      // Assertion-shaped guard: the stub fails HERE via assertion.\n      Object? outcome;\n      String? exitCode;\n      try {\n        exitCode = await subject_a1();\n        outcome = 'ok';\n      } on UnimplementedError catch (e) {\n        outcome = e;\n      }\n      expect(outcome, isNot(isA<UnimplementedError>()));\n      expect(exitCode, '0', reason: 'the example must exit 0');\n    }, timeout: const Timeout(Duration(minutes: 3)));\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/116-runnable-example/a1_subject.dart",
+   "action": "create",
+   "sha256": "84941dddb272b60a99b029032901e8d28e0c0423f799e371de3320caabfba7a2",
+   "bytes": 424,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 116 A1): run the example via\n// subprocess and return the exit code string.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\nFuture<String> subject_a1() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  return '${result.exitCode}';\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

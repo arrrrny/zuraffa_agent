@@ -12,14 +12,14 @@
   {
    "path": "test/tdd/115-agent-platform-packages/a4_test.dart",
    "action": "create",
-   "sha256": "462622abadfa3597976fb2c8a2253053f3d959798af0a6fe01cf9bf3717fb212",
-   "bytes": 1239
+   "sha256": "4670efc925b7b8ca7eae506fee6d3a382e337847112f345e7489924410845710",
+   "bytes": 1215
   },
   {
    "path": "lib/tdd/115-agent-platform-packages/a4_subject.dart",
    "action": "create",
-   "sha256": "198bdce069cfa93ebfa3ce3ffcb6393f0d77246aa13f07d82a492b6e84c7d2ec",
-   "bytes": 2648
+   "sha256": "fc4bf5f19e660a35120d067dad4bdc9fbf4738b04ed332fcde281b3bd0e958fb",
+   "bytes": 270
   }
  ],
  "receipt_version": 1,

@@ -12,8 +12,8 @@
   {
    "path": "test/tdd/115-agent-platform-packages/u4_test.dart",
    "action": "create",
-   "sha256": "d0b5e8aaf3f4817170f2a57c8988f0feb6ec000ce8ec32b6b3797c408be3dfd5",
-   "bytes": 2219
+   "sha256": "f66ebe544d455fa6e15afd92581279758ec6d1898feb2a64ae11ccf641b3836a",
+   "bytes": 2184
   },
   {
    "path": "lib/tdd/115-agent-platform-packages/u4_subject.dart",

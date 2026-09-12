@@ -1,23 +1,23 @@
 {
-  "schema": "proof.v1",
-  "command": "tdd compose",
-  "target": "A1",
-  "repro": "zfa tdd compose",
-  "at": "2026-09-11T21:20:49.899033Z",
-  "generator_version": "6.2.2",
-  "input": {
-    "feature": "113-eventbus-error-observability"
-  },
-  "files": [
-    {
-      "path": "lib/tdd/113-eventbus-error-observability/a1_subject.dart",
-      "action": "update",
-      "sha256": "edda1855ed2e17a0969a021c4f2b8768af0dc94a98c71fc5b5a9b11e5e216ad3",
-      "bytes": 1790,
-      "snapshot": "// GENERATED IMPLEMENTATION — `zfa tdd compose A1` (issue\n// #642; spec 052-acceptance-make-composition: the acceptance subject is\n// composed against the feature's green / entity-wired unit subjects by a\n// generation-pipeline step, never by a wrapper or by hand).\n//\n// behavior_id: A1\n// source_criterion: AC-1\n// composed against: U1 (/Users/arrrrny/Developer/zuraffa_agent/lib/tdd/113-eventbus-error-observability/u1_subject.dart)\n// description: the later subscriber still receives the event and a SEVERE\n//\n// This replaces the `zfa tdd gen` stub with the minimal composed\n// implementation (spec 047 FR-005): the feature's unit subjects are the\n// implementation anchors. An anchor marked [entity-wired] carries only\n// the `zfa tdd wire` wiring so far (issue #923) — the composed scenario's\n// real green transition lands when those unit subjects are filled with\n// business logic in later cycles. Extend the body with real behavior in\n// later cycles — the paired test file is immutable (044 ownership).\n//\n// The subject name is derived from the behavior id (`subject_a1`) and is\n// deliberately snake_cased — the generator KNOWS the name it emits, so\n// the lint its shape provably trips is suppressed here rather than\n// renaming the contract surface (issue #1035).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/tdd/113-eventbus-error-observability/u1_subject.dart' as anchor0;\n\n/// Subject for behavior A1, composed against the\n/// feature's unit subject anchors by the generation pipeline.\nvoid subject_a1() {  // Composition anchor: references the feature's green / entity-wired unit\n  // subjects this behavior builds on.\n  // ignore: unused_local_variable\n  final composedUnitAnchors = <Function>[anchor0.subject_u1];\n}\n"
-    }
-  ],
-  "receipt_version": 1,
-  "min_core_version": "6.0.0",
-  "generated_against_core": "6.2.2"
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A1",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T21:20:49.899033Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "113-eventbus-error-observability"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/113-eventbus-error-observability/a1_subject.dart",
+   "action": "update",
+   "sha256": "e6531e8d11ddfe355a1a67349edb18255504f74da154565fa781269e51b9c114",
+   "bytes": 1795,
+   "snapshot": "// GENERATED IMPLEMENTATION \u2014 `zfa tdd compose A1` (issue\n// #642; spec 052-acceptance-make-composition: the acceptance subject is\n// composed against the feature's green / entity-wired unit subjects by a\n// generation-pipeline step, never by a wrapper or by hand).\n//\n// behavior_id: A1\n// source_criterion: AC-1\n// composed against: U1 (/Users/arrrrny/Developer/zuraffa_agent/lib/tdd/113-eventbus-error-observability/u1_subject.dart)\n// description: the later subscriber still receives the event and a SEVERE\n//\n// This replaces the `zfa tdd gen` stub with the minimal composed\n// implementation (spec 047 FR-005): the feature's unit subjects are the\n// implementation anchors. An anchor marked [entity-wired] carries only\n// the `zfa tdd wire` wiring so far (issue #923) \u2014 the composed scenario's\n// real green transition lands when those unit subjects are filled with\n// business logic in later cycles. Extend the body with real behavior in\n// later cycles \u2014 the paired test file is immutable (044 ownership).\n//\n// The subject name is derived from the behavior id (`subject_a1`) and is\n// deliberately snake_cased \u2014 the generator KNOWS the name it emits, so\n// the lint its shape provably trips is suppressed here rather than\n// renaming the contract surface (issue #1035).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/tdd/113-eventbus-error-observability/u1_subject.dart'\n    as anchor0;\n\n/// Subject for behavior A1, composed against the\n/// feature's unit subject anchors by the generation pipeline.\nvoid subject_a1() {\n  // Composition anchor: references the feature's green / entity-wired unit\n  // subjects this behavior builds on.\n  // ignore: unused_local_variable\n  final composedUnitAnchors = <Function>[anchor0.subject_u1];\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
 }

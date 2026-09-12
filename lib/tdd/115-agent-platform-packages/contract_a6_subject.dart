@@ -13,8 +13,8 @@
 // enumerates the contract's cases and stays BLOCKED (never RED) until
 // every case is satisfied.
 library;
-import 'package:zuraffa_agent/zuraffa_agent.dart';
 
+import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 /// Contract seam for `SecureStore.validate(dynamic key) -> void`
 /// (usecase contract, declared in the spec's Layer Contracts
