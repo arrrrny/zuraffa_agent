@@ -23,6 +23,7 @@ surface a clear final error when exhausted."
 injectable `LlmClock`, and `test/llm/retry_test.dart` (U4–U9) pins that
 core. What the R4 contract (issue #95) asks for that the tree does not yet
 satisfy:
+  traces: Retry.fr1
 
 1. **Retry-After is clamped.** `_retryAfterMs` silently caps the header at
    3600 seconds (`if (seconds > 3600) return 3600000;`). A server that says
@@ -124,17 +125,21 @@ sequences.
   `LlmNetworkException` (connection-level). Non-retryable statuses (other
   4xx) throw `LlmHttpException` immediately with zero retries (existing
   U7 pin; network recovery/exhaustion now first-class tested).
+  traces: Retry.fr2
 - **FR-002**: The system MUST satisfy this requirement: Backoff for computed delays is exponential
   (`base << (attempt-1)` plus injectable jitter) capped at
   `maxDelayMs`; total attempts are capped at `maxAttempts` (existing U8
   pin, cited).
+  traces: Retry.fr3
 - **FR-003**: The system MUST satisfy this requirement: A `Retry-After` header in seconds form is honored UNCLAMPED:
   the sleep equals the header value in ms, regardless of `maxDelayMs` or
   any fixed ceiling (the 3600s cap is removed). Negative values are
   treated as 0; absent/unparseable headers fall back to the computed
   backoff.
+  traces: Retry.fr4
 - **FR-004**: The system MUST satisfy this requirement: Network errors (`LlmNetworkException`) are retried under the
   same policy (same backoff, same `maxAttempts`).
+  traces: Retry.fr5
 - **FR-005**: The system MUST satisfy this requirement: On exhaustion the final error is typed and
   attempt-annotated: the HTTP path throws `LlmHttpException` with
   `attempts == maxAttempts`; the network path throws a terminal
@@ -142,16 +147,20 @@ sequences.
   `attempts == maxAttempts`); both `toString` forms name the attempt
   count. Outside the retry loop the exceptions default to `attempts: 1`
   (single-shot semantics, e.g. provider clients).
+  traces: Retry.fr6
 - **FR-006**: The system MUST satisfy this requirement: Timing is deterministic under the injected clock: the same
   script + the same jitter function produce byte-identical sleep
   sequences across runs (`LlmClock` seam, existing; now pinned
   cross-run).
+  traces: Retry.fr7
 - **FR-007**: The system MUST satisfy this requirement: `openStreamWithRetry` follows the identical policy on the
   initial HTTP exchange (retryable statuses, Retry-After, attempts on the
   final error).
+  traces: Retry.fr8
 - **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, out of scope); the full `dart test`
   suite is green, including the unmodified spec-007 `test/llm/retry_test.dart`.
+  traces: Retry.fr9
 
 ### Key entities
 
@@ -160,6 +169,7 @@ sequences.
 - `LlmClock` — injectable clock/sleep seam (unchanged).
 - `sendWithRetry` / `openStreamWithRetry` — policy unchanged except
 - **FR-003**: The system MUST satisfy this requirement: /FR-005.
+  traces: Retry.fr10
 
 ## Success criteria
 
@@ -214,3 +224,10 @@ sequences.
    **Type**: acceptance
 14. **Given** the feature implementation under its clean-architecture seams **When** U9: a Retry-After header overrides the computed backoff delay **Then** the pinned regression test passes (`test/llm/retry_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `Retry`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

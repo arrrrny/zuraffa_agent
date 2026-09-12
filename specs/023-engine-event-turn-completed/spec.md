@@ -19,12 +19,22 @@ As the build CI, I see `dart analyze --fatal-infos` succeed on the new `turn_com
 
 ## Requirements
 - **FR-001**: `turn_completed.dart` MUST be `part of 'engine_event.dart';` and declare `final class TurnCompleted extends EngineEvent` with `final DateTime emittedAt; final String? reason; const TurnCompleted({required this.emittedAt, this.reason});`.
+  traces: EngineEven.fr1
 - **FR-002**: `engine_event.dart` MUST have `part 'turn_completed.dart';` directive.
+  traces: EngineEven.fr2
 - **FR-003**: `test/engine/events/engine_event_test.dart` MUST be updated so its `describe(EngineEvent)` switch handles both `TurnStarted` and `TurnCompleted` cases.
+  traces: EngineEven.fr3
 - **FR-004**: `dart analyze --fatal-infos` + `dart test` MUST pass.
+  traces: EngineEven.fr4
 
 ## Key Entities
 - **TurnCompleted**: emitted by the engine loop when a turn finishes (with optional reason like `cancelled` or `max-tokens-reached`).
+
+## Layer Contracts
+
+**Domain**:
+
+- `EngineEven`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`
 
 ## Success Criteria
 - SC-001: `dart analyze --fatal-infos` exits 0.

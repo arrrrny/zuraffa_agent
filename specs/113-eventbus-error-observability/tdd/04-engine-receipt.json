@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "feature": "113-eventbus-error-observability",
+  "lane": "engine",
+  "verdict": "error",
+  "result": "runner-error",
+  "behaviors": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "contract:A1",
+    "contract:A3"
+  ],
+  "counts": {
+    "total": 11,
+    "pending": 0,
+    "red": 0,
+    "green": 2,
+    "done": 9
+  },
+  "stopped_at": "contract:A1:refactor",
+  "at": "2026-09-11T21:39:43.958846Z"
+}

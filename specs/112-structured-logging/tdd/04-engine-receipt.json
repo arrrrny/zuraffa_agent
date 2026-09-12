@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "feature": "112-structured-logging",
+  "lane": "engine",
+  "verdict": "error",
+  "result": "runner-error",
+  "behaviors": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "U5",
+    "U6",
+    "contract:A7",
+    "contract:A8",
+    "contract:A9",
+    "contract:A10",
+    "contract:A11",
+    "contract:A12"
+  ],
+  "counts": {
+    "total": 20,
+    "pending": 0,
+    "red": 0,
+    "green": 6,
+    "done": 14
+  },
+  "stopped_at": "contract:A7:refactor",
+  "at": "2026-09-11T20:39:11.289259Z"
+}

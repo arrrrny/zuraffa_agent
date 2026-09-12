@@ -53,17 +53,29 @@ As the next agent fixing a sibling zfa-bug (e.g. #12, #25, #27, #29), I copy the
 ### Functional Requirements
 
 - **FR-001**: `lib/src/domain/services/artifact_service.dart` MUST declare `abstract class ArtifactService` with method signatures `Future<List<ArtifactRef>> list(NoParams params)` and `int thresholdBytes(NoParams params)`.
+  traces: ArtifactProvide.fr1
 - **FR-002**: `lib/src/data/providers/artifact/artifact_provider.dart` MUST declare `class ArtifactProvider implements ArtifactService` whose overrides of `list` and `thresholdBytes` carry the exact same `NoParams params` parameter as the service.
+  traces: ArtifactProvide.fr2
 - **FR-003**: The provider methods MUST be stubbed with `throw UnimplementedError()` bodies (matching the zfa-generated stub convention for `--di mock`/`--provider` outputs) so the file is analyzable without forcing real I/O.
+  traces: ArtifactProvide.fr3
 - **FR-004**: `dart analyze --fatal-infos` MUST report zero issues on the two new files and zero new issues on `lib` as a whole.
+  traces: ArtifactProvide.fr4
 - **FR-005**: `dart test` MUST continue to pass all 129 pre-existing tests AND a new test file at `test/data/providers/artifact_provider_test.dart` that exercises the NoParams round-trip and asserts the override relationship (`ArtifactProvider` is an `ArtifactService`).
+  traces: ArtifactProvide.fr5
 - **FR-006**: A short comment at the top of each new file MUST explain that the file is a hand-curated placeholder for the zfa-generated equivalent, and link back to issue #11, so the next contributor understands why the file exists before the zfa tool ships the matching fix.
+  traces: ArtifactProvide.fr6
 
 ### Key Entities
 
 - **ArtifactService** (abstract interface): `list(NoParams)` and `thresholdBytes(NoParams)` — the parameterless service surface.
 - **ArtifactProvider** (concrete class): implements `ArtifactService` with matching NoParams signatures; default bodies throw `UnimplementedError`.
 - **NoParams**: the existing `package:zuraffa/zuraffa.dart`-exported marker type for parameterless use-case invocations.
+
+## Layer Contracts
+
+**Domain**:
+
+- `ArtifactProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

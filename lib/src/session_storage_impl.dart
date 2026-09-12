@@ -32,6 +32,13 @@ class InMemorySessionStorage implements SessionStorage {
   }
 
   @override
+  Stream<SessionTreeEntry> entries() async* {
+    for (final entry in List.of(_entries.values)) {
+      yield entry;
+    }
+  }
+
+  @override
   Future<String?> getActiveLeafId() async {
     return _activeLeafId.isEmpty ? null : _activeLeafId;
   }

@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "A3",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T22:45:08.193733Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "test/tdd/115-agent-platform-packages/a3_test.dart",
+   "action": "create",
+   "sha256": "de3828d7d235f34b257f12e15d90bee43ae57120d254b5678658abecba6f9780",
+   "bytes": 1906
+  },
+  {
+   "path": "lib/tdd/115-agent-platform-packages/a3_subject.dart",
+   "action": "create",
+   "sha256": "f5c5aafd195d326f34ca5d71303a1008f077075594845b5187fa0be793bbd603",
+   "bytes": 676
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

@@ -62,10 +62,15 @@ As the engine, episodic memories persist across sessions via the session storage
 ### Functional Requirements
 
 - **FR-001**: Compression events MUST create EpisodicMemory entries. *(already green from spec 009's U8/U11 — this spec pins it with a multi-compression acceptance test rather than re-implementing)*
+  traces: SessionStorage.fr1
 - **FR-002**: A `retrieve_memory` tool MUST expose episodic memories to the model.
+  traces: SessionStorage.fr2
 - **FR-003**: EpisodicMemory MUST store both the summary (XML) and original messages. *(entity exists from spec 009; unchanged)*
+  traces: SessionStorage.fr3
 - **FR-004**: Retrieval MUST support snapshot_id lookup and limit/offset pagination.
+  traces: SessionStorage.fr4
 - **FR-005**: EpisodicMemory MUST persist via the session storage backend.
+  traces: SessionStorage.fr5
 
 ### Key Entities
 
@@ -75,6 +80,12 @@ As the engine, episodic memories persist across sessions via the session storage
 - **RetrieveMemoryTool** *(new)*: model-facing tool; parameters `snapshot_id?`, `limit?`, `offset?`; returns the specific memory (with original messages) or a paginated summary listing.
 - **PersistentEpisodicMemoryStore** *(new)*: an EpisodicMemoryStore that mirrors every `add` into the SessionStorage backend as a CustomEntry (`customType: 'episodic_memory'`, payload = memory JSON) and rebuilds entries on `restore()` (FR-005).
 - **retrieve_memory** tool: snapshot_id, limit, offset parameters *(the LlmToolSpec surface of RetrieveMemoryTool)*.
+
+## Layer Contracts
+
+**Domain**:
+
+- `SessionStorage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

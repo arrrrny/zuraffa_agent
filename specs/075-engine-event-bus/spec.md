@@ -32,13 +32,16 @@ dropped:
   `BeforeToolCallRequest` and friends do not exist in this repo, and the
   sealed union grows only from its own spec. Deferred until an
   engine-owned request/event spec introduces those types.
+  traces: EngineEventBus.fr1
 - **FR-004**: The system MUST satisfy this requirement: `AgentController`**: with request/response deferred, the
   controller wrapper would be an empty shell; the bus IS the surface.
+  traces: EngineEventBus.fr2
 - **FR-005**: "engine MUST emit through the bus"**: the runtimes (PRs
   #80-#83, unmerged stack) emit through `onEvent` callbacks; the bridge
   is `onEvent: bus.publish` — one line at the call site, no engine
   change needed. This spec delivers the bus; an integration test
   proves the bridge pattern with real event objects.
+  traces: EngineEventBus.fr3
 
 ## Files
 
@@ -56,11 +59,13 @@ dropped:
   subtype (`TurnStarted`) — delivery is EXACT-type — or `EngineEvent`
   itself — delivery is everything. All subtypes are `final`, so
   exact-type matching is unambiguous.
+  traces: EngineEventBus.fr4
 
 - **FR-002**: The system MUST satisfy this requirement: `publish(EngineEvent event)`: synchronous delivery, in
   REGISTRATION order, to every subscriber whose type matches
   (`T == event.runtimeType` or `T == EngineEvent`). One emission, many
   independent consumers — the fan-out the onEvent callback cannot do.
+  traces: EngineEventBus.fr5
 
 - **FR-003**: The system MUST satisfy this requirement: Subscriber error isolation: a handler that throws must
   NOT break delivery to later subscribers, and must NOT propagate to
@@ -69,21 +74,26 @@ dropped:
   swallowed (documented — the bus is infrastructure; a broken observer
   must never break the engine). This repo's dart:io-free discipline
   (spec 064) rules out stderr logging as a default.
+  traces: EngineEventBus.fr6
 
 - **FR-004**: The system MUST satisfy this requirement: `cancel()` stops delivery (idempotent — double cancel is
   safe); `isActive` reports liveness; cancelled subscriptions free
   their slot (`subscriberCount` drops).
+  traces: EngineEventBus.fr7
 
 - **FR-005**: The system MUST satisfy this requirement: `replay(Iterable<EngineEvent> events)`: re-publishes the
   given history through the bus, in order, to every CURRENT subscriber.
   This is a broadcast, not per-subscriber catch-up: a late subscriber
   that wants history subscribes first, then the caller replays (the
   natural composition with EngineEventLog: `bus.replay(log.events)`).
+  traces: EngineEventBus.fr8
 
 - **FR-006**: The system MUST satisfy this requirement: `subscriberCount`: the number of live subscriptions.
+  traces: EngineEventBus.fr9
 
 - **FR-007**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 915/2 at `fec7889` + new tests).
+  traces: EngineEventBus.fr10
 
 ## Verification
 
@@ -125,3 +135,10 @@ dropped:
    **Type**: acceptance
 8. **Given** the feature implementation under its clean-architecture seams **When** onEvent bridge: any emitter becomes a multi-subscriber source **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `EngineEventBus`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

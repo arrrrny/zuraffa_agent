@@ -19,10 +19,14 @@
 // Delivery contract: synchronous, registration order, error-isolated. A
 // throwing subscriber never breaks its siblings and never propagates to
 // the publisher — broken observers must not break the engine. Errors go
-// to the optional onSubscriberError hook; without one they are swallowed
-// (the bus is infrastructure; spec 064's dart:io-free discipline rules
-// out stderr logging as a default).
+// to the optional onSubscriberError hook; without one they are routed
+// to a SEVERE record on the `zuraffa.agent.eventBus` logger (spec 112)
+// and an EngineEventSubscriberError is published onto the bus itself —
+// never swallowed (spec 113, issue #134).
 
+import 'package:logging/logging.dart';
+
+import '../logging/agent_log.dart';
 import 'events/engine_event.dart';
 
 /// Handle for one bus subscription — cancel to stop delivery.
@@ -104,15 +108,68 @@ class EngineEventBus {
       try {
         entry.invoke(event);
       } catch (error) {
-        // Isolate the hook itself: a throwing hook must not escape publish
-        // and break later subscribers or the publisher.
-        try {
-          _onSubscriberError?.call(error, event);
-        } catch (_) {
-          // Swallowed on purpose — see the library doc comment.
-        }
+        // Isolate the error route itself: a throwing hook must not
+        // escape publish and break later subscribers or the publisher.
+        _routeSubscriberError(error, event);
       }
     }
+  }
+
+  /// The subscriber-error route (spec 113): the consumer hook when
+  /// installed, otherwise the default SEVERE record on the `eventBus`
+  /// logger — then the self-observation event, unless the failing event
+  /// already is one (the recursion guard).
+  void _routeSubscriberError(Object error, EngineEvent event) {
+    try {
+      final hook = _onSubscriberError;
+      if (hook != null) {
+        hook(error, event);
+      } else {
+        logSubscriberError(error, event);
+      }
+    } catch (hookError) {
+      try {
+        AgentLog.eventBus.log(
+          AgentLog.terminalLevel,
+          'subscriber-error hook failed on ${event.runtimeType}: $hookError',
+        );
+      } catch (_) {
+        // The logger itself is broken — containment beats propagation.
+      }
+    }
+    // Recursion guard: an error event's own failure is logged above but
+    // never re-published.
+    if (event is EngineEventSubscriberError) return;
+    try {
+      publish(subscriberErrorEvent(error, event));
+    } catch (_) {
+      // publish isolates its own subscriber errors; belt and braces.
+    }
+  }
+
+  /// The default subscriber-error route (spec 113 FR-001): a SEVERE
+  /// record on the `zuraffa.agent.eventBus` logger naming the source
+  /// event's runtime type and the thrown error. Cheap when the level is
+  /// filtered.
+  static void logSubscriberError(Object error, EngineEvent event) {
+    if (!AgentLog.eventBus.isLoggable(AgentLog.terminalLevel)) return;
+    AgentLog.eventBus.log(
+      AgentLog.terminalLevel,
+      'subscriber error on ${event.runtimeType}: $error',
+    );
+  }
+
+  /// The self-observation factory (spec 113 FR-003): the thrown error +
+  /// the source event's runtime type — never the source event itself.
+  static EngineEventSubscriberError subscriberErrorEvent(
+    Object error,
+    EngineEvent event,
+  ) {
+    return EngineEventSubscriberError(
+      emittedAt: DateTime.now().toUtc(),
+      error: error,
+      eventType: event.runtimeType,
+    );
   }
 
   /// Re-publishes [events] through the bus, in order, to every CURRENT

@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A5",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T18:54:15.642238Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/112-structured-logging/a5_subject.dart",
+   "action": "update",
+   "sha256": "3a2951cc436308f80c9ceb95344ed2977a9b09bc0f6ab0e420a0402473aad719",
+   "bytes": 1900,
+   "snapshot": "// Hand-stepped acceptance subject (spec 112, AC-5): a scripted transport\n// that fails once then succeeds must yield exactly one WARNING retry\n// record carrying attempt, delay, and the error. Returns the message.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/src/llm/llm_clock.dart';\nimport 'package:zuraffa_agent/src/llm/llm_client.dart';\nimport 'package:zuraffa_agent/src/llm/llm_transport.dart';\nimport 'package:zuraffa_agent/src/llm/retry.dart';\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\nimport 'package:zuraffa_agent/src/logging/memory_log_sink.dart';\n\nclass _A5Transport implements LlmTransport {\n  int calls = 0;\n  @override\n  Future<LlmHttpResponse> send(LlmHttpRequest request) async {\n    calls++;\n    if (calls == 1) {\n      throw const LlmNetworkException(provider: 'scripted', cause: 'boom');\n    }\n    return const LlmHttpResponse(statusCode: 200);\n  }\n\n  @override\n  Future<LlmStreamResponse> openStream(LlmHttpRequest request) =>\n      throw UnimplementedError('A5 exercises the retry path only');\n}\n\nclass _A5Clock implements LlmClock {\n  @override\n  DateTime now() => DateTime.fromMillisecondsSinceEpoch(0);\n  @override\n  Future<void> sleep(int milliseconds) async {}\n}\n\nFuture<Map<String, Object?>> subject_a5() async {\n  ZuraffaLogging.reset();\n  final sink = MemoryLogSink();\n  ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);\n  final transport = _A5Transport();\n  await sendWithRetry(\n    transport: transport,\n    request: LlmHttpRequest(uri: Uri.parse('https://a5.test/v1')),\n    config: const RetryConfig(maxAttempts: 3, baseDelayMs: 250),\n    clock: _A5Clock(),\n    provider: 'scripted',\n  );\n  ZuraffaLogging.reset();\n  final warning = sink.firstWhereMessage('retry scheduled');\n  return {'calls': transport.calls, 'message': warning?.message ?? ''};\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

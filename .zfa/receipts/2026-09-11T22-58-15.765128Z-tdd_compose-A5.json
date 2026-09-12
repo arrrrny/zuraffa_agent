@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A5",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T22:58:15.765128Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/115-agent-platform-packages/a5_subject.dart",
+   "action": "update",
+   "sha256": "069924bacae40a5eec3de10a8593cf9a168772e562927b851f31f647ca77ad3f",
+   "bytes": 1028,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 115 A5): federated structure\n// validation over the real pubspecs (the test reads the files).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nMap<String, String> subject_a5(Map<String, dynamic> packages) {\n  final failures = <String, String>{};\n  const expectedPlatforms = {\n    'zuraffa_agent_android': ['android'],\n    'zuraffa_agent_ios': ['ios'],\n    'zuraffa_agent_macos': ['macos'],\n  };\n  packages.forEach((name, meta) {\n    final deps = List<String>.from((meta as Map)['deps'] as List);\n    if (!deps.contains('zuraffa_agent')) {\n      failures[name] = 'missing zuraffa_agent dependency';\n    }\n    final platforms = List<String>.from(meta['pluginPlatforms'] as List);\n    final expected = expectedPlatforms[name];\n    if (expected != null) {\n      for (final other in expectedPlatforms.keys) {\n        if (other != name && platforms.contains(other)) {\n          failures[name] = 'declares foreign platform $other';\n        }\n      }\n    }\n  });\n  return failures;\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

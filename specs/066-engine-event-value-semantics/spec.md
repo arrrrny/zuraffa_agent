@@ -33,9 +33,13 @@ value equality and readable diagnostics.
 ##FRs
 
 - **FR-001**: The system MUST satisfy this requirement: Every `EngineEvent` subtype implements `operator ==` following the house pattern: `identical(this, other) || (other is T && runtimeType == other.runtimeType && <field-by-field equality>)`. Two events with identical field values are equal; events differing in ANY field are not.
+  traces: TurnStarte.fr1
 - **FR-002**: The system MUST satisfy this requirement: Every subtype overrides `hashCode` with `Object.hash(<all fields in declaration order>)`; equal objects have equal hashCodes.
+  traces: TurnStarte.fr2
 - **FR-003**: The system MUST satisfy this requirement: Every subtype overrides `toString` as `TypeName(field: value, …)` covering ALL fields in declaration order (nullable fields render `null`; `DateTime` renders via its own `toString`).
+  traces: TurnStarte.fr3
 - **FR-004**: The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911 passed / 2 pre-existing skips at `30b4b94` + new tests).
+  traces: TurnStarte.fr4
 
 ## Verification
 
@@ -135,3 +139,10 @@ value equality and readable diagnostics.
    **Type**: acceptance
 40. **Given** the feature implementation under its clean-architecture seams **When** PlanChanged value semantics (born with spec 066 pattern) **Then** the pinned regression test passes (`test/engine/events/engine_event_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `TurnStarte`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`
+

@@ -82,27 +82,37 @@ ones → `restore()` → good entries present, no throw.
 - **FR-001**: `MemoryJsonCodec` MUST losslessly round-trip `MemoryRecord`
   (id, content, tags, source, createdAt as UTC ISO-8601, salience) and
   `MemoryLink` (from, to, type by name, createdAt, note).
+  traces: PersistentAgentMemory.fr1
 - **FR-002**: `PersistentLongTermMemoryStore` MUST mirror every `remember`
   into its file (write-through, full snapshot, format
   `{"version":1,"records":[...]}`).
+  traces: PersistentAgentMemory.fr2
 - **FR-003**: `restore()` MUST rebuild the store from the file; a missing
   file restores to empty (first boot) without throwing.
+  traces: PersistentAgentMemory.fr3
 - **FR-004**: During restore, malformed individual entries MUST be skipped;
   a wholly unparseable file MUST throw `StateError`.
+  traces: PersistentAgentMemory.fr4
 - **FR-005**: Same-id replace MUST write through without duplicating the
   record in the file.
+  traces: PersistentAgentMemory.fr5
 - **FR-006**: `PersistentMemoryGraph` MUST mirror every `link` (including
   idempotent re-link replacement) into `{"version":1,"links":[...]}` and
   restore losslessly.
+  traces: PersistentAgentMemory.fr6
 - **FR-007**: Writes MUST be atomic — content lands in a `*.tmp` sibling
   first, then renames over the target; no `.tmp` survives a completed write.
+  traces: PersistentAgentMemory.fr7
 - **FR-008**: The facade MUST compose with persistent stores such that
   `remember` (long-term), `link`, and `promote` all persist; a full
   system rebuilt from restored stores preserves recall and graph traversal.
+  traces: PersistentAgentMemory.fr8
 - **FR-009**: `SessionMemoryStore` MUST NOT be persisted (evaporating layer;
   durability flows through promotion only) — documented decision.
+  traces: PersistentAgentMemory.fr9
 - **FR-010**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart test`
   green.
+  traces: PersistentAgentMemory.fr10
 
 ### Key entities
 
@@ -164,3 +174,10 @@ ones → `restore()` → good entries present, no throw.
    **Type**: acceptance
 15. **Given** the feature implementation under its clean-architecture seams **When** restore skips a record whose tags are not a list **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `PersistentAgentMemory`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

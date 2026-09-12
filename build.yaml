@@ -8,12 +8,25 @@ targets:
           - test/**
       json_serializable:
         enabled: true
+        # engine_event.g.dart is a hand-authored placeholder (PR #43):
+        # the sealed EngineEvent subtypes carry no annotations yet, and a
+        # build that claims the .g.dart part as an empty output DELETES
+        # the tracked placeholder file — keep the builder off that library.
         generate_for:
-          - lib/src/**
-          - test/**
+          include:
+            - lib/src/**
+            - test/**
+          exclude:
+            - lib/src/engine/events/engine_event.dart
         options:
           explicit_to_json: false
           include_if_null: false
           generic_argument_factories: true
       source_gen:combining_builder:
         enabled: true
+        generate_for:
+          include:
+            - lib/src/**
+            - test/**
+          exclude:
+            - lib/src/engine/events/engine_event.dart

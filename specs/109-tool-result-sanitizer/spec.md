@@ -50,6 +50,9 @@ rule that caught it — so the next LLM request carries no secret material.
 secret comes out of a sanitized mission with the marker
 (`[REDACTED:<rule>]`) in the transcript and the original substring absent.
 
+**Acceptance Scenarios**:
+
+1. **Given** each default redaction rule and a result containing a realistic secret, **When** the mission sanitizes its tool output, **Then** the transcript carries the marker (`[REDACTED:<rule>]`) and the original substring is absent.
 ### US2 — Benign output is untouched (P1)
 
 As a tool author, normal tool output (code, logs, paths, prose) passes
@@ -59,6 +62,9 @@ through byte-for-byte; no false positives.
 match the patterns, e.g. `AKIA` in prose without the full key shape)
 round-trips unchanged with zero matched rules.
 
+**Acceptance Scenarios**:
+
+2. **Given** a benign corpus (including strings that resemble but do not match the patterns, e.g. `AKIA` in prose without the full key shape), **When** it is sanitized, **Then** it round-trips unchanged with zero matched rules.
 ### US3 — The defense is configurable (P2)
 
 As an integrator, I can disable individual rules, add custom patterns with
@@ -68,6 +74,9 @@ their own names, and change the marker template.
 fires with its own rule name; a custom marker template (e.g.
 `<REMOVED:{rule}>`) is honored.
 
+**Acceptance Scenarios**:
+
+3. **Given** a disabled rule, a custom pattern, and a custom marker template (e.g. `<REMOVED:{rule}>`), **When** sanitization runs, **Then** the disabled rule leaves its secret intact, the custom pattern fires with its own rule name, and the custom marker template is honored.
 ### US4 — The runner wires it at the egress boundary (P1)
 
 As an integrator, injecting the sanitizer into the mission runner protects
@@ -78,24 +87,33 @@ before.
 produces a redacted transcript when the sanitizer is injected, and a
 byte-identical transcript when it is not.
 
+**Acceptance Scenarios**:
+
+4. **Given** a mission whose tool returns secret-bearing content, **When** it runs with the sanitizer injected and without it, **Then** the sanitized run produces a redacted transcript and the unsanitized run produces a byte-identical transcript.
 ## Requirements
 
 ### Functional requirements
 
-- **FR-001** (US1): the sanitizer exposes a `sanitize(content)` operation
+- **FR-001**: the sanitizer exposes a `sanitize(content)` operation
   returning the sanitized content plus the names of the rules that matched.
-- **FR-002** (US1): default rules cover: AWS access key ids, GitHub
+  traces: ToolResultSanitize.fr1
+- **FR-002**: default rules cover: AWS access key ids, GitHub
   personal access tokens, JWTs, private-key block headers, Slack tokens,
   and Stripe live keys — each redacting only the secret substring, leaving
   surrounding content intact.
-- **FR-003** (US2): non-matching content round-trips unchanged with an
+  traces: ToolResultSanitize.fr2
+- **FR-003**: non-matching content round-trips unchanged with an
   empty matched-rule list.
-- **FR-004** (US3): per-rule enable/disable, custom patterns (name +
+  traces: ToolResultSanitize.fr3
+- **FR-004**: per-rule enable/disable, custom patterns (name +
   regex), and a marker template with a `{rule}` placeholder.
-- **FR-005** (US4): `MissionRunner` accepts an optional sanitizer and
+  traces: ToolResultSanitize.fr4
+- **FR-005**: `MissionRunner` accepts an optional sanitizer and
   applies it to dispatched tool output (success content and error text)
   before the transcript join; absent sanitizer = unchanged behavior.
+  traces: ToolResultSanitize.fr5
 - **FR-006**: the sanitizer is pure (no I/O) and deterministic.
+  traces: ToolResultSanitize.fr6
 
 ## Success criteria
 
@@ -122,3 +140,10 @@ byte-identical transcript when it is not.
   `ToolDispatchResult`.
 - Pairs with (out of scope): threat model (#130), audit log, input
   sanitization.
+
+## Layer Contracts
+
+**Domain**:
+
+- `ToolResultSanitize`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
+

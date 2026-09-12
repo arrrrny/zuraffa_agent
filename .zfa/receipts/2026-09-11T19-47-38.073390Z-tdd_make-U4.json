@@ -1,0 +1,22 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd make",
+ "target": "U4",
+ "repro": "zfa tdd make",
+ "at": "2026-09-11T19:47:38.073390Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "specs/112-structured-logging/tdd/cycle-log.md",
+   "action": "update",
+   "sha256": "09f3e1737621fe8c82faa5c6d5bc50a54636a8a479ad038ea03c091a0f8fac12",
+   "bytes": 122602
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

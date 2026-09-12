@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd func",
+ "target": "U3",
+ "repro": "zfa tdd func",
+ "at": "2026-09-11T22:56:06.163145Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/115-agent-platform-packages/u3_subject.dart",
+   "action": "update",
+   "sha256": "6ecac11dd313f538fbe7aeeaa2d91c5d736b11c86d605258d993291f1bd6599f",
+   "bytes": 410,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 115 U3): the real validator.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Subject for behavior U3 \u2014 declared contract: `validate(key) -> void`.\nvoid subject_u3(String? key) {\n  if (key == null) {\n    throw ArgumentError.value(null, 'key', 'must be non-empty');\n  }\n  SecureStore.validate(key);\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

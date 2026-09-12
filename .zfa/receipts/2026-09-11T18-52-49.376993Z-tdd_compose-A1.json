@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A1",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T18:52:49.376993Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/112-structured-logging/a1_subject.dart",
+   "action": "update",
+   "sha256": "4b9cbb10a831a4810bd9f4723f77cd667061c8dc9e850e5955878a31533ff8d5",
+   "bytes": 667,
+   "snapshot": "// Hand-stepped acceptance subject (spec 112, AC-1): install a sink,\n// emit through two subsystem loggers, return the delivered records.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\nimport 'package:zuraffa_agent/src/logging/memory_log_sink.dart';\n\nList<LogRecord> subject_a1() {\n  ZuraffaLogging.reset();\n  final sink = MemoryLogSink();\n  ZuraffaLogging.install(level: Level.ALL, onRecord: sink.add);\n  AgentLog.llm.info('llm lifecycle record');\n  AgentLog.engine.warning('engine resilience record');\n  ZuraffaLogging.reset();\n  return sink.records;\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

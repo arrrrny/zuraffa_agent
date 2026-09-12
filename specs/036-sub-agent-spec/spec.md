@@ -75,17 +75,30 @@ As a library consumer, I store specs in sets/maps (spec registries keyed by valu
 ### Functional Requirements
 
 - **FR-001**: `SubAgentSpec` MUST reject with `ArgumentError` any construction where `name`, `description`, or `systemPrompt` is an empty string (the message MUST name the field).
+  traces: SubAgentSpecProvide.fr1
 - **FR-002**: `SubAgentSpec` MUST reject with `ArgumentError` any blank id (`''`) inside `tools` or `subAgents` (the message MUST name the offending list).
+  traces: SubAgentSpecProvide.fr2
 - **FR-003**: `SubAgentSpec` MUST reject with `ArgumentError` a non-positive budget when supplied: `maxTurns != null && maxTurns < 1`, `contextWindowTokens != null && contextWindowTokens < 1`, or `wallClockTimeout` with negative `Duration` (message MUST name the field). `Duration.zero` remains valid.
+  traces: SubAgentSpecProvide.fr3
 - **FR-004**: `SubAgentSpec` MUST reject with `ArgumentError` the 1-cycle `extendsSpec == name`.
+  traces: SubAgentSpecProvide.fr4
 - **FR-005**: The structural getters MUST keep their documented semantics: `isLeaf` == `subAgents.isEmpty`; `isRoot` == `extendsSpec == null`; `hasBudgets` == any of the three budget fields non-null.
+  traces: SubAgentSpecProvide.fr5
 - **FR-006**: Equality/hashCode MUST keep field-wise value semantics across all ten fields (list-aware for `tools`/`subAgents`), and MUST be constructible with non-const lists without breaking equality.
+  traces: SubAgentSpecProvide.fr6
 - **FR-007**: The clean-arch layers (`SubAgentSpecService.current/count`, `SubAgentSpecProvider`) MUST keep their existing signatures and stub behavior (UnimplementedError); no behavioral change to those layers in this feature.
+  traces: SubAgentSpecProvide.fr7
 
 ### Key Entities *(include if feature involves data)*
 
 - **SubAgentSpec** (value object, existing): the ten-field declarative aggregate; this feature adds construction-time validation (FR-001..004) and changes nothing else.
 - **SubAgentSpecService / SubAgentSpecProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 11 tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `SubAgentSpecProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

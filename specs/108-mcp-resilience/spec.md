@@ -69,6 +69,9 @@ timeout error after roughly the configured duration (not 30s when 50ms is
 configured); without a timeout override the 30s default applies; a fast
 server is unaffected.
 
+**Acceptance Scenarios**:
+
+1. **Given** a never-responding MCP server with a configured call timeout, **When** a call is made, **Then** the typed timeout error returns after roughly the configured duration (not 30s when 50ms is configured), the 30s default applies without an override, and a fast server is unaffected.
 ### US2 — A permanently failing server is short-circuited (P1)
 
 As the engine, after repeated consecutive failures the client stops
@@ -82,6 +85,9 @@ touching the wire; after the cooldown the next call probes; a successful
 probe closes the breaker (calls flow again) and a failing probe re-opens
 it; a success in closed state resets the consecutive-failure count.
 
+**Acceptance Scenarios**:
+
+2. **Given** a failure threshold of N, **When** consecutive failures accumulate, **Then** the Nth failure opens the breaker, call N+1 returns `circuit-open` without touching the wire, after the cooldown the next call probes, a successful probe closes the breaker, a failing probe re-opens it, and a success in closed state resets the consecutive-failure count.
 ### US3 — Only safe tools are retried, only on transient trouble (P2)
 
 As a tool author, marking a tool read-only opts it into bounded automatic
@@ -93,6 +99,9 @@ second succeeds is called exactly twice; a non-read-only tool in the same
 situation is called exactly once; a timeout is never retried regardless of
 the read-only mark.
 
+**Acceptance Scenarios**:
+
+3. **Given** a read-only tool whose first attempt fails transiently and second succeeds (and a non-read-only tool in the same situation), **When** each is called, **Then** the read-only tool is called exactly twice and the non-read-only tool exactly once, and a timeout is never retried regardless of the read-only mark.
 ## Edge cases
 
 - A thrown transport exception during a guarded call counts as a breaker
@@ -107,21 +116,27 @@ the read-only mark.
 
 ### Functional requirements
 
-- **FR-001** (US1): `callTool` accepts a per-call timeout; on expiry it
+- **FR-001**: `callTool` accepts a per-call timeout; on expiry it
   returns the typed `timeout` call error; the default is 30 seconds.
-- **FR-002** (US1): a timed-out call is never retried, whatever the
+  traces: McpCallGu.fr1
+- **FR-002**: a timed-out call is never retried, whatever the
   read-only mark.
-- **FR-003** (US2): with a breaker configured, N consecutive call failures
+  traces: McpCallGu.fr2
+- **FR-003**: with a breaker configured, N consecutive call failures
   (call errors or transport throws) open the breaker; subsequent calls
   fail fast typed without invoking the wire; after the cooldown a single
   probe decides recovery; a success in closed state resets the count.
-- **FR-004** (US3): with a retry config supplied for a read-only call,
+  traces: McpCallGu.fr3
+- **FR-004**: with a retry config supplied for a read-only call,
   transient failures are retried up to the configured attempt count with
   backoff; application errors and timeouts are not retried; non-read-only
   calls are never retried.
+  traces: McpCallGu.fr4
 - **FR-005**: the `McpClient` contract documentation states the timeout,
   breaker, and retry behaviors.
+  traces: McpCallGu.fr5
 - **FR-006**: `readOnly` is an additive, default-false descriptor flag.
+  traces: McpCallGu.fr6
 
 ## Success criteria
 
@@ -151,3 +166,10 @@ the read-only mark.
   reconnect policy (spec 082), the immutable `CircuitBreaker` (spec 035).
 - Related but out of scope: half-open probe concurrency, metrics export,
   per-tool breakers, spec 082 reconnect-policy changes.
+
+## Layer Contracts
+
+**Domain**:
+
+- `McpCallGu`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
+

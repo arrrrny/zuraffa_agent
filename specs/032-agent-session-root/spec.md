@@ -80,17 +80,29 @@ As the persistence layer (JSONL session storage / Hive session store / session-t
 ### Functional Requirements
 
 - **FR-001**: The `AgentSession` root entity MUST keep its spec-exact seven-field surface — `id`, `missionId?`, `rootEntryId`, `currentEntryId?`, `parentSessionId?`, `createdAt`, `updatedAt` — with value equality, `isBranch`, and `isHead` unchanged (compile parity with the 8 existing tests).
+  traces: JsonlSessionStorage.fr1
 - **FR-002**: `appendEntry(String entryId, {DateTime? at})` MUST return a NEW snapshot with `currentEntryId == entryId` and `updatedAt == at ?? DateTime.now()`; it MUST NOT mutate the source; it MUST throw `ArgumentError` on an empty `entryId`. No tree-validity ordering is enforced (the engine owns entry ordering; the root only tracks the cursor).
+  traces: JsonlSessionStorage.fr2
 - **FR-003**: `fork({required String sessionId, DateTime? at})` MUST return a NEW child session with `id == sessionId`, `missionId` inherited, `rootEntryId` preserved, `currentEntryId == parent.currentEntryId ?? parent.rootEntryId`, `parentSessionId == parent.id`, `createdAt == updatedAt == at ?? DateTime.now()`, without mutating the source.
+  traces: JsonlSessionStorage.fr3
 - **FR-004**: `toJson()` MUST emit `id`, `rootEntryId`, `createdAt`, `updatedAt` always and `missionId`, `currentEntryId`, `parentSessionId` only when non-null (absent-never-fabricated); timestamps as ISO-8601 strings. `AgentSession.fromJson` MUST round-trip all seven fields exactly and MUST throw `ArgumentError` naming the key when a required field is missing or ill-typed.
+  traces: JsonlSessionStorage.fr4
 - **FR-005**: The clean-arch layers (`AgentSessionService.current/count`, `AgentSessionProvider`) MUST keep their existing signatures and stubs (no behavioral change — the aggregate semantics are the deliverable; wiring the provider to a store is a downstream feature).
+  traces: JsonlSessionStorage.fr5
 - **FR-006**: Transitions MUST be pure: `appendEntry`/`fork` never mutate `this` and never touch shared state (constitution-appropriate: the root stays an immutable snapshot like CircuitBreaker).
+  traces: JsonlSessionStorage.fr6
 
 ### Key Entities *(include if feature involves data)*
 
 - **AgentSession** (root entity, existing scaffold): seven-field surface + NEW pure transitions `appendEntry`/`fork` + NEW `toJson`/`fromJson` (persistence contract).
 - **AgentSessionService / AgentSessionProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 8 tests.
 - Downstream consumers (NOT modified here): `jsonl_session_storage.dart`, `hive_session_store.dart`, `session_storage_impl.dart` — the shape FR-004 defines is the contract they consume when their own specs land.
+
+## Layer Contracts
+
+**Domain**:
+
+- `JsonlSessionStorage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A6",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T22:58:24.723117Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/115-agent-platform-packages/a6_subject.dart",
+   "action": "update",
+   "sha256": "629d2d36afb757eae97aa5c0786cb76bd14415bf7d31d930ee3539972ec6ba04",
+   "bytes": 839,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 115 A6): the pinned channel\n// contract; asserts method names and argument shapes.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nconst String a6ChannelName = 'dev.zuraffa/agent_platform';\nconst List<String> a6MethodNames = [\n  'getAgentHome',\n  'secureRead',\n  'secureWrite',\n  'secureDelete',\n];\n\nString subject_a6(String method, Map<String, dynamic> args) {\n  if (!a6MethodNames.contains(method)) return 'bad-method';\n  switch (method) {\n    case 'getAgentHome':\n      return args.isEmpty ? 'ok' : 'bad-args';\n    case 'secureRead':\n    case 'secureDelete':\n      return args.keys.contains('key') ? 'ok' : 'bad-args';\n    case 'secureWrite':\n      return args.keys.contains('key') && args.keys.contains('value')\n          ? 'ok'\n          : 'bad-args';\n  }\n  return 'bad-method';\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

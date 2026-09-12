@@ -1,0 +1,14 @@
+{
+  "feature": "116-runnable-example",
+  "behavior_states": {
+    "A1": "red",
+    "A2": "red",
+    "U1": "red",
+    "U2": "pending",
+    "U3": "pending",
+    "contract:A1": "pending",
+    "contract:A2": "pending",
+    "contract:A3": "pending"
+  },
+  "dropped": []
+}

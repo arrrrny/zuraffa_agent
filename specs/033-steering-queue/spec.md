@@ -80,11 +80,17 @@ As the persistence layer (the queue persists between turns; the session tree rec
 ### Functional Requirements
 
 - **FR-001**: `SteeringQueue` MUST be a true immutable snapshot: the constructor MUST defensively copy [pending] into an unmodifiable list (mutations of the source list after construction do not affect the queue; direct writes to `queue.pending` throw). `SteeringMessage` keeps its three-field surface (`id`, `content`, `injectedAt`) and value equality.
+  traces: SteeringQueueProvide.fr1
 - **FR-002**: `enqueue(SteeringMessage message)` MUST return a NEW snapshot with `pending + [message]` (FIFO append) and `lastInjectedAt == message.injectedAt`; `processedCount` and `id` are unchanged; the source snapshot is never mutated.
+  traces: SteeringQueueProvide.fr2
 - **FR-003**: `pop()` MUST return a record `({SteeringMessage message, SteeringQueue queue})` where `message` is the current head, `queue` is a NEW snapshot with the head removed, `processedCount + 1`, `lastInjectedAt` preserved, and the remainder of the pending list in order; popping an empty queue MUST throw `StateError`. The source snapshot is never mutated.
+  traces: SteeringQueueProvide.fr3
 - **FR-004**: `SteeringMessage.toJson()/fromJson()` MUST round-trip id, content, injectedAt exactly (ISO-8601 timestamp); `SteeringQueue.toJson()/fromJson()` MUST round-trip id, pending (nested message objects, FIFO order), processedCount, and lastInjectedAt-when-present; absent optionals serialize absent, never fabricated; missing/ill-typed required keys throw `ArgumentError` naming the key.
+  traces: SteeringQueueProvide.fr4
 - **FR-005**: The system MUST satisfy this requirement: The `head`/`isEmpty`/`pendingCount` getters and value equality keep their existing semantics (compile parity with the 9 existing tests — equality stays deep over pending).
+  traces: SteeringQueueProvide.fr5
 - **FR-006**: The system MUST satisfy this requirement: The clean-arch layers (`SteeringQueueService.current/count`, `SteeringQueueProvider`) keep their existing signatures and stubs (no behavioral change — the queue semantics are the deliverable).
+  traces: SteeringQueueProvide.fr6
 
 ### Key Entities *(include if feature involves data)*
 
@@ -92,6 +98,12 @@ As the persistence layer (the queue persists between turns; the session tree rec
 - **SteeringQueue** (value object, existing scaffold): four-field surface + NEW pure transitions `enqueue`/`pop` + NEW `toJson`/`fromJson` + defensive immutability (FR-001).
 - **SteeringInjected** (engine event, existing — NOT modified): the lifecycle event the engine emits per pop; the dispatch contract (FR-003) defines what the event carries.
 - **SteeringQueueService / SteeringQueueProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 9 tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `SteeringQueueProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

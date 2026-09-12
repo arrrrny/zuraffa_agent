@@ -124,14 +124,17 @@ equal `SteeringMessage`.
 - **FR-001**: `SteeringMessage` MUST be a value object with three
   required fields: `String id`, `String content`, `DateTime injectedAt`.
   All three are required at construction; none has a default.
+  traces: SteeringMessage.fr1
 - **FR-002**: `SteeringMessage.toJson()` MUST return a
   `Map<String, dynamic>` of shape `{id: <string>, content: <string>,
   injectedAt: <ISO-8601 string>}` — exactly three keys, no extras,
   no omissions. The timestamp MUST be `DateTime.toIso8601String()`
   output (UTC instants round-trip exactly).
+  traces: SteeringMessage.fr2
 - **FR-003**: The system MUST satisfy this requirement: `SteeringMessage.fromJson(Map<String, dynamic> json)`
   MUST produce a `SteeringMessage` equal (by FR-005) to the original
   that was serialized with `toJson` — lossless round-trip.
+  traces: SteeringMessage.fr3
 - **FR-004**: `SteeringMessage.fromJson` MUST throw `ArgumentError`
   (via `ArgumentError.value` with the offending value, name, and
   message) when:
@@ -141,22 +144,27 @@ equal `SteeringMessage`.
   - `injectedAt` is a `String` but cannot be parsed by
     `DateTime.tryParse` — `.name = 'injectedAt'` (message indicates
     "not a parseable ISO-8601 timestamp").
+  traces: SteeringMessage.fr4
 - **FR-005**: `SteeringMessage.==` MUST return `true` iff both
   objects are `SteeringMessage` instances AND their `id`, `content`,
   and `injectedAt` fields are all equal. Identity short-circuits to
   `true`. `hashCode` MUST agree with `==` (two equal messages
   produce equal hashCodes).
+  traces: SteeringMessage.fr5
 - **FR-006**: Edge cases that MUST round-trip losslessly:
   - empty `content` (length 0);
   - unicode in `id` and `content` (Chinese, emoji, RTL text);
   - non-UTC `injectedAt` (with explicit timezone offset);
   - microsecond precision in `injectedAt`;
   - large `content` (>= 10 KB).
+  traces: SteeringMessage.fr6
 - **FR-007**: `SteeringMessage.toString()` MUST return a human-readable
   string naming the type and the three fields (with content truncated
   to 40 characters to avoid log bloat for long messages).
+  traces: SteeringMessage.fr7
 - **FR-008**: The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the
   changed files; full `dart test` green (baseline + new).
+  traces: SteeringMessage.fr8
 
 ### Key entities
 
@@ -281,3 +289,10 @@ equal `SteeringMessage`.
    **Type**: acceptance
 38. **Given** the feature implementation under its clean-architecture seams **When** U6: malformed message JSON throws ArgumentError naming the key **Then** the pinned regression test passes (`test/domain/entities/steering_queue/steering_queue_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `SteeringMessage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

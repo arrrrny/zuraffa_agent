@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "116-runnable-example",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-12T00:25:42.557367Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "116-runnable-example"
+  },
+  "files": [
+    {
+      "path": "specs/116-runnable-example/tdd/test-list.md",
+      "action": "update",
+      "sha256": "a0461042b0b140c0c19d55ae2adc10dff0c5c067450010eaced33626afada628",
+      "bytes": 3332,
+      "snapshot": "# Test List: 116-runnable-example\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | it exits 0 and prints | AC-1 | PENDING |\n| A2 | it | AC-2 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | The example MUST run a full mission through `MissionRunner` | FR-001, MinimalAgent.run | PENDING |\n| U2 | The example MUST print the mission lifecycle (start, | FR-002, MinimalAgent.transcript | PENDING |\n| U3 | A test MUST execute the example as a subprocess and assert | FR-003, MinimalAgent.subprocess | PENDING |\n\nSeam cost: 2 of 3 unit behaviors will hand-step because return is an entity.\n\n## Contract loop: contract behaviors\n\nOne per declared entity method, controller method and usecase in `spec.md` Layer Contracts (issue #1007). A contract test proves the implementation satisfies the DECLARED contract — a failing contract test is BLOCKED (never RED) and blocks the cycle from proceeding to GREEN.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| contract:A1 | MinimalAgent.run() -> Future<MissionResult> (usecase contract) | MinimalAgent.run | PENDING |\n| contract:A2 | MinimalAgent.transcript(events) -> List<String> (usecase contract) | MinimalAgent.transcript | PENDING |\n| contract:A3 | MinimalAgent.subprocess() -> ProcessResult (usecase contract) | MinimalAgent.subprocess | PENDING |\n\n## External dependencies\n\n| dependency | type | contract | mock priority |\n| ---------- | ---- | -------- | ------------- |\n| dart:io | SDK (test/example only) | `Process.run` for the subprocess check | P1 |\n\n## Layer contracts\n\n### Domain\n\n- `MinimalAgent`: `run() -> Future<MissionResult>`, `transcript(events) -> List<String>`, `subprocess() -> ProcessResult`\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 47]\nroute: A2 -> acceptance lane [declared: type marker, spec line 52]\nroute: U1 -> unit lane [declared: contract row: MinimalAgent, spec line 81]\nroute: U2 -> unit lane [declared: contract row: MinimalAgent, spec line 81]\nroute: U3 -> unit lane [declared: contract row: MinimalAgent, spec line 81]\nroute: contract:A1 -> contract lane [declared: MinimalAgent]\nroute: contract:A2 -> contract lane [declared: MinimalAgent]\nroute: contract:A3 -> contract lane [declared: MinimalAgent]\n\n"
+    },
+    {
+      "path": "specs/116-runnable-example/tdd/traceability.md",
+      "action": "update",
+      "sha256": "e56e671091328beebccb1579c6d71ff90d727db3d63aa7646d9a1ace989195b5",
+      "bytes": 1022,
+      "snapshot": "# Traceability: 116-runnable-example\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:10db0a6ae663063274267d5bf759bf3d234e378f38d35fef36a4020c7930f2b8\nstatements: 5\nautomated: 5\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 46 | 1. **Given** the repo checked out, **When** `dart run | A1 | automated |\n| AC-2 | 51 | 2. **Given** the example source, **When** it is read, **Then** it | A2 | automated |\n| FR-001 | 60 | - **FR-001**: The example MUST run a full mission through `MissionRunner` | U1 | automated |\n| FR-002 | 64 | - **FR-002**: The example MUST print the mission lifecycle (start, | U2 | automated |\n| FR-003 | 68 | - **FR-003**: A test MUST execute the example as a subprocess and assert | U3 | automated |\n\n"
+    },
+    {
+      "path": "specs/116-runnable-example/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/116-runnable-example/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

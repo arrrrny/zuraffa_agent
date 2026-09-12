@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "107-zuraffa-config",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-12T00:25:40.558164Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "107-zuraffa-config"
+  },
+  "files": [
+    {
+      "path": "specs/107-zuraffa-config/tdd/test-list.md",
+      "action": "update",
+      "sha256": "8af2bdd86a7d3c57e14a0f6348e50810ff361c07b1df36c154abd765970caeea",
+      "bytes": 5060,
+      "snapshot": "# Test List: 107-zuraffa-config\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | every field is preserved in the typed sections, `validate()` returns no issues, and the runner accepts it. | AC-1 | PENDING |\n| A2 | the corresponding sections populate, partial maps yield partial configurations, and unknown keys never become sections and never error. | AC-2 | PENDING |\n| A3 | the validation names each problem with its section and field, the runner throws before emitting any event or calling the engine, a valid configuration runs the mission unchanged, and no configuration preserves the pre-existing behavior. | AC-3 | PENDING |\n| A4 | it exposes the three source kinds and the shipped stub resolves nothing (returns absence) and never throws. | AC-4 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U2 | `ZuraffaConfig` aggregates the six sections, each | FR-001, ZuraffaConfig.fr1 | PENDING |\n| U8 | the YAML loader parses a document into the typed | FR-002, ZuraffaConfig.fr2 | PENDING |\n| U10 | the environment loader maps documented variables to | FR-003, ZuraffaConfig.fr3 | PENDING |\n| U5 | `validate()` returns typed issues — `missing` (a | FR-004, ZuraffaConfig.fr4 | PENDING |\n| U14 | `MissionRunner.run` with a configuration that fails | FR-005, ZuraffaConfig.fr5 | PENDING |\n| U11 | the `SecretResolver` interface exposes the three source | FR-006, ZuraffaConfig.fr6 | PENDING |\n\n## Contract loop: contract behaviors\n\nOne per declared entity method, controller method and usecase in `spec.md` Layer Contracts (issue #1007). A contract test proves the implementation satisfies the DECLARED contract — a failing contract test is BLOCKED (never RED) and blocks the cycle from proceeding to GREEN.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| contract:A1 | ZuraffaConfig.fr1(...) -> Result (usecase contract) | ZuraffaConfig.fr1 | PENDING |\n| contract:A2 | ZuraffaConfig.fr2(...) -> Result (usecase contract) | ZuraffaConfig.fr2 | PENDING |\n| contract:A3 | ZuraffaConfig.fr3(...) -> Result (usecase contract) | ZuraffaConfig.fr3 | PENDING |\n| contract:A4 | ZuraffaConfig.fr4(...) -> Result (usecase contract) | ZuraffaConfig.fr4 | PENDING |\n| contract:A5 | ZuraffaConfig.fr5(...) -> Result (usecase contract) | ZuraffaConfig.fr5 | PENDING |\n| contract:A6 | ZuraffaConfig.fr6(...) -> Result (usecase contract) | ZuraffaConfig.fr6 | PENDING |\n\n## Layer contracts\n\n### Domain\n\n- `ZuraffaConfig`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A2 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A3 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: A4 -> acceptance lane [fallback: repairable — legacy description classifier matched, add `**Type**: acceptance` to the scenario]\nroute: U2 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: U8 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: U10 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: U5 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: U14 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: U11 -> unit lane [declared: contract row: ZuraffaConfig, spec line 208]\nroute: contract:A1 -> contract lane [declared: ZuraffaConfig]\nroute: contract:A2 -> contract lane [declared: ZuraffaConfig]\nroute: contract:A3 -> contract lane [declared: ZuraffaConfig]\nroute: contract:A4 -> contract lane [declared: ZuraffaConfig]\nroute: contract:A5 -> contract lane [declared: ZuraffaConfig]\nroute: contract:A6 -> contract lane [declared: ZuraffaConfig]\n\n"
+    },
+    {
+      "path": "specs/107-zuraffa-config/tdd/traceability.md",
+      "action": "update",
+      "sha256": "02c8fb5f288ee849924bc9be57804dc63f141ed265cd62cf3b7aa00fb116e07b",
+      "bytes": 2252,
+      "snapshot": "# Traceability: 107-zuraffa-config\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:ba3884f035c832c5952545225fbaeeb2c8479a4e380513f40820d4130c0d1106\nstatements: 10\nautomated: 10\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 72 | 1. **Given** a fully-populated configuration document, **When** it loads, **Then** every field is preserved in the typed sections, `validate()` returns no issues, and the runner accepts it. | A1 | automated |\n| AC-2 | 85 | 2. **Given** an environment map (partial or full), **When** a configuration is produced from it, **Then** the corresponding sections populate, partial maps yield partial configurations, and unknown keys never become sections and never error. | A2 | automated |\n| AC-3 | 101 | 3. **Given** a configuration with multiple problems, **When** `validate()` runs and the runner starts, **Then** the validation names each problem with its section and field, the runner throws before emitting any event or calling the engine, a valid configuration runs the mission unchanged, and no configuration preserves the pre-existing behavior. | A3 | automated |\n| AC-4 | 114 | 4. **Given** the resolver interface, **When** it is inspected and exercised with absence, **Then** it exposes the three source kinds and the shipped stub resolves nothing (returns absence) and never throws. | A4 | automated |\n| FR-001 | 132 | - **FR-001**: `ZuraffaConfig` aggregates the six sections, each | U2 | automated |\n| FR-002 | 136 | - **FR-002**: the YAML loader parses a document into the typed | U8 | automated |\n| FR-003 | 140 | - **FR-003**: the environment loader maps documented variables to | U10 | automated |\n| FR-004 | 144 | - **FR-004**: `validate()` returns typed issues — `missing` (a | U5 | automated |\n| FR-005 | 150 | - **FR-005**: `MissionRunner.run` with a configuration that fails | U14 | automated |\n| FR-006 | 155 | - **FR-006**: the `SecretResolver` interface exposes the three source | U11 | automated |\n\n"
+    },
+    {
+      "path": "specs/107-zuraffa-config/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/107-zuraffa-config/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

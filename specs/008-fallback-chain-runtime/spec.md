@@ -64,10 +64,15 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` at any time to s
 ### Functional Requirements
 
 - **FR-001**: A `FallbackChainClient` MUST wrap multiple `LlmClient` instances with automatic failover.
+  traces: fallbackChainRuntime.fr1
 - **FR-002**: Each provider MUST have an independent circuit breaker (open/half-open/closed).
+  traces: fallbackChainRuntime.fr2
 - **FR-003**: The chain MUST advance on connection error, timeout, 5xx, context overflow, or repeated 429.
+  traces: fallbackChainRuntime.fr3
 - **FR-004**: Mid-stream failures MUST restart on the next provider (configurable policy).
+  traces: fallbackChainRuntime.fr4
 - **FR-005**: A health snapshot API MUST expose chain state at any time.
+  traces: fallbackChainRuntime.fr5
 
 ### Key Entities
 
@@ -76,6 +81,12 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` at any time to s
 - **ClientHealth**: state, consecutiveFailures, cooldownWindowMs, lastFailureAt
 - **FallbackChain** (evolved entity): chain configuration + advance policy + breaker states (providerOrder, maxConsecutiveFailures, cooldownMs, policyMode, breakerStates, lastProviderIndex) while remaining field-compatible with the spec-053 value object (id, providerIds, currentProviderIndex, advances, lastErrorClass)
 - **ClientHealth** (new entity at `lib/src/domain/entities/client_health/`): id, state, consecutiveFailures, cooldownWindowMs, lastFailureAt, isHealthy + JSON round-trip — contract pinned by the pre-existing spec-004 lineage tests
+
+## Layer Contracts
+
+**Domain**:
+
+- `fallbackChainRuntime`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

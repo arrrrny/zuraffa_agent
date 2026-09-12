@@ -35,10 +35,15 @@ projection over records, no `@Zorphy`, no `dart:io`.
 ## FRs
 
 - **FR-001**: The system MUST satisfy this requirement: `void add(EngineEvent event)` appends one event; `void addAll(Iterable<EngineEvent> events)` appends in iteration order. Order of insertion is preserved exactly on read-back.
+  traces: UsageLedge.fr1
 - **FR-002**: The system MUST satisfy this requirement: `List<EngineEvent> get events` returns an **unmodifiable** copy — mutating the returned list (add/remove/clear/element assignment) throws; mutations never propagate into the log. `int get length`, `bool get isEmpty`, `bool get isNotEmpty` reflect the append count.
+  traces: UsageLedge.fr2
 - **FR-003**: The system MUST satisfy this requirement: `List<T> byType<T extends EngineEvent>()` returns the sub-list of events of exactly type `T`, in insertion order. `T? firstOfType<T extends EngineEvent>()` / `T? lastOfType<T extends EngineEvent>()` return the first/last such event or `null`.
+  traces: UsageLedge.fr3
 - **FR-004**: The system MUST satisfy this requirement: `List<EngineEvent> since(DateTime cutoff, {bool inclusive = true})` returns events with `emittedAt >= cutoff` (or `>` when `inclusive: false`), preserving order; `List<EngineEvent> before(DateTime cutoff, {bool inclusive = false})` mirrors it for `emittedAt <=`/`<` cutoff. Implementation note (design discovery during the red phase): the sealed base `EngineEvent` gains an abstract `DateTime get emittedAt;` — every subtype already carries the field, so all 9 conform without modification, and the temporal projections filter the whole union uniformly.
+  traces: UsageLedge.fr4
 - **FR-005**: The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests). Engine purity preserved: pure Dart, no `dart:io`, no new dependencies.
+  traces: UsageLedge.fr5
 
 ## Verification
 
@@ -74,3 +79,10 @@ projection over records, no `@Zorphy`, no `dart:io`.
    **Type**: acceptance
 8. **Given** the feature implementation under its clean-architecture seams **When** empty log behaves as empty **Then** the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `UsageLedge`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
+

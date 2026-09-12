@@ -75,13 +75,21 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 ### Functional Requirements
 
 - **FR-001**: The `RepetitionTracker` value object MUST expose the loop-detection configuration — `id`, `maxCalls` (N), `window` (M) — with value equality across all fields.
+  traces: RepetitionTracke.fr1
 - **FR-002**: `RepetitionTracker` MUST expose a pure predicate `isRepetition(observedCalls)` that returns true iff `observedCalls >= maxCalls`, so threshold logic is testable without a datasource.
+  traces: RepetitionTracke.fr2
 - **FR-003**: The datasource interface MUST define the persistence contract: `current()`, `reset()`, `record(signature)`, `count(signature)`, `isLooping(signature)` — all asynchronous.
+  traces: RepetitionTracke.fr3
 - **FR-004**: `record` MUST accept an optional injectable timestamp; `count`/`isLooping` MUST accept an optional injectable evaluation time, so window behavior is deterministically testable.
+  traces: RepetitionTracke.fr4
 - **FR-005**: The mock datasource MUST implement in-memory sliding-window tracking: per-signature timestamp lists, pruned to the window at write and read time.
+  traces: RepetitionTracke.fr5
 - **FR-006**: `isLooping(signature)` MUST equal `current().isRepetition(count(signature))` — the signal is always derived from the live window count and the configured threshold.
+  traces: RepetitionTracke.fr6
 - **FR-007**: `reset()` MUST clear every recorded signature history while preserving the tracker configuration returned by `current()`.
+  traces: RepetitionTracke.fr7
 - **FR-008**: The entity, interface, and mock MUST keep constructor backward compatibility: `RepetitionTracker({required id})` and `RepetitionTrackerMockDatasource()` must keep compiling with sensible defaults (`maxCalls=5`, `window=60s`).
+  traces: RepetitionTracke.fr8
 
 ### Key Entities *(include if feature involves data)*
 
@@ -89,6 +97,12 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 - **RepetitionTrackerDatasource** (interface): persistence contract over the tracker — read config, reset, record a call, count in-window calls, derive loop signal.
 - **RepetitionTrackerMockDatasource** (concrete): in-memory implementation with injectable clock for deterministic tests.
 - **ToolCallSignature** (owned by spec 29): the signature string passed to `record` is the canonical key a `ToolCallSignature` produces; this pair consumes it as an opaque `String`, keeping the two specs independently testable.
+
+## Layer Contracts
+
+**Domain**:
+
+- `RepetitionTracke`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

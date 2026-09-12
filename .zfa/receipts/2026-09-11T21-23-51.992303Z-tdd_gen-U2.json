@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T21:23:51.992303Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "113-eventbus-error-observability"
+ },
+ "files": [
+  {
+   "path": "test/tdd/113-eventbus-error-observability/u2_test.dart",
+   "action": "create",
+   "sha256": "1cbdddff905e90084e0ef2d096b0043178a64f344b73fab20c8b230a1b5eb96f",
+   "bytes": 1947
+  },
+  {
+   "path": "lib/tdd/113-eventbus-error-observability/u2_subject.dart",
+   "action": "create",
+   "sha256": "4aed7473c84a25f0e52d5d7340174c518b84d81d0278bf3beacb1860ca716cfc",
+   "bytes": 1057
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

@@ -124,33 +124,41 @@ killer mutant.
   / `send` / `notifications` / `isOpen` only; reconnection state lives in the
   client, never on the wire (015 architecture, pinned by the existing wire /
   A6 tests; no new wire members).
+  traces: McpClien.fr1
 - **FR-002**: The system MUST satisfy this requirement: Reconnect backoff is exponential with a hard cap, and with
   jitter enabled no applied delay exceeds `config.cap` (the jitter scale is
   clamped to the cap).
+  traces: McpClien.fr2
 - **FR-003**: The system MUST satisfy this requirement: A reconnect storm is bounded: one failure episode schedules at
   most `config.maxAttempts` backoff delays; on exhaustion the client
   transitions to `McpClientState.failed`; after that transition no further
   delays are scheduled (a subsequent `callTool` returns
   `McpCallError('client-not-connected')` and the recorded delay count is
   unchanged).
+  traces: McpClien.fr3
 - **FR-004**: The system MUST satisfy this requirement: `McpClient` exposes `Stream<void> onReconnected`. SSE and
   stdio clients fire it exactly once per successful recovery (the
   reconnecting → connected transition inside `_callWithReconnect`), never on
   the initial `connect()`, and close it on `disconnect()`. `InProcMcpClient`
   exposes a never-emitting stream.
+  traces: McpClien.fr4
 - **FR-005**: The system MUST satisfy this requirement: `ToolListingCache` subscribes to
   `client.onReconnected` and invalidates its entry when that fires; the
   subscription is cancelled by `dispose()`.
+  traces: McpClien.fr5
 - **FR-006**: The system MUST satisfy this requirement: Cache freshness is `age < maxAge` — an entry aged exactly
   `maxAge` is stale and the next `getOrRefresh()` re-lists.
+  traces: McpClien.fr6
 - **FR-007**: The system MUST satisfy this requirement: Tool calls resolve through `McpToolAdapter` under the
   `mcp:<serverId>:<toolName>` namespace and surface as the sealed
   `McpCallResult` union (`McpCallOk` / `McpCallError`) — never as a thrown
   exception from the client surface (015 FR; pinned by existing adapter /
   client tests cited in the test list).
+  traces: McpClien.fr7
 - **FR-008**: The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the
   master baseline (3 pre-existing, all out of scope); the full `dart test`
   suite is green.
+  traces: McpClien.fr8
 
 ### Key entities
 
@@ -226,3 +234,10 @@ killer mutant.
    **Type**: acceptance
 20. **Given** the feature implementation under its clean-architecture seams **When** dispose() cancels the onToolsChanged subscription **Then** the pinned regression test passes (`test/mcp/tool_listing_cache_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `McpClien`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

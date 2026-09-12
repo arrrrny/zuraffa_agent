@@ -58,16 +58,27 @@ As a developer, an `AgentController` wraps the event bus with convenience method
 ### Functional Requirements
 
 - **FR-001**: An `EventBus` MUST support typed pub/sub (on<T>, emit<T>).
+  traces: eventBus.fr1
 - **FR-002**: An `EventBus` MUST support typed request/response (request<R>, registerHandler<T,R>).
+  traces: eventBus.fr2
 - **FR-003**: Events MUST be delivered synchronously in registration order.
+  traces: eventBus.fr3
 - **FR-004**: An `AgentController` MUST wrap EventBus with convenience methods.
+  traces: eventBus.fr4
 - **FR-005**: The engine MUST emit lifecycle events through the bus.
+  traces: eventBus.fr5
 
 ### Key Entities
 
 - **EventBus**: on<T>(), emit<T>(), request<R>(), registerHandler<T,R>()
 - **AgentController**: publish(), listen<T>(), request(), on<T>()
 - **Event types**: AgentStartedEvent, LLMChunkEvent, BeforeToolCallEvent, etc.
+
+## Layer Contracts
+
+**Domain**:
+
+- `eventBus`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

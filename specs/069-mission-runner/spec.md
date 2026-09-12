@@ -61,10 +61,12 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   `TurnCompleted` (the turn never finished). All timestamps come from an
   injectable `clock` (default `DateTime.now`) — deterministic tests, no
   ambient time.
+  traces: ToolDispatche.fr1
 - **FR-002**: The system MUST satisfy this requirement: Natural completion: when a turn's `finishReason == 'stop'` and
   the planner produced no tool calls, the mission stops with
   `MissionStatus.completed`; `MissionResult.summary` is that turn's assistant
   content; the assistant message is appended to the returned transcript.
+  traces: ToolDispatche.fr2
 - **FR-003**: The system MUST satisfy this requirement: Tool dispatch: each planned `ToolCall` is dispatched
   sequentially through the injected `ToolDispatcher`
   (`isInternalMission: false`); a `tool`-role `ChatMessage` carrying the
@@ -73,11 +75,13 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   and `ToolCallCompleted` share a `callId` of the form
   `'$missionId-call-$turn-$index'`; `ToolCallCompleted.ok` mirrors
   `ToolDispatchResult.success`; a failed tool does NOT abort the mission.
+  traces: ToolDispatche.fr3
 - **FR-004**: The system MUST satisfy this requirement: Steering drain: when constructed with a `SteeringQueue`, all
   pending messages are drained at the START of each turn (FIFO via `pop()`),
   each appended to the transcript as a `user` message and announced with
   `SteeringInjected(emittedAt, content, injectedAt: message.injectedAt)`. The
   queue instance is never mutated in place; the drained snapshot replaces it.
+  traces: ToolDispatche.fr4
 - **FR-005**: The system MUST satisfy this requirement: Budgets (from `StopPolicy`, when `enabled`): effective turn cap
   is `min(executor.loop.maxTurns, stopPolicy.maxTurns)` — reaching it stops
   the mission with `budgetExhausted` (the executor's `StateError` backstop
@@ -86,17 +90,21 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
   `start + wallClockTimeout` is checked before each turn; exceeding it stops
   with `budgetExhausted`. When `enabled == false`, only the executor's
   `loop.maxTurns` applies.
+  traces: ToolDispatche.fr5
 - **FR-006**: The system MUST satisfy this requirement: Provider failure: if `executor.runTurn` throws, the runner
   emits `ProviderError(emittedAt, providerName: executor.llmClient.config.id,
   error: e.toString())`, stops with `MissionStatus.providerFailed`, and still
   emits the terminal `MissionCompleted` (a mission never ends without its
   terminal event).
+  traces: ToolDispatche.fr6
 - **FR-007**: The system MUST satisfy this requirement: `MissionResult` carries value semantics (spec 066 house
   pattern): `==`/`hashCode` over `(missionId, status, turnsUsed, transcript,
   summary)` with element-wise transcript comparison, and a `toString`
   rendering the id, status, turns, and message count.
+  traces: ToolDispatche.fr7
 - **FR-008**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green
   (baseline 915 passed / 2 skipped at `fec7889` + new tests).
+  traces: ToolDispatche.fr8
 
 ## Verification
 
@@ -140,3 +148,10 @@ engine runtimes (`tool_dispatcher.dart`, `agent_hooks.dart`,
    **Type**: acceptance
 10. **Given** the feature implementation under its clean-architecture seams **When** planner receives an unmodifiable transcript view **Then** the pinned regression test passes (`test/engine/mission_runner_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `ToolDispatche`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
+

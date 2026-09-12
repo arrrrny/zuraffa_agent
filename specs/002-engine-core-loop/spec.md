@@ -99,17 +99,29 @@ As the UI layer, I consume the mission as typed lifecycle events — thinking de
 ### Functional Requirements
 
 - **FR-001**: The engine MUST implement a turn-based while-loop advancing on LLM finish-reason, with no external state machine.
+  traces: engineCoreLoop.fr1
 - **FR-002**: Assistant messages MUST carry thinking blocks alongside tool calls; context assembly MUST preserve them across turns.
+  traces: engineCoreLoop.fr2
 - **FR-003**: The engine MUST support steering and follow-up message queues injected between turns.
+  traces: engineCoreLoop.fr3
 - **FR-004**: The engine MUST enforce max-turns, wall-clock timeout, and repetition-detection aborts with typed outcome events.
+  traces: engineCoreLoop.fr4
 - **FR-005**: The engine MUST emit every lifecycle event as a typed, ordered stream with sequence identifiers.
+  traces: engineCoreLoop.fr5
 - **FR-006**: The loop design MUST follow pi-mono's `agent-loop.ts` reference (turn-based, injectable behavior callbacks); pi_agent's loop stub is completed, not kept.
+  traces: engineCoreLoop.fr6
 
 ### Key Entities
 
 - **EngineLoop**: the turn executor; owns no persistence (delegates to R2 session model, spec 002).
 - **EngineEvent**: sealed hierarchy — mission/turn/tool/message lifecycle events.
 - **StopPolicy**: maxTurns, wall-clock, repetition threshold; produces typed outcomes.
+
+## Layer Contracts
+
+**Domain**:
+
+- `engineCoreLoop`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -33,3 +33,17 @@ export 'src/mcp/sse_mcp_client.dart';
 export 'src/mcp/stdio_mcp_client.dart';
 export 'src/mcp/tool_listing_cache.dart';
 export 'src/mcp/mcp_tool_adapter.dart';
+
+// Structured logging (spec 112, issue #119).
+export 'src/logging/agent_log.dart';
+export 'src/logging/memory_log_sink.dart';
+export 'src/session_lock.dart';
+
+// Host platform seam (spec 115).
+export 'src/platform/agent_home_resolver.dart';
+export 'src/platform/agent_platform.dart';
+export 'src/platform/secure_store.dart';
+
+// LLM provider seam (spec 007; used by the example and integrations).
+export 'src/data/providers/llm_client/llm_client_provider.dart';
+export 'src/llm/llm_transport.dart';

@@ -82,16 +82,27 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` (state, failure 
 ### Functional Requirements
 
 - **FR-001**: The engine MUST provide OpenAI-compatible, Anthropic, and Gemini clients behind one `LlmClient` interface on engine primitives.
+  traces: providersAndFallback.fr1
 - **FR-002**: Provider code MUST be vendored from dart_agent_core with attribution; dart_agent_core MUST NOT appear in the dependency graph.
+  traces: providersAndFallback.fr2
 - **FR-003**: Every call MUST account usage into the UsageLedger.
+  traces: providersAndFallback.fr3
 - **FR-004**: A fallback chain MUST advance on connection/timeout/5xx/context-overflow/repeated-429 with per-provider circuit breaker (open/half-open/closed) and explicit mid-stream policy.
+  traces: providersAndFallback.fr4
 - **FR-005**: A health snapshot API MUST expose chain state.
+  traces: providersAndFallback.fr5
 
 ### Key Entities
 
 - **LlmClient** (interface): stream(messages, tools, config) → events; ported implementations.
 - **FallbackChain**: ordered clients + breaker state machine + policy knobs.
 - **ClientHealth**: state, consecutive failures, cooldown window.
+
+## Layer Contracts
+
+**Domain**:
+
+- `providersAndFallback`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

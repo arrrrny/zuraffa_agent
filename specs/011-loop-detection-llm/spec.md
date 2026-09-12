@@ -64,10 +64,15 @@ As an operator, I configure the loop detection parameters: tool call repetition 
 ### Functional Requirements
 
 - **FR-001**: The engine MUST detect tool call loops by tracking recent call signatures.
+  traces: loopDetectionLlm.fr1
 - **FR-002**: The engine MUST detect cognitive stagnation via periodic LLM diagnosis.
+  traces: loopDetectionLlm.fr2
 - **FR-003**: LLM diagnosis MUST be triggered after a configurable number of turns.
+  traces: loopDetectionLlm.fr3
 - **FR-004**: Stagnation detection MUST use a confidence threshold (default 0.8).
+  traces: loopDetectionLlm.fr4
 - **FR-005**: Detection parameters MUST be configurable.
+  traces: loopDetectionLlm.fr5
 
 ### Key Entities
 
@@ -76,6 +81,12 @@ As an operator, I configure the loop detection parameters: tool call repetition 
 - **LoopDetectorResult**: isLoop, reason, confidence (+ turnNumber at observation time).
 - **LoopDetectorConfig**: toolLoopThreshold (default 5), llmCheckAfterTurns (default 30), llmCheckInterval (default 5), stagnationThreshold (default 0.8), plus diagnosisWindowMessages (default 20 — how much recent history the diagnosis prompt carries).
 - **Tool call signature**: tool name + JSON-normalized argument map (sorted keys — key-order-insensitive; call `id` excluded — every engine call gets a fresh id, so the loop signal is name+arguments).
+
+## Layer Contracts
+
+**Domain**:
+
+- `loopDetectionLlm`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

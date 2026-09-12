@@ -1,0 +1,37 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd refactor",
+  "target": "114-jsonl-single-writer-streaming",
+  "repro": "zfa tdd refactor",
+  "at": "2026-09-11T22:30:13.064445Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "sanctioned": true,
+    "refactor": true,
+    "passes": [
+      "build",
+      "format",
+      "fix"
+    ],
+    "feature": "114-jsonl-single-writer-streaming"
+  },
+  "files": [
+    {
+      "path": "lib/tdd/114-jsonl-single-writer-streaming/a4_subject.dart",
+      "action": "update",
+      "sha256": "a7fea1ed9537138019467dbb22833bcd35be835f4ef3dd9cbb447fb5cd5ff514",
+      "bytes": 908,
+      "snapshot": "// GENERATED STUB — hand-stepped (spec 114 A4): entries() yields the same\n// set as getEntries() on both Hive and in-memory stores.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/src/session_storage.dart';\nimport 'package:zuraffa_agent/src/session_storage_impl.dart';\nimport 'package:zuraffa_agent/src/types.dart';\n\n/// Scenario runner for behavior A4. Returns per-store verdicts.\nFuture<Map<String, bool>> subject_a4(\n  Stream<SessionTreeEntry> streamed,\n  List<SessionTreeEntry> eager,\n) async {\n  final streamedIds = await streamed.map((e) => e.id).toList();\n  final eagerIds = eager.map((e) => e.id).toSet();\n  final streamedSet = streamedIds.toSet();\n  final sameSet =\n      streamedSet.length == eagerIds.length &&\n      streamedSet.every(eagerIds.contains);\n  return {\n    'sameSet': sameSet,\n    'sameCount': streamedIds.length == eagerIds.length,\n  };\n}\n"
+    },
+    {
+      "path": "lib/tdd/114-jsonl-single-writer-streaming/u2_subject.dart",
+      "action": "update",
+      "sha256": "47428b522c19bfb548e6f0be515b281f4454c1fb35f1782c2de86207105931ea",
+      "bytes": 1101,
+      "snapshot": "// GENERATED STUB — hand-stepped (spec 114 U2): a second store open on a\n// locked path fails fast with a StateError naming the path.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\nimport 'package:zuraffa_agent/src/jsonl_session_storage.dart';\nimport 'package:zuraffa_agent/src/session_lock.dart';\nimport 'package:zuraffa_agent/src/types.dart';\n\n/// Subject for behavior U2 — declared contract: `acquire() -> Future<void>`.\n///\n/// Acquires the lock for a temp path, then attempts a second acquire.\n/// Returns the second acquire's error message, or the empty string when\n/// no error surfaced.\nFuture<String> subject_u2() async {\n  final dir = await Directory.systemTemp.createTemp('spec114-u2');\n  final path = '${dir.path}/sessions.jsonl';\n  final first = SessionLock(path);\n  await first.acquire();\n  try {\n    final second = SessionLock(path);\n    try {\n      await second.acquire();\n      return '';\n    } on StateError catch (e) {\n      return e.message.toString();\n    }\n  } finally {\n    await first.release();\n    await dir.delete(recursive: true);\n  }\n}\n"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

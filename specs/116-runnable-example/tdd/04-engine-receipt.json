@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "feature": "116-runnable-example",
+  "lane": "engine",
+  "verdict": "red",
+  "result": "stopped",
+  "behaviors": [
+    "A1",
+    "A2",
+    "U1",
+    "U2",
+    "U3",
+    "contract:A1",
+    "contract:A2",
+    "contract:A3"
+  ],
+  "counts": {
+    "total": 8,
+    "pending": 5,
+    "red": 3,
+    "green": 0,
+    "done": 0
+  },
+  "stopped_at": "U1:hand",
+  "at": "2026-09-11T23:19:17.022462Z"
+}

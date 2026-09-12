@@ -86,26 +86,35 @@ a deliberate mutant.
 - **FR-001**: `AgentController.request<R>(event)` MUST delegate to the
   wrapped bus's typed request/response and behave identically to
   `EventBus.request<R>` (SC-003 parity).
+  traces: EventBus.fr1
 - **FR-002**: `AgentController.on<T>(listener)` MUST subscribe exactly
   like `listen<T>` (documented alias).
+  traces: EventBus.fr2
 - **FR-003**: `AgentController` MUST expose its wrapped `EventBus`
   (`bus` getter) — the handler-registration surface must be reachable
   through the wrap.
+  traces: EventBus.fr3
 - **FR-004**: The system MUST satisfy this requirement: (bus semantics, pinned): when multiple handlers are
   registered for a request type, the MOST RECENTLY registered handler
   responds (override semantics).
+  traces: EventBus.fr4
 - **FR-005**: (bus semantics, pinned): a handler exception MUST propagate
   to the awaiting requester.
+  traces: EventBus.fr5
 - **FR-006**: The system MUST satisfy this requirement: (bus semantics, pinned): `request` with no registered
   handler MUST throw `StateError` naming the request type.
+  traces: EventBus.fr6
 - **FR-007**: (bus semantics, pinned): the response cast MUST be honest —
   requesting `R` against a handler returning an incompatible type
   surfaces as a `TypeError`, never a silent value.
+  traces: EventBus.fr7
 - **FR-008**: The system MUST satisfy this requirement: (bus semantics, pinned): handlers registered after earlier
   requests serve later requests (registration is live, not cached at
   first use); distinct request types dispatch independently.
+  traces: EventBus.fr8
 - **FR-009**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart
   test` green.
+  traces: EventBus.fr9
 
 ### Key entities
 
@@ -150,3 +159,10 @@ a deliberate mutant.
    **Type**: acceptance
 8. **Given** the feature implementation under its clean-architecture seams **When** registration is live and types dispatch independently **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
    **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `EventBus`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`
+
