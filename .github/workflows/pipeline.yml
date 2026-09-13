@@ -66,10 +66,10 @@ jobs:
           lib/src/engine/persistent_agent_memory.dart
           # SessionLock: spec-114 advisory single-writer sidecar lock for
           # session stores — takes an exclusive non-blocking OS lock on a
-          # `<path>.lock` sidecar. Missed the allowlist when spec 114
-          # landed (the gate is not run on pushes to master); an
-          # interface-backed adapter like jsonl_session_storage.dart.
-          # (spec 114)
+          # .lock sidecar next to the store path. Missed the allowlist
+          # when spec 114 landed (the gate is not run on pushes to
+          # master); an interface-backed adapter like
+          # jsonl_session_storage.dart. (spec 114)
           lib/src/session_lock.dart"
           BAD=0
           while IFS= read -r f; do
