@@ -1,0 +1,30 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U1",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:19:15.301097Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "116-runnable-example"
+ },
+ "files": [
+  {
+   "path": "test/tdd/116-runnable-example/u1_test.dart",
+   "action": "create",
+   "sha256": "015e7f9889e75827c43b9b73d7eb95bf2747953c3a7b10608dcc0fa2c19606f8",
+   "bytes": 1312,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen U1` (spec 044-test-tdd-generation).\n//\n// behavior_id: U1\n// source_criterion: FR-001, MinimalAgent.run\n// kind: unit\n// description: The example MUST run a full mission through `MissionRunner`\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/116-runnable-example/u1_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\n\nlibrary;\n\nimport 'package:test/test.dart';\n\nimport 'package:zuraffa_agent/tdd/116-runnable-example/u1_subject.dart';\n\n\nvoid main() {\n  group('U1 (FR-001, MinimalAgent.run)', () {\n    test('U1 \u2014 The example MUST run a full mission through `MissionRunner`', () async {\n      // Assertion-shaped guard: the stub fails HERE via assertion.\n      Object? outcome;\n      try {\n        outcome = await subject_u1();\n      } on UnimplementedError catch (e) {\n        outcome = e;\n      }\n      expect(outcome, isNot(isA<UnimplementedError>()));\n      expect(outcome, '0', reason: 'the example mission must exit 0');\n    }, timeout: const Timeout(Duration(minutes: 3)));\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/116-runnable-example/u1_subject.dart",
+   "action": "create",
+   "sha256": "ecb620a155269381270379855a5bca1a62a954443173e02c2d9f017868fac726",
+   "bytes": 607,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 116 U1): run the example mission\n// in-process by executing the example script's logic (subprocess form:\n// U3). Returns the exit-code string '0' when the mission completes.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\n/// Subject for behavior U1 \u2014 declared contract: `run() -> Future<MissionResult>`.\nFuture<String> subject_u1() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  return '${result.exitCode}';\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

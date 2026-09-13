@@ -9,11 +9,9 @@ part 'golden_mission.g.dart';
 /// GoldenMission entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $GoldenMission {
-
   String get id;
   String get name;
   Map<String, dynamic> get cassette;
   String get taskDefinition;
   List<String> get graderBindings;
 }
-

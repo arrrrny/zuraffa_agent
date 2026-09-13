@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Agent memory persistence — 010-style file-backed store
 
 **Branch**: `feat/spec-076-memory-persistence` (off `feat/spec-073-agent-memory` `4dd76e2`) | **Date**: 2026-08-29
@@ -80,27 +82,37 @@ ones → `restore()` → good entries present, no throw.
 - **FR-001**: `MemoryJsonCodec` MUST losslessly round-trip `MemoryRecord`
   (id, content, tags, source, createdAt as UTC ISO-8601, salience) and
   `MemoryLink` (from, to, type by name, createdAt, note).
+  traces: PersistentAgentMemory.fr1
 - **FR-002**: `PersistentLongTermMemoryStore` MUST mirror every `remember`
   into its file (write-through, full snapshot, format
   `{"version":1,"records":[...]}`).
+  traces: PersistentAgentMemory.fr2
 - **FR-003**: `restore()` MUST rebuild the store from the file; a missing
   file restores to empty (first boot) without throwing.
+  traces: PersistentAgentMemory.fr3
 - **FR-004**: During restore, malformed individual entries MUST be skipped;
   a wholly unparseable file MUST throw `StateError`.
+  traces: PersistentAgentMemory.fr4
 - **FR-005**: Same-id replace MUST write through without duplicating the
   record in the file.
+  traces: PersistentAgentMemory.fr5
 - **FR-006**: `PersistentMemoryGraph` MUST mirror every `link` (including
   idempotent re-link replacement) into `{"version":1,"links":[...]}` and
   restore losslessly.
+  traces: PersistentAgentMemory.fr6
 - **FR-007**: Writes MUST be atomic — content lands in a `*.tmp` sibling
   first, then renames over the target; no `.tmp` survives a completed write.
+  traces: PersistentAgentMemory.fr7
 - **FR-008**: The facade MUST compose with persistent stores such that
   `remember` (long-term), `link`, and `promote` all persist; a full
   system rebuilt from restored stores preserves recall and graph traversal.
+  traces: PersistentAgentMemory.fr8
 - **FR-009**: `SessionMemoryStore` MUST NOT be persisted (evaporating layer;
   durability flows through promotion only) — documented decision.
-- **FR-010**: Gates — `dart analyze --fatal-infos` exit 0; full `dart test`
+  traces: PersistentAgentMemory.fr9
+- **FR-010**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart test`
   green.
+  traces: PersistentAgentMemory.fr10
 
 ### Key entities
 
@@ -126,3 +138,46 @@ ones → `restore()` → good entries present, no throw.
   semantics, store-subclass shape).
 - Feeds: spec 077 (distiller) — distilled promotions become durable by
   composing with these stores.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** MemoryJsonCodec round-trips records and links **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** PersistentLongTermMemoryStore write-through persists to disk **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** restore round-trips records and links with full fidelity **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** same-id replace writes through without duplication **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** restore skips malformed entries and fails loud on a corrupt file **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** graph restore skips malformed links and fails loud on a corrupt file **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** restore on a missing file starts empty **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** PersistentMemoryGraph round-trips links and replaces idempotently **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** atomic writes leave no temp files and always-valid JSON **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** full system persistence — promote survives a restart **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+11. **Given** the feature implementation under its clean-architecture seams **When** write-through works for records created with default salience **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+12. **Given** the feature implementation under its clean-architecture seams **When** write-through creates missing parent directories **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+13. **Given** the feature implementation under its clean-architecture seams **When** restore fails loud on a JSON document of the wrong shape **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+14. **Given** the feature implementation under its clean-architecture seams **When** restore fails loud on an unsupported snapshot version **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+15. **Given** the feature implementation under its clean-architecture seams **When** restore skips a record whose tags are not a list **Then** the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`).
+   **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `PersistentAgentMemory`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

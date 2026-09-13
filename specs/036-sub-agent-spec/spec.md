@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: SubAgentSpec value object (R5 sub-agents & specs)
 
 **Feature Branch**: `036-sub-agent-spec`
@@ -21,8 +23,11 @@ As the spec loader (R5.2), I construct `SubAgentSpec` values from YAML agent spe
 **Acceptance Scenarios**:
 
 1. **Given** a spec with an empty `name`, empty `description`, or empty `systemPrompt`, **When** constructed, **Then** `ArgumentError` is thrown naming that field.
+   **Type**: acceptance
 2. **Given** a spec whose `tools` or `subAgents` allowlist contains an empty string id, **When** constructed, **Then** `ArgumentError` is thrown naming the list.
+   **Type**: acceptance
 3. **Given** a spec with `maxTurns` < 1, `contextWindowTokens` < 1, or a negative `wallClockTimeout`, **When** constructed, **Then** `ArgumentError` is thrown naming the budget field.
+   **Type**: acceptance
 
 ---
 
@@ -36,8 +41,10 @@ As the loader resolving `extends` chains (R5.2), I need the self-inheritance ill
 
 **Acceptance Scenarios**:
 
-1. **Given** a spec whose `extendsSpec` equals its own `name`, **When** constructed, **Then** `ArgumentError` is thrown (1-cycles are ill-formed).
-2. **Given** the four canonical shapes, **When** the getters are read, **Then** `isLeaf` == `subAgents.isEmpty`, `isRoot` == `extendsSpec == null`, and `hasBudgets` reflects the three budget fields (AC covered by existing tests — pinned, not new).
+4. **Given** a spec whose `extendsSpec` equals its own `name`, **When** constructed, **Then** `ArgumentError` is thrown (1-cycles are ill-formed).
+   **Type**: acceptance
+5. **Given** the four canonical shapes, **When** the getters are read, **Then** `isLeaf` == `subAgents.isEmpty`, `isRoot` == `extendsSpec == null`, and `hasBudgets` reflects the three budget fields (AC covered by existing tests — pinned, not new).
+   **Type**: acceptance
 
 ---
 
@@ -51,8 +58,10 @@ As a library consumer, I store specs in sets/maps (spec registries keyed by valu
 
 **Acceptance Scenarios**:
 
-1. **Given** two specs equal in all ten fields but with independently constructed `tools`/`subAgents` lists, **When** compared, **Then** they are `==` and share `hashCode` (AC covered by existing tests — pinned, not new).
-2. **Given** two specs differing in exactly one field, **Then** they are unequal.
+6. **Given** two specs equal in all ten fields but with independently constructed `tools`/`subAgents` lists, **When** compared, **Then** they are `==` and share `hashCode` (AC covered by existing tests — pinned, not new).
+   **Type**: acceptance
+7. **Given** two specs differing in exactly one field, **Then** they are unequal.
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -66,17 +75,30 @@ As a library consumer, I store specs in sets/maps (spec registries keyed by valu
 ### Functional Requirements
 
 - **FR-001**: `SubAgentSpec` MUST reject with `ArgumentError` any construction where `name`, `description`, or `systemPrompt` is an empty string (the message MUST name the field).
+  traces: SubAgentSpecProvide.fr1
 - **FR-002**: `SubAgentSpec` MUST reject with `ArgumentError` any blank id (`''`) inside `tools` or `subAgents` (the message MUST name the offending list).
+  traces: SubAgentSpecProvide.fr2
 - **FR-003**: `SubAgentSpec` MUST reject with `ArgumentError` a non-positive budget when supplied: `maxTurns != null && maxTurns < 1`, `contextWindowTokens != null && contextWindowTokens < 1`, or `wallClockTimeout` with negative `Duration` (message MUST name the field). `Duration.zero` remains valid.
+  traces: SubAgentSpecProvide.fr3
 - **FR-004**: `SubAgentSpec` MUST reject with `ArgumentError` the 1-cycle `extendsSpec == name`.
+  traces: SubAgentSpecProvide.fr4
 - **FR-005**: The structural getters MUST keep their documented semantics: `isLeaf` == `subAgents.isEmpty`; `isRoot` == `extendsSpec == null`; `hasBudgets` == any of the three budget fields non-null.
+  traces: SubAgentSpecProvide.fr5
 - **FR-006**: Equality/hashCode MUST keep field-wise value semantics across all ten fields (list-aware for `tools`/`subAgents`), and MUST be constructible with non-const lists without breaking equality.
+  traces: SubAgentSpecProvide.fr6
 - **FR-007**: The clean-arch layers (`SubAgentSpecService.current/count`, `SubAgentSpecProvider`) MUST keep their existing signatures and stub behavior (UnimplementedError); no behavioral change to those layers in this feature.
+  traces: SubAgentSpecProvide.fr7
 
 ### Key Entities *(include if feature involves data)*
 
 - **SubAgentSpec** (value object, existing): the ten-field declarative aggregate; this feature adds construction-time validation (FR-001..004) and changes nothing else.
 - **SubAgentSpecService / SubAgentSpecProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing 11 tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `SubAgentSpecProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

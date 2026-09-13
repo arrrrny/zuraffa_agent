@@ -1,86 +1,62 @@
----
-feature: 034-agent-tool-risk-tier
-loop: inside-out
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 9 # acceptance criteria AC US1-1..3, US2-1..3, US3-1..3 in spec.md
-planned_at: 34b47f8
-updated_at: 22a4d7b
-suite_baseline: green # 626 passed, 0 failed (post spec-033)
----
-
-# Test List: AgentTool entity + RiskTier enum — classification, registry persistence, hash contract
+# Test List: 034-agent-tool-risk-tier
 
 ## Outer loop: acceptance behaviors
 
-The feature is a pure value-object layer with no user-visible surface of its
-own, so the loop runs inside-out: acceptance behaviors are exercised through
-the declaration value object's public API (parsers, serialization, hashing)
-— the entry points the registry and the dispatch/approval layer consume.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
-| --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| A1  | Equal tools with distinct-but-equal paramsSchema instances share hashCode      | AC US3-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A2  | Equal schemas built in different insertion orders hash equally                 | AC US3-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A3  | Tools differing on any of the five fields are unequal                          | AC US3-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A4  | RiskTier.fromString parses safe/confirm/admin exactly and round-trips via name | AC US1-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A5  | RiskTier.fromString rejects unknown strings (incl. case mismatches) typed      | AC US1-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A6  | Each tier's dispatch policy reads correctly (confirm pauses, admin gates)      | AC US1-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A7  | A fully-declared tool round-trips JSON with tier, mode and deep schema         | AC US2-1   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A8  | A schema-less tool serializes paramsSchema absent                              | AC US2-2   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| A9  | Malformed declaration JSON throws ArgumentError naming the field               | AC US2-3   | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | each maps to its tier, and `name` round-trips the string back. | AC-1 | PENDING |
+| A2 | an `ArgumentError` names the input — never a silent `safe` fallback. | AC-2 | PENDING |
+| A3 | `safe` dispatches free, `confirm` pauses for approval, `admin` additionally requires a grant (pinned by the existing enum tests; the tier-parse is the new surface). | AC-3 | PENDING |
+| A4 | the parsed tool equals the original on every field including the deep params schema. | AC-4 | PENDING |
+| A5 | the `paramsSchema` key is absent — never `null`, never an empty map masquerading as a schema. | AC-5 | PENDING |
+| A6 | an `ArgumentError` names the offending field — never a silent default tier (which would under-classify). | AC-6 | PENDING |
+| A7 | the hashCodes are equal (the scaffold's live violation — genuinely red today). | AC-7 | PENDING |
+| A8 | the tools remain equal with equal hashes (order-independent fold). | AC-8 | PENDING |
+| A9 | they are unequal (the existing per-axis test pins this; the hash side follows the fix). | AC-9 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/agent_tool/agent_tool.dart` (enums)
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: The `AgentTool` value object keeps its spec-exact five-field surface — `id`, `description`, `riskTier` (default `safe`), `executionMode` (default `sequential`), `paramsSchema?` — with value equality (deep `_mapEq` on the schema), `requiresConfirmation`, `isAdmin`, and the enum surfaces unchanged (compile parity with the 10 existing tests). | FR-001 | PENDING |
+| U2 | `RiskTier.fromString(String value)` MUST parse `'safe'`/`'confirm'`/`'admin'` exactly (case-significant) and MUST throw `ArgumentError` naming the input for anything else — never a silent default. `RiskTier.name` (the enum's built-in) round-trips the wire string. | FR-002 | PENDING |
+| U3 | `ExecutionMode.fromString(String value)` MUST parse `'sequential'`/`'parallel'` with the same typed-failure discipline (consumed by FR-004). | FR-003 | PENDING |
+| U4 | `toJson()` MUST emit `id`, `description`, `riskTier` (tier name), `executionMode` (mode name) always and `paramsSchema` only when non-null (absent-never-fabricated); `AgentTool.fromJson` MUST round-trip all five fields (schema deep-copied) and MUST throw `ArgumentError` naming the field on missing required keys, unknown tier/mode strings, or a non-map schema. | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: The dispatch-policy reads (`RiskTier.severity`, `requiresConfirmation`, `isAdmin`) keep their existing semantics — the classification consumed by dispatch/approval (R3.2); pinned by the existing enum tests. | FR-005 | PENDING |
+| U6 | `hashCode` MUST be consistent with `==`: an order-independent fold over the params schema entries (commutative sum of per-entry hashes, nested maps folded recursively) combined with `Object.hash(id, description, riskTier, executionMode)` — fixing the scaffold's live violation where equal tools with distinct-but-equal schema instances hash differently. | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: The clean-arch layers (`AgentToolService.current/count`, `AgentToolProvider`) keep their existing signatures and stubs (no behavioral change — the classification + persistence + hash semantics are the deliverable). | FR-007 | PENDING |
 
-| id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
-| --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U1  | ExecutionMode.fromString parses sequential/parallel; unknown rejects typed     | FR-003     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| U2  | fromString's ArgumentError carries the offending input as its value            | FR-002     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+## Routing provenance
 
-### `lib/src/domain/entities/agent_tool/agent_tool.dart` (hash fold)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
-| --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U3  | The hash fold recurses into nested maps (a one-level fold would re-violate)    | FR-006     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| U4  | Schema array order matters for equality/hashing (required lists are ordered)   | FR-006     | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
+route: A1 -> acceptance lane [declared: type marker, spec line 28]
+route: A2 -> acceptance lane [declared: type marker, spec line 30]
+route: A3 -> acceptance lane [declared: type marker, spec line 32]
+route: A4 -> acceptance lane [declared: type marker, spec line 47]
+route: A5 -> acceptance lane [declared: type marker, spec line 49]
+route: A6 -> acceptance lane [declared: type marker, spec line 51]
+route: A7 -> acceptance lane [declared: type marker, spec line 66]
+route: A8 -> acceptance lane [declared: type marker, spec line 68]
+route: A9 -> acceptance lane [declared: type marker, spec line 70]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-### `lib/src/domain/entities/agent_tool/agent_tool.dart` (persistence)
-
-| id  | behavior                                                                       | traces     | kind    | state   | test                                                          |
-| --- | ------------------------------------------------------------------------------ | ---------- | ------- | ------- | -------------------------------------------------------------- |
-| U5  | fromJson routes tier/mode through fromString — unknown tier in JSON fails like a declaration | FR-004 | example | DONE    | `test/domain/entities/agent_tool/agent_tool_test.dart`        |
-| U6  | The 10 pre-existing provider/compile-parity tests keep passing unchanged       | FR-001, FR-005, FR-007 | BASELINE | BASELINE | `test/data/providers/agent_tool/agent_tool_provider_test.dart` |
-
-## Invariants and edge cases still to place
-
-- The `==`/`hashCode` contract: A1 is the LIVE red (probe-verified: equal pair hashed 518580394 vs 128524753 on the scaffold); A2/U3 pin the fold's order-independence and depth.
-- Absent-never-fabricated serialization: A8 — the house discipline from 031/032/033.
-- Under-classification safety: A5/U2 — an unknown tier never becomes a silent `safe`.
-
-## Out of scope
-
-- Datasource interface + mock datasource pair: belongs to the datasource-pair spec family (025/027/029 precedent); the repo's spec.md pins the provider-stub contract (FR-007).
-- Wiring `AgentToolProvider` to a real registry store: separate feature.
-- Dispatch-time params validation against `paramsSchema` (R3.1): the dispatcher's spec; the declaration ships the schema.
-- Approval-callback wiring for `confirm` tools: downstream feature building on this surface.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md` at planning time:
-
-- Single test: `dart test test/domain/entities/agent_tool/agent_tool_test.dart -n "<name>"` (mind regex-special characters — 033 cycle-log lesson)
-- File: `dart test test/domain/entities/agent_tool/agent_tool_test.dart`
-- Full suite: `dart test`
-- Mutation (changed files): no tool wired — deliberate hand-mutants per the profile
-
-## Mutation targets (deliberate-mutant sampling)
-
-| target | mutant | killed by |
-| ------ | ------ | --------- |
-| identity hash | hashCode passes the schema Map through Object.hash (the scaffold's bug) | A1 |
-| nested fold | fold stops at depth 1 (nested maps hashed by identity) | U3 |
-| parse guard | fromString silently returns safe on unknown input | A5 |
-| round-trip guard | fromJson ignores an unknown tier string and defaults to safe | A9/U5 |

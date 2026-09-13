@@ -1,0 +1,431 @@
+{
+  "source_corpus": "/Users/arrrrny/Developer/zuraffa_agent/specs",
+  "imported_at": "2026-09-08T21:41:50.600920Z",
+  "features": [
+    {
+      "name": "001-state-and-sessions",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "002-engine-core-loop",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "003-tools-and-mcp",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "004-providers-and-fallback",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "005-subagents-and-declarative",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "006-eval-harness-golden",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "007-llm-provider-clients",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "008-fallback-chain-runtime",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "009-context-compression-llm",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "010-episodic-memory",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "011-artifact-provider-noparams-list",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "011-loop-detection-llm",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "012-agent-hooks-pipeline",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "013-event-bus",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "013-stop-policy-duration-fields",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "014-planner-todo-system",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "014-stop-policy-clean-arch-layers",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "015-engine-event-json-part",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "015-mcp-client",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "022-engine-event-tool-call-started",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "023-engine-event-turn-completed",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "024-engine-event-turn-started",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "031-tool-result-value-object",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "032-agent-session-root",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "033-steering-queue",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "034-agent-tool-risk-tier",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "035-circuit-breaker",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "036-sub-agent-spec",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "037-pass-at-k",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "038-ui-tree-payload",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "041-agent_message",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "042-session_tree_entry",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "043-session_branch",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "044-compaction_strategy",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "045-engine_loop",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "046-loop_safety_rails",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "047-tool_registry",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "048-tool_dispatch_mode",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "049-mcp_transport",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "050-oversized_result_policy",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "051-llm_client",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "052-provider_config",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "053-fallback_chain",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "054-health_snapshot",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "055-sub_agent_context",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "056-sub_agent_instance",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "057-yaml_agent_spec",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "058-dispatch_tool",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "059-recorded_traffic",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "060-replay_diff",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "061-pass_k_empirical",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "062-grader_sealed",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "063-replay_cli_surface",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "064-dart_io_free_gate",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "065-llmclient-proxy-impl",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "066-engine-event-value-semantics",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "067-engine-event-plan-changed",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "068-engine-event-log",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "069-mission-runner",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "070-sub-agent-dispatch-runtime",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "071-goal-mode",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "072-agent-swarm",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "073-agent-memory",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "074-memory-tools",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "075-engine-event-bus",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "076-memory-persistence",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "077-memory-distiller",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "078-request-response",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "079-skill-system",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "080-agent-message-history",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "081-steering-message",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "082-mcp-transport-resilience",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "083-usage-ledger",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "084-llm-retry-backoff",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "085-eval-suite-health",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "104-playbook-as-spec-steering",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "16-engine-event-mission-completed",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "17-engine-event-mission-started",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "18-engine-event-provider-error",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "19-engine-event-steering-injected",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "20-engine-event-thinking-delta",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "21-engine-event-tool-call-completed",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "25-repetition_tracker-datasource-pair",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "27-stop_policy-datasource-pair",
+      "ready": true,
+      "reason": ""
+    },
+    {
+      "name": "29-tool_call_signature-datasource-pair",
+      "ready": true,
+      "reason": ""
+    }
+  ]
+}

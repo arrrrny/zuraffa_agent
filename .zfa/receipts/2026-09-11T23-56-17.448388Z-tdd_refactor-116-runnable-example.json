@@ -1,0 +1,86 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd refactor",
+  "target": "116-runnable-example",
+  "repro": "zfa tdd refactor",
+  "at": "2026-09-11T23:56:17.448388Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "sanctioned": true,
+    "refactor": true,
+    "passes": [
+      "build",
+      "format",
+      "fix"
+    ],
+    "feature": "116-runnable-example"
+  },
+  "files": [
+    {
+      "path": "lib/tdd/115-agent-platform-packages/contract_a2_subject.dart",
+      "action": "update",
+      "sha256": "2c97dad4b5bce7bd6be1384cc26279e8d1298aa61c04b8bdfbab9f7e79f7ddb6",
+      "bytes": 1647,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A2` (issue #1007).\n//\n// behavior_id: contract:A2\n// source_criterion: AgentPlatform.secureRead\n// kind: contract\n// target: subject_contract_a2\n// description: AgentPlatform.secureRead(key) -> Future<String?> (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `AgentPlatform.secureRead(dynamic key) -> Future<String?>`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Local in-memory fake (pure Dart) — the engine-side contract slice.\nfinal class _LocalFake implements AgentPlatform {\n  final home = '/support';\n  final store = <String, String>{};\n  @override\n  Future<String?> getAgentHome() async => home;\n  @override\n  Future<String?> secureRead(String key) async => store[key];\n  @override\n  Future<void> secureWrite(String key, String value) async =>\n      store[key] = value;\n  @override\n  Future<void> secureDelete(String key) async => store.remove(key);\n}\n\n/// Contract seam for `AgentPlatform.secureRead(dynamic key) -> Future<String?>`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Null-probe shim (zuraffa#1541): probe passes null key.\nFuture<String?> secureRead(dynamic key) async {\n  if (key is! String) return null;\n  final fake = _LocalFake();\n  return fake.secureRead(key);\n}\n"
+    },
+    {
+      "path": "lib/tdd/115-agent-platform-packages/contract_a3_subject.dart",
+      "action": "update",
+      "sha256": "eba3522e9cd398825e35a50080ea4f19e42c41d8c05eb5fe4010939eeb8167fb",
+      "bytes": 1691,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A3` (issue #1007).\n//\n// behavior_id: contract:A3\n// source_criterion: AgentPlatform.secureWrite\n// kind: contract\n// target: subject_contract_a3\n// description: AgentPlatform.secureWrite(key, value) -> Future<void> (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `AgentPlatform.secureWrite(dynamic key, dynamic value) -> Future<void>`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Local in-memory fake (pure Dart) — the engine-side contract slice.\nfinal class _LocalFake implements AgentPlatform {\n  final home = '/support';\n  final store = <String, String>{};\n  @override\n  Future<String?> getAgentHome() async => home;\n  @override\n  Future<String?> secureRead(String key) async => store[key];\n  @override\n  Future<void> secureWrite(String key, String value) async =>\n      store[key] = value;\n  @override\n  Future<void> secureDelete(String key) async => store.remove(key);\n}\n\n/// Contract seam for `AgentPlatform.secureWrite(dynamic key, dynamic value) -> Future<void>`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Null-probe shim (zuraffa#1541).\nFuture<void> secureWrite(dynamic key, dynamic value) async {\n  if (key is! String || value is! String) return;\n  final fake = _LocalFake();\n  await fake.secureWrite(key, value);\n}\n"
+    },
+    {
+      "path": "lib/tdd/115-agent-platform-packages/contract_a4_subject.dart",
+      "action": "update",
+      "sha256": "b4f6580036908d3ea519ad874cb8d0e3240710f70709d0598977d12c066bd232",
+      "bytes": 1618,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A4` (issue #1007).\n//\n// behavior_id: contract:A4\n// source_criterion: AgentPlatform.secureDelete\n// kind: contract\n// target: subject_contract_a4\n// description: AgentPlatform.secureDelete(key) -> Future<void> (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `AgentPlatform.secureDelete(dynamic key) -> Future<void>`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Local in-memory fake (pure Dart) — the engine-side contract slice.\nfinal class _LocalFake implements AgentPlatform {\n  final home = '/support';\n  final store = <String, String>{};\n  @override\n  Future<String?> getAgentHome() async => home;\n  @override\n  Future<String?> secureRead(String key) async => store[key];\n  @override\n  Future<void> secureWrite(String key, String value) async =>\n      store[key] = value;\n  @override\n  Future<void> secureDelete(String key) async => store.remove(key);\n}\n\n/// Contract seam for `AgentPlatform.secureDelete(dynamic key) -> Future<void>`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Null-probe shim (zuraffa#1541).\nFuture<void> secureDelete(dynamic key) async {\n  if (key is! String) return;\n  final fake = _LocalFake();\n  await fake.secureDelete(key);\n}\n"
+    },
+    {
+      "path": "lib/tdd/115-agent-platform-packages/contract_a5_subject.dart",
+      "action": "update",
+      "sha256": "1c0fd30cf4a61b36707c00e001c3db29f96af190f1f032adf76b7fe25fcb6733",
+      "bytes": 1128,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A5` (issue #1007).\n//\n// behavior_id: contract:A5\n// source_criterion: AgentHomeResolver.compose\n// kind: contract\n// target: subject_contract_a5\n// description: AgentHomeResolver.compose(home) -> AgentHomeLayout (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `AgentHomeResolver.compose(dynamic home) -> AgentHomeLayout`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Contract seam for `AgentHomeResolver.compose(dynamic home) -> AgentHomeLayout`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Null-probe shim (zuraffa#1541): empty home is refused by design.\nObject? compose(dynamic home) {\n  if (home is! String) return null;\n  return AgentHomeResolver.compose(home);\n}\n"
+    },
+    {
+      "path": "lib/tdd/115-agent-platform-packages/contract_a6_subject.dart",
+      "action": "update",
+      "sha256": "88a935d8fabe48ae3666aaa7d5d38f84aa232fc1b513bf76bcdc33a25591748e",
+      "bytes": 1040,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A6` (issue #1007).\n//\n// behavior_id: contract:A6\n// source_criterion: SecureStore.validate\n// kind: contract\n// target: subject_contract_a6\n// description: SecureStore.validate(key) -> void (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `SecureStore.validate(dynamic key) -> void`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\n/// Contract seam for `SecureStore.validate(dynamic key) -> void`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Null-probe shim (zuraffa#1541).\nObject? validate(dynamic key) {\n  if (key is! String) return null;\n  SecureStore.validate(key);\n  return null;\n}\n"
+    },
+    {
+      "path": "lib/tdd/116-runnable-example/a1_subject.dart",
+      "action": "update",
+      "sha256": "84941dddb272b60a99b029032901e8d28e0c0423f799e371de3320caabfba7a2",
+      "bytes": 424,
+      "snapshot": "// GENERATED STUB — hand-stepped (spec 116 A1): run the example via\n// subprocess and return the exit code string.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\nFuture<String> subject_a1() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  return '${result.exitCode}';\n}\n"
+    },
+    {
+      "path": "lib/tdd/116-runnable-example/contract_a1_subject.dart",
+      "action": "update",
+      "sha256": "79f6260f7ec50c5431ee72cbd409c064c5c344f2af2ca8dbc94adc2aa5e1ed9c",
+      "bytes": 1333,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen contract:A1` (issue #1007).\n//\n// behavior_id: contract:A1\n// source_criterion: MinimalAgent.run\n// kind: contract\n// target: subject_contract_a1\n// description: MinimalAgent.run() -> Future<MissionResult> (usecase contract)\n//\n// CONTRACT SEAM (issue #1007): this file is where the declared contract\n// `MinimalAgent.run() -> Future<MissionResult>`\n// (usecase contract) gets its implementation. Implement the seam\n// below — or wire it to the production method. The paired contract test\n// enumerates the contract's cases and stays BLOCKED (never RED) until\n// every case is satisfied.\nlibrary;\n\nimport 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';\nimport 'package:zuraffa_agent/src/engine/mission_runner.dart';\n\n/// Contract seam for `MinimalAgent.run() -> Future<MissionResult>`\n/// (usecase contract, declared in the spec's Layer Contracts\n/// section).\n///\n/// Throws [UnimplementedError] until the contract is implemented.\n// Probe shim: returns a real MissionResult (construction only — the\n// full run proof is A1/U1's behavioral fixture).\nFuture<MissionResult> run() async => MissionResult(\n  missionId: 'contract-probe',\n  status: MissionStatus.completed,\n  turnsUsed: 1,\n  transcript: const <ChatMessage>[],\n  summary: 'probe',\n  goalAchieved: false,\n);\n"
+    },
+    {
+      "path": "lib/tdd/116-runnable-example/u1_subject.dart",
+      "action": "update",
+      "sha256": "ecb620a155269381270379855a5bca1a62a954443173e02c2d9f017868fac726",
+      "bytes": 607,
+      "snapshot": "// GENERATED STUB — hand-stepped (spec 116 U1): run the example mission\n// in-process by executing the example script's logic (subprocess form:\n// U3). Returns the exit-code string '0' when the mission completes.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\n/// Subject for behavior U1 — declared contract: `run() -> Future<MissionResult>`.\nFuture<String> subject_u1() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  return '${result.exitCode}';\n}\n"
+    },
+    {
+      "path": "lib/tdd/116-runnable-example/u3_subject.dart",
+      "action": "update",
+      "sha256": "8e65c1983a51f7386b976dd81214fef944febdabd9076c2e869269353ca9b2ca",
+      "bytes": 775,
+      "snapshot": "// GENERATED STUB — hand-stepped (spec 116 U3): the subprocess check.\n// Returns exit code + whether the lifecycle lines are present.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\n/// Subject for behavior U3 — declared contract:\n/// `subprocess() -> ProcessResult`.\nFuture<Map<String, Object?>> subject_u3() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  final out = result.stdout as String;\n  return {\n    'exitCode': result.exitCode,\n    'hasStart': out.contains('[event] MissionStarted'),\n    'hasComplete': out.contains('[event] MissionCompleted'),\n    'hasStatus': out.contains('status    : completed'),\n  };\n}\n"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

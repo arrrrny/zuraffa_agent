@@ -28,10 +28,16 @@ class HealthSnapshot {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is HealthSnapshot &&
-          runtimeType == other.runtimeType && id == other.id && chainId == other.chainId && capturedAt == other.capturedAt && healthyProviders == other.healthyProviders && trippedProviders == other.trippedProviders);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          chainId == other.chainId &&
+          capturedAt == other.capturedAt &&
+          healthyProviders == other.healthyProviders &&
+          trippedProviders == other.trippedProviders);
 
   @override
-  int get hashCode => Object.hash(id, chainId, capturedAt, healthyProviders, trippedProviders);
+  int get hashCode =>
+      Object.hash(id, chainId, capturedAt, healthyProviders, trippedProviders);
 
   @override
   String toString() =>

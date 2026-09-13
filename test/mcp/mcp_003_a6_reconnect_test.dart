@@ -47,11 +47,13 @@ void main() {
 
     // Drop #1: mid-listing. The retry after reconnect returns the listing.
     wire.enqueueNext(const TransportDropped());
-    wire.enqueueNext(const McpWireResponseOk({
-      'tools': [
-        {'name': 'search', 'description': 'search the web'},
-      ],
-    }));
+    wire.enqueueNext(
+      const McpWireResponseOk({
+        'tools': [
+          {'name': 'search', 'description': 'search the web'},
+        ],
+      }),
+    );
 
     final tools = await client.listTools();
     expect(tools.map((t) => t.name), ['search']);

@@ -1,0 +1,25 @@
+{
+  "feature": "115-agent-platform-packages",
+  "behavior_states": {
+    "A1": "green",
+    "A2": "green",
+    "A3": "green",
+    "A4": "green",
+    "A5": "green",
+    "A6": "green",
+    "U1": "done",
+    "U2": "done",
+    "U3": "done",
+    "U4": "done",
+    "U5": "done",
+    "contract:A1": "blocked",
+    "contract:A2": "pending",
+    "contract:A3": "pending",
+    "contract:A4": "pending",
+    "contract:A5": "pending",
+    "contract:A6": "pending",
+    "contract:A7": "pending",
+    "contract:A8": "pending"
+  },
+  "dropped": []
+}

@@ -71,61 +71,59 @@ class FallbackChain {
     String? policyMode,
     List<ClientHealth>? breakerStates,
     int? lastProviderIndex,
-  }) =>
-      FallbackChain(
-        id: id ?? this.id,
-        providerIds: providerIds ?? this.providerIds,
-        currentProviderIndex: currentProviderIndex ?? this.currentProviderIndex,
-        advances: advances ?? this.advances,
-        lastErrorClass: lastErrorClass ?? this.lastErrorClass,
-        providerOrder: providerOrder ?? this.providerOrder,
-        maxConsecutiveFailures:
-            maxConsecutiveFailures ?? this.maxConsecutiveFailures,
-        cooldownMs: cooldownMs ?? this.cooldownMs,
-        policyMode: policyMode ?? this.policyMode,
-        breakerStates: breakerStates ?? this.breakerStates,
-        lastProviderIndex: lastProviderIndex ?? this.lastProviderIndex,
-      );
+  }) => FallbackChain(
+    id: id ?? this.id,
+    providerIds: providerIds ?? this.providerIds,
+    currentProviderIndex: currentProviderIndex ?? this.currentProviderIndex,
+    advances: advances ?? this.advances,
+    lastErrorClass: lastErrorClass ?? this.lastErrorClass,
+    providerOrder: providerOrder ?? this.providerOrder,
+    maxConsecutiveFailures:
+        maxConsecutiveFailures ?? this.maxConsecutiveFailures,
+    cooldownMs: cooldownMs ?? this.cooldownMs,
+    policyMode: policyMode ?? this.policyMode,
+    breakerStates: breakerStates ?? this.breakerStates,
+    lastProviderIndex: lastProviderIndex ?? this.lastProviderIndex,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'providerIds': providerIds,
-        'currentProviderIndex': currentProviderIndex,
-        'advances': advances,
-        'lastErrorClass': lastErrorClass,
-        'providerOrder': providerOrder,
-        'maxConsecutiveFailures': maxConsecutiveFailures,
-        'cooldownMs': cooldownMs,
-        'policyMode': policyMode,
-        'breakerStates': [for (final h in breakerStates) h.toJson()],
-        'lastProviderIndex': lastProviderIndex,
-      };
+    'id': id,
+    'providerIds': providerIds,
+    'currentProviderIndex': currentProviderIndex,
+    'advances': advances,
+    'lastErrorClass': lastErrorClass,
+    'providerOrder': providerOrder,
+    'maxConsecutiveFailures': maxConsecutiveFailures,
+    'cooldownMs': cooldownMs,
+    'policyMode': policyMode,
+    'breakerStates': [for (final h in breakerStates) h.toJson()],
+    'lastProviderIndex': lastProviderIndex,
+  };
 
   factory FallbackChain.fromJson(Map<String, dynamic> json) => FallbackChain(
-        id: json['id'] as String?,
-        providerIds: (json['providerIds'] as List?)
-                ?.map((e) => e as String)
-                .toList() ??
-            const [],
-        currentProviderIndex:
-            (json['currentProviderIndex'] as num?)?.toInt() ?? 0,
-        advances: (json['advances'] as num?)?.toInt() ?? 0,
-        lastErrorClass: json['lastErrorClass'] as String?,
-        providerOrder: (json['providerOrder'] as List?)
-                ?.map((e) => e as String)
-                .toList() ??
-            const [],
-        maxConsecutiveFailures:
-            (json['maxConsecutiveFailures'] as num?)?.toInt() ?? 3,
-        cooldownMs: (json['cooldownMs'] as num?)?.toInt() ?? 60000,
-        policyMode: json['policyMode'] as String? ?? 'skip',
-        breakerStates: (json['breakerStates'] as List?)
-                ?.map((e) =>
-                    ClientHealth.fromJson(Map<String, dynamic>.from(e as Map)))
-                .toList() ??
-            const [],
-        lastProviderIndex: (json['lastProviderIndex'] as num?)?.toInt() ?? 0,
-      );
+    id: json['id'] as String?,
+    providerIds:
+        (json['providerIds'] as List?)?.map((e) => e as String).toList() ??
+        const [],
+    currentProviderIndex: (json['currentProviderIndex'] as num?)?.toInt() ?? 0,
+    advances: (json['advances'] as num?)?.toInt() ?? 0,
+    lastErrorClass: json['lastErrorClass'] as String?,
+    providerOrder:
+        (json['providerOrder'] as List?)?.map((e) => e as String).toList() ??
+        const [],
+    maxConsecutiveFailures:
+        (json['maxConsecutiveFailures'] as num?)?.toInt() ?? 3,
+    cooldownMs: (json['cooldownMs'] as num?)?.toInt() ?? 60000,
+    policyMode: json['policyMode'] as String? ?? 'skip',
+    breakerStates:
+        (json['breakerStates'] as List?)
+            ?.map(
+              (e) => ClientHealth.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
+            .toList() ??
+        const [],
+    lastProviderIndex: (json['lastProviderIndex'] as num?)?.toInt() ?? 0,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -146,17 +144,18 @@ class FallbackChain {
 
   @override
   int get hashCode => Object.hash(
-      id,
-      Object.hashAll(providerIds),
-      currentProviderIndex,
-      advances,
-      lastErrorClass,
-      Object.hashAll(providerOrder),
-      maxConsecutiveFailures,
-      cooldownMs,
-      policyMode,
-      Object.hashAll(breakerStates),
-      lastProviderIndex);
+    id,
+    Object.hashAll(providerIds),
+    currentProviderIndex,
+    advances,
+    lastErrorClass,
+    Object.hashAll(providerOrder),
+    maxConsecutiveFailures,
+    cooldownMs,
+    policyMode,
+    Object.hashAll(breakerStates),
+    lastProviderIndex,
+  );
 
   @override
   String toString() =>

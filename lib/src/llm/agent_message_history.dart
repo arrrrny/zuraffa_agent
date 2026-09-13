@@ -29,8 +29,9 @@ class AgentMessageHistory {
 
   /// Memory summaries in insertion order — the compact, context-building
   /// view of [episodicMemories].
-  List<String> get memorySummaries =>
-      [for (final memory in episodicMemories) memory.summary];
+  List<String> get memorySummaries => [
+    for (final memory in episodicMemories) memory.summary,
+  ];
 
   /// A history with additional active messages appended.
   AgentMessageHistory appendMessages(Iterable<AgentMessage> more) =>
@@ -67,11 +68,10 @@ class AgentMessageHistory {
   }
 
   /// A history with an additional episodic memory (insertion order).
-  AgentMessageHistory addMemory(EpisodicMemory memory) =>
-      AgentMessageHistory(
-        messages: messages,
-        episodicMemories: [...episodicMemories, memory],
-      );
+  AgentMessageHistory addMemory(EpisodicMemory memory) => AgentMessageHistory(
+    messages: messages,
+    episodicMemories: [...episodicMemories, memory],
+  );
 
   // --------------------------------------------------------------
   // Equality (FR-001 / FR-002) — full-field equality over messages
@@ -87,10 +87,8 @@ class AgentMessageHistory {
   }
 
   @override
-  int get hashCode => Object.hash(
-        Object.hashAll(messages),
-        Object.hashAll(episodicMemories),
-      );
+  int get hashCode =>
+      Object.hash(Object.hashAll(messages), Object.hashAll(episodicMemories));
 
   // --------------------------------------------------------------
   // JSON contract (FR-003 / FR-004 / FR-005) — `toJson` produces
@@ -100,16 +98,19 @@ class AgentMessageHistory {
   // and `SteeringMessage.fromJson`.
   // --------------------------------------------------------------
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'messages': [for (final m in messages) m.toJson()],
-        'episodicMemories': [for (final em in episodicMemories) em.toJson()],
-      };
+    'messages': [for (final m in messages) m.toJson()],
+    'episodicMemories': [for (final em in episodicMemories) em.toJson()],
+  };
 
   factory AgentMessageHistory.fromJson(Map<String, dynamic> json) {
     List<dynamic> requireList(String key) {
       final value = json[key];
       if (value is! List) {
         throw ArgumentError.value(
-            value, key, 'AgentMessageHistory.$key must be a list');
+          value,
+          key,
+          'AgentMessageHistory.$key must be a list',
+        );
       }
       return value;
     }
@@ -122,13 +123,19 @@ class AgentMessageHistory {
       final raw = rawMessages[i];
       if (raw is! Map<String, dynamic>) {
         throw ArgumentError.value(
-            raw, 'messages[$i]', 'must be a Map<String, dynamic>');
+          raw,
+          'messages[$i]',
+          'must be a Map<String, dynamic>',
+        );
       }
       try {
         messages.add(AgentMessage.fromJson(raw));
       } catch (e) {
         throw ArgumentError.value(
-            raw, 'messages[$i]', 'AgentMessage.fromJson failed: $e');
+          raw,
+          'messages[$i]',
+          'AgentMessage.fromJson failed: $e',
+        );
       }
     }
 
@@ -137,20 +144,23 @@ class AgentMessageHistory {
       final raw = rawMemories[i];
       if (raw is! Map<String, dynamic>) {
         throw ArgumentError.value(
-            raw, 'episodicMemories[$i]', 'must be a Map<String, dynamic>');
+          raw,
+          'episodicMemories[$i]',
+          'must be a Map<String, dynamic>',
+        );
       }
       try {
         memories.add(EpisodicMemory.fromJson(raw));
       } catch (e) {
         throw ArgumentError.value(
-            raw, 'episodicMemories[$i]', 'EpisodicMemory.fromJson failed: $e');
+          raw,
+          'episodicMemories[$i]',
+          'EpisodicMemory.fromJson failed: $e',
+        );
       }
     }
 
-    return AgentMessageHistory(
-      messages: messages,
-      episodicMemories: memories,
-    );
+    return AgentMessageHistory(messages: messages, episodicMemories: memories);
   }
 }
 

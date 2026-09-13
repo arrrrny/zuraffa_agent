@@ -51,7 +51,10 @@ class ModelChunkHookContext {
 class AfterModelCallHookContext {
   final LlmRequest request;
   final LlmResponse response;
-  const AfterModelCallHookContext({required this.request, required this.response});
+  const AfterModelCallHookContext({
+    required this.request,
+    required this.response,
+  });
 }
 
 class ToolCallHookContext {
@@ -73,7 +76,10 @@ class AfterToolCallHookContext {
 class TurnCompletionHookContext {
   final int turnNumber;
   final List<AgentMessage> messages;
-  const TurnCompletionHookContext({required this.turnNumber, required this.messages});
+  const TurnCompletionHookContext({
+    required this.turnNumber,
+    required this.messages,
+  });
 }
 
 class PersistStateHookContext {
@@ -84,7 +90,10 @@ class PersistStateHookContext {
 class AfterRunHookContext {
   final List<AgentMessage> finalMessages;
   final String outcome;
-  const AfterRunHookContext({required this.finalMessages, required this.outcome});
+  const AfterRunHookContext({
+    required this.finalMessages,
+    required this.outcome,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -96,16 +105,16 @@ class BeforeRunHookResult {
   final List<AgentMessage>? messages;
   final String? abortReason;
   const BeforeRunHookResult.continue_()
-      : action = HookAction.continue_,
-        messages = null,
-        abortReason = null;
+    : action = HookAction.continue_,
+      messages = null,
+      abortReason = null;
   const BeforeRunHookResult.modify(List<AgentMessage> this.messages)
-      : action = HookAction.modify,
-        abortReason = null;
+    : action = HookAction.modify,
+      abortReason = null;
   const BeforeRunHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        messages = null,
-        abortReason = reason;
+    : action = HookAction.abort,
+      messages = null,
+      abortReason = reason;
 }
 
 class ModelCallHookResult {
@@ -113,27 +122,27 @@ class ModelCallHookResult {
   final LlmRequest? request;
   final String? abortReason;
   const ModelCallHookResult.continue_()
-      : action = HookAction.continue_,
-        request = null,
-        abortReason = null;
+    : action = HookAction.continue_,
+      request = null,
+      abortReason = null;
   const ModelCallHookResult.modify(LlmRequest this.request)
-      : action = HookAction.modify,
-        abortReason = null;
+    : action = HookAction.modify,
+      abortReason = null;
   const ModelCallHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        request = null,
-        abortReason = reason;
+    : action = HookAction.abort,
+      request = null,
+      abortReason = reason;
 }
 
 class ModelChunkHookResult {
   final HookAction action;
   final String? abortReason;
   const ModelChunkHookResult.continue_()
-      : action = HookAction.continue_,
-        abortReason = null;
+    : action = HookAction.continue_,
+      abortReason = null;
   const ModelChunkHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        abortReason = reason;
+    : action = HookAction.abort,
+      abortReason = reason;
 }
 
 class AfterModelCallHookResult {
@@ -141,20 +150,20 @@ class AfterModelCallHookResult {
   final LlmResponse? response;
   final String? abortReason;
   const AfterModelCallHookResult.continue_()
-      : action = HookAction.continue_,
-        response = null,
-        abortReason = null;
+    : action = HookAction.continue_,
+      response = null,
+      abortReason = null;
   const AfterModelCallHookResult.modify(LlmResponse this.response)
-      : action = HookAction.modify,
-        abortReason = null;
+    : action = HookAction.modify,
+      abortReason = null;
   const AfterModelCallHookResult.retry()
-      : action = HookAction.retry,
-        response = null,
-        abortReason = null;
+    : action = HookAction.retry,
+      response = null,
+      abortReason = null;
   const AfterModelCallHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        response = null,
-        abortReason = reason;
+    : action = HookAction.abort,
+      response = null,
+      abortReason = reason;
 }
 
 class ToolCallHookResult {
@@ -164,27 +173,26 @@ class ToolCallHookResult {
   final bool denyIsError;
   final String? abortReason;
   const ToolCallHookResult.continue_()
-      : action = HookAction.continue_,
-        toolCall = null,
-        denyResult = null,
-        denyIsError = false,
-        abortReason = null;
+    : action = HookAction.continue_,
+      toolCall = null,
+      denyResult = null,
+      denyIsError = false,
+      abortReason = null;
   const ToolCallHookResult.modify(LlmToolCall this.toolCall)
-      : action = HookAction.modify,
-        denyResult = null,
-        denyIsError = false,
-        abortReason = null;
-  const ToolCallHookResult.deny(
-      {this.denyResult = '', this.denyIsError = true})
-      : action = HookAction.deny,
-        toolCall = null,
-        abortReason = null;
+    : action = HookAction.modify,
+      denyResult = null,
+      denyIsError = false,
+      abortReason = null;
+  const ToolCallHookResult.deny({this.denyResult = '', this.denyIsError = true})
+    : action = HookAction.deny,
+      toolCall = null,
+      abortReason = null;
   const ToolCallHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        toolCall = null,
-        denyResult = null,
-        denyIsError = false,
-        abortReason = reason;
+    : action = HookAction.abort,
+      toolCall = null,
+      denyResult = null,
+      denyIsError = false,
+      abortReason = reason;
 }
 
 class AfterToolCallHookResult {
@@ -193,29 +201,31 @@ class AfterToolCallHookResult {
   final bool? isError;
   final String? abortReason;
   const AfterToolCallHookResult.continue_()
-      : action = HookAction.continue_,
-        result = null,
-        isError = null,
-        abortReason = null;
-  const AfterToolCallHookResult.modify({required String this.result, this.isError = false})
-      : action = HookAction.modify,
-        abortReason = null;
+    : action = HookAction.continue_,
+      result = null,
+      isError = null,
+      abortReason = null;
+  const AfterToolCallHookResult.modify({
+    required String this.result,
+    this.isError = false,
+  }) : action = HookAction.modify,
+       abortReason = null;
   const AfterToolCallHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        result = null,
-        isError = null,
-        abortReason = reason;
+    : action = HookAction.abort,
+      result = null,
+      isError = null,
+      abortReason = reason;
 }
 
 class TurnCompletionHookResult {
   final HookAction action;
   final String? abortReason;
   const TurnCompletionHookResult.continue_()
-      : action = HookAction.continue_,
-        abortReason = null;
+    : action = HookAction.continue_,
+      abortReason = null;
   const TurnCompletionHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        abortReason = reason;
+    : action = HookAction.abort,
+      abortReason = reason;
 }
 
 class PersistStateHookResult {
@@ -223,16 +233,16 @@ class PersistStateHookResult {
   final List<AgentMessage>? messages;
   final String? abortReason;
   const PersistStateHookResult.continue_()
-      : action = HookAction.continue_,
-        messages = null,
-        abortReason = null;
+    : action = HookAction.continue_,
+      messages = null,
+      abortReason = null;
   const PersistStateHookResult.modify(List<AgentMessage> this.messages)
-      : action = HookAction.modify,
-        abortReason = null;
+    : action = HookAction.modify,
+      abortReason = null;
   const PersistStateHookResult.abort({String? reason})
-      : action = HookAction.abort,
-        messages = null,
-        abortReason = reason;
+    : action = HookAction.abort,
+      messages = null,
+      abortReason = reason;
 }
 
 class AfterRunHookResult {
@@ -256,11 +266,13 @@ class ToolCallDecision {
   const ToolCallDecision._(this.context, this.denyResult, this.denyIsError);
 
   const ToolCallDecision.proceed(ToolCallHookContext context)
-      : this._(context, null, false);
+    : this._(context, null, false);
 
-  const ToolCallDecision.denied(ToolCallHookContext context,
-      {required String result, bool isError = true})
-      : this._(context, result, isError);
+  const ToolCallDecision.denied(
+    ToolCallHookContext context, {
+    required String result,
+    bool isError = true,
+  }) : this._(context, result, isError);
 
   bool get denied => denyResult != null;
 }
@@ -285,30 +297,33 @@ abstract class AgentHook {
   Future<BeforeRunHookResult> beforeRun(BeforeRunHookContext context) async =>
       const BeforeRunHookResult.continue_();
 
-  Future<ModelCallHookResult> beforeModelCall(ModelCallHookContext context) async =>
-      const ModelCallHookResult.continue_();
+  Future<ModelCallHookResult> beforeModelCall(
+    ModelCallHookContext context,
+  ) async => const ModelCallHookResult.continue_();
 
-  Future<ModelChunkHookResult> onModelChunk(ModelChunkHookContext context) async =>
-      const ModelChunkHookResult.continue_();
+  Future<ModelChunkHookResult> onModelChunk(
+    ModelChunkHookContext context,
+  ) async => const ModelChunkHookResult.continue_();
 
   Future<AfterModelCallHookResult> afterModelCall(
-          AfterModelCallHookContext context) async =>
-      const AfterModelCallHookResult.continue_();
+    AfterModelCallHookContext context,
+  ) async => const AfterModelCallHookResult.continue_();
 
-  Future<ToolCallHookResult> beforeToolCall(ToolCallHookContext context) async =>
-      const ToolCallHookResult.continue_();
+  Future<ToolCallHookResult> beforeToolCall(
+    ToolCallHookContext context,
+  ) async => const ToolCallHookResult.continue_();
 
   Future<AfterToolCallHookResult> afterToolCall(
-          AfterToolCallHookContext context) async =>
-      const AfterToolCallHookResult.continue_();
+    AfterToolCallHookContext context,
+  ) async => const AfterToolCallHookResult.continue_();
 
   Future<TurnCompletionHookResult> onTurnCompletion(
-          TurnCompletionHookContext context) async =>
-      const TurnCompletionHookResult.continue_();
+    TurnCompletionHookContext context,
+  ) async => const TurnCompletionHookResult.continue_();
 
   Future<PersistStateHookResult> beforePersistState(
-          PersistStateHookContext context) async =>
-      const PersistStateHookResult.continue_();
+    PersistStateHookContext context,
+  ) async => const PersistStateHookResult.continue_();
 
   Future<AfterRunHookResult> afterRun(AfterRunHookContext context) async =>
       const AfterRunHookResult.continue_();

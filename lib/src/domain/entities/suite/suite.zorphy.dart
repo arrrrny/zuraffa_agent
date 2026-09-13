@@ -46,6 +46,31 @@ class Suite {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  Suite copyWithField<T>(Field<Suite, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'name':
+        return copyWith(name: value as String);
+      case 'tasks':
+        return copyWith(tasks: value as List<String>);
+      case 'k':
+        return copyWith(k: value as int);
+      case 'gateThreshold':
+        return copyWith(gateThreshold: value as double);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'Suite has no settable field with this name',
+        );
+    }
+  }
+
   Suite copyWithSuite({
     String? id,
     String? name,

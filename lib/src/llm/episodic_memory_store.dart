@@ -16,8 +16,7 @@ class EpisodicMemoryStore {
 
   /// Stores an entry (later additions with the same id replace earlier ones).
   void add(EpisodicMemory memory) {
-    final existingIndex =
-        _entries.indexWhere((m) => m.id == memory.id);
+    final existingIndex = _entries.indexWhere((m) => m.id == memory.id);
     if (existingIndex >= 0) {
       _entries[existingIndex] = memory;
     } else {

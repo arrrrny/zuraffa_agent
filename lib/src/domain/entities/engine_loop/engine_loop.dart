@@ -28,10 +28,21 @@ class EngineLoop {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is EngineLoop &&
-          runtimeType == other.runtimeType && id == other.id && sessionId == other.sessionId && maxTurns == other.maxTurns && wallClockTimeoutMs == other.wallClockTimeoutMs && repetitionThreshold == other.repetitionThreshold);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          sessionId == other.sessionId &&
+          maxTurns == other.maxTurns &&
+          wallClockTimeoutMs == other.wallClockTimeoutMs &&
+          repetitionThreshold == other.repetitionThreshold);
 
   @override
-  int get hashCode => Object.hash(id, sessionId, maxTurns, wallClockTimeoutMs, repetitionThreshold);
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    maxTurns,
+    wallClockTimeoutMs,
+    repetitionThreshold,
+  );
 
   @override
   String toString() =>

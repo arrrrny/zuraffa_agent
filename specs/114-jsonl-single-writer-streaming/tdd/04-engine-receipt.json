@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "feature": "114-jsonl-single-writer-streaming",
+  "lane": "engine",
+  "verdict": "error",
+  "result": "blocked",
+  "behaviors": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "contract:A1",
+    "contract:A2",
+    "contract:A3"
+  ],
+  "counts": {
+    "total": 11,
+    "pending": 2,
+    "red": 0,
+    "green": 5,
+    "done": 3,
+    "blocked": 1
+  },
+  "stopped_at": "contract:A1:verify-red",
+  "at": "2026-09-11T22:11:56.013501Z"
+}

@@ -33,10 +33,10 @@ class SkillFormatException extends FormatException {
   final String reason;
 
   SkillFormatException(this.sourcePath, this.reason, [Object? parsed])
-      : super(
-          'Skill file at "$sourcePath" has malformed frontmatter: $reason'
-          '${parsed != null ? ' (near: $parsed)' : ''}',
-        );
+    : super(
+        'Skill file at "$sourcePath" has malformed frontmatter: $reason'
+        '${parsed != null ? ' (near: $parsed)' : ''}',
+      );
 }
 
 /// Represents a discovered skill with name, description, instructions,

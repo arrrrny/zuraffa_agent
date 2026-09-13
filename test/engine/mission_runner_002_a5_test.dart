@@ -25,16 +25,16 @@ const kThinkingTurn2 = 'Turn two reasoning: the forecast is in, I can answer.';
 /// Records the context handed to it on every turn.
 class RecordingThinkingClient extends LlmClientProvider {
   RecordingThinkingClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<List<ChatMessage>> contexts = [];
 
@@ -61,41 +61,37 @@ class OkToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'forecast: sunny',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'forecast: sunny',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      [
-        for (final c in calls)
-          await dispatch(
-            toolName: c.toolName,
-            arguments: c.arguments,
-            isInternalMission: isInternalMission,
-          )
-      ];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }
 
 class ToolCallsPlanner implements ToolCallPlanner {
@@ -103,62 +99,65 @@ class ToolCallsPlanner implements ToolCallPlanner {
   Future<List<ToolCall>> plan(
     ChatCompletion completion,
     List<ChatMessage> transcript,
-  ) async =>
-      completion.finishReason == 'tool_calls'
-          ? const [
-              ToolCall(
-                toolName: 'forecast',
-                arguments: {'city': 'lisbon'},
-                executionMode: 'sequential',
-              )
-            ]
-          : const [];
+  ) async => completion.finishReason == 'tool_calls'
+      ? const [
+          ToolCall(
+            toolName: 'forecast',
+            arguments: {'city': 'lisbon'},
+            executionMode: 'sequential',
+          ),
+        ]
+      : const [];
 }
 
 void main() {
-  test("A5: turn 2's assembled context still carries turn 1's thinking block",
-      () async {
-    const loop = EngineLoop(
-      id: 'loop-5',
-      sessionId: 's5',
-      maxTurns: 4,
-      wallClockTimeoutMs: 600000,
-      repetitionThreshold: 10,
-    );
-    const policy = StopPolicy(
-      id: 'cap5',
-      maxTurns: 4,
-      wallClockTimeout: Duration.zero,
-      repetitionThreshold: 10,
-    );
+  test(
+    "A5: turn 2's assembled context still carries turn 1's thinking block",
+    () async {
+      const loop = EngineLoop(
+        id: 'loop-5',
+        sessionId: 's5',
+        maxTurns: 4,
+        wallClockTimeoutMs: 600000,
+        repetitionThreshold: 10,
+      );
+      const policy = StopPolicy(
+        id: 'cap5',
+        maxTurns: 4,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 10,
+      );
 
-    final client = RecordingThinkingClient();
-    final runner = MissionRunner(
-      executor: EngineLoopExecutor(loop, client),
-      toolDispatcher: OkToolDispatcher(),
-      stopPolicy: policy,
-      onEvent: (_) {},
-    );
+      final client = RecordingThinkingClient();
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(loop, client),
+        toolDispatcher: OkToolDispatcher(),
+        stopPolicy: policy,
+        onEvent: (_) {},
+      );
 
-    await runner.run(
-      missionId: 'm5',
-      messages: const [ChatMessage(role: 'user', content: 'forecast?')],
-      planner: ToolCallsPlanner(),
-    );
+      await runner.run(
+        missionId: 'm5',
+        messages: const [ChatMessage(role: 'user', content: 'forecast?')],
+        planner: ToolCallsPlanner(),
+      );
 
-    expect(client.contexts.length, 2, reason: 'the mission ran two turns');
+      expect(client.contexts.length, 2, reason: 'the mission ran two turns');
 
-    // Turn 1 saw only the user message — no thinking to preserve yet.
-    expect(client.contexts.first.map((m) => m.thinking), everyElement(isNull));
+      // Turn 1 saw only the user message — no thinking to preserve yet.
+      expect(
+        client.contexts.first.map((m) => m.thinking),
+        everyElement(isNull),
+      );
 
-    // Turn 2's context: the prior turn's assistant message is present AND
-    // still carries its thinking block.
-    final turn2 = client.contexts[1];
-    final priorAssistant =
-        turn2.where((m) => m.role == 'assistant').single;
-    expect(priorAssistant.thinking, kThinkingTurn1);
+      // Turn 2's context: the prior turn's assistant message is present AND
+      // still carries its thinking block.
+      final turn2 = client.contexts[1];
+      final priorAssistant = turn2.where((m) => m.role == 'assistant').single;
+      expect(priorAssistant.thinking, kThinkingTurn1);
 
-    // And the wire form the gateway receives keeps it too.
-    expect(priorAssistant.toJson()['thinking'], kThinkingTurn1);
-  });
+      // And the wire form the gateway receives keeps it too.
+      expect(priorAssistant.toJson()['thinking'], kThinkingTurn1);
+    },
+  );
 }

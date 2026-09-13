@@ -1,0 +1,295 @@
+{
+  "schema": 1,
+  "feature": "115-agent-platform-packages",
+  "entries": [
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T22:44:57.544021Z",
+      "finished_at": "2026-09-11T22:45:41.088239Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U1:make"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3",
+        "contract:A4",
+        "contract:A5",
+        "contract:A6"
+      ],
+      "counts": {
+        "total": 17,
+        "pending": 10,
+        "red": 6,
+        "green": 1,
+        "done": 0
+      },
+      "stopped_at": "U1:make"
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T22:44:57.537768Z",
+      "finished_at": "2026-09-11T22:45:41.090375Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U1:make",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T22:47:01.562209Z",
+      "finished_at": "2026-09-11T22:47:11.757466Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U1:hand",
+        "hand-step=U1:hand — replace the zfa:tdd: vacuous-guard guard at test/tdd/115-agent-platform-packages/u1_test.dart with an assertion on the observable outcome, remove the marker, then re-run make (issue #1308)"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3",
+        "contract:A4",
+        "contract:A5",
+        "contract:A6",
+        "contract:A7",
+        "contract:A8"
+      ],
+      "counts": {
+        "total": 19,
+        "pending": 12,
+        "red": 6,
+        "green": 1,
+        "done": 0
+      },
+      "stopped_at": "U1:hand"
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T22:47:01.557674Z",
+      "finished_at": "2026-09-11T22:47:11.758961Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U1:hand",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T22:57:46.139452Z",
+      "finished_at": "2026-09-11T22:59:57.301487Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:verify-red"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3",
+        "contract:A4",
+        "contract:A5",
+        "contract:A6",
+        "contract:A7",
+        "contract:A8"
+      ],
+      "counts": {
+        "total": 19,
+        "pending": 7,
+        "red": 0,
+        "green": 6,
+        "done": 5,
+        "blocked": 1
+      },
+      "stopped_at": "contract:A1:verify-red"
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T22:57:46.136437Z",
+      "finished_at": "2026-09-11T22:59:57.303309Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:verify-red",
+        "engine lane result=blocked — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T23:05:13.585939Z",
+      "finished_at": "2026-09-11T23:05:15.478139Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:verify-red"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3",
+        "contract:A4",
+        "contract:A5",
+        "contract:A6",
+        "contract:A7",
+        "contract:A8"
+      ],
+      "counts": {
+        "total": 19,
+        "pending": 7,
+        "red": 0,
+        "green": 6,
+        "done": 5,
+        "blocked": 1
+      },
+      "stopped_at": "contract:A1:verify-red"
+    },
+    {
+      "feature": "115-agent-platform-packages",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T23:05:13.581515Z",
+      "finished_at": "2026-09-11T23:05:15.479535Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:verify-red",
+        "engine lane result=blocked — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [],
+      "stopped_at": null
+    }
+  ]
+}

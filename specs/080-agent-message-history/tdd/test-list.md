@@ -1,100 +1,84 @@
-# Test List: R1 — Agent Message History (spec 080)
-
----
-feature: 080-agent-message-history
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # file absent at HEAD — rubric graded against the tdd-test-quality-rubric template + constitution.md Principles II/V/VII/IX
-spec_criteria: 9 # FR-001..FR-009 in spec.md
-planned_at: master (29b7fef)
-updated_at: 080-agent-message-history (planned)
-suite_baseline: 1073 passed / 2 skipped at 29b7fef (master)
-suite_after: 1090 passed / 2 skipped at 080-agent-message-history HEAD (+17 new, 0 regressions)
----
+# Test List: 080-agent-message-history
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Two histories built from equal-but-distinct message + memory lists compare equal via `==`; mutating either list breaks equality; `hashCode` agrees | FR-001, FR-002, US1 | example | PASSING | `test/llm/agent_message_history_080_test.dart::spec 080 — AgentMessageHistory::equality holds for equal histories and breaks for any field mutation` |
-| A2  | A history with N messages + M memories round-trips through `toJson` → `fromJson` to an equal history (lossless) | FR-003, FR-004, US2 | example | PASSING | `…::toJson → fromJson round-trips an equal history` |
-| A3  | Gates: `dart analyze --fatal-infos` exit 0 on the changed files; full `dart test` green (baseline 1073/2 + 17 new) | FR-009 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-13 | PENDING |
+| A14 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-14 | PENDING |
+| A15 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-15 | PENDING |
+| A16 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-16 | PENDING |
+| A17 | the pinned regression test passes (`test/llm/agent_message_history_080_test.dart`). | AC-17 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### Equality (FR-001 / FR-002)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | Two histories with the SAME message + memory instances (different list wrappers) compare `==` | FR-001 | unit | PASSING | `…::equality — equal histories (same message instances + same memory instances) are ==` |
-| U2  | Appending a message to one history's `messages` breaks `==` | FR-001 | unit | PASSING | `…::equality — appended message breaks ==` |
-| U3  | Appending a memory to one history's `episodicMemories` breaks `==` | FR-001 | unit | PASSING | `…::equality — appended memory breaks ==` |
-| U4  | `hashCode` agrees with `==` for the equal case (the only contractually-required property) | FR-002 | unit | PASSING | `…::equality — hashCode agrees with ==` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `AgentMessageHistory.==` MUST return `true` iff both | FR-001 | PENDING |
+| U2 | `AgentMessageHistory.hashCode` MUST agree with `==` — | FR-002 | PENDING |
+| U3 | `AgentMessageHistory.toJson()` MUST return a | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: `AgentMessageHistory.fromJson(Map<String, dynamic> json)` | FR-004 | PENDING |
+| U5 | `AgentMessageHistory.fromJson` MUST throw `ArgumentError` | FR-005 | PENDING |
+| U6 | `truncate(int keep)` MUST return a new | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: existing pure transforms (`appendMessages`, `addMemory`, | FR-007 | PENDING |
+| U8 | existing constructor + `memorySummaries` MUST remain | FR-008 | PENDING |
+| U9 | The system MUST satisfy this requirement: (gates): `dart analyze --fatal-infos` exit 0 on the | FR-009 | PENDING |
+| U10 | The system MUST satisfy this requirement: / FR-004). | FR-003 | PENDING |
 
-### JSON round-trip (FR-003 / FR-004)
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U5  | History with two messages + one memory → `toJson` → `fromJson` → produces a structurally-equal history (counts, roles, content text, memory id, summaries). Note: AgentMessage subclasses inherit Object identity equality, so the round-trip is asserted structurally rather than via `==` | FR-003, FR-004 | unit | PASSING | `…::JSON — round-trip preserves structural shape (lossless round-trip)` |
-| U6  | Empty history (both lists empty) → `toJson` → `fromJson` → empty history with both lists empty and both JSON keys empty | FR-003, FR-004 | unit | PASSING | `…::JSON — empty history round-trips` |
-| U7  | `toJson` produces exactly the two keys `messages` and `episodicMemories`; no extras | FR-003 | unit | PASSING | `…::JSON — toJson shape has exactly two keys` |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### truncate preserves memories — pinned by equality (FR-006)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A10 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A11 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A12 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A13 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A14 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A15 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A16 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A17 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U8  | `truncate(N).episodicMemories == receiver.episodicMemories` — equal by `==` (not just length) | FR-006, US3 | pin | PASSING | `…::truncate — episodicMemories survive via ==` |
-| U9  | `truncate(0).episodicMemories == receiver.episodicMemories` — memories untouched even when active window is fully evicted | FR-006 | pin | PASSING | `…::truncate(0) — memories untouched when active window is fully evicted` |
-
-### fromJson error paths (FR-005)
-
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U10 | Missing `messages` key → `ArgumentError` naming `messages` | FR-005, US4 | unit | PASSING | `…::fromJson — missing messages throws ArgumentError naming messages` |
-| U11 | `messages` is not a list (e.g. a string) → `ArgumentError` naming `messages` | FR-005 | unit | PASSING | `…::fromJson — messages not a list throws ArgumentError naming messages` |
-| U12 | Missing `episodicMemories` key → `ArgumentError` naming `episodicMemories` | FR-005 | unit | PASSING | `…::fromJson — missing episodicMemories throws ArgumentError naming episodicMemories` |
-| U13 | Element of `messages` is not a Map → `ArgumentError` naming `messages[0]` | FR-005 | unit | PASSING | `…::fromJson — malformed inner message throws ArgumentError naming messages[i]` |
-| U14 | Element of `episodicMemories` fails `EpisodicMemory.fromJson` (e.g. missing `id`) → `ArgumentError` naming `episodicMemories[0]` | FR-005 | unit | PASSING | `…::fromJson — malformed inner memory throws ArgumentError naming episodicMemories[i]` |
-
-### Purity pin (FR-007)
-
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U15 | `appendMessages` returns a new value; the receiver's `messages.length` is unchanged | FR-007 | pin | PASSING | `…::purity — appendMessages does not mutate the receiver` |
-| U16 | `addMemory` returns a new value; the receiver's `episodicMemories.length` is unchanged | FR-007 | pin | PASSING | `…::purity — addMemory does not mutate the receiver` |
-| U17 | `truncate` returns a new value; the receiver's `messages.length` is unchanged | FR-007 | pin | PASSING | `…::purity — truncate does not mutate the receiver` |
-
-## Edge cases & invariants
-
-- Two histories with the same `messages` but reordered `episodicMemories`
-  are NOT equal (order matters — `==` is structural, list-position-aware).
-- An empty history is equal to another empty history (both lists empty).
-- `hashCode` collision between unequal histories is statistically
-  improbable (Object.hash's mixing is well-distributed); not pinned
-  explicitly — the test asserts `equal hashes for equal histories`
-  only (the only property that must hold).
-- `fromJson` accepts a JSON map whose top-level keys include extras
-  beyond `messages` and `episodicMemories` (e.g. a version tag) —
-  extras are ignored, not errors (parity with `AgentMessage.fromJson`).
-- `AgentMessage` subclasses have their own JSON contracts
-  (`UserMessage.fromJson`, `AssistantMessage.fromJson`, etc.) —
-  this spec relies on those contracts; failures propagate as
-  `ArgumentError` from this layer (FR-005) wrapping the delegate's
-  typed exception.
-
-## Out of scope
-
-- Storage optimization (deduplicating memories by id; compacting the
-  messages list during `appendMessages`) — compaction spec (010).
-- Equality across `AgentMessage` subclasses with non-`==` timestamps
-  (timestamps are part of each subclass's existing `==` already; not
-  re-tested here).
-- Network-backed history sources — `fromJson` takes a JSON map; HTTP
-  / S3 sources are an engine-integration concern.
-- Backward compatibility with a previous (non-existent) JSON shape —
-  this is the first published JSON shape for `AgentMessageHistory`.
-
-## Verification commands
-
-- Single test: `dart test test/llm/agent_message_history_080_test.dart -N 'spec 080 — AgentMessageHistory'`
-- Full suite: `dart test`
-- Analyze: `dart analyze --fatal-infos lib/src/llm/agent_message_history.dart test/llm/agent_message_history_080_test.dart`

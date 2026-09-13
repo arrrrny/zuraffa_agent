@@ -73,6 +73,41 @@ class TurnRecord {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  TurnRecord copyWithField<T>(Field<TurnRecord, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'parentId':
+        return copyWith(parentId: value as String?);
+      case 'timestamp':
+        return copyWith(timestamp: value as DateTime);
+      case 'turnNumber':
+        return copyWith(turnNumber: value as int);
+      case 'messageEntryIds':
+        return copyWith(messageEntryIds: value as List<String>);
+      case 'toolInvocationEntryIds':
+        return copyWith(toolInvocationEntryIds: value as List<String>);
+      case 'stopReason':
+        return copyWith(stopReason: value as String);
+      case 'startedAt':
+        return copyWith(startedAt: value as DateTime);
+      case 'endedAt':
+        return copyWith(endedAt: value as DateTime);
+      case 'durationMs':
+        return copyWith(durationMs: value as int);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'TurnRecord has no settable field with this name',
+        );
+    }
+  }
+
   TurnRecord copyWithTurnRecord({
     String? id,
     String? parentId,

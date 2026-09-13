@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A2",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T18:53:52.637537Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/112-structured-logging/a2_subject.dart",
+   "action": "update",
+   "sha256": "65a669c564d5b86a67e5a51d5d794f33cf76645c0098a386b39a028e2de32c73",
+   "bytes": 756,
+   "snapshot": "// Hand-stepped acceptance subject (spec 112, AC-2): with NO sink\n// installed, emission at every level is silent and never throws.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\n\nMap<String, Object?> subject_a2() {\n  ZuraffaLogging.reset();\n  var emitted = 0;\n  for (final subsystem in AgentLog.subsystems) {\n    final logger = AgentLog.logger(subsystem);\n    logger.log(AgentLog.transportLevel, 'fine pre-install');\n    logger.log(AgentLog.lifecycleLevel, 'info pre-install');\n    logger.log(AgentLog.resilienceLevel, 'warning pre-install');\n    logger.log(AgentLog.terminalLevel, 'severe pre-install');\n    emitted += 4;\n  }\n  return {'status': 'silent-ok', 'emitted': emitted};\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

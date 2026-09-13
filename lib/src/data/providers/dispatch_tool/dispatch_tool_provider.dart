@@ -17,13 +17,14 @@ class DispatchToolProvider
   final DispatchTool _active;
 
   DispatchToolProvider([DispatchTool? active])
-      : _active = active ??
-            const DispatchTool(
-              id: 'default',
-              toolName: 'dispatch',
-              subAgentSpecId: 'general-purpose',
-              riskTier: 'safe',
-            );
+    : _active =
+          active ??
+          const DispatchTool(
+            id: 'default',
+            toolName: 'dispatch',
+            subAgentSpecId: 'general-purpose',
+            riskTier: 'safe',
+          );
 
   @override
   Future<DispatchTool> current(NoParams params) async => _active;

@@ -1,55 +1,203 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
-// See issue arrrrny/zuraffa_agent#15 (spec 015-mcp-client).
+// See issue arrrrny/zuraffa_agent#15 (spec 015-mcp-client); implemented in
+// spec 105 (issue arrrrny/zuraffa_agent#107).
 //
 // IoStdioMcpTransport — concrete [McpWire] over dart:io Process.start
-// + stdin/stdout JSON-RPC. THIS FILE IS ON THE RUNTIME-PURITY
-// ALLOWLIST in .github/workflows/pipeline.yml (constitution VII).
+// + stdin/stdout newline-delimited JSON-RPC 2.0, per the wire contract in
+// specs/105-production-mcp-transports/contracts/mcp-wire-dialect.md.
+// THIS FILE IS ON THE RUNTIME-PURITY ALLOWLIST in
+// .github/workflows/pipeline.yml (constitution VII).
 //
-// The bodies throw UnimplementedError so the file analyzes cleanly
-// without forcing real subprocess I/O in tests. The StdioMcpClient
-// unit tests use a fake McpWire (test/mcp/_fake_wire.dart), not this
-// adapter — full subprocess behavior is verified in a future
-// integration-test PR (tracked separately).
+// Transport-level failures THROW (typed [McpWireClosedException]) so the
+// clients' reconnect policy (spec 082) sees a drop; JSON-RPC *error
+// responses* map to [McpWireResponseError] instead. The SSE/stdio unit
+// tests use a fake McpWire (test/mcp/_fake_wire.dart); this adapter's real
+// subprocess behavior is integration-tested against
+// test/mcp/_mock_stdio_mcp_server.dart.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'mcp_wire.dart';
 
-/// Concrete [McpWire] over stdio (subprocess JSON-RPC). Stub — see
-/// file header.
+/// Typed transport failure: the wire is not open (used before open, after
+/// close, or after the child process exited).
+class McpWireClosedException implements Exception {
+  final String message;
+  const McpWireClosedException(this.message);
+  @override
+  String toString() => 'McpWireClosedException: $message';
+}
+
+/// Concrete [McpWire] over stdio (subprocess JSON-RPC). See file header.
 class IoStdioMcpTransport implements McpWire {
   final String executable;
   final List<String> args;
 
+  Process? _process;
+  StreamSubscription<String>? _stdoutSub;
+  StreamSubscription<String>? _stderrSub;
   bool _isOpen = false;
+  bool _closed = false;
+  int _nextId = 0;
+  final Map<int, Completer<McpWireResponse>> _pending = {};
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoStdioMcpTransport({
-    required this.executable,
-    this.args = const [],
-  });
+  IoStdioMcpTransport({required this.executable, this.args = const []}) {
+    if (executable.trim().isEmpty) {
+      throw ArgumentError.value(
+        executable,
+        'executable',
+        'must be a non-empty command',
+      );
+    }
+  }
 
   @override
   Future<void> open() async {
-    // TODO(spec-015-followup): implement Process.start + stdin/stdout
-    // JSON-RPC. For now, throw so any production wiring fails loudly.
-    throw UnimplementedError(
-      'IoStdioMcpTransport.open not yet implemented — see spec 015 plan.md Phase 8',
-    );
+    if (_isOpen) return; // idempotent: never spawn a second session
+    final process = await Process.start(executable, args);
+    _process = process;
+    // Drain the pipes from day one: a child blocked on a full stdout
+    // buffer is a hung session. Line semantics arrive with the send path.
+    _stdoutSub = process.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen(_handleLine);
+    _stderrSub = process.stderr
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((_) {});
+    _isOpen = true;
+    unawaited(process.exitCode.then((_) => _handleExit()));
+  }
+
+  /// A child exit (crash or normal) is a dropped session: the open signal
+  /// goes off, in-flight sends fail typed — the reconnect policy's signal —
+  /// and the notification stream is done.
+  void _handleExit() {
+    if (_closed) return;
+    _isOpen = false;
+    _failPending('the server process exited');
+    _notifications.close();
+  }
+
+  void _failPending(String reason) {
+    final failure = McpWireClosedException('IoStdioMcpTransport: $reason');
+    for (final completer in _pending.values) {
+      completer.completeError(failure);
+    }
+    _pending.clear();
   }
 
   @override
   Future<void> close() async {
+    _closed = true;
     _isOpen = false;
+    final process = _process;
+    _process = null;
+    process?.kill();
+    if (process != null) {
+      // An uncooperative child that ignores SIGTERM must not linger holding
+      // its pipes after the transport reports closed — escalate, bounded so
+      // close() never hangs.
+      try {
+        await process.exitCode.timeout(const Duration(milliseconds: 250));
+      } on TimeoutException {
+        process.kill(ProcessSignal.sigkill);
+      }
+    }
+    _failPending('the transport was closed');
+    await _stdoutSub?.cancel();
+    _stdoutSub = null;
+    await _stderrSub?.cancel();
+    _stderrSub = null;
     await _notifications.close();
   }
 
   @override
   Future<McpWireResponse> send(McpWireRequest request) async {
-    throw UnimplementedError(
-      'IoStdioMcpTransport.send not yet implemented — see spec 015 plan.md Phase 8',
-    );
+    final process = _process;
+    if (!_isOpen || process == null) {
+      throw const McpWireClosedException(
+        'IoStdioMcpTransport: send on a transport that is not open',
+      );
+    }
+    final id = _nextId++;
+    final completer = Completer<McpWireResponse>();
+    _pending[id] = completer;
+    final Map<String, Object?> envelope;
+    switch (request) {
+      case McpWireRequestListTools():
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/list',
+          'params': <String, Object?>{},
+        };
+      case McpWireRequestCallTool(name: final name, arguments: final arguments):
+        envelope = {
+          'jsonrpc': '2.0',
+          'id': id,
+          'method': 'tools/call',
+          'params': {'name': name, 'arguments': arguments},
+        };
+    }
+    try {
+      process.stdin.writeln(jsonEncode(envelope));
+      // The completer future is returned (and thus subscribed) synchronously:
+      // a close/exit completing this pending entry in the same turn can never
+      // produce an unhandled rejection. Flush errors mean the pipe died —
+      // exactly the path where close/exit drains the pending entry typed.
+      unawaited(process.stdin.flush().catchError((Object _) {}));
+    } on Object {
+      // The child died between the guard and the write: keep the typed
+      // failure contract (never an untyped platform exception).
+      throw const McpWireClosedException(
+        'IoStdioMcpTransport: the server process is gone',
+      );
+    }
+    return completer.future;
+  }
+
+  void _handleLine(String line) {
+    Map<String, dynamic> message;
+    try {
+      final decoded = jsonDecode(line);
+      if (decoded is! Map<String, dynamic>) return;
+      message = decoded;
+    } on FormatException {
+      return; // log-noise lines are skipped (pinned at U7)
+    }
+    final id = message['id'];
+    if (id is int && _pending.containsKey(id)) {
+      _pending.remove(id)!.complete(_responseFor(message));
+      return;
+    }
+    // Server-pushed notification (no id): only the tools-changed method has
+    // semantic meaning on this seam.
+    if (message['method'] == 'notifications/tools/list_changed') {
+      _notifications.add(const McpWireNotificationToolsChanged());
+    }
+  }
+
+  /// Maps a JSON-RPC response object onto the sealed response family:
+  /// an `error` object becomes the typed error (application-level failure),
+  /// anything else carries its `result` map.
+  McpWireResponse _responseFor(Map<String, dynamic> message) {
+    final error = message['error'];
+    if (error is Map) {
+      return McpWireResponseError(
+        code: error['code']?.toString() ?? '',
+        message: error['message']?.toString() ?? '',
+      );
+    }
+    final result =
+        (message['result'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
+    return McpWireResponseOk(result);
   }
 
   @override

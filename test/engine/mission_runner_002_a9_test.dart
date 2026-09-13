@@ -23,23 +23,27 @@ import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
       ChatCompletion(
         content: 'call a tool',
         finishReason: 'tool_calls',
-        usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+        usage: const TokenUsage(
+          promptTokens: 1,
+          completionTokens: 1,
+          totalTokens: 2,
+        ),
       );
 }
 
@@ -64,62 +68,89 @@ class FakeToolDispatcher implements ToolDispatcher {
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      [for (final c in calls) await dispatch(toolName: c.toolName, arguments: c.arguments, isInternalMission: isInternalMission)];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
-  List<String> validateSchema({required Map<String, dynamic> schema, required Map<String, dynamic> arguments}) => const [];
+  List<String> validateSchema({
+    required Map<String, dynamic> schema,
+    required Map<String, dynamic> arguments,
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 class LoopPlanner implements ToolCallPlanner {
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async =>
-      const [ToolCall(toolName: 'search', arguments: {'q': 'same'}, executionMode: 'sequential')];
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async => const [
+    ToolCall(
+      toolName: 'search',
+      arguments: {'q': 'same'},
+      executionMode: 'sequential',
+    ),
+  ];
 }
 
 void main() {
-  test('A9: maxCalls=3 with a repeating tool call ends in loopDetected after the 3rd', () async {
-    final events = <EngineEvent>[];
-    final repetition = RepetitionTrackerMockDatasource(
-      config: const RepetitionTracker(id: 'default', maxCalls: 3, window: Duration(seconds: 60)),
-      clock: () => DateTime.utc(2026, 1, 1),
-    );
+  test(
+    'A9: maxCalls=3 with a repeating tool call ends in loopDetected after the 3rd',
+    () async {
+      final events = <EngineEvent>[];
+      final repetition = RepetitionTrackerMockDatasource(
+        config: const RepetitionTracker(
+          id: 'default',
+          maxCalls: 3,
+          window: Duration(seconds: 60),
+        ),
+        clock: () => DateTime.utc(2026, 1, 1),
+      );
 
-    const loop = EngineLoop(
-      id: 'loop-9',
-      sessionId: 's9',
-      maxTurns: 10,
-      wallClockTimeoutMs: 600000,
-      repetitionThreshold: 3,
-    );
-    const policy = StopPolicy(
-      id: 'cap9',
-      maxTurns: 10,
-      wallClockTimeout: Duration.zero,
-      repetitionThreshold: 3,
-    );
+      const loop = EngineLoop(
+        id: 'loop-9',
+        sessionId: 's9',
+        maxTurns: 10,
+        wallClockTimeoutMs: 600000,
+        repetitionThreshold: 3,
+      );
+      const policy = StopPolicy(
+        id: 'cap9',
+        maxTurns: 10,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 3,
+      );
 
-    final runner = MissionRunner(
-      executor: EngineLoopExecutor(loop, ScriptedLlmClient()),
-      toolDispatcher: FakeToolDispatcher(),
-      stopPolicy: policy,
-      repetitionTracker: repetition,
-      onEvent: events.add,
-    );
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(loop, ScriptedLlmClient()),
+        toolDispatcher: FakeToolDispatcher(),
+        stopPolicy: policy,
+        repetitionTracker: repetition,
+        onEvent: events.add,
+      );
 
-    final result = await runner.run(
-      missionId: 'm9',
-      messages: const [ChatMessage(role: 'user', content: 'go')],
-      planner: LoopPlanner(),
-    );
+      final result = await runner.run(
+        missionId: 'm9',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: LoopPlanner(),
+      );
 
-    expect(result.status.name, 'loopDetected');
-    expect(result.turnsUsed, 3);
-    final completed = events.whereType<MissionCompleted>().single;
-    expect(completed.status, 'loopDetected');
-    expect(events.whereType<ToolCallCompleted>().length, 3);
-  });
+      expect(result.status.name, 'loopDetected');
+      expect(result.turnsUsed, 3);
+      final completed = events.whereType<MissionCompleted>().single;
+      expect(completed.status, 'loopDetected');
+      expect(events.whereType<ToolCallCompleted>().length, 3);
+    },
+  );
 }

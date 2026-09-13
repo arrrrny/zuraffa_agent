@@ -26,7 +26,11 @@ class LoopSafetyRails {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LoopSafetyRails &&
-          runtimeType == other.runtimeType && outcomeType == other.outcomeType && turnNumber == other.turnNumber && reason == other.reason && emittedAt == other.emittedAt);
+          runtimeType == other.runtimeType &&
+          outcomeType == other.outcomeType &&
+          turnNumber == other.turnNumber &&
+          reason == other.reason &&
+          emittedAt == other.emittedAt);
 
   @override
   int get hashCode => Object.hash(outcomeType, turnNumber, reason, emittedAt);

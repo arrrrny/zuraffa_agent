@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Fallback Chain Runtime
 
 **Feature Branch**: `008-fallback-chain-runtime`
@@ -21,8 +23,11 @@ As the engine operator, I configure an ordered provider chain (e.g., self-host �
 **Acceptance Scenarios**:
 
 1. **Given** provider A failing, **When** a call is made, **Then** B serves it; the mission observes only latency. **[AC-1]**
+   **Type**: acceptance
 2. **Given** A in open state, **When** the cooldown elapses, **Then** a half-open probe routes real traffic back on success. **[AC-2]**
+   **Type**: acceptance
 3. **Given** a mid-stream failure after partial chunks, **Then** the policy restarts on the next provider — never silently truncates. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Circuit breaker per provider (Priority: P1)
 
@@ -34,9 +39,12 @@ As the engine, each provider has an independent circuit breaker (open/half-open/
 
 **Acceptance Scenarios**:
 
-1. **Given** maxConsecutiveFailures=3, **When** 3 consecutive failures occur, **Then** the breaker opens. **[AC-4]**
-2. **Given** an open breaker with cooldownMs=60000, **When** 60s elapse, **Then** the state transitions to half-open. **[AC-5]**
-3. **Given** a half-open breaker, **When** a call succeeds, **Then** the state transitions to closed. **[AC-6]**
+4. **Given** maxConsecutiveFailures=3, **When** 3 consecutive failures occur, **Then** the breaker opens. **[AC-4]**
+   **Type**: acceptance
+5. **Given** an open breaker with cooldownMs=60000, **When** 60s elapse, **Then** the state transitions to half-open. **[AC-5]**
+   **Type**: acceptance
+6. **Given** a half-open breaker, **When** a call succeeds, **Then** the state transitions to closed. **[AC-6]**
+   **Type**: acceptance
 
 ### User Story 3 - Health snapshot (Priority: P2)
 
@@ -48,17 +56,23 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` at any time to s
 
 **Acceptance Scenarios**:
 
-1. **Given** any chain state, **When** the snapshot is read, **Then** it matches the internal breaker states. **[AC-7]**
+7. **Given** any chain state, **When** the snapshot is read, **Then** it matches the internal breaker states. **[AC-7]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: A `FallbackChainClient` MUST wrap multiple `LlmClient` instances with automatic failover.
+  traces: fallbackChainRuntime.fr1
 - **FR-002**: Each provider MUST have an independent circuit breaker (open/half-open/closed).
+  traces: fallbackChainRuntime.fr2
 - **FR-003**: The chain MUST advance on connection error, timeout, 5xx, context overflow, or repeated 429.
+  traces: fallbackChainRuntime.fr3
 - **FR-004**: Mid-stream failures MUST restart on the next provider (configurable policy).
+  traces: fallbackChainRuntime.fr4
 - **FR-005**: A health snapshot API MUST expose chain state at any time.
+  traces: fallbackChainRuntime.fr5
 
 ### Key Entities
 
@@ -67,6 +81,12 @@ As an operator/dashboard, I query `Map<provider, ClientHealth>` at any time to s
 - **ClientHealth**: state, consecutiveFailures, cooldownWindowMs, lastFailureAt
 - **FallbackChain** (evolved entity): chain configuration + advance policy + breaker states (providerOrder, maxConsecutiveFailures, cooldownMs, policyMode, breakerStates, lastProviderIndex) while remaining field-compatible with the spec-053 value object (id, providerIds, currentProviderIndex, advances, lastErrorClass)
 - **ClientHealth** (new entity at `lib/src/domain/entities/client_health/`): id, state, consecutiveFailures, cooldownWindowMs, lastFailureAt, isHealthy + JSON round-trip — contract pinned by the pre-existing spec-004 lineage tests
+
+## Layer Contracts
+
+**Domain**:
+
+- `fallbackChainRuntime`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

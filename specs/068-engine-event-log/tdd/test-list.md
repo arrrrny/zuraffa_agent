@@ -1,60 +1,56 @@
-# Test List: EngineEventLog
-
----
-feature: 068-engine-event-log
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 5 # FR-001..FR-005 in spec.md
-planned_at: 30b4b94 # master HEAD at cycle start
-updated_at: HEAD
-suite_baseline: green # 911 passed / 2 skipped (pre-existing KIMI_API_KEY integration skips) at 30b4b94
----
+# Test List: 068-engine-event-log
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | `add` / `addAll` append events; read-back preserves insertion order exactly | FR-001 | example | DONE | `test/engine/events/engine_event_log_test.dart::EngineEventLog::add/addAll preserve insertion order` |
-| A2  | `events` is an unmodifiable copy: mutation throws and never propagates; `length`/`isEmpty`/`isNotEmpty` track appends | FR-002 | example | DONE | `…::events is an unmodifiable snapshot` + `…::length and emptiness track appends` |
-| A3  | `byType<T>` / `firstOfType<T>` / `lastOfType<T>` return exactly-type-T events in insertion order (or null) | FR-003 | example | DONE | `…::byType filters by exact type, insertion order` + `…::firstOfType and lastOfType` |
-| A4  | `since(cutoff, {inclusive})` / `before(cutoff, {inclusive})` filter on `emittedAt` with correct inclusive/exclusive boundaries, order preserved | FR-004 | example | DONE | `…::since filters by emission time with inclusive/exclusive boundary` + `…::before filters by emission time with inclusive/exclusive boundary` |
-| A5  | `dart analyze --fatal-infos` exits 0 and `dart test` passes baseline + new | FR-005 | gate | DONE | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/events/engine_event_log_test.dart`). | AC-8 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/events/engine_event_log.dart` (new library)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `EngineEventLog` is constructible empty; `isEmpty` true; all projections return empty/null | FR-001, FR-003 | example | DONE | `…::empty log behaves as empty` |
-| U2  | `_events` is never aliased: `events` builds a fresh unmodifiable list per call; two consecutive `events` reads are equal snapshots but not the same mutable object | FR-002 | example | DONE | `…::events is an unmodifiable snapshot` (mutating returned list throws both times) |
-| U3  | `byType<T>` uses exact type matching (`whereType` semantics) — a `MissionStarted` is not returned by `byType<MissionCompleted>()` | FR-003 | example | DONE | A3 (distinct payload types in fixture) + mutant M2 |
-| U4  | `since`/`before` boundary: an event emitted exactly AT the cutoff is included iff `inclusive: true` (default for `since`, opt-in for `before`) | FR-004 | example | DONE | A4 boundary fixtures + mutant M3 |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: `void add(EngineEvent event)` appends one event; `void addAll(Iterable<EngineEvent> events)` appends in iteration order. Order of insertion is preserved exactly on read-back. | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: `List<EngineEvent> get events` returns an unmodifiable copy — mutating the returned list (add/remove/clear/element assignment) throws; mutations never propagate into the log. `int get length`, `bool get isEmpty`, `bool get isNotEmpty` reflect the append count. | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: `List<T> byType<T extends EngineEvent>()` returns the sub-list of events of exactly type `T`, in insertion order. `T? firstOfType<T extends EngineEvent>()` / `T? lastOfType<T extends EngineEvent>()` return the first/last such event or `null`. | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: `List<EngineEvent> since(DateTime cutoff, {bool inclusive = true})` returns events with `emittedAt >= cutoff` (or `>` when `inclusive: false`), preserving order; `List<EngineEvent> before(DateTime cutoff, {bool inclusive = false})` mirrors it for `emittedAt <=`/`<` cutoff. Implementation note (design discovery during the red phase): the sealed base `EngineEvent` gains an abstract `DateTime get emittedAt;` — every subtype already carries the field, so all 9 conform without modification, and the temporal projections filter the whole union uniformly. | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests). Engine purity preserved: pure Dart, no `dart:io`, no new dependencies. | FR-005 | PENDING |
 
-### Barrel export
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U5  | `lib/zuraffa_agent.dart` exports `engine_event_log.dart` — the log is reachable from the package root | FR-005 | gate | DONE | analyzer gate (test imports the library path directly; export is non-behavioral wiring) |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Invariants and edge cases
+route: A1 -> acceptance lane [declared: type marker, spec line 62]
+route: A2 -> acceptance lane [declared: type marker, spec line 64]
+route: A3 -> acceptance lane [declared: type marker, spec line 66]
+route: A4 -> acceptance lane [declared: type marker, spec line 68]
+route: A5 -> acceptance lane [declared: type marker, spec line 70]
+route: A6 -> acceptance lane [declared: type marker, spec line 72]
+route: A7 -> acceptance lane [declared: type marker, spec line 74]
+route: A8 -> acceptance lane [declared: type marker, spec line 76]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-- Same-instance round-trip: events read back are the exact instances appended (`same(...)`) — keeps this spec independent of spec 066's `==` (any merge order).
-- Cutoff with no matching events: `since`/`before` return empty lists, never throw.
-- `firstOfType`/`lastOfType` on an empty log or type-absent log: `null`, never throw.
-- `addAll` with an empty iterable: no-op.
-- Fixtures use the 9 master events with distinct payloads; the log is union-size agnostic (spec 067's `PlanChanged` not required).
-
-## Out of scope
-
-- Pub/sub bus + request/response (spec 013 Draft).
-- `Stream<EngineEvent>` subscription (deferred to the bus).
-- Persistence (session recording specs own storage).
-- Event equality (spec 066 / PR #77).
-
-## Verification commands
-
-- Single feature: `dart test test/engine/events/engine_event_log_test.dart --reporter expanded`
-- Full suite: `dart test`
-- Analyze gate: `dart analyze --fatal-infos`
-- Mutation: deliberate mutants, one at a time, `cp`-restored (see `verification.md`)

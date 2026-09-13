@@ -34,68 +34,91 @@ void main() {
   });
 
   group('spec 084 — network-error path (FR-001, FR-004, FR-005)', () {
-    test('T1 (pin): one network error then 200 recovers with one backoff',
-        () async {
-      final clock = FakeLlmClock();
-      final transport = FakeLlmTransport(
-        provider: 'openai',
-        script: [
-          const ScriptedResponse(networkError: _socketReset),
-          const ScriptedResponse(statusCode: 200, body: '{}'),
-        ],
-      );
+    test(
+      'T1 (pin): one network error then 200 recovers with one backoff',
+      () async {
+        final clock = FakeLlmClock();
+        final transport = FakeLlmTransport(
+          provider: 'openai',
+          script: [
+            const ScriptedResponse(networkError: _socketReset),
+            const ScriptedResponse(statusCode: 200, body: '{}'),
+          ],
+        );
 
-      final resp = await sendWithRetry(
-        transport: transport,
-        request: request,
-        config: const RetryConfig(
-            maxAttempts: 4, baseDelayMs: 100, maxDelayMs: 250),
-        clock: clock,
-        provider: 'openai',
-        jitter: (_) => 0,
-      );
-
-      expect(resp.statusCode, 200);
-      expect(clock.sleeps, [100]);
-      expect(transport.requests.length, 2);
-    });
-
-    test('T2: network exhaustion → terminal typed error with attempts',
-        () async {
-      final clock = FakeLlmClock();
-      final transport = FakeLlmTransport(
-        provider: 'openai',
-        script: List.filled(
-            3, const ScriptedResponse(networkError: _socketReset)),
-      );
-
-      await expectLater(
-        sendWithRetry(
+        final resp = await sendWithRetry(
           transport: transport,
           request: request,
           config: const RetryConfig(
-              maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+            maxAttempts: 4,
+            baseDelayMs: 100,
+            maxDelayMs: 250,
+          ),
           clock: clock,
           provider: 'openai',
           jitter: (_) => 0,
-        ),
-        throwsA(isA<LlmNetworkException>().having(
-            (e) => e.attempts, 'attempts', 3).having(
-            (e) => e.cause.toString(), 'cause preserved',
-            contains(_socketReset)).having(
-            (e) => e.toString(), 'toString names exhaustion',
-            contains('after 3 attempts'))),
-      );
-      // 3 attempts → 2 sleeps between them.
-      expect(clock.sleeps, [100, 200]);
-      expect(transport.requests.length, 3);
-    });
+        );
+
+        expect(resp.statusCode, 200);
+        expect(clock.sleeps, [100]);
+        expect(transport.requests.length, 2);
+      },
+    );
+
+    test(
+      'T2: network exhaustion → terminal typed error with attempts',
+      () async {
+        final clock = FakeLlmClock();
+        final transport = FakeLlmTransport(
+          provider: 'openai',
+          script: List.filled(
+            3,
+            const ScriptedResponse(networkError: _socketReset),
+          ),
+        );
+
+        await expectLater(
+          sendWithRetry(
+            transport: transport,
+            request: request,
+            config: const RetryConfig(
+              maxAttempts: 3,
+              baseDelayMs: 100,
+              maxDelayMs: 250,
+            ),
+            clock: clock,
+            provider: 'openai',
+            jitter: (_) => 0,
+          ),
+          throwsA(
+            isA<LlmNetworkException>()
+                .having((e) => e.attempts, 'attempts', 3)
+                .having(
+                  (e) => e.cause.toString(),
+                  'cause preserved',
+                  contains(_socketReset),
+                )
+                .having(
+                  (e) => e.toString(),
+                  'toString names exhaustion',
+                  contains('after 3 attempts'),
+                ),
+          ),
+        );
+        // 3 attempts → 2 sleeps between them.
+        expect(clock.sleeps, [100, 200]);
+        expect(transport.requests.length, 3);
+      },
+    );
 
     test('T3: HTTP exhaustion → LlmHttpException with attempts', () async {
       final clock = FakeLlmClock();
       final transport = FakeLlmTransport(
         provider: 'openai',
-        script: List.filled(3, const ScriptedResponse(statusCode: 503, body: 'down')),
+        script: List.filled(
+          3,
+          const ScriptedResponse(statusCode: 503, body: 'down'),
+        ),
       );
 
       await expectLater(
@@ -103,25 +126,32 @@ void main() {
           transport: transport,
           request: request,
           config: const RetryConfig(
-              maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+            maxAttempts: 3,
+            baseDelayMs: 100,
+            maxDelayMs: 250,
+          ),
           clock: clock,
           provider: 'openai',
           jitter: (_) => 0,
         ),
-        throwsA(isA<LlmHttpException>()
-            .having((e) => e.attempts, 'attempts', 3)
-            .having((e) => e.statusCode, 'status preserved', 503)
-            .having((e) => e.body, 'body preserved', 'down')
-            .having((e) => e.toString(), 'toString names exhaustion',
-                contains('after 3 attempts'))),
+        throwsA(
+          isA<LlmHttpException>()
+              .having((e) => e.attempts, 'attempts', 3)
+              .having((e) => e.statusCode, 'status preserved', 503)
+              .having((e) => e.body, 'body preserved', 'down')
+              .having(
+                (e) => e.toString(),
+                'toString names exhaustion',
+                contains('after 3 attempts'),
+              ),
+        ),
       );
       expect(clock.sleeps, [100, 200]);
     });
   });
 
   group('spec 084 — Retry-After unclamped (FR-003)', () {
-    test(
-        'T5: Retry-After: 7200 with maxDelayMs: 250 → sleep exactly '
+    test('T5: Retry-After: 7200 with maxDelayMs: 250 → sleep exactly '
         '7200000', () async {
       final clock = FakeLlmClock();
       final transport = FakeLlmTransport(
@@ -140,16 +170,23 @@ void main() {
         transport: transport,
         request: request,
         config: const RetryConfig(
-            maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+          maxAttempts: 3,
+          baseDelayMs: 100,
+          maxDelayMs: 250,
+        ),
         clock: clock,
         provider: 'openai',
         jitter: (_) => 0,
       );
 
-      expect(clock.sleeps, [7200000],
-          reason: 'the server directive is honored unclamped — not bounded '
-              'by maxDelayMs (250) nor by any fixed ceiling (the old 3600s '
-              'cap would have slept 3600000)');
+      expect(
+        clock.sleeps,
+        [7200000],
+        reason:
+            'the server directive is honored unclamped — not bounded '
+            'by maxDelayMs (250) nor by any fixed ceiling (the old 3600s '
+            'cap would have slept 3600000)',
+      );
     });
 
     test('T6 (pin): Retry-After: 90 with maxDelayMs: 250 → 90000', () async {
@@ -170,7 +207,10 @@ void main() {
         transport: transport,
         request: request,
         config: const RetryConfig(
-            maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+          maxAttempts: 3,
+          baseDelayMs: 100,
+          maxDelayMs: 250,
+        ),
         clock: clock,
         provider: 'openai',
         jitter: (_) => 0,
@@ -197,7 +237,10 @@ void main() {
         transport: transport,
         request: request,
         config: const RetryConfig(
-            maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+          maxAttempts: 3,
+          baseDelayMs: 100,
+          maxDelayMs: 250,
+        ),
         clock: clock,
         provider: 'openai',
         jitter: (_) => 0,
@@ -227,7 +270,10 @@ void main() {
         transport: transport,
         request: request,
         config: const RetryConfig(
-            maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 250),
+          maxAttempts: 3,
+          baseDelayMs: 100,
+          maxDelayMs: 250,
+        ),
         clock: clock,
         provider: 'openai',
         jitter: (_) => 0,
@@ -237,15 +283,16 @@ void main() {
       expect(clock.sleeps, [3000]);
     });
 
-    test('T9 (pin): identical runs record identical sleep sequences',
-        () async {
+    test('T9 (pin): identical runs record identical sleep sequences', () async {
       Future<List<int>> run() async {
         final clock = FakeLlmClock();
         final transport = FakeLlmTransport(
           provider: 'openai',
           script: [
             ...List.filled(
-                4, const ScriptedResponse(statusCode: 500, body: 'x')),
+              4,
+              const ScriptedResponse(statusCode: 500, body: 'x'),
+            ),
             const ScriptedResponse(statusCode: 200, body: '{}'),
           ],
         );
@@ -253,7 +300,10 @@ void main() {
           transport: transport,
           request: request,
           config: const RetryConfig(
-              maxAttempts: 5, baseDelayMs: 100, maxDelayMs: 250),
+            maxAttempts: 5,
+            baseDelayMs: 100,
+            maxDelayMs: 250,
+          ),
           clock: clock,
           provider: 'openai',
           jitter: (m) => m ~/ 3,
@@ -263,8 +313,11 @@ void main() {
 
       final first = await run();
       final second = await run();
-      expect(first, second,
-          reason: 'the injected clock makes backoff deterministic');
+      expect(
+        first,
+        second,
+        reason: 'the injected clock makes backoff deterministic',
+      );
       // 100+33=133; 200+66=266 → capped at 250; 400+133 → 250; 800+266 → 250.
       expect(first, [133, 250, 250, 250]);
     });

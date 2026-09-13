@@ -40,21 +40,32 @@ class SubAgentInstance {
 
   /// The durable JSON form of this instance.
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'subAgentSpecId': subAgentSpecId,
-        'parentSessionId': parentSessionId,
-        'totalRuns': totalRuns,
-        'lastRunOutcome': lastRunOutcome,
-      };
+    'id': id,
+    'subAgentSpecId': subAgentSpecId,
+    'parentSessionId': parentSessionId,
+    'totalRuns': totalRuns,
+    'lastRunOutcome': lastRunOutcome,
+  };
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SubAgentInstance &&
-          runtimeType == other.runtimeType && id == other.id && subAgentSpecId == other.subAgentSpecId && parentSessionId == other.parentSessionId && totalRuns == other.totalRuns && lastRunOutcome == other.lastRunOutcome);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          subAgentSpecId == other.subAgentSpecId &&
+          parentSessionId == other.parentSessionId &&
+          totalRuns == other.totalRuns &&
+          lastRunOutcome == other.lastRunOutcome);
 
   @override
-  int get hashCode => Object.hash(id, subAgentSpecId, parentSessionId, totalRuns, lastRunOutcome);
+  int get hashCode => Object.hash(
+    id,
+    subAgentSpecId,
+    parentSessionId,
+    totalRuns,
+    lastRunOutcome,
+  );
 
   @override
   String toString() =>

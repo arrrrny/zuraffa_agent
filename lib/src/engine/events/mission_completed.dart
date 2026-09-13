@@ -8,7 +8,12 @@ final class MissionCompleted extends EngineEvent {
   final String status;
   final String? summary;
 
-  const MissionCompleted({required this.emittedAt, required this.missionId, required this.status, required this.summary});
+  const MissionCompleted({
+    required this.emittedAt,
+    required this.missionId,
+    required this.status,
+    required this.summary,
+  });
 
   @override
   bool operator ==(Object other) =>

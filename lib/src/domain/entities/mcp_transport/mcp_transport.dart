@@ -26,7 +26,11 @@ class McpTransport {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is McpTransport &&
-          runtimeType == other.runtimeType && id == other.id && transportType == other.transportType && endpoint == other.endpoint && authRequired == other.authRequired);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          transportType == other.transportType &&
+          endpoint == other.endpoint &&
+          authRequired == other.authRequired);
 
   @override
   int get hashCode => Object.hash(id, transportType, endpoint, authRequired);

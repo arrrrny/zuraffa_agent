@@ -23,7 +23,7 @@ class IoLlmTransport implements LlmTransport {
   final HttpClient _client;
 
   IoLlmTransport({this.provider = 'io', HttpClient? client})
-      : _client = client ?? HttpClient();
+    : _client = client ?? HttpClient();
 
   @override
   Future<LlmHttpResponse> send(LlmHttpRequest request) async {

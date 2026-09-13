@@ -16,6 +16,7 @@
 // Mirrors lib/src/llm/llm_client.dart.
 
 import '../domain/entities/mcp_transport/mcp_transport.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_call_result.dart';
 import 'mcp_tool_descriptor.dart';
 
@@ -71,10 +72,26 @@ abstract class McpClient {
   /// Returns [McpCallOk] on success or [McpCallError] on failure; never
   /// throws — failures are surfaced as values so the dispatcher doesn't
   /// need a try/catch around every call.
+  ///
+  /// Resilience contract (spec 108, issue #120):
+  /// - **Timeout** — every call is bounded ([McpCallOptions.timeout], default
+  ///   30 seconds). A timed-out call returns `McpCallError(code: 'timeout')`
+  ///   and is NEVER retried — the model decides what to do next.
+  /// - **Circuit breaker** — with a per-server breaker configured, N
+  ///   consecutive call failures (call errors or transport drops) open the
+  ///   breaker: further calls fail fast with `McpCallError(code:
+  ///   'circuit-open')` without touching the wire until the cooldown
+  ///   elapses, after which one probe decides recovery.
+  /// - **Retry** — with [McpCallOptions.retry] set AND
+  ///   [McpCallOptions.readOnly] true, transient failures (transport errors,
+  ///   `unavailable`, `server-error`) are retried up to the configured
+  ///   attempt count with backoff. Application errors, timeouts, and
+  ///   non-read-only calls are never retried.
   Future<McpCallResult> callTool(
     String name,
-    Map<String, dynamic> arguments,
-  );
+    Map<String, dynamic> arguments, {
+    McpCallOptions? options,
+  });
 
   /// Stream that fires when the server reports a tools-changed
   /// notification. Consumers (e.g. [McpToolAdapter]) re-list and

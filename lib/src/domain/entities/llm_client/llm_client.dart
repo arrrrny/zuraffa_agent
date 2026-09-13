@@ -28,10 +28,16 @@ class LlmClient {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LlmClient &&
-          runtimeType == other.runtimeType && id == other.id && providerName == other.providerName && model == other.model && supportsStreaming == other.supportsStreaming && supportsThinking == other.supportsThinking);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          providerName == other.providerName &&
+          model == other.model &&
+          supportsStreaming == other.supportsStreaming &&
+          supportsThinking == other.supportsThinking);
 
   @override
-  int get hashCode => Object.hash(id, providerName, model, supportsStreaming, supportsThinking);
+  int get hashCode =>
+      Object.hash(id, providerName, model, supportsStreaming, supportsThinking);
 
   @override
   String toString() =>

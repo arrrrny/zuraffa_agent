@@ -9,7 +9,6 @@ part 'agent_spec.g.dart';
 /// AgentSpec entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $AgentSpec {
-
   String get id;
   List<String> get tools;
   List<String> get subagents;
@@ -18,4 +17,3 @@ abstract class $AgentSpec {
   String get riskTier;
   String get extendsSpec;
 }
-

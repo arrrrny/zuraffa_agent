@@ -21,9 +21,9 @@ class OversizedResultPolicyDispatcher implements ToolDispatcher {
     required ToolDispatcher inner,
     required OversizedResultPolicyService policyService,
     required ArtifactService artifactService,
-  })  : _inner = inner,
-        _policyService = policyService,
-        _artifactService = artifactService;
+  }) : _inner = inner,
+       _policyService = policyService,
+       _artifactService = artifactService;
 
   final ToolDispatcher _inner;
   final OversizedResultPolicyService _policyService;
@@ -59,15 +59,16 @@ class OversizedResultPolicyDispatcher implements ToolDispatcher {
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      _inner.validateSchema(schema: schema, arguments: arguments);
+  }) => _inner.validateSchema(schema: schema, arguments: arguments);
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      _inner.checkRiskTier(riskTier: riskTier, isInternalMission: isInternalMission);
+  }) => _inner.checkRiskTier(
+    riskTier: riskTier,
+    isInternalMission: isInternalMission,
+  );
 
   Future<ToolDispatchResult> _enforce(ToolDispatchResult result) async {
     final policy = await _policyService.current(NoParams());

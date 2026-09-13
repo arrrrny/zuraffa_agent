@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Engine event bus
 
 **Branch**: `feat/spec-075-engine-event-bus` (off master `fec7889`) | **Date**: 2026-08-29
@@ -26,17 +28,20 @@ source.
 Honest deviations from the 013 draft, documented rather than silently
 dropped:
 
-- **FR-002 request/response (registerHandler / request)**: the draft's
+- **FR-002**: The system MUST satisfy this requirement: request/response (registerHandler / request)**: the draft's
   `BeforeToolCallRequest` and friends do not exist in this repo, and the
   sealed union grows only from its own spec. Deferred until an
   engine-owned request/event spec introduces those types.
-- **FR-004 `AgentController`**: with request/response deferred, the
+  traces: EngineEventBus.fr1
+- **FR-004**: The system MUST satisfy this requirement: `AgentController`**: with request/response deferred, the
   controller wrapper would be an empty shell; the bus IS the surface.
-- **FR-005 "engine MUST emit through the bus"**: the runtimes (PRs
+  traces: EngineEventBus.fr2
+- **FR-005**: "engine MUST emit through the bus"**: the runtimes (PRs
   #80-#83, unmerged stack) emit through `onEvent` callbacks; the bridge
   is `onEvent: bus.publish` — one line at the call site, no engine
   change needed. This spec delivers the bus; an integration test
   proves the bridge pattern with real event objects.
+  traces: EngineEventBus.fr3
 
 ## Files
 
@@ -48,40 +53,47 @@ dropped:
 
 ## FRs
 
-- **FR-001** — Typed subscription: `subscribe<T extends EngineEvent>(
+- **FR-001**: The system MUST satisfy this requirement: Typed subscription: `subscribe<T extends EngineEvent>(
   void Function(T) handler)` returns an `EngineEventSubscription`
   (handle with `cancel()` and `isActive`). `T` may be a concrete
   subtype (`TurnStarted`) — delivery is EXACT-type — or `EngineEvent`
   itself — delivery is everything. All subtypes are `final`, so
   exact-type matching is unambiguous.
+  traces: EngineEventBus.fr4
 
-- **FR-002** — `publish(EngineEvent event)`: synchronous delivery, in
+- **FR-002**: The system MUST satisfy this requirement: `publish(EngineEvent event)`: synchronous delivery, in
   REGISTRATION order, to every subscriber whose type matches
   (`T == event.runtimeType` or `T == EngineEvent`). One emission, many
   independent consumers — the fan-out the onEvent callback cannot do.
+  traces: EngineEventBus.fr5
 
-- **FR-003** — Subscriber error isolation: a handler that throws must
+- **FR-003**: The system MUST satisfy this requirement: Subscriber error isolation: a handler that throws must
   NOT break delivery to later subscribers, and must NOT propagate to
   the publisher. Errors (and the event that caused them) go to the
   optional `onSubscriberError` constructor hook; with no hook they are
   swallowed (documented — the bus is infrastructure; a broken observer
   must never break the engine). This repo's dart:io-free discipline
   (spec 064) rules out stderr logging as a default.
+  traces: EngineEventBus.fr6
 
-- **FR-004** — `cancel()` stops delivery (idempotent — double cancel is
+- **FR-004**: The system MUST satisfy this requirement: `cancel()` stops delivery (idempotent — double cancel is
   safe); `isActive` reports liveness; cancelled subscriptions free
   their slot (`subscriberCount` drops).
+  traces: EngineEventBus.fr7
 
-- **FR-005** — `replay(Iterable<EngineEvent> events)`: re-publishes the
+- **FR-005**: The system MUST satisfy this requirement: `replay(Iterable<EngineEvent> events)`: re-publishes the
   given history through the bus, in order, to every CURRENT subscriber.
   This is a broadcast, not per-subscriber catch-up: a late subscriber
   that wants history subscribes first, then the caller replays (the
   natural composition with EngineEventLog: `bus.replay(log.events)`).
+  traces: EngineEventBus.fr8
 
-- **FR-006** — `subscriberCount`: the number of live subscriptions.
+- **FR-006**: The system MUST satisfy this requirement: `subscriberCount`: the number of live subscriptions.
+  traces: EngineEventBus.fr9
 
-- **FR-007** — Gates: `dart analyze --fatal-infos` clean; `dart test`
+- **FR-007**: The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test`
   green (baseline 915/2 at `fec7889` + new tests).
+  traces: EngineEventBus.fr10
 
 ## Verification
 
@@ -101,3 +113,32 @@ dropped:
   needs no engine change).
 - Persistence of published events (EngineEventLog, spec 068, owns
   recording).
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** typed subscriptions filter by exact runtime type **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** delivery follows registration order **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** one publish fans out to many subscribers **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** a throwing subscriber never breaks delivery **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** cancel stops delivery and frees the slot **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** subscriberCount tracks live subscriptions **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** replay broadcasts history to current subscribers **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** onEvent bridge: any emitter becomes a multi-subscriber source **Then** the pinned regression test passes (`test/engine/engine_event_bus_test.dart`).
+   **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `EngineEventBus`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
+

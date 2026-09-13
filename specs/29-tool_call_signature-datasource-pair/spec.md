@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: ToolCallSignature datasource + mock pair
 
 **Feature Branch**: `29-tool_call_signature-datasource-pair`
@@ -21,7 +23,9 @@ As the engine, I capture the content-addressable signature of every tool invocat
 **Acceptance Scenarios**:
 
 1. **Given** an empty store, **When** `capture(signature)` completes, **Then** a subsequent `lookup(signature.key)` returns the signature (round-trip).
+   **Type**: acceptance
 2. **Given** an empty store, **When** `lookup` is called with any key, **Then** absence is reported (null / not-found — no throw, no phantom entry).
+   **Type**: acceptance
 
 ---
 
@@ -35,9 +39,12 @@ As the engine, two invocations with the same tool name, argument hash, and versi
 
 **Acceptance Scenarios**:
 
-1. **Given** `('webview.browse', 'abc123', 1)` built twice, **Then** both signatures are equal, hash equally, and their keys are identical.
-2. **Given** the same tool name and hash but version 2, **Then** the signature is unequal to the version-1 signature and its key differs.
-3. **Given** `capture` of the same content twice, **Then** the store holds one entry (idempotent capture — dedup at the datasource level too).
+3. **Given** `('webview.browse', 'abc123', 1)` built twice, **Then** both signatures are equal, hash equally, and their keys are identical.
+   **Type**: acceptance
+4. **Given** the same tool name and hash but version 2, **Then** the signature is unequal to the version-1 signature and its key differs.
+   **Type**: acceptance
+5. **Given** `capture` of the same content twice, **Then** the store holds one entry (idempotent capture — dedup at the datasource level too).
+   **Type**: acceptance
 
 ---
 
@@ -51,8 +58,10 @@ As the engine operator, I reset the signature store between missions so cross-mi
 
 **Acceptance Scenarios**:
 
-1. **Given** 3 distinct signatures captured, **When** `count` is called, **Then** it returns 3.
-2. **Given** any captured state, **When** `reset()` is called, **Then** `count` returns 0 and every `lookup` reports absence.
+6. **Given** 3 distinct signatures captured, **When** `count` is called, **Then** it returns 3.
+   **Type**: acceptance
+7. **Given** any captured state, **When** `reset()` is called, **Then** `count` returns 0 and every `lookup` reports absence.
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -67,12 +76,19 @@ As the engine operator, I reset the signature store between missions so cross-mi
 ### Functional Requirements
 
 - **FR-001**: The `ToolCallSignature` value object MUST carry `toolName`, `argumentHash`, `version` (default 1) with value equality and hashCode across all three fields.
+  traces: ToolCallSignature.fr1
 - **FR-002**: `ToolCallSignature` MUST derive `id`/`key` from content — a stable canonical string of the form `toolName@version:argumentHash` — identical for equal signatures, different for any differing component.
+  traces: ToolCallSignature.fr2
 - **FR-003**: Constructor backward compatibility MUST hold: `ToolCallSignature(id: ...)` from the anemic scaffold keeps compiling, and a content-only constructor derives the key automatically.
+  traces: ToolCallSignature.fr3
 - **FR-004**: The datasource interface MUST define the persistence contract: `capture(signature)`, `lookup(key)`, `count()`, `reset()` — all asynchronous; plus the scaffolded `current()`/`reset()` semantics folded into the refined surface.
+  traces: ToolCallSignature.fr4
 - **FR-005**: `capture` MUST be idempotent per key — duplicate captures of equal signatures do not grow the store.
+  traces: ToolCallSignature.fr5
 - **FR-006**: `lookup` MUST return the captured signature for a known key and absence (null) for an unknown key — never throw for misses.
+  traces: ToolCallSignature.fr6
 - **FR-007**: The mock datasource MUST implement the contract in memory: a key-addressed map, seeded empty, `reset` clearing all entries.
+  traces: ToolCallSignature.fr7
 
 ### Key Entities *(include if feature involves data)*
 
@@ -80,6 +96,12 @@ As the engine operator, I reset the signature store between missions so cross-mi
 - **ToolCallSignatureDatasource** (interface): capture/lookup/count/reset persistence contract.
 - **ToolCallSignatureMockDatasource** (concrete): in-memory key-addressed reference implementation.
 - **RepetitionTracker** (spec 25): consumes the signature's key as its opaque `String signature` — composition documented on both sides, compiled on neither (independent testability).
+
+## Layer Contracts
+
+**Domain**:
+
+- `ToolCallSignature`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

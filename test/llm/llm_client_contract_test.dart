@@ -53,91 +53,104 @@ class ContractFixtures {
 Future<String> _fixture(String provider, String name) =>
     File('test/fixtures/llm/$provider/$name').readAsString();
 
-List<String> _fixtureLines(String provider, String name) =>
-    File('test/fixtures/llm/$provider/$name')
-        .readAsLinesSync()
-        .where((line) => line.isNotEmpty)
-        .toList();
+List<String> _fixtureLines(String provider, String name) => File(
+  'test/fixtures/llm/$provider/$name',
+).readAsLinesSync().where((line) => line.isNotEmpty).toList();
 
 void runLlmClientContractSuite({
   required String label,
-  required LlmClient Function(FakeLlmTransport transport,
-          {RetryConfig retryConfig})
-      makeClient,
+  required LlmClient Function(
+    FakeLlmTransport transport, {
+    RetryConfig retryConfig,
+  })
+  makeClient,
   required ContractFixtures fixtures,
 }) {
   group('LlmClient contract suite — $label (A-behaviors)', () {
-    test('generate returns the canonical content, usage, and finish reason', () async {
-      final transport = FakeLlmTransport(
-        provider: label,
-        script: [
-          ScriptedResponse(statusCode: 200, body: fixtures.generateBody),
-        ],
-      );
-      final client = makeClient(transport);
+    test(
+      'generate returns the canonical content, usage, and finish reason',
+      () async {
+        final transport = FakeLlmTransport(
+          provider: label,
+          script: [
+            ScriptedResponse(statusCode: 200, body: fixtures.generateBody),
+          ],
+        );
+        final client = makeClient(transport);
 
-      final response = await client
-          .generate(LlmRequest(messages: [UserMessage.text('hi')]));
+        final response = await client.generate(
+          LlmRequest(messages: [UserMessage.text('hi')]),
+        );
 
-      expect(response.content, 'Hello, world.');
-      expect(response.finishReason, 'stop');
-      expect(response.usage.inputTokens, 25);
-      expect(response.usage.outputTokens, 42);
-      expect(response.usage.cachedTokens, 8);
-      expect(response.usage.thoughtTokens, fixtures.expectedThoughtTokens);
-    });
+        expect(response.content, 'Hello, world.');
+        expect(response.finishReason, 'stop');
+        expect(response.usage.inputTokens, 25);
+        expect(response.usage.outputTokens, 42);
+        expect(response.usage.cachedTokens, 8);
+        expect(response.usage.thoughtTokens, fixtures.expectedThoughtTokens);
+      },
+    );
 
-    test('stream emits the canonical text deltas, assembled tool call, and completing usage chunk', () async {
-      final transport = FakeLlmTransport(
-        provider: label,
-        script: [
-          ScriptedResponse(statusCode: 200, lines: fixtures.streamLines),
-        ],
-      );
-      final client = makeClient(transport);
+    test(
+      'stream emits the canonical text deltas, assembled tool call, and completing usage chunk',
+      () async {
+        final transport = FakeLlmTransport(
+          provider: label,
+          script: [
+            ScriptedResponse(statusCode: 200, lines: fixtures.streamLines),
+          ],
+        );
+        final client = makeClient(transport);
 
-      final chunks = await client
-          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-          .toList();
+        final chunks = await client
+            .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+            .toList();
 
-      // Identical text delta sequence across providers.
-      expect(chunks.where((c) => c.content != null).map((c) => c.content).toList(),
-          ['Hello', ', ', 'world.']);
+        // Identical text delta sequence across providers.
+        expect(
+          chunks.where((c) => c.content != null).map((c) => c.content).toList(),
+          ['Hello', ', ', 'world.'],
+        );
 
-      // Identical assembled tool-call buffering.
-      final toolChunks = chunks.where((c) => c.toolCalls.isNotEmpty).toList();
-      expect(toolChunks, hasLength(1));
-      expect(toolChunks.single.toolCalls.single.name, 'get_weather');
-      expect(toolChunks.single.toolCalls.single.arguments,
-          {'city': 'Paris'});
+        // Identical assembled tool-call buffering.
+        final toolChunks = chunks.where((c) => c.toolCalls.isNotEmpty).toList();
+        expect(toolChunks, hasLength(1));
+        expect(toolChunks.single.toolCalls.single.name, 'get_weather');
+        expect(toolChunks.single.toolCalls.single.arguments, {'city': 'Paris'});
 
-      // Identical completing final chunk with usage fields.
-      final last = chunks.last;
-      expect(last.isComplete, isTrue);
-      expect(last.usage!.inputTokens, 25);
-      expect(last.usage!.outputTokens, 42);
-      expect(last.usage!.cachedTokens, 8);
-      expect(last.finishReason, fixtures.expectedStreamFinishReason);
-    });
+        // Identical completing final chunk with usage fields.
+        final last = chunks.last;
+        expect(last.isComplete, isTrue);
+        expect(last.usage!.inputTokens, 25);
+        expect(last.usage!.outputTokens, 42);
+        expect(last.usage!.cachedTokens, 8);
+        expect(last.finishReason, fixtures.expectedStreamFinishReason);
+      },
+    );
 
-    test('a non-2xx response raises LlmHttpException with status and body', () async {
-      final transport = FakeLlmTransport(
-        provider: label,
-        script: [
-          ScriptedResponse(statusCode: 500, body: fixtures.errorBody),
-        ],
-      );
-      // Single 500, no retries: the typed error must surface immediately.
-      final client = makeClient(transport,
-          retryConfig: const RetryConfig(maxAttempts: 1));
+    test(
+      'a non-2xx response raises LlmHttpException with status and body',
+      () async {
+        final transport = FakeLlmTransport(
+          provider: label,
+          script: [ScriptedResponse(statusCode: 500, body: fixtures.errorBody)],
+        );
+        // Single 500, no retries: the typed error must surface immediately.
+        final client = makeClient(
+          transport,
+          retryConfig: const RetryConfig(maxAttempts: 1),
+        );
 
-      await expectLater(
-        client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
-        throwsA(isA<LlmHttpException>()
-            .having((e) => e.statusCode, 'statusCode', 500)
-            .having((e) => e.body, 'body', fixtures.errorBody)),
-      );
-    });
+        await expectLater(
+          client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+          throwsA(
+            isA<LlmHttpException>()
+                .having((e) => e.statusCode, 'statusCode', 500)
+                .having((e) => e.body, 'body', fixtures.errorBody),
+          ),
+        );
+      },
+    );
 
     test('a 429 is retried and then succeeds', () async {
       final transport = FakeLlmTransport(
@@ -147,11 +160,14 @@ void runLlmClientContractSuite({
           ScriptedResponse(statusCode: 200, body: fixtures.generateBody),
         ],
       );
-      final client = makeClient(transport,
-          retryConfig: const RetryConfig(maxAttempts: 2, baseDelayMs: 10));
+      final client = makeClient(
+        transport,
+        retryConfig: const RetryConfig(maxAttempts: 2, baseDelayMs: 10),
+      );
 
-      final response = await client
-          .generate(LlmRequest(messages: [UserMessage.text('hi')]));
+      final response = await client.generate(
+        LlmRequest(messages: [UserMessage.text('hi')]),
+      );
 
       expect(response.content, 'Hello, world.');
       expect(transport.requests, hasLength(2));
@@ -190,37 +206,43 @@ void main() async {
   runLlmClientContractSuite(
     label: 'openai',
     fixtures: openai,
-    makeClient: (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) => OpenAiCompatibleClient(
-      transport: transport,
-      baseUrl: 'https://api.test/v1',
-      model: 'test-model',
-      apiKey: 'test-key',
-      retryConfig: retryConfig,
-      clock: FakeLlmClock(),
-    ),
+    makeClient:
+        (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) =>
+            OpenAiCompatibleClient(
+              transport: transport,
+              baseUrl: 'https://api.test/v1',
+              model: 'test-model',
+              apiKey: 'test-key',
+              retryConfig: retryConfig,
+              clock: FakeLlmClock(),
+            ),
   );
   runLlmClientContractSuite(
     label: 'anthropic',
     fixtures: anthropic,
-    makeClient: (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) => AnthropicClient(
-      transport: transport,
-      baseUrl: 'https://api.test/v1',
-      model: 'test-model',
-      apiKey: 'test-key',
-      retryConfig: retryConfig,
-      clock: FakeLlmClock(),
-    ),
+    makeClient:
+        (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) =>
+            AnthropicClient(
+              transport: transport,
+              baseUrl: 'https://api.test/v1',
+              model: 'test-model',
+              apiKey: 'test-key',
+              retryConfig: retryConfig,
+              clock: FakeLlmClock(),
+            ),
   );
   runLlmClientContractSuite(
     label: 'gemini',
     fixtures: gemini,
-    makeClient: (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) => GeminiClient(
-      transport: transport,
-      baseUrl: 'https://api.test/v1beta',
-      model: 'test-model',
-      apiKey: 'test-key',
-      retryConfig: retryConfig,
-      clock: FakeLlmClock(),
-    ),
+    makeClient:
+        (transport, {retryConfig = const RetryConfig(maxAttempts: 1)}) =>
+            GeminiClient(
+              transport: transport,
+              baseUrl: 'https://api.test/v1beta',
+              model: 'test-model',
+              apiKey: 'test-key',
+              retryConfig: retryConfig,
+              clock: FakeLlmClock(),
+            ),
   );
 }

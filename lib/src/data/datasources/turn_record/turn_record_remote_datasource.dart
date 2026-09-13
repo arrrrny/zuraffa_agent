@@ -21,14 +21,14 @@ class TurnRecordRemoteDataSource
   final Map<String, TurnRecord> _mem = <String, TurnRecord>{};
 
   TurnRecordRemoteDataSource({this.path})
-      : _storage = path == null
-            ? null
-            : JsonlEntityStorage<TurnRecord>(
-                path: path,
-                fromJson: TurnRecord.fromJson,
-                toJson: (r) => r.toJson(),
-                getId: (r) => r.id,
-              );
+    : _storage = path == null
+          ? null
+          : JsonlEntityStorage<TurnRecord>(
+              path: path,
+              fromJson: TurnRecord.fromJson,
+              toJson: (r) => r.toJson(),
+              getId: (r) => r.id,
+            );
 
   @override
   Future<TurnRecord> get(QueryParams<TurnRecord> params) async {
@@ -41,9 +41,7 @@ class TurnRecordRemoteDataSource
   }
 
   @override
-  Future<List<TurnRecord>> getList(
-    ListQueryParams<TurnRecord> params,
-  ) async {
+  Future<List<TurnRecord>> getList(ListQueryParams<TurnRecord> params) async {
     var items = await _all();
     final offset = params.offset ?? 0;
     if (offset > 0) items = items.skip(offset).toList();

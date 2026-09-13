@@ -157,6 +157,12 @@ String eventKey(EngineEvent e) => switch (e) {
     'ProviderError|$emittedAt|$providerName|$error',
   PlanChanged(:final emittedAt, :final change) =>
     'PlanChanged|$emittedAt|${change.previous.id}|${change.next.id}',
+  EngineEventSubscriberError(
+    :final emittedAt,
+    :final error,
+    :final eventType,
+  ) =>
+    'EngineEventSubscriberError|$emittedAt|$eventType|$error',
 };
 
 void main() {

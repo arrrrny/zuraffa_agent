@@ -30,27 +30,26 @@ class EpisodicMemory {
     String? id,
     String? summary,
     List<AgentMessage>? messages,
-  }) =>
-      EpisodicMemory(
-        id: id ?? this.id,
-        summary: summary ?? this.summary,
-        messages: messages ?? this.messages,
-      );
+  }) => EpisodicMemory(
+    id: id ?? this.id,
+    summary: summary ?? this.summary,
+    messages: messages ?? this.messages,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'summary': summary,
-        'messages': [for (final m in messages) m.toJson()],
-      };
+    'id': id,
+    'summary': summary,
+    'messages': [for (final m in messages) m.toJson()],
+  };
 
   factory EpisodicMemory.fromJson(Map<String, dynamic> json) => EpisodicMemory(
-        id: json['id'] as String,
-        summary: json['summary'] as String,
-        messages: [
-          for (final m in (json['messages'] as List? ?? const []))
-            AgentMessage.fromJson(Map<String, dynamic>.from(m as Map)),
-        ],
-      );
+    id: json['id'] as String,
+    summary: json['summary'] as String,
+    messages: [
+      for (final m in (json['messages'] as List? ?? const []))
+        AgentMessage.fromJson(Map<String, dynamic>.from(m as Map)),
+    ],
+  );
 
   @override
   bool operator ==(Object other) =>

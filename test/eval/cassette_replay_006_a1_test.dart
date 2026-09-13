@@ -30,12 +30,20 @@ final kCassette = <String, dynamic>{
       'content': 'looking it up',
       'reasoning': 'I should call the search tool',
       'finishReason': 'tool_calls',
-      'usage': {'prompt_tokens': 10, 'completion_tokens': 4, 'total_tokens': 14},
+      'usage': {
+        'prompt_tokens': 10,
+        'completion_tokens': 4,
+        'total_tokens': 14,
+      },
     },
     {
       'content': 'lisbon is sunny',
       'finishReason': 'stop',
-      'usage': {'prompt_tokens': 20, 'completion_tokens': 5, 'total_tokens': 25},
+      'usage': {
+        'prompt_tokens': 20,
+        'completion_tokens': 5,
+        'total_tokens': 25,
+      },
     },
   ],
   'eventOrder': [
@@ -56,55 +64,51 @@ class NeverCalledDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'forecast: sunny',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'forecast: sunny',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      [
-        for (final c in calls)
-          await dispatch(
-            toolName: c.toolName,
-            arguments: c.arguments,
-            isInternalMission: isInternalMission,
-          )
-      ];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }
 
 class SearchThenStopPlanner implements ToolCallPlanner {
   @override
   Future<List<ToolCall>> plan(completion, transcript) async =>
       completion.finishReason == 'tool_calls'
-          ? const [
-              ToolCall(
-                toolName: 'search',
-                arguments: {'q': 'weather'},
-                executionMode: 'sequential',
-              )
-            ]
-          : const [];
+      ? const [
+          ToolCall(
+            toolName: 'search',
+            arguments: {'q': 'weather'},
+            executionMode: 'sequential',
+          ),
+        ]
+      : const [];
 }
 
 void main() {

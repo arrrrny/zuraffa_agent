@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: State & Sessions
 
 **Feature Branch**: `001-state-and-sessions`
@@ -21,7 +23,9 @@ As the engine, I persist agent state as granular typed entities — `AgentSessio
 **Acceptance Scenarios**:
 
 1. **Given** a completed mission, **When** inspected, **Then** every turn, message, tool invocation, and usage record is a distinct typed entity retrievable independently by identity.
+   **Type**: acceptance
 2. **Given** a mission's state persisted and reloaded, **When** entities are deserialized, **Then** each equals its pre-persistence value as a typed object — no untyped map escapes anywhere in the entity API.
+   **Type**: acceptance
 
 ---
 
@@ -35,10 +39,14 @@ As a user, I branch a session (explore an alternative strategy), later resume ei
 
 **Acceptance Scenarios**:
 
-1. **Given** a session at entry N, **When** forked, **Then** the new branch shares ancestry entries 1..N with the original and diverges cleanly after N; both branches remain resumable.
-2. **Given** two diverged branches, **When** switching between them, **Then** `buildContext()` reconstructs each branch's conversation exactly — the original branch matches its pre-fork history, with no cross-contamination.
-3. **Given** a persisted session, **When** the engine restarts, **Then** the session resumes from its latest leaf.
-4. **Given** the same session tree persisted to both the Hive and JSONL stores, **When** each store is reloaded, **Then** both yield the identical branch structure and entries (round-trip equivalence).
+3. **Given** a session at entry N, **When** forked, **Then** the new branch shares ancestry entries 1..N with the original and diverges cleanly after N; both branches remain resumable.
+   **Type**: acceptance
+4. **Given** two diverged branches, **When** switching between them, **Then** `buildContext()` reconstructs each branch's conversation exactly — the original branch matches its pre-fork history, with no cross-contamination.
+   **Type**: acceptance
+5. **Given** a persisted session, **When** the engine restarts, **Then** the session resumes from its latest leaf.
+   **Type**: acceptance
+6. **Given** the same session tree persisted to both the Hive and JSONL stores, **When** each store is reloaded, **Then** both yield the identical branch structure and entries (round-trip equivalence).
+   **Type**: acceptance
 
 ---
 
@@ -52,8 +60,10 @@ As the engine, when context approaches the budget, I compact selectively — ret
 
 **Acceptance Scenarios**:
 
-1. **Given** context usage crossing the compaction threshold, **When** compaction runs, **Then** decisions, tool names, key results, and plan state survive verbatim, and discarded verbose material is replaced by structured summaries that reference retrievable artifacts.
-2. **Given** the fixture mission suite, **When** compacted runs are compared to uncompacted baselines, **Then** mission outcomes are equal and context usage stays under the configured budget across the full 50+ tool calls.
+7. **Given** context usage crossing the compaction threshold, **When** compaction runs, **Then** decisions, tool names, key results, and plan state survive verbatim, and discarded verbose material is replaced by structured summaries that reference retrievable artifacts.
+   **Type**: acceptance
+8. **Given** the fixture mission suite, **When** compacted runs are compared to uncompacted baselines, **Then** mission outcomes are equal and context usage stays under the configured budget across the full 50+ tool calls.
+   **Type**: acceptance
 
 ---
 
@@ -67,8 +77,10 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 
 **Acceptance Scenarios**:
 
-1. **Given** the pi_agent source (branch `001-dart-agent-package`), **When** merged, **Then** types/tools/session-tree/SSE/skills/templates carry attribution headers and pass the engine's test suite.
-2. **Given** pi_agent's unwired loop stub, **When** the merge completes, **Then** no stub code ships — the live loop is delivered by spec 002 (engine core), not ported as a stub.
+9. **Given** the pi_agent source (branch `001-dart-agent-package`), **When** merged, **Then** types/tools/session-tree/SSE/skills/templates carry attribution headers and pass the engine's test suite.
+   **Type**: acceptance
+10. **Given** pi_agent's unwired loop stub, **When** the merge completes, **Then** no stub code ships — the live loop is delivered by spec 002 (engine core), not ported as a stub.
+   **Type**: acceptance
 
 ---
 
@@ -83,10 +95,15 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 ### Functional Requirements
 
 - **FR-001**: State MUST be granular typed entities (session/message/turn/invocation/usage), defined through Zorphy per constitution IX — no monolithic blob, no untyped map escapes.
+  traces: stateAndSessions.fr1
 - **FR-002**: Sessions MUST form a tree with first-class branch, fork, switch, and resume.
+  traces: stateAndSessions.fr2
 - **FR-003**: Persistence MUST ship Hive (device) and JSONL (debug/CI) datasources behind one storage interface.
+  traces: stateAndSessions.fr3
 - **FR-004**: Compaction MUST be selective and structured (retain/summarize/artifact-ref), never naive truncation.
+  traces: stateAndSessions.fr4
 - **FR-005**: pi_agent assets MUST be merged with attribution; stubs replaced, not shipped.
+  traces: stateAndSessions.fr5
 
 ### Key Entities
 
@@ -95,6 +112,12 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 - **TurnRecord**: one engine turn — its messages and tool invocations in order.
 - **ToolInvocation**: a single tool call with typed parameters and typed result.
 - **UsageLedger**: per-call token accounting consumed by budgets (plugin policy shell).
+
+## Layer Contracts
+
+**Domain**:
+
+- `stateAndSessions`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 
@@ -115,3 +138,10 @@ As the maintainer, I merge pi_agent's production-quality assets into the engine 
 ## Dependencies
 
 - Issue: arrrrny/zuraffa_agent#3 · Epic: #1 · Shares types with: spec 002 (engine core loop, issue #2) · Feeds: specs 003/005/006, policy shell (arrrrny/zuraffa#387)
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

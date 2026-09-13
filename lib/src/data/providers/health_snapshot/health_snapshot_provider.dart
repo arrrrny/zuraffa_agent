@@ -16,14 +16,15 @@ class HealthSnapshotProvider
   final HealthSnapshot _active;
 
   HealthSnapshotProvider([HealthSnapshot? active])
-      : _active = active ??
-            const HealthSnapshot(
-              id: 'default',
-              chainId: 'chain-0',
-              capturedAt: 0,
-              healthyProviders: 1,
-              trippedProviders: 0,
-            );
+    : _active =
+          active ??
+          const HealthSnapshot(
+            id: 'default',
+            chainId: 'chain-0',
+            capturedAt: 0,
+            healthyProviders: 1,
+            trippedProviders: 0,
+          );
 
   @override
   Future<HealthSnapshot> current(NoParams params) async => _active;

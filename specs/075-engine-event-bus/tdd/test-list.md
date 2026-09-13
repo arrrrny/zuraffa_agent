@@ -1,50 +1,66 @@
-# Test List: Engine event bus
-
----
-feature: 075-engine-event-bus
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 7 # FR-001..FR-007 in spec.md
-planned_at: fec7889 # master
-updated_at: HEAD
-suite_baseline: green # 915 passed / 2 skipped at fec7889
----
+# Test List: 075-engine-event-bus
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Fan-out: ONE publish reaches BOTH a typed subscriber and an everything-subscriber; two same-type subscribers both receive it (the onEvent callback cannot do this) | FR-002 | example | PASSING | `test/engine/engine_event_bus_test.dart::spec 075 — EngineEventBus::one publish fans out to many subscribers` |
-| A2  | Error isolation: first subscriber throws, second still receives the event, publish does not propagate the error; onSubscriberError hook gets the error + the offending event | FR-003 | example | PASSING | `…::a throwing subscriber never breaks delivery` |
-| A3  | Replay: subscriber added AFTER three publishes; replay(history) delivers all three in order to it (and re-delivers to earlier subscribers); composes with an Iterable source like EngineEventLog.events | FR-005 | example | PASSING | `…::replay broadcasts history to current subscribers` |
-| A4  | The bridge pattern: an emitter's `onEvent: bus.publish` callback feeds the bus — real EngineEvent objects flow end-to-end from a callback-shaped source to typed subscribers | FR-002 | example | PASSING | `…::onEvent bridge: any emitter becomes a multi-subscriber source` |
-| A5  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 915/2 + new) | FR-007 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/engine_event_bus_test.dart`). | AC-8 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/engine_event_bus.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | Typed delivery: subscribe<TurnStarted> receives TurnStarted but NOT TurnCompleted/ToolCallStarted; subscribe<EngineEvent> receives all three | FR-001 | example | PASSING | `…::typed subscriptions filter by exact runtime type` |
-| U2  | Registration order: two same-type subscribers are invoked in subscription order for each published event | FR-002 | example | PASSING | `…::delivery follows registration order` |
-| U3  | Cancel: isActive true → cancel → no further delivery, isActive false, double cancel safe, subscriberCount drops; a NEW subscriber after cancel still receives events | FR-004 | example | PASSING | `…::cancel stops delivery and frees the slot` |
-| U4  | subscriberCount tracks subscribe/cancel bookkeeping | FR-006 | example | PASSING | `…::subscriberCount tracks live subscriptions` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: request/response (registerHandler / request): the draft's | FR-002 | PENDING |
+| U2 | The system MUST satisfy this requirement: `AgentController`: with request/response deferred, the | FR-004 | PENDING |
+| U3 | "engine MUST emit through the bus": the runtimes (PRs | FR-005 | PENDING |
+| U4 | The system MUST satisfy this requirement: Typed subscription: `subscribe<T extends EngineEvent>( | FR-001 | PENDING |
+| U5 | The system MUST satisfy this requirement: `publish(EngineEvent event)`: synchronous delivery, in | FR-002 | PENDING |
+| U6 | The system MUST satisfy this requirement: Subscriber error isolation: a handler that throws must | FR-003 | PENDING |
+| U7 | The system MUST satisfy this requirement: `cancel()` stops delivery (idempotent — double cancel is | FR-004 | PENDING |
+| U8 | The system MUST satisfy this requirement: `replay(Iterable<EngineEvent> events)`: re-publishes the | FR-005 | PENDING |
+| U9 | The system MUST satisfy this requirement: `subscriberCount`: the number of live subscriptions. | FR-006 | PENDING |
+| U10 | The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` | FR-007 | PENDING |
 
-## Invariants and edge cases
+## Routing provenance
 
-- Isolation invariant: no subscriber exception can escape publish (A2) — the publisher's control flow is sacred.
-- Order invariants: registration order across subscribers within one publish (U2); history order within replay (A3).
-- Matching invariant: exact runtime type OR EngineEvent wildcard — never a subclass walk (all members are final; U1 pins it).
-- Cancel idempotence: double cancel is safe, no throw (U3).
-- No dynamic dispatch: handler invocation goes through a typed erasing closure (implementation discipline; pinned by analyze-clean, not a test).
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Mutation plan (deliberate, one at a time, cp-restored)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | mutant | killed by |
-| --- | ------ | --------- |
-| M1  | publish delivers to the FIRST matching subscriber only (break after first) | A1 (second same-type subscriber starves) |
-| M2  | type filter dropped — every subscriber invoked for every event | U1 (TurnStarted subscriber receives TurnCompleted) |
-| M3  | replay iterates the history reversed | A3 (order assertion) |
-| M4  | isolation removed — subscriber exceptions propagate to the publisher | A2 (publish throws / second subscriber starves) |
-| M5  | cancel is a no-op (entry stays live) | U3 (delivery continues after cancel) |

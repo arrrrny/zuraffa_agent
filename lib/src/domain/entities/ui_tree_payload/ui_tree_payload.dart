@@ -72,13 +72,21 @@ class UiTreePayload {
     required this.vocabularyId,
     required this.schemaVersion,
     required this.tree,
-  })  : depth = computeDepth(tree),
-        nodeCount = computeNodeCount(tree) {
+  }) : depth = computeDepth(tree),
+       nodeCount = computeNodeCount(tree) {
     if (vocabularyId.isEmpty) {
-      throw ArgumentError.value(vocabularyId, 'vocabularyId', 'must not be empty');
+      throw ArgumentError.value(
+        vocabularyId,
+        'vocabularyId',
+        'must not be empty',
+      );
     }
     if (schemaVersion.isEmpty) {
-      throw ArgumentError.value(schemaVersion, 'schemaVersion', 'must not be empty');
+      throw ArgumentError.value(
+        schemaVersion,
+        'schemaVersion',
+        'must not be empty',
+      );
     }
   }
 
@@ -86,11 +94,11 @@ class UiTreePayload {
   /// `mimeType`, `vocabularyId`, `schemaVersion`, `tree`. Callers own
   /// jsonEncode when crossing a string wire.
   Map<String, dynamic> toJson() => {
-        'mimeType': mimeType,
-        'vocabularyId': vocabularyId,
-        'schemaVersion': schemaVersion,
-        'tree': tree,
-      };
+    'mimeType': mimeType,
+    'vocabularyId': vocabularyId,
+    'schemaVersion': schemaVersion,
+    'tree': tree,
+  };
 
   /// Parse a ui/tree+json contract map (spec 038 FR-002). The mimeType is
   /// part of the contract, not a hint: absent or different throws
@@ -102,23 +110,35 @@ class UiTreePayload {
   factory UiTreePayload.fromJson(Map<String, dynamic> json) {
     final parsedMime = json['mimeType'];
     if (parsedMime is! String || parsedMime != mimeType) {
-      throw ArgumentError.value(parsedMime, 'mimeType',
-          'must be present and equal to "$mimeType"');
+      throw ArgumentError.value(
+        parsedMime,
+        'mimeType',
+        'must be present and equal to "$mimeType"',
+      );
     }
     final parsedVocab = json['vocabularyId'];
     if (parsedVocab is! String) {
       throw ArgumentError.value(
-          parsedVocab, 'vocabularyId', 'must be a non-empty string');
+        parsedVocab,
+        'vocabularyId',
+        'must be a non-empty string',
+      );
     }
     final parsedSchema = json['schemaVersion'];
     if (parsedSchema is! String) {
       throw ArgumentError.value(
-          parsedSchema, 'schemaVersion', 'must be a non-empty string');
+        parsedSchema,
+        'schemaVersion',
+        'must be a non-empty string',
+      );
     }
     final parsedTree = json['tree'];
     if (parsedTree is! Map<String, dynamic>) {
       throw ArgumentError.value(
-          parsedTree, 'tree', 'must be a Map<String, dynamic>');
+        parsedTree,
+        'tree',
+        'must be a Map<String, dynamic>',
+      );
     }
     return UiTreePayload(
       vocabularyId: parsedVocab,
@@ -180,8 +200,9 @@ class UiTreePayload {
     }
     final childrenA = _childrenOf(a);
     final childrenB = _childrenOf(b);
-    final max =
-        childrenA.length > childrenB.length ? childrenA.length : childrenB.length;
+    final max = childrenA.length > childrenB.length
+        ? childrenA.length
+        : childrenB.length;
     for (var i = 0; i < max; i++) {
       final childA = i < childrenA.length ? childrenA[i] : null;
       final childB = i < childrenB.length ? childrenB[i] : null;
@@ -195,7 +216,7 @@ class UiTreePayload {
     if (children is! List) return const [];
     return [
       for (final child in children)
-        if (child is Map<String, dynamic>) child
+        if (child is Map<String, dynamic>) child,
     ];
   }
 
@@ -203,11 +224,11 @@ class UiTreePayload {
   static bool _ownPayloadEq(Map<String, dynamic> a, Map<String, dynamic> b) {
     final keysA = [
       for (final k in a.keys)
-        if (k != 'children') k
+        if (k != 'children') k,
     ]..sort();
     final keysB = [
       for (final k in b.keys)
-        if (k != 'children') k
+        if (k != 'children') k,
     ]..sort();
     if (keysA.length != keysB.length) return false;
     for (var i = 0; i < keysA.length; i++) {
@@ -381,12 +402,12 @@ class UiTreeDiff {
 
   @override
   int get hashCode => Object.hash(
-        Object.hashAll(addedPaths),
-        Object.hashAll(removedPaths),
-        Object.hashAll(changedPaths),
-        vocabularyChanged,
-        schemaChanged,
-      );
+    Object.hashAll(addedPaths),
+    Object.hashAll(removedPaths),
+    Object.hashAll(changedPaths),
+    vocabularyChanged,
+    schemaChanged,
+  );
 
   @override
   String toString() =>

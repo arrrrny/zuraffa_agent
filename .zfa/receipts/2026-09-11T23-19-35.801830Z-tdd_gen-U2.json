@@ -1,0 +1,30 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:19:35.801830Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "116-runnable-example"
+ },
+ "files": [
+  {
+   "path": "test/tdd/116-runnable-example/u2_test.dart",
+   "action": "create",
+   "sha256": "0313c82e65cba1522e59376d7d869ba7e34ceefaef5815427b568a4681a8a116",
+   "bytes": 1363,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen U2` (spec 044-test-tdd-generation).\n//\n// behavior_id: U2\n// source_criterion: FR-002, MinimalAgent.transcript\n// kind: unit\n// description: The example MUST print the mission lifecycle (start,\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/116-runnable-example/u2_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\n\nlibrary;\n\nimport 'package:test/test.dart';\n\nimport 'package:zuraffa_agent/tdd/116-runnable-example/u2_subject.dart';\n\n\nvoid main() {\n  group('U2 (FR-002, MinimalAgent.transcript)', () {\n    test('U2 \u2014 The example MUST print the mission lifecycle (start,', ()  {\n      // Assertion-shaped guard: the stub fails HERE via assertion.\n      Object? guard;\n      try {\n        subject_u2(const ['MissionStarted']);\n        guard = 'ok';\n      } on UnimplementedError catch (e) {\n        guard = e;\n      }\n      expect(guard, isNot(isA<UnimplementedError>()));\n      final lines = subject_u2(['MissionStarted', 'MissionCompleted']);\n      expect(lines, ['[event] MissionStarted', '[event] MissionCompleted']);\n    });\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/116-runnable-example/u2_subject.dart",
+   "action": "create",
+   "sha256": "cd48d52712ecf6a3daec2ef53f46cf4fb074624f8fe8b32ef753b24268cdec93",
+   "bytes": 379,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 116 U2): transcript lines from\n// event type names (the example prints [event] lines).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\n/// Subject for behavior U2 \u2014 declared contract:\n/// `transcript(events) -> List<String>`.\nList<String> subject_u2(List<String> events) {\n  return [for (final e in events) '[event] $e'];\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

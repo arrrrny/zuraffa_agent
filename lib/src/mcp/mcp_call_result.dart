@@ -33,7 +33,9 @@ final class McpCallOk extends McpCallResult {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is McpCallOk && runtimeType == other.runtimeType && _mapEq(result, other.result));
+      (other is McpCallOk &&
+          runtimeType == other.runtimeType &&
+          _mapEq(result, other.result));
 
   static bool _mapEq(Map<String, dynamic> a, Map<String, dynamic> b) {
     if (a.length != b.length) return false;

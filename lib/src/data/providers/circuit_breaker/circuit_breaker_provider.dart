@@ -16,13 +16,14 @@ class CircuitBreakerProvider
   final CircuitBreaker _active;
 
   CircuitBreakerProvider([CircuitBreaker? active])
-      : _active = active ??
-            const CircuitBreaker(
-              id: 'openai-compat',
-              failureThreshold: 3,
-              cooldown: Duration(seconds: 30),
-              halfOpenThreshold: 2,
-            );
+    : _active =
+          active ??
+          const CircuitBreaker(
+            id: 'openai-compat',
+            failureThreshold: 3,
+            cooldown: Duration(seconds: 30),
+            halfOpenThreshold: 2,
+          );
 
   @override
   Future<CircuitBreaker> current(NoParams params) async => _active;

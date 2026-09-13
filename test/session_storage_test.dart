@@ -40,18 +40,22 @@ void main() {
     });
 
     test('getEntries returns all appended entries', () async {
-      await store.appendEntry(MessageEntry(
-        id: 'e_1',
-        parentId: null,
-        timestamp: fixedTime,
-        message: UserMessage.text('a'),
-      ));
-      await store.appendEntry(MessageEntry(
-        id: 'e_2',
-        parentId: 'e_1',
-        timestamp: fixedTime,
-        message: UserMessage.text('b'),
-      ));
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: UserMessage.text('a'),
+        ),
+      );
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_2',
+          parentId: 'e_1',
+          timestamp: fixedTime,
+          message: UserMessage.text('b'),
+        ),
+      );
       final entries = await store.getEntries();
       expect(entries, hasLength(2));
     });
@@ -63,18 +67,22 @@ void main() {
     });
 
     test('deleteEntries removes specified entries', () async {
-      await store.appendEntry(MessageEntry(
-        id: 'e_1',
-        parentId: null,
-        timestamp: fixedTime,
-        message: UserMessage.text('a'),
-      ));
-      await store.appendEntry(MessageEntry(
-        id: 'e_2',
-        parentId: 'e_1',
-        timestamp: fixedTime,
-        message: UserMessage.text('b'),
-      ));
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: UserMessage.text('a'),
+        ),
+      );
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_2',
+          parentId: 'e_1',
+          timestamp: fixedTime,
+          message: UserMessage.text('b'),
+        ),
+      );
       await store.deleteEntries({'e_1'});
       final entries = await store.getEntries();
       expect(entries, hasLength(1));
@@ -182,18 +190,22 @@ void main() {
       final store = JsonlSessionStorage(jsonlPath);
       await store.init();
 
-      await store.appendEntry(MessageEntry(
-        id: 'e_1',
-        parentId: null,
-        timestamp: fixedTime,
-        message: UserMessage.text('a'),
-      ));
-      await store.appendEntry(MessageEntry(
-        id: 'e_2',
-        parentId: 'e_1',
-        timestamp: fixedTime,
-        message: UserMessage.text('b'),
-      ));
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: UserMessage.text('a'),
+        ),
+      );
+      await store.appendEntry(
+        MessageEntry(
+          id: 'e_2',
+          parentId: 'e_1',
+          timestamp: fixedTime,
+          message: UserMessage.text('b'),
+        ),
+      );
 
       await store.deleteEntries({'e_1'});
       await store.close();
@@ -296,58 +308,62 @@ void main() {
       expect(ctx.activeModel!.modelId, 'gpt-4');
     });
 
-    test('buildContext tracks active compaction from CompactionTreeEntry',
-        () async {
-      await session.appendMessage(UserMessage.text('hello'));
-      await session.appendCompaction(
-        CompactionEntry(
-          id: 'ce_1',
-          parentId: null,
-          timestamp: fixedTime,
-          firstKeptEntryId: '',
-          tokensBefore: 5000,
-          tokensAfter: 1000,
-        ),
-        summary: CompactionSummary(
-          decisions: ['decided X'],
-          toolNames: ['tool_a'],
-          keyResults: ['result_a'],
-        ),
-      );
-      final ctx = await session.buildContext();
-      expect(ctx.activeCompaction, isNotNull);
-      expect(ctx.activeCompaction!.decisions, ['decided X']);
-    });
+    test(
+      'buildContext tracks active compaction from CompactionTreeEntry',
+      () async {
+        await session.appendMessage(UserMessage.text('hello'));
+        await session.appendCompaction(
+          CompactionEntry(
+            id: 'ce_1',
+            parentId: null,
+            timestamp: fixedTime,
+            firstKeptEntryId: '',
+            tokensBefore: 5000,
+            tokensAfter: 1000,
+          ),
+          summary: CompactionSummary(
+            decisions: ['decided X'],
+            toolNames: ['tool_a'],
+            keyResults: ['result_a'],
+          ),
+        );
+        final ctx = await session.buildContext();
+        expect(ctx.activeCompaction, isNotNull);
+        expect(ctx.activeCompaction!.decisions, ['decided X']);
+      },
+    );
   });
 
   group('Mission fixture loading', () {
-    test('mission_50.jsonl loads and round-trips through JsonlSessionStorage',
-        () async {
-      // Copy fixture to temp directory (never mutate committed fixtures).
-      final tmpDir = await Directory.systemTemp.createTemp('mission_test_');
-      final tmpPath = '${tmpDir.path}/mission.jsonl';
-      final fixtureFile = File('test/fixtures/mission_50.jsonl');
-      await fixtureFile.copy(tmpPath);
+    test(
+      'mission_50.jsonl loads and round-trips through JsonlSessionStorage',
+      () async {
+        // Copy fixture to temp directory (never mutate committed fixtures).
+        final tmpDir = await Directory.systemTemp.createTemp('mission_test_');
+        final tmpPath = '${tmpDir.path}/mission.jsonl';
+        final fixtureFile = File('test/fixtures/mission_50.jsonl');
+        await fixtureFile.copy(tmpPath);
 
-      final store = JsonlSessionStorage(tmpPath);
-      final result = await store.init();
+        final store = JsonlSessionStorage(tmpPath);
+        final result = await store.init();
 
-      // Should have loaded entries without tears.
-      expect(result.loadedEntriesCount, greaterThan(100));
-      expect(result.tearReport, isNull);
+        // Should have loaded entries without tears.
+        expect(result.loadedEntriesCount, greaterThan(100));
+        expect(result.tearReport, isNull);
 
-      final entries = await store.getEntries();
-      expect(entries.length, result.loadedEntriesCount);
+        final entries = await store.getEntries();
+        expect(entries.length, result.loadedEntriesCount);
 
-      // Verify all entries round-trip.
-      for (final entry in entries) {
-        final json = entry.toJson();
-        final restored = SessionTreeEntry.fromJson(json);
-        expect(restored.id, entry.id);
-      }
+        // Verify all entries round-trip.
+        for (final entry in entries) {
+          final json = entry.toJson();
+          final restored = SessionTreeEntry.fromJson(json);
+          expect(restored.id, entry.id);
+        }
 
-      await store.close();
-      await tmpDir.delete(recursive: true);
-    });
+        await store.close();
+        await tmpDir.delete(recursive: true);
+      },
+    );
   });
 }

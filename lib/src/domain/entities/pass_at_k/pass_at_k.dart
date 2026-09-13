@@ -92,7 +92,10 @@ class PassAtK {
   static PassAtK fromResults(List<bool> outcomes, {required int k}) {
     if (outcomes.isEmpty) {
       throw ArgumentError.value(
-          outcomes, 'outcomes', 'must contain at least one run');
+        outcomes,
+        'outcomes',
+        'must contain at least one run',
+      );
     }
     final c = outcomes.where((passed) => passed).length;
     return compute(n: outcomes.length, c: c, k: k);
@@ -106,7 +109,10 @@ class PassAtK {
   bool meetsThreshold(double threshold) {
     if (threshold.isNaN || threshold < 0 || threshold > 1) {
       throw ArgumentError.value(
-          threshold, 'threshold', 'must be within [0, 1]');
+        threshold,
+        'threshold',
+        'must be within [0, 1]',
+      );
     }
     return value >= threshold;
   }
@@ -154,6 +160,5 @@ class PassAtK {
   int get hashCode => Object.hash(n, c, k);
 
   @override
-  String toString() =>
-      'PassAtK(n: $n, c: $c, k: $k, value: $value)';
+  String toString() => 'PassAtK(n: $n, c: $c, k: $k, value: $value)';
 }

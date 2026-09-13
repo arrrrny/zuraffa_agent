@@ -9,11 +9,9 @@ part 'suite.g.dart';
 /// Suite entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $Suite {
-
   String get id;
   String get name;
   List<String> get tasks;
   int get k;
   double get gateThreshold;
 }
-

@@ -27,8 +27,9 @@ void main() {
   group('UpdateUsageLedgerEntryUseCase', () {
     final tUsageLedgerEntry = MockUsageLedgerEntry();
     test('should call repository.update and return result', () async {
-      when(() => mockRepository.update(any()))
-          .thenAnswer((_) async => tUsageLedgerEntry);
+      when(
+        () => mockRepository.update(any()),
+      ).thenAnswer((_) async => tUsageLedgerEntry);
       final result = await useCase.call(
         UpdateParams<String, UsageLedgerEntryPatch>(
           id: '1',

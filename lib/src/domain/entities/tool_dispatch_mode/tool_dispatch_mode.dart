@@ -26,7 +26,11 @@ class ToolDispatchMode {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ToolDispatchMode &&
-          runtimeType == other.runtimeType && id == other.id && mode == other.mode && maxParallel == other.maxParallel && failFast == other.failFast);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          mode == other.mode &&
+          maxParallel == other.maxParallel &&
+          failFast == other.failFast);
 
   @override
   int get hashCode => Object.hash(id, mode, maxParallel, failFast);

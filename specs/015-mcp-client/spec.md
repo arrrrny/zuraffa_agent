@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: MCP Client
 
 **Feature Branch**: `015-mcp-client`
@@ -21,6 +23,7 @@ As the engine, I call MCP tools directly via in-process transport (zero IPC) for
 **Acceptance Scenarios**:
 
 1. **Given** an in-proc MCP server, **When** a tool is called, **Then** it executes without serialization overhead.
+   **Type**: acceptance
 
 ### User Story 2 - SSE + Bearer transport (Priority: P1)
 
@@ -32,8 +35,10 @@ As the engine, I connect to remote MCP servers via SSE with Bearer auth, automat
 
 **Acceptance Scenarios**:
 
-1. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects and resumes.
-2. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without rebuild.
+2. **Given** an SSE connection that drops mid-mission, **When** connectivity returns, **Then** the client reconnects and resumes.
+   **Type**: acceptance
+3. **Given** an expiring token, **When** the auth callback rotates it, **Then** calls continue without rebuild.
+   **Type**: acceptance
 
 ### User Story 3 - stdio transport (Priority: P2)
 
@@ -45,7 +50,8 @@ As the engine, I connect to local MCP servers via stdio for dev tooling.
 
 **Acceptance Scenarios**:
 
-1. **Given** a stdio server that crashes, **When** it restarts, **Then** the client reconnects automatically.
+4. **Given** a stdio server that crashes, **When** it restarts, **Then** the client reconnects automatically.
+   **Type**: acceptance
 
 ### User Story 4 - Tool listing and caching (Priority: P1)
 
@@ -57,18 +63,25 @@ As the engine, I list tools from MCP servers and cache the results, with invalid
 
 **Acceptance Scenarios**:
 
-1. **Given** an MCP server, **When** tools are listed, **Then** they are registered in the tool registry.
-2. **Given** a tools-changed notification, **When** received, **Then** the cache is invalidated and tools are re-listed.
+5. **Given** an MCP server, **When** tools are listed, **Then** they are registered in the tool registry.
+   **Type**: acceptance
+6. **Given** a tools-changed notification, **When** received, **Then** the cache is invalidated and tools are re-listed.
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The MCP client MUST implement in-proc, SSE+Bearer, and stdio transports.
+  traces: mcpClient.fr1
 - **FR-002**: SSE transport MUST support automatic reconnect with exponential backoff.
+  traces: mcpClient.fr2
 - **FR-003**: SSE transport MUST support auth callback for token rotation.
+  traces: mcpClient.fr3
 - **FR-004**: stdio transport MUST handle process crashes with bounded retries.
+  traces: mcpClient.fr4
 - **FR-005**: Tool listing MUST be cached and invalidated on change notifications.
+  traces: mcpClient.fr5
 
 ### Key Entities
 
@@ -77,6 +90,12 @@ As the engine, I list tools from MCP servers and cache the results, with invalid
 - **InProcTransport**: zero-IPC registry calls
 - **SseTransport**: SSE + Bearer with reconnect
 - **StdioTransport**: process management with restart
+
+## Layer Contracts
+
+**Domain**:
+
+- `mcpClient`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

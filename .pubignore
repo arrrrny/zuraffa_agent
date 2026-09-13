@@ -1,0 +1,19 @@
+# TDD / spec working files (dev-only, large)
+/specs/
+
+# Agent handoff notes
+/handoffs/
+
+# Dev scripts and fixture tooling
+/scripts/
+/tool/
+
+# PR working documents
+/CODERABBIT_PR70.md
+/WALKTHROUGH_PR70.md
+/AGENTS.md
+
+# Build artifacts
+/build/
+/.zfa/
+/.workflow/

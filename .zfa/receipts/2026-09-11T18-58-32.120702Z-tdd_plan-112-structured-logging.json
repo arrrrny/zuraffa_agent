@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "112-structured-logging",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-11T18:58:32.120702Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "112-structured-logging"
+  },
+  "files": [
+    {
+      "path": "specs/112-structured-logging/tdd/test-list.md",
+      "action": "update",
+      "sha256": "e16947d077b0e434de186b479fd24e0ebf749a2ed44f30ed8d97834404fc7a9d",
+      "bytes": 5319,
+      "snapshot": "# Test List: 112-structured-logging\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | both records arrive at the sink carrying logger names `zuraffa.agent.llm` | AC-1 | PENDING |\n| A2 | nothing is printed, nothing throws, and | AC-2 | PENDING |\n| A3 | they are filtered out by the hierarchy and only | AC-3 | PENDING |\n| A4 | transport is FINE, lifecycle is INFO, resilience (retry, | AC-4 | PENDING |\n| A5 | a | AC-5 | PENDING |\n| A6 | an INFO | AC-6 | PENDING |\n| A7 | Type: acceptance | AC-7 | PENDING |\n| A8 | there are zero matches (the engine | AC-8 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | `AgentLog` MUST expose the named subsystem loggers `llm`, | FR-001, AgentLog.logger | PENDING |\n| U2 | The level policy MUST be pinned as facade constants — | FR-002, AgentLog.levelPolicy | PENDING |\n| U3 | `ZuraffaLogging.install({level, onRecord})` MUST be the only | FR-003, AgentLog.install | PENDING |\n| U4 | Emission MUST be safe and cheap before install: no listener | FR-004, AgentLog.logger | PENDING |\n| U5 | The first adoption sites MUST ship with this spec: the LLM | FR-005, AgentLog.retryWarning | PENDING |\n| U6 | ARCHITECTURE.md MUST document the logger hierarchy, the | FR-006, AgentLog.document | PENDING |\n\nSeam cost: 3 of 6 unit behaviors will hand-step because return is an entity.\n\n## Contract loop: contract behaviors\n\nOne per declared entity method, controller method and usecase in `spec.md` Layer Contracts (issue #1007). A contract test proves the implementation satisfies the DECLARED contract — a failing contract test is BLOCKED (never RED) and blocks the cycle from proceeding to GREEN.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| contract:A7 | AgentLog.logger(subsystem) -> Logger (usecase contract) | AgentLog.logger | PENDING |\n| contract:A8 | AgentLog.install(level, onRecord) -> void (usecase contract) | AgentLog.install | PENDING |\n| contract:A9 | AgentLog.levelPolicy() -> LevelTable (usecase contract) | AgentLog.levelPolicy | PENDING |\n| contract:A10 | AgentLog.retryWarning(attempt, delay, error) -> void (usecase contract) | AgentLog.retryWarning | PENDING |\n| contract:A11 | AgentLog.missionInfo(missionId, outcome) -> void (usecase contract) | AgentLog.missionInfo | PENDING |\n| contract:A12 | AgentLog.document(hierarchy, policy, sinkRecipe) -> void (usecase contract) | AgentLog.document | PENDING |\n\n## External dependencies\n\n| dependency | type | contract | mock priority |\n| ---------- | ---- | -------- | ------------- |\n| package:logging | pub dependency | `Logger`, `Level`, `LogRecord`, `Logger.root.onRecord` | P1 |\n\n## Layer contracts\n\n### Domain\n\n- `AgentLog`: `logger(subsystem) -> Logger`, `install(level, onRecord) -> void`, `levelPolicy() -> LevelTable`, `retryWarning(attempt, delay, error) -> void`, `missionInfo(missionId, outcome) -> void`, `document(hierarchy, policy, sinkRecipe) -> void`\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 68]\nroute: A2 -> acceptance lane [declared: type marker, spec line 74]\nroute: A3 -> acceptance lane [declared: type marker, spec line 78]\nroute: A4 -> acceptance lane [declared: type marker, spec line 97]\nroute: A5 -> acceptance lane [declared: type marker, spec line 101]\nroute: A6 -> acceptance lane [declared: type marker, spec line 106]\nroute: A7 -> acceptance lane [declared: type marker, spec line 126]\nroute: A8 -> acceptance lane [declared: type marker, spec line 131]\nroute: U1 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: U2 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: U3 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: U4 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: U5 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: U6 -> unit lane [declared: contract row: AgentLog, spec line 178]\nroute: contract:A7 -> contract lane [declared: AgentLog]\nroute: contract:A8 -> contract lane [declared: AgentLog]\nroute: contract:A9 -> contract lane [declared: AgentLog]\nroute: contract:A10 -> contract lane [declared: AgentLog]\nroute: contract:A11 -> contract lane [declared: AgentLog]\nroute: contract:A12 -> contract lane [declared: AgentLog]\n\n"
+    },
+    {
+      "path": "specs/112-structured-logging/tdd/traceability.md",
+      "action": "update",
+      "sha256": "b238aedf98531d71e170e629795964f01152fb81cccb956cc409758d2b31162c",
+      "bytes": 2082,
+      "snapshot": "# Traceability: 112-structured-logging\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:d05f49519d9f9a82db1f2fd06a014f8271ca12d10c447b97fd642b417290320b\nstatements: 15\nautomated: 15\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 67 | 1. **Given** `ZuraffaLogging.install(level: Level.INFO, onRecord: sink.add)` | A1 | automated |\n| AC-2 | 73 | 2. **Given** no `install` call has been made, **When** subsystem code emits | A2 | automated |\n| AC-3 | 77 | 3. **Given** `install` at `Level.WARNING`, **When** FINE and INFO records | A3 | automated |\n| AC-4 | 96 | 4. **Given** the `AgentLog` level policy constants, **When** they are read, | A4 | automated |\n| AC-5 | 100 | 5. **Given** an LLM client whose transport fails once and succeeds on | A5 | automated |\n| AC-6 | 105 | 6. **Given** a mission run driven through `MissionRunner` with a scripted | A6 | automated |\n| AC-7 | 125 | 7. **Given** ARCHITECTURE.md on master, **When** it is inspected, **Then** | A7 | automated |\n| AC-8 | 130 | 8. **Given** the `lib/` tree, **When** it is searched for `print(`, | A8 | automated |\n| FR-001 | 140 | - **FR-001**: `AgentLog` MUST expose the named subsystem loggers `llm`, | U1 | automated |\n| FR-002 | 145 | - **FR-002**: The level policy MUST be pinned as facade constants — | U2 | automated |\n| FR-003 | 150 | - **FR-003**: `ZuraffaLogging.install({level, onRecord})` MUST be the only | U3 | automated |\n| FR-004 | 156 | - **FR-004**: Emission MUST be safe and cheap before install: no listener | U4 | automated |\n| FR-005 | 160 | - **FR-005**: The first adoption sites MUST ship with this spec: the LLM | U5 | automated |\n| FR-006 | 165 | - **FR-006**: ARCHITECTURE.md MUST document the logger hierarchy, the | U6 | automated |\n| FR-003 | 199 | FR-003, FR-004). | U3 | automated |\n\n"
+    },
+    {
+      "path": "specs/112-structured-logging/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/112-structured-logging/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

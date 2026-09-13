@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Context Compression (LLM-based)
 
 **Feature Branch**: `009-context-compression-llm`
@@ -21,8 +23,11 @@ As the engine, when conversation history exceeds a token threshold, I compress o
 **Acceptance Scenarios**:
 
 1. **Given** history exceeding tokenThreshold, **When** compression triggers, **Then** an LLM generates a `<state_snapshot>` with sections: overall_goal, key_knowledge, file_system_state, recent_actions, current_plan. **[AC-1]**
+   **Type**: acceptance
 2. **Given** compressed history, **When** the agent continues, **Then** the snapshot is prepended as an episodic memory entry, and recent messages are preserved. **[AC-2]**
+   **Type**: acceptance
 3. **Given** a compression failure, **When** it occurs, **Then** the engine falls back to the heuristic summarizer. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Episodic memory from compression (Priority: P1)
 
@@ -34,7 +39,8 @@ As the engine, compressed messages become EpisodicMemory entries that can be ret
 
 **Acceptance Scenarios**:
 
-1. **Given** a compressed conversation, **When** `retrieve_memory` is called, **Then** the snapshot is returned with its original messages. **[AC-4]**
+4. **Given** a compressed conversation, **When** `retrieve_memory` is called, **Then** the snapshot is returned with its original messages. **[AC-4]**
+   **Type**: acceptance
 
 ### User Story 3 - Configurable thresholds (Priority: P2)
 
@@ -46,17 +52,23 @@ As an operator, I configure when compression triggers (token threshold, message 
 
 **Acceptance Scenarios**:
 
-1. **Given** a custom tokenThreshold, **When** history exceeds it, **Then** compression triggers at the configured point. **[AC-5]**
+5. **Given** a custom tokenThreshold, **When** history exceeds it, **Then** compression triggers at the configured point. **[AC-5]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The engine MUST compress conversation history when token threshold is exceeded.
+  traces: Types.fr1
 - **FR-002**: Compression MUST use an LLM to generate a structured XML snapshot.
+  traces: Types.fr2
 - **FR-003**: Compressed messages MUST become EpisodicMemory entries.
+  traces: Types.fr3
 - **FR-004**: Recent messages MUST be preserved verbatim after compression.
+  traces: Types.fr4
 - **FR-005**: The engine MUST fall back to heuristic summarization on LLM failure.
+  traces: Types.fr5
 
 ### Key Entities
 
@@ -66,6 +78,12 @@ As an operator, I configure when compression triggers (token threshold, message 
 - **EpisodicMemoryStore**: in-memory store + retrieval (the `retrieve_memory` surface)
 - **CompressionResult**: snapshot, preservedMessages, compressedMessages, memory, strategy
 - **ContextCompressionSettings**: tokenThreshold (default 64000), keepRecentMessages (default 10), messageCountThreshold (optional)
+
+## Layer Contracts
+
+**Domain**:
+
+- `Types`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

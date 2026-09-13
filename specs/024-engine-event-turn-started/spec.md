@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: EngineEvent sealed library + TurnStarted
 
 **Feature Branch**: `024-engine-event-turn-started`
@@ -21,8 +23,11 @@ As the build CI, I see `dart analyze --fatal-infos` succeed on `lib/src/engine/e
 **Acceptance Scenarios**:
 
 1. **Given** a hand-curated `lib/src/engine/events/engine_event.dart` declaring `sealed class EngineEvent`, **When** a part file declares `final class TurnStarted extends EngineEvent`, **Then** `dart analyze` reports no `invalid_use_of_type_outside_library` error.
+   **Type**: acceptance
 2. **Given** `TurnStarted` is the only `EngineEvent` subtype in this PR, **When** `dart analyze` is run on the whole `lib/`, **Then** it succeeds with no `exhaustive_switch` warnings (the `switch` over `EngineEvent` in the test uses a `default` arm OR is checked with `is TurnStarted`).
+   **Type**: acceptance
 3. **Given** a downstream consumer switches over `engineEvent`, **When** only `TurnStarted` is implemented, **Then** the switch is exhaustive when expanded as `switch (e) { case TurnStarted(): ... }`.
+   **Type**: acceptance
 
 ### User Story 2 - Foundation for the 8 sibling events (Priority: P2)
 
@@ -34,7 +39,8 @@ As the next agent fixing issue #23 (turn_completed), I clone this worktree's `en
 
 **Acceptance Scenarios**:
 
-1. **Given** the merged `engine_event.dart` library, **When** an agent adds a second `final class` extending `EngineEvent` in its own part file, **Then** `dart analyze` succeeds with no new errors.
+4. **Given** the merged `engine_event.dart` library, **When** an agent adds a second `final class` extending `EngineEvent` in its own part file, **Then** `dart analyze` succeeds with no new errors.
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -47,16 +53,28 @@ As the next agent fixing issue #23 (turn_completed), I clone this worktree's `en
 ### Functional Requirements
 
 - **FR-001**: `lib/src/engine/events/engine_event.dart` MUST declare `sealed class EngineEvent` with `part 'turn_started.dart';` and `part 'engine_event.g.dart';` directives.
+  traces: EngineEven.fr1
 - **FR-002**: `lib/src/engine/events/turn_started.dart` MUST be `part of 'engine_event.dart';` and declare `final class TurnStarted extends EngineEvent` with a `const TurnStarted();` constructor and any payload fields the engine will emit (start-of-turn timestamp `DateTime`, optional `turnId` `String?`).
+  traces: EngineEven.fr2
 - **FR-003**: `lib/src/engine/events/engine_event.dart` MUST export the `EngineEvent` library through `lib/zuraffa_agent.dart` (i.e., add `export 'src/engine/events/engine_event.dart';`).
+  traces: EngineEven.fr3
 - **FR-004**: `dart analyze --fatal-infos` MUST report zero issues on `lib/` and on the new files in particular.
+  traces: EngineEven.fr4
 - **FR-005**: A new test file at `test/engine/events/engine_event_test.dart` MUST assert: (a) `TurnStarted()` is `is EngineEvent`; (b) `TurnStarted()` is `is TurnStarted`; (c) a `switch` over `EngineEvent` with a single `TurnStarted` case + `default` compiles and runs.
+  traces: EngineEven.fr5
 - **FR-006**: `dart test` MUST pass all pre-existing tests (now 134 after PR #32) + new tests = ≥ 137 passing.
+  traces: EngineEven.fr6
 
 ### Key Entities
 
 - **EngineEvent** (sealed, in `lib/src/engine/events/engine_event.dart`): base for all engine-emitted runtime events.
 - **TurnStarted** (final class, in `lib/src/engine/events/turn_started.dart` part): emitted by the engine loop at the start of every turn.
+
+## Layer Contracts
+
+**Domain**:
+
+- `EngineEven`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

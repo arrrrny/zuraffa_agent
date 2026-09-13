@@ -14,8 +14,11 @@ void main() {
     test('declarations are safe-tier typed tools', () {
       final tools = MemoryTools.declarations;
       expect(tools, hasLength(3));
-      expect(tools.map((t) => t.id),
-          ['memory_remember', 'memory_recall', 'memory_link']);
+      expect(tools.map((t) => t.id), [
+        'memory_remember',
+        'memory_recall',
+        'memory_link',
+      ]);
       for (final tool in tools) {
         expect(tool.riskTier, RiskTier.safe);
         expect(tool.executionMode, ExecutionMode.sequential);
@@ -25,15 +28,15 @@ void main() {
       }
 
       // Schemas declare the required params.
-      final remember =
-          tools.firstWhere((t) => t.id == 'memory_remember');
-      expect(
-          (remember.paramsSchema!['required'] as List), contains('content'));
+      final remember = tools.firstWhere((t) => t.id == 'memory_remember');
+      expect((remember.paramsSchema!['required'] as List), contains('content'));
       final recall = tools.firstWhere((t) => t.id == 'memory_recall');
       expect((recall.paramsSchema!['required'] as List), contains('query'));
       final link = tools.firstWhere((t) => t.id == 'memory_link');
-      expect((link.paramsSchema!['required'] as List),
-          containsAll(['from_id', 'to_id', 'type']));
+      expect(
+        (link.paramsSchema!['required'] as List),
+        containsAll(['from_id', 'to_id', 'type']),
+      );
 
       expect(() => tools.add(tools.first), throwsUnsupportedError);
     });
@@ -88,8 +91,11 @@ void main() {
         isInternalMission: false,
       );
       expect(memory.sessionMemory.forSession('sess-42'), hasLength(1));
-      expect(memory.longTermMemory.all, isEmpty,
-          reason: 'session-scoped write must NOT land long-term');
+      expect(
+        memory.longTermMemory.all,
+        isEmpty,
+        reason: 'session-scoped write must NOT land long-term',
+      );
 
       await dispatcher.dispatch(
         toolName: 'memory_remember',
@@ -97,8 +103,11 @@ void main() {
         isInternalMission: false,
       );
       expect(memory.longTermMemory.all, hasLength(1));
-      expect(memory.sessionMemory.forSession('sess-42'), hasLength(1),
-          reason: 'long-term write must NOT touch the session');
+      expect(
+        memory.sessionMemory.forSession('sess-42'),
+        hasLength(1),
+        reason: 'long-term write must NOT touch the session',
+      );
     });
 
     test('recall renders ranked layer-attributed lines', () async {
@@ -172,8 +181,7 @@ void main() {
       expect(linked.result, contains('a'));
       expect(linked.result, contains('supports'));
 
-      final graphLinks =
-          memory.graph.linksOf(MemoryLinkType.supports);
+      final graphLinks = memory.graph.linksOf(MemoryLinkType.supports);
       expect(graphLinks, hasLength(1));
       expect(graphLinks.single.fromRecordId, 'b');
       expect(graphLinks.single.note, 'b backs a');
@@ -192,9 +200,15 @@ void main() {
       final memory = AgentMemorySystem();
       final dispatcher = MemoryToolDispatcher(memory: memory);
 
-      Future<ToolDispatchOutcome> run(String tool, Map<String, dynamic> args) async {
+      Future<ToolDispatchOutcome> run(
+        String tool,
+        Map<String, dynamic> args,
+      ) async {
         final r = await dispatcher.dispatch(
-            toolName: tool, arguments: args, isInternalMission: false);
+          toolName: tool,
+          arguments: args,
+          isInternalMission: false,
+        );
         return (r.success, r.error);
       }
 
@@ -209,8 +223,10 @@ void main() {
       expect(err, isNotEmpty);
 
       // Bad salience.
-      (ok, err) = await run(
-          'memory_remember', {'content': 'x', 'salience': 2.5});
+      (ok, err) = await run('memory_remember', {
+        'content': 'x',
+        'salience': 2.5,
+      });
       expect(ok, isFalse);
       expect(err, isNotEmpty);
 
@@ -284,7 +300,9 @@ void main() {
       expect(
         dispatcher.validateSchema(
           schema: MemoryTools.rememberTool.paramsSchema!,
-          arguments: {'tags': ['x']},
+          arguments: {
+            'tags': ['x'],
+          },
         ),
         isNotEmpty,
       );
@@ -312,8 +330,9 @@ void main() {
 
       // Memory tools are safe-tier: any risk question is yes.
       expect(
-          dispatcher.checkRiskTier(riskTier: 'safe', isInternalMission: false),
-          isTrue);
+        dispatcher.checkRiskTier(riskTier: 'safe', isInternalMission: false),
+        isTrue,
+      );
     });
 
     test('projection ranks by salience and marks session notes', () async {
@@ -355,8 +374,7 @@ void main() {
         isInternalMission: false,
       );
 
-      final withSession =
-          projection.renderWithSession('sx', limit: 2);
+      final withSession = projection.renderWithSession('sx', limit: 2);
       expect(withSession, hasLength(4));
       expect(withSession[0], contains('[session]'));
       expect(withSession[0], contains('session note one'));
@@ -365,8 +383,9 @@ void main() {
 
       // Empty memory renders empty.
       expect(
-          MemoryPromptProjection(memory: AgentMemorySystem()).render(),
-          isEmpty);
+        MemoryPromptProjection(memory: AgentMemorySystem()).render(),
+        isEmpty,
+      );
     });
 
     test('agent story: remember, link, recall, project', () async {
@@ -397,11 +416,7 @@ void main() {
       );
       final linkResult = await dispatcher.dispatch(
         toolName: 'memory_link',
-        arguments: {
-          'from_id': 'today',
-          'to_id': 'pref',
-          'type': 'supports',
-        },
+        arguments: {'from_id': 'today', 'to_id': 'pref', 'type': 'supports'},
         isInternalMission: false,
       );
       expect(linkResult.success, isTrue);
@@ -423,8 +438,7 @@ void main() {
       expect(projection.render(limit: 1).single, contains('dart over kotlin'));
     });
 
-    test('an auto id never overwrites a memory stored under that id',
-        () async {
+    test('an auto id never overwrites a memory stored under that id', () async {
       final memory = AgentMemorySystem();
       final dispatcher = MemoryToolDispatcher(memory: memory);
 
@@ -462,8 +476,7 @@ void main() {
       expect(result.error, contains('0.0..1.0'));
     });
 
-    test('validateSchema rejects an explicit null for a required argument',
-        () {
+    test('validateSchema rejects an explicit null for a required argument', () {
       final dispatcher = MemoryToolDispatcher(memory: AgentMemorySystem());
 
       // A JSON-shaped arg map yields null for an absent field, and dispatch
@@ -496,8 +509,9 @@ void main() {
         );
       }
 
-      final lines = MemoryPromptProjection(memory: memory)
-          .renderWithSession(sessionId, limit: 2);
+      final lines = MemoryPromptProjection(
+        memory: memory,
+      ).renderWithSession(sessionId, limit: 2);
 
       expect(lines, hasLength(4));
       expect(lines.where((l) => l.contains('[session]')), hasLength(2));

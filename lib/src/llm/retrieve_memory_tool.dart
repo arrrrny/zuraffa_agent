@@ -76,32 +76,34 @@ class RetrieveMemoryTool {
 
   /// The tool definition advertised to the model.
   LlmToolSpec get spec => const LlmToolSpec(
-        name: 'retrieve_memory',
-        description: 'Retrieve earlier conversation history that was '
-            'compressed. Call with snapshot_id to get one memory including '
-            'its original messages, or with limit/offset to page through '
-            'memory summaries (oldest first).',
-        parameters: {
-          'type': 'object',
-          'properties': {
-            'snapshot_id': {
-              'type': 'string',
-              'description': 'Return this specific memory (full original '
-                  'messages included).',
-            },
-            'limit': {
-              'type': 'integer',
-              'description': 'Page size for summary listings.',
-              'minimum': 1,
-            },
-            'offset': {
-              'type': 'integer',
-              'description': 'Number of memories to skip (oldest first).',
-              'minimum': 0,
-            },
-          },
+    name: 'retrieve_memory',
+    description:
+        'Retrieve earlier conversation history that was '
+        'compressed. Call with snapshot_id to get one memory including '
+        'its original messages, or with limit/offset to page through '
+        'memory summaries (oldest first).',
+    parameters: {
+      'type': 'object',
+      'properties': {
+        'snapshot_id': {
+          'type': 'string',
+          'description':
+              'Return this specific memory (full original '
+              'messages included).',
         },
-      );
+        'limit': {
+          'type': 'integer',
+          'description': 'Page size for summary listings.',
+          'minimum': 1,
+        },
+        'offset': {
+          'type': 'integer',
+          'description': 'Number of memories to skip (oldest first).',
+          'minimum': 0,
+        },
+      },
+    },
+  );
 
   /// Executes one retrieve_memory call with raw model-supplied parameters.
   RetrieveMemoryResult execute(Map<String, dynamic> params) {

@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T22:12:03.970774Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "114-jsonl-single-writer-streaming"
+ },
+ "files": [
+  {
+   "path": "test/tdd/114-jsonl-single-writer-streaming/contract_a2_test.dart",
+   "action": "create",
+   "sha256": "220a727e9aa5c80f452a1572ad7e87a6529b9b230ef3b564d76fdfd0af16eb37",
+   "bytes": 2436
+  },
+  {
+   "path": "lib/tdd/114-jsonl-single-writer-streaming/contract_a2_subject.dart",
+   "action": "create",
+   "sha256": "6be75736750d2061c40bac421bb53e8b2f4725d6b9fecf07d8a5e5bb348cefb7",
+   "bytes": 639
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

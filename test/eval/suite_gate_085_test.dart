@@ -26,14 +26,13 @@ Suite suiteWith({
   required double gateThreshold,
   List<String> tasks = const ['GM-1', 'GM-2', 'GM-3'],
   int k = 1,
-}) =>
-    Suite(
-      id: kSuiteId,
-      name: 'golden missions 085',
-      tasks: tasks,
-      k: k,
-      gateThreshold: gateThreshold,
-    );
+}) => Suite(
+  id: kSuiteId,
+  name: 'golden missions 085',
+  tasks: tasks,
+  k: k,
+  gateThreshold: gateThreshold,
+);
 
 void main() {
   group('spec 085 — fail-closed edges (FR-005, FR-006, FR-007)', () {
@@ -43,8 +42,11 @@ void main() {
         samples: const {},
       );
 
-      expect(decision.passed, isFalse,
-          reason: 'a gate over zero tasks is not evidence — fail closed');
+      expect(
+        decision.passed,
+        isFalse,
+        reason: 'a gate over zero tasks is not evidence — fail closed',
+      );
       expect(decision.exitCode, 1);
       expect(decision.score, 0.0);
       expect(decision.breakdown, isEmpty);
@@ -113,8 +115,7 @@ void main() {
       }
     });
 
-    test('T5 (pin): a score exactly at the threshold passes (>=, not >)',
-        () {
+    test('T5 (pin): a score exactly at the threshold passes (>=, not >)', () {
       // GM-1: pass@2 == 1.0 (n=4, c=4), GM-2: pass@2 == 0.0 (n=4, c=0),
       // GM-3: pass@2 == 0.5 (n=4, c=1 — C(3,2)/C(4,2) = 3/6)
       // → score = (1.0 + 0.0 + 0.5) / 3 = 0.5 == threshold.
@@ -132,8 +133,7 @@ void main() {
       expect(decision.exitCode, 0);
     });
 
-    test('T6 (pin): per-task breakdown carries the unbiased pass@k value',
-        () {
+    test('T6 (pin): per-task breakdown carries the unbiased pass@k value', () {
       final decision = SuiteGate.evaluate(
         suite: suiteWith(gateThreshold: 0.3, tasks: const ['GM-1'], k: 1),
         samples: const {'GM-1': TaskSamples(n: 10, c: 4)},
@@ -159,8 +159,7 @@ void main() {
       expect(decision.breakdown.map((r) => r.taskId), ['GM-1']);
     });
 
-    test('T8 (pin): c > n is a programming error, not an incomplete run',
-        () {
+    test('T8 (pin): c > n is a programming error, not an incomplete run', () {
       expect(
         () => SuiteGate.evaluate(
           suite: suiteWith(gateThreshold: 0.5, tasks: const ['GM-1']),

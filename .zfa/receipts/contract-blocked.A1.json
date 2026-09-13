@@ -1,0 +1,13 @@
+{
+  "schema": "contract-blocked.v1",
+  "behavior": "contract:A1",
+  "feature": "115-agent-platform-packages",
+  "kind": "contract",
+  "contract": "AgentPlatform.getAgentHome",
+  "classification": "blocked",
+  "command": "dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/115-agent-platform-packages/contract_a1_test.dart --plain-name \"AgentPlatform.getAgentHome() -> Future<String?> (usecase contract)\"",
+  "exit_code": 1,
+  "output_excerpt": "00:00 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/115-agent-platform-packages/contract_a1_test.dart\n00:00 +0: contract:A1 (AgentPlatform.getAgentHome) contract:A1 — AgentPlatform.getAgentHome() -> Future<String?> (usecase contract)\n00:00 +0 -1: contract:A1 (AgentPlatform.getAgentHome) contract:A1 — AgentPlatform.getAgentHome() -> Future<String?> (usecase contract) [E]\n  Expected: not <Instance of 'UnimplementedError'>\n    Actual: UnimplementedError:<UnimplementedError: AgentPlatform.getAgentHome() -> Future<String?> is not implemented>",
+  "blocked_at": "2026-09-11T23:05:15.472914Z",
+  "reason": "the declared contract is not satisfied by the implementation — the cycle is BLOCKED and cannot proceed to GREEN (issue #1007)"
+}

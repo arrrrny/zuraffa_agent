@@ -8,8 +8,7 @@ import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 
 DateTime get at => DateTime.utc(2026, 8, 29, 12);
 
-TurnStarted turnStart([int n = 1]) =>
-    TurnStarted(emittedAt: at, turnId: 't$n');
+TurnStarted turnStart([int n = 1]) => TurnStarted(emittedAt: at, turnId: 't$n');
 
 TurnCompleted turnComplete() => TurnCompleted(emittedAt: at);
 
@@ -32,22 +31,26 @@ void main() {
 
       expect(turns, hasLength(1), reason: 'only the TurnStarted matched');
       expect(turns.single.turnId, 't1');
-      expect(everything, hasLength(3),
-          reason: 'EngineEvent wildcard receives all');
+      expect(
+        everything,
+        hasLength(3),
+        reason: 'EngineEvent wildcard receives all',
+      );
 
       // Non-matching publishes are FILTERED, not swallowed-as-errors: the
       // error hook must stay silent when a typed subscriber simply isn't
       // interested. (Pins the type filter as behavior, not just the cast
       // inside the invoker — mutation M2's original survivor.)
       var hookFired = 0;
-      final quiet = EngineEventBus(
-        onSubscriberError: (_, _) => hookFired++,
-      );
+      final quiet = EngineEventBus(onSubscriberError: (_, _) => hookFired++);
       quiet.subscribe<TurnStarted>((_) {});
       quiet.publish(turnComplete());
       quiet.publish(toolStart());
-      expect(hookFired, 0,
-          reason: 'non-matching events are filtered before the handler');
+      expect(
+        hookFired,
+        0,
+        reason: 'non-matching events are filtered before the handler',
+      );
     });
 
     test('delivery follows registration order', () {
@@ -143,7 +146,7 @@ void main() {
       final bus = EngineEventBus();
       expect(bus.subscriberCount, 0);
 
-      final a = bus.subscribe<TurnStarted>( (_) {});
+      final a = bus.subscribe<TurnStarted>((_) {});
       final b = bus.subscribe<EngineEvent>((_) {});
       expect(bus.subscriberCount, 2);
 
@@ -182,12 +185,10 @@ void main() {
       final mixed = <EngineEvent>[];
       bus.subscribe<EngineEvent>(mixed.add);
       bus.replay(logShape);
-      expect(mixed.map((e) => e.runtimeType),
-          [TurnCompleted, ToolCallStarted]);
+      expect(mixed.map((e) => e.runtimeType), [TurnCompleted, ToolCallStarted]);
     });
 
-    test('onEvent bridge: any emitter becomes a multi-subscriber source',
-        () {
+    test('onEvent bridge: any emitter becomes a multi-subscriber source', () {
       final bus = EngineEventBus();
       final turns = <TurnStarted>[];
       final tools = <ToolCallStarted>[];

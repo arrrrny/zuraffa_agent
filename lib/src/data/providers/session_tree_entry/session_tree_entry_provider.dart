@@ -16,12 +16,13 @@ class SessionTreeEntryProvider
   final SessionTreeEntry _active;
 
   SessionTreeEntryProvider([SessionTreeEntry? active])
-      : _active = active ??
-            const SessionTreeEntry(
-              id: 'entry-default',
-              sessionId: 'session-default',
-              createdAt: 0,
-            );
+    : _active =
+          active ??
+          const SessionTreeEntry(
+            id: 'entry-default',
+            sessionId: 'session-default',
+            createdAt: 0,
+          );
 
   @override
   Future<SessionTreeEntry> current(NoParams params) async => _active;

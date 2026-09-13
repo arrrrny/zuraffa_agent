@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "010-episodic-memory",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-12T00:25:25.503415Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "010-episodic-memory"
+  },
+  "files": [
+    {
+      "path": "specs/010-episodic-memory/tdd/test-list.md",
+      "action": "update",
+      "sha256": "8cefad990a8f799aebea592635bcf77ca099c4e25ceaa7c9215effd6dee52888",
+      "bytes": 4768,
+      "snapshot": "# Test List: 010-episodic-memory\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | an EpisodicMemory entry is created with the XML snapshot and original messages. [AC-1] | AC-1 | PENDING |\n| A2 | memory summaries are available for retrieval (AgentMessageHistory carries messages + episodicMemories). [AC-2] | AC-2 | PENDING |\n| A3 | the store holds exactly 3 entries whose combined original messages cover the full compressed history. [AC-3] | AC-3 | PENDING |\n| A4 | the specific memory is returned — with its original messages, not just the summary. [AC-4] | AC-4 | PENDING |\n| A5 | paginated results are returned. [AC-5] | AC-5 | PENDING |\n| A6 | memories are restored. [AC-3 — the persistence half] | AC-6 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | Compression events MUST create EpisodicMemory entries. *(already green from spec 009's U8/U11 — this spec pins it with a multi-compression acceptance test rather than re-implementing)* | FR-001, SessionStorage.fr1 | PENDING |\n| U2 | A `retrieve_memory` tool MUST expose episodic memories to the model. | FR-002, SessionStorage.fr2 | PENDING |\n| U3 | EpisodicMemory MUST store both the summary (XML) and original messages. *(entity exists from spec 009; unchanged)* | FR-003, SessionStorage.fr3 | PENDING |\n| U4 | Retrieval MUST support snapshot_id lookup and limit/offset pagination. | FR-004, SessionStorage.fr4 | PENDING |\n| U5 | EpisodicMemory MUST persist via the session storage backend. | FR-005, SessionStorage.fr5 | PENDING |\n\n## Contract loop: contract behaviors\n\nOne per declared entity method, controller method and usecase in `spec.md` Layer Contracts (issue #1007). A contract test proves the implementation satisfies the DECLARED contract — a failing contract test is BLOCKED (never RED) and blocks the cycle from proceeding to GREEN.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| contract:A1 | SessionStorage.fr1(...) -> Result (usecase contract) | SessionStorage.fr1 | PENDING |\n| contract:A2 | SessionStorage.fr2(...) -> Result (usecase contract) | SessionStorage.fr2 | PENDING |\n| contract:A3 | SessionStorage.fr3(...) -> Result (usecase contract) | SessionStorage.fr3 | PENDING |\n| contract:A4 | SessionStorage.fr4(...) -> Result (usecase contract) | SessionStorage.fr4 | PENDING |\n| contract:A5 | SessionStorage.fr5(...) -> Result (usecase contract) | SessionStorage.fr5 | PENDING |\n\n## Layer contracts\n\n### Domain\n\n- `SessionStorage`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 30]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: A5 -> acceptance lane [declared: type marker, spec line 45]\nroute: A6 -> acceptance lane [declared: type marker, spec line 58]\nroute: U1 -> unit lane [declared: contract row: SessionStorage, spec line 88]\nroute: U2 -> unit lane [declared: contract row: SessionStorage, spec line 88]\nroute: U3 -> unit lane [declared: contract row: SessionStorage, spec line 88]\nroute: U4 -> unit lane [declared: contract row: SessionStorage, spec line 88]\nroute: U5 -> unit lane [declared: contract row: SessionStorage, spec line 88]\nroute: contract:A1 -> contract lane [declared: SessionStorage]\nroute: contract:A2 -> contract lane [declared: SessionStorage]\nroute: contract:A3 -> contract lane [declared: SessionStorage]\nroute: contract:A4 -> contract lane [declared: SessionStorage]\nroute: contract:A5 -> contract lane [declared: SessionStorage]\n\n"
+    },
+    {
+      "path": "specs/010-episodic-memory/tdd/traceability.md",
+      "action": "update",
+      "sha256": "870a25103bbf6e73e8dc2c658bea63d137a83e90d8302565801d0f695dcb08da",
+      "bytes": 2528,
+      "snapshot": "# Traceability: 010-episodic-memory\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:179b362ed545ba430939c53d0d969bb296eb9f8769c14289801f2f8aaf87e2a1\nstatements: 11\nautomated: 11\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a compression event, **When** it completes, **Then** an EpisodicMemory entry is created with the XML snapshot and original messages. **[AC-1]** | A1 | automated |\n| AC-2 | 27 | 2. **Given** episodic memories exist, **When** the agent builds context, **Then** memory summaries are available for retrieval (AgentMessageHistory carries messages + episodicMemories). **[AC-2]** | A2 | automated |\n| AC-3 | 29 | 3. **Given** three successive compression events on a growing conversation, **When** all three complete, **Then** the store holds exactly 3 entries whose combined original messages cover the full compressed history. **[AC-3]** | A3 | automated |\n| AC-4 | 42 | 4. **Given** episodic memories exist, **When** `retrieve_memory` is called with snapshot_id, **Then** the specific memory is returned — with its original messages, not just the summary. **[AC-4]** | A4 | automated |\n| AC-5 | 44 | 5. **Given** episodic memories exist, **When** `retrieve_memory` is called with limit/offset, **Then** paginated results are returned. **[AC-5]** | A5 | automated |\n| AC-6 | 57 | 6. **Given** persisted episodic memories, **When** the session loads, **Then** memories are restored. **[AC-3 — the persistence half]** | A6 | automated |\n| FR-001 | 64 | - **FR-001**: Compression events MUST create EpisodicMemory entries. *(already green from spec 009's U8/U11 — this spec pins it with a multi-compression acceptance test rather than re-implementing)* | U1 | automated |\n| FR-002 | 66 | - **FR-002**: A `retrieve_memory` tool MUST expose episodic memories to the model. | U2 | automated |\n| FR-003 | 68 | - **FR-003**: EpisodicMemory MUST store both the summary (XML) and original messages. *(entity exists from spec 009; unchanged)* | U3 | automated |\n| FR-004 | 70 | - **FR-004**: Retrieval MUST support snapshot_id lookup and limit/offset pagination. | U4 | automated |\n| FR-005 | 72 | - **FR-005**: EpisodicMemory MUST persist via the session storage backend. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/010-episodic-memory/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/010-episodic-memory/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

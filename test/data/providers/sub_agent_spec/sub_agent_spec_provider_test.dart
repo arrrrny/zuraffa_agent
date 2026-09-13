@@ -45,32 +45,35 @@ void main() {
       expect(spec.hasBudgets, isFalse);
     });
 
-    test('SubAgentSpec carries tools + subAgents + extends + riskTier + budgets', () {
-      final spec = SubAgentSpec(
-        name: 'composer',
-        description: 'Compose long-form content.',
-        systemPrompt: 'You are a composer.',
-        extendsSpec: 'explore',
-        tools: const ['fs.read', 'web.fetch'],
-        subAgents: const ['explore', 'verify'],
-        riskTier: RiskTier.confirm,
-        maxTurns: 20,
-        wallClockTimeout: const Duration(minutes: 5),
-        contextWindowTokens: 32000,
-      );
-      expect(spec.extendsSpec, 'explore');
-      expect(spec.tools.length, 2);
-      expect(spec.tools, contains('fs.read'));
-      expect(spec.subAgents.length, 2);
-      expect(spec.subAgents, contains('verify'));
-      expect(spec.riskTier, RiskTier.confirm);
-      expect(spec.maxTurns, 20);
-      expect(spec.wallClockTimeout, const Duration(minutes: 5));
-      expect(spec.contextWindowTokens, 32000);
-      expect(spec.isLeaf, isFalse);
-      expect(spec.isRoot, isFalse);
-      expect(spec.hasBudgets, isTrue);
-    });
+    test(
+      'SubAgentSpec carries tools + subAgents + extends + riskTier + budgets',
+      () {
+        final spec = SubAgentSpec(
+          name: 'composer',
+          description: 'Compose long-form content.',
+          systemPrompt: 'You are a composer.',
+          extendsSpec: 'explore',
+          tools: const ['fs.read', 'web.fetch'],
+          subAgents: const ['explore', 'verify'],
+          riskTier: RiskTier.confirm,
+          maxTurns: 20,
+          wallClockTimeout: const Duration(minutes: 5),
+          contextWindowTokens: 32000,
+        );
+        expect(spec.extendsSpec, 'explore');
+        expect(spec.tools.length, 2);
+        expect(spec.tools, contains('fs.read'));
+        expect(spec.subAgents.length, 2);
+        expect(spec.subAgents, contains('verify'));
+        expect(spec.riskTier, RiskTier.confirm);
+        expect(spec.maxTurns, 20);
+        expect(spec.wallClockTimeout, const Duration(minutes: 5));
+        expect(spec.contextWindowTokens, 32000);
+        expect(spec.isLeaf, isFalse);
+        expect(spec.isRoot, isFalse);
+        expect(spec.hasBudgets, isTrue);
+      },
+    );
 
     test('SubAgentSpec.isLeaf is false when subAgents is non-empty', () {
       final spec = SubAgentSpec(
@@ -182,14 +185,17 @@ void main() {
       expect(spec.isLeaf, isTrue);
     });
 
-    test('SubAgentSpecProvider.current returns a supplied active spec', () async {
-      final active = SubAgentSpec(
-        name: 'composer',
-        description: 'Compose.',
-        systemPrompt: 'You compose.',
-      );
-      expect(await SubAgentSpecProvider(active).current(NoParams()), active);
-    });
+    test(
+      'SubAgentSpecProvider.current returns a supplied active spec',
+      () async {
+        final active = SubAgentSpec(
+          name: 'composer',
+          description: 'Compose.',
+          systemPrompt: 'You compose.',
+        );
+        expect(await SubAgentSpecProvider(active).current(NoParams()), active);
+      },
+    );
 
     test('SubAgentSpecProvider.count returns 1', () async {
       expect(await SubAgentSpecProvider().count(NoParams()), 1);

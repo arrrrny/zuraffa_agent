@@ -1,90 +1,110 @@
-# Test List: EngineEvent.MissionCompleted
-
----
-feature: 016-engine-event-mission-completed
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — constitution.md gates applied instead (see verification.md)
-spec_criteria: 4 # acceptance criteria SC-001, SC-002 + FR-001..FR-004 in spec.md
-planned_at: 30b4b94 # master HEAD at cycle start
-updated_at: HEAD
-suite_baseline: green # 911 passed / 2 skipped (pre-existing KIMI_API_KEY integration skips) at 30b4b94; green criterion for this feature = its tests pass AND full-suite delta vs baseline is 0 new failures
----
-
-## Context at cycle start
-
-`MissionCompleted` (part file, `part` directive, sealed-switch arm, is-A +
-payload tests) landed on master via PR #42 (`32496b6`, closed issue #16)
-before this TDD pass ran. This cycle therefore closes the two gaps that
-remained against the spec's TDD obligations:
-
-1. `specs/16-engine-event-mission-completed/tdd/` artifacts did not exist.
-2. Behavioral coverage was partial: the `describe(EngineEvent)` routing for
-   `MissionCompleted` was never asserted, and `summary` was constructed
-   `null` in every test without ever being asserted (non-null round-trip
-   untested; distinct-payload mutants undetectable).
+# Test List: 16-engine-event-mission-completed
 
 ## Outer loop: acceptance behaviors
 
-Per `spec.md`'s Verification section, the acceptance behaviors for this
-spec are exercised through `test/engine/events/engine_event_test.dart`
-(this is a library feature; the public `EngineEvent` library is the
-entry surface).
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | `MissionCompleted` is `is EngineEvent` AND `is MissionCompleted` | FR-001, SC-001 | example | DONE | `test/engine/events/engine_event_test.dart::arrarrny/zuraffa_agent#16 — EngineEvent.MissionCompleted::MissionCompleted is an EngineEvent` (landed with #42; re-verified this cycle) |
-| A2  | `MissionCompleted` carries `emittedAt`, `missionId`, `status` with distinct values AND `summary: String?` round-trips both a non-null terminal summary and `null` | FR-001, SC-002 | example | DONE | `…::MissionCompleted carries payload fields` (strengthened this cycle: distinct missionId/status/summary values) + `…::MissionCompleted.summary is nullable and round-trips null` (new this cycle) |
-| A3  | `dart analyze --fatal-infos` exits 0 | FR-004, SC-001 | gate | DONE | CI gate `.github/workflows/pipeline.yml::verify / Analyze` |
-| A4  | `dart test` passes all 911 baseline + new tests | FR-004, SC-002 | gate | DONE | full suite green at HEAD (see verification.md for exact counts) |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-13 | PENDING |
+| A14 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-14 | PENDING |
+| A15 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-15 | PENDING |
+| A16 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-16 | PENDING |
+| A17 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-17 | PENDING |
+| A18 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-18 | PENDING |
+| A19 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-19 | PENDING |
+| A20 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-20 | PENDING |
+| A21 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-21 | PENDING |
+| A22 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-22 | PENDING |
+| A23 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-23 | PENDING |
+| A24 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-24 | PENDING |
+| A25 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-25 | PENDING |
+| A26 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-26 | PENDING |
+| A27 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-27 | PENDING |
+| A28 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-28 | PENDING |
+| A29 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-29 | PENDING |
+| A30 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-30 | PENDING |
+| A31 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-31 | PENDING |
+| A32 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-32 | PENDING |
+| A33 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-33 | PENDING |
+| A34 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-34 | PENDING |
+| A35 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-35 | PENDING |
+| A36 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-36 | PENDING |
+| A37 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-37 | PENDING |
+| A38 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-38 | PENDING |
+| A39 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-39 | PENDING |
+| A40 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-40 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/events/mission_completed.dart` (part file — landed via #42)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `final class MissionCompleted extends EngineEvent` declared as `part of 'engine_event.dart';` with `final DateTime emittedAt; final String missionId; final String status; final String? summary;` and a `const` all-required constructor — value semantics, immutable | FR-001 | example | DONE | A1, A2 (above); proven by mutants M1/M2 |
-| U2  | `missionId` and `status` constructor parameters bind to the fields of the same name (no cross-binding) | FR-001 | example | DONE | A2 distinct-values assertions; proven by mutant M2 |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
 
-### `lib/src/engine/events/engine_event.dart` (sealed base)
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U3  | `engine_event.dart` includes `part 'mission_completed.dart';` directive, picked up by the sealed library | FR-002 | gate | DONE | CI Analyze gate; proven by mutant M3 |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### Test file: `test/engine/events/engine_event_test.dart`
+route: A1 -> acceptance lane [declared: type marker, spec line 29]
+route: A2 -> acceptance lane [declared: type marker, spec line 31]
+route: A3 -> acceptance lane [declared: type marker, spec line 33]
+route: A4 -> acceptance lane [declared: type marker, spec line 35]
+route: A5 -> acceptance lane [declared: type marker, spec line 37]
+route: A6 -> acceptance lane [declared: type marker, spec line 39]
+route: A7 -> acceptance lane [declared: type marker, spec line 41]
+route: A8 -> acceptance lane [declared: type marker, spec line 43]
+route: A9 -> acceptance lane [declared: type marker, spec line 45]
+route: A10 -> acceptance lane [declared: type marker, spec line 47]
+route: A11 -> acceptance lane [declared: type marker, spec line 49]
+route: A12 -> acceptance lane [declared: type marker, spec line 51]
+route: A13 -> acceptance lane [declared: type marker, spec line 53]
+route: A14 -> acceptance lane [declared: type marker, spec line 55]
+route: A15 -> acceptance lane [declared: type marker, spec line 57]
+route: A16 -> acceptance lane [declared: type marker, spec line 59]
+route: A17 -> acceptance lane [declared: type marker, spec line 61]
+route: A18 -> acceptance lane [declared: type marker, spec line 63]
+route: A19 -> acceptance lane [declared: type marker, spec line 65]
+route: A20 -> acceptance lane [declared: type marker, spec line 67]
+route: A21 -> acceptance lane [declared: type marker, spec line 69]
+route: A22 -> acceptance lane [declared: type marker, spec line 71]
+route: A23 -> acceptance lane [declared: type marker, spec line 73]
+route: A24 -> acceptance lane [declared: type marker, spec line 75]
+route: A25 -> acceptance lane [declared: type marker, spec line 77]
+route: A26 -> acceptance lane [declared: type marker, spec line 79]
+route: A27 -> acceptance lane [declared: type marker, spec line 81]
+route: A28 -> acceptance lane [declared: type marker, spec line 83]
+route: A29 -> acceptance lane [declared: type marker, spec line 85]
+route: A30 -> acceptance lane [declared: type marker, spec line 87]
+route: A31 -> acceptance lane [declared: type marker, spec line 89]
+route: A32 -> acceptance lane [declared: type marker, spec line 91]
+route: A33 -> acceptance lane [declared: type marker, spec line 93]
+route: A34 -> acceptance lane [declared: type marker, spec line 95]
+route: A35 -> acceptance lane [declared: type marker, spec line 97]
+route: A36 -> acceptance lane [declared: type marker, spec line 99]
+route: A37 -> acceptance lane [declared: type marker, spec line 101]
+route: A38 -> acceptance lane [declared: type marker, spec line 103]
+route: A39 -> acceptance lane [declared: type marker, spec line 105]
+route: A40 -> acceptance lane [declared: type marker, spec line 107]
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U4  | The `describe(EngineEvent)` `switch` handles `MissionCompleted` (exhaustive with no `default` arm) and routes it to `mission_completed(<missionId>)` — extends the `switch` from PR #33/#42 with an asserted routing case | FR-003 | example | DONE | `…::describe(EngineEvent) switch routes MissionCompleted to mission_completed(missionId)` (new this cycle; the shared #24 group switch already carries the arm — this test asserts its output) |
-
-## Invariants and edge cases still to place
-
-- `summary = null` (cancelled mission with no summary): covered by
-  `…::MissionCompleted.summary is nullable and round-trips null`.
-- Specific `status` strings (`success`, `fail`, `cancelled`): not asserted
-  at the type level — the mission runner is the right enforcement site
-  (out of scope, spec-002/spec-005). The tests assert representative
-  distinct status strings round-trip.
-- `emittedAt` vs mission end time: the spec carries no separate
-  `completedAt`; `emittedAt` is the single timestamp (matches merged
-  #42 shape — no drift).
-
-## Out of scope
-
-- The 8 sibling event subtypes — each has its own spec (017 and 018
-  follow this one; the other six predate it).
-- The concrete engine loop / mission runner that emits
-  `MissionCompleted` — spec-002 / spec-005.
-- json_serializable / Zorphy annotations for `MissionCompleted` —
-  issue #15 / spec-015-engine-event-json-part.
-- Re-landing the class itself: landed via merged PR #42; this cycle
-  completes the spec-kit TDD artifacts and closes the coverage gaps.
-
-## Verification commands
-
-- Single feature: `dart test test/engine/events/engine_event_test.dart --name "MissionCompleted" --reporter expanded`
-- Full suite: `dart test`
-- Analyze gate: `dart analyze --fatal-infos`
-- Coverage: `dart test --coverage=coverage` (not run — `package:coverage` not installed; adding deps mid-loop is forbidden)
-- Mutation: no mutation tool installed — deliberate mutants per rubric (see `verification.md`)

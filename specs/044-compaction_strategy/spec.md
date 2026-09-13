@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: CompactionStrategy (selective retain/summarize)
 
 **Branch**: `044-compaction_strategy` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Selective compaction policy — retain decisions/tool names/key results/plan sta
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #3 (State & Sessions)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategy equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategy inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategyProvider is a CompactionStrategyService **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategyProvider.current returns the active strategy **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategyProvider honors an injected active strategy **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** CompactionStrategyProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/compaction_strategy/compaction_strategy_provider_test.dart`).
+   **Type**: acceptance

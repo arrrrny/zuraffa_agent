@@ -1,78 +1,60 @@
----
-feature: 031-tool-result-value-object
-loop: inside-out
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 8
-planned_at: a1934c3
-updated_at: f5c4e92
-suite_baseline: green
----
-
-# Test List: ToolResult value object
+# Test List: 031-tool-result-value-object
 
 ## Outer loop: acceptance behaviors
 
-One per acceptance criterion in `spec.md`. The feature is a pure value object
-with no user-visible surface of its own, so the loop runs inside-out: the
-acceptance behaviors are exercised through the value object's public API
-(constructors, getters, serialization) — which IS the real entry point a
-consumer uses.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                       | traces   | kind    | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------ | -------- | ------- | ------- | ----------------------------------------------------------- |
-| A1  | A success result with payload round-trips through JSON exactly                 | AC US1-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A2  | An error result round-trips with isError true and content preserved            | AC US1-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A3  | An error result without payload serializes without a payload key               | AC US1-3 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A4  | The oversized path yields summary + artifactRef + isSummarized true            | AC US2-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A5  | A summarized result's artifactRef survives the round-trip                      | AC US2-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A6  | An inline result is isSummarized false and serializes without artifactRef      | AC US2-3 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A7  | Equal results with distinct-but-equal payload instances share hashCode         | AC US3-1 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| A8  | Results differing in content/payload/isError/artifactRef are unequal           | AC US3-2 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the parsed value equals the original (content, payload, isError all preserved). | AC-1 | PENDING |
+| A2 | `isError` is still true and the content (error message) is preserved. | AC-2 | PENDING |
+| A3 | the payload key is absent/null — not an empty object masquerading as data. | AC-3 | PENDING |
+| A4 | content is a bounded summary, `artifactRef` is non-null, and `isSummarized` is true. | AC-4 | PENDING |
+| A5 | the artifactRef (kind, id, uri) survives the round-trip. | AC-5 | PENDING |
+| A6 | it is false and serialization omits the artifactRef. | AC-6 | PENDING |
+| A7 | the hashCodes are equal (the contract the scaffold violates). | AC-7 | PENDING |
+| A8 | they are unequal. | AC-8 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/tool_result/tool_result.dart`
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The `ToolResult` value object MUST keep the spec-003-exact field surface — `content` (String), `structuredPayload` (Map?), `artifactRef` (ArtifactRef?) — with NO `id` field, and MUST add `isError` (bool, default false) as the success/error discriminator. | FR-001 | PENDING |
+| U2 | Named constructors `ToolResult.success` and `ToolResult.error` MUST construct results with `isError` false/true respectively; `isError` participates in equality and hashCode. | FR-002 | PENDING |
+| U3 | `toJson()` MUST produce a JSON map with `content`, `structuredPayload` (null-safe), `artifactRef` (nested kind/id/uri, null-safe), and `isError`; `ToolResult.fromJson` MUST round-trip all four fields exactly. | FR-003 | PENDING |
+| U4 | The oversized path (`ToolResult.oversized`) MUST require a summary and an artifactRef; such results report `isSummarized == true` (artifactRef non-null). | FR-004 | PENDING |
+| U5 | `isSummarized` MUST remain the derived getter (artifactRef != null) — true for any result carrying a ref, false otherwise; serialization omits a null artifactRef. | FR-005 | PENDING |
+| U6 | Equality MUST compare content, structuredPayload (deep map equality), isError, and artifactRef; `hashCode` MUST be consistent with equality (equal results — including distinct-but-equal payload instances, any insertion order — hash equally) and MUST fold the payload in an order-independent way so payload-only differences stop colliding deterministically. | FR-006 | PENDING |
+| U7 | The clean-arch layers (`ToolResultService.current/count`, `ToolResultProvider`) MUST keep their existing signatures and compile parity; the provider stubs remain UnimplementedError (no behavioral change in this feature — the value object semantics are the deliverable). | FR-007 | PENDING |
 
-| id  | behavior                                                                       | traces         | kind    | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------ | -------------- | ------- | ------- | ----------------------------------------------------------- |
-| U1  | success factory sets isError false; error factory sets isError true            | FR-002         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U2  | Default construction stays isError=false (backward compat)                     | FR-001         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U3  | isError participates in equality                                               | FR-002         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U4  | Payload hashing is order-independent across insertion orders                   | FR-006         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U5  | null payload equals null only — never an empty map                             | edge-1         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U6  | oversized constructor requires summary + artifactRef (assert contract)         | FR-004         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U7  | oversized error results are constructible (edge-5)                             | FR-004, edge-5 | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
-| U8  | fromJson round-trips a ref with uri null (nullable uri survives)               | FR-003         | example | DONE    | `test/domain/entities/tool_result/tool_result_test.dart`    |
+## Routing provenance
 
-### `lib/src/data/providers/tool_result/` (layers untouched — FR-007)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                       | traces         | kind    | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------ | -------------- | ------- | ------- | ----------------------------------------------------------- |
-| U9  | The 7 pre-existing compile-parity + stub tests keep passing unchanged           | FR-007         | BASELINE | BASELINE | `test/data/providers/tool_result/tool_result_provider_test.dart` |
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 47]
+route: A6 -> acceptance lane [declared: type marker, spec line 49]
+route: A7 -> acceptance lane [declared: type marker, spec line 64]
+route: A8 -> acceptance lane [declared: type marker, spec line 66]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Invariants and edge cases still to place
-
-- `==`/`hashCode` consistency: every equality axis (content, payload, isError,
-  artifactRef) must be reflected in the hash — covered by A7/U4 + A8.
-- Serialization must never fabricate structure: absent payload stays absent
-  (A3), absent ref stays absent (A6).
-
-## Out of scope
-
-- Wiring ToolResultProvider to a store (current/count behavior): separate
-  feature; FR-007 pins the stubs.
-- Non-JSON-encodable payload values: caller pre-sanitizes (spec Assumption).
-- The threshold decision itself (what counts as oversized): OversizedResultPolicy
-  (spec 050) owns it; this pair only carries the summarized shape.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md`:
-
-- Single test: `dart test <file> --plain-name "<test name>"`
-- Full suite: `dart test`
-- Coverage: not configured (corroboration only, never a gate)
-- Mutation (changed files): no tool configured — deliberate hand-mutants per
-  `/speckit.tdd.verify` Phase 4

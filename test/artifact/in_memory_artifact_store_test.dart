@@ -20,18 +20,18 @@ void main() {
   });
 
   group('InMemoryArtifactStore - Store', () {
-    test('stores data and returns non-summarized result within threshold', () async {
-      final data = utf8.encode('small result');
-      final result = await store.store(
-        data: data,
-        mimeType: 'text/plain',
-      );
+    test(
+      'stores data and returns non-summarized result within threshold',
+      () async {
+        final data = utf8.encode('small result');
+        final result = await store.store(data: data, mimeType: 'text/plain');
 
-      expect(result.summarized, isFalse);
-      expect(result.summary, isNull);
-      expect(result.ref.id, isNotEmpty);
-      expect(result.ref.kind, 'artifact');
-    });
+        expect(result.summarized, isFalse);
+        expect(result.summary, isNull);
+        expect(result.ref.id, isNotEmpty);
+        expect(result.ref.kind, 'artifact');
+      },
+    );
 
     test('summarizes data exceeding threshold', () async {
       // Create data exceeding default 256KB threshold
@@ -52,7 +52,9 @@ void main() {
         config: const ArtifactServiceConfig(thresholdBytes: 100),
       );
 
-      final data = utf8.encode('a' * 200); // 200 bytes, exceeds 100 byte threshold
+      final data = utf8.encode(
+        'a' * 200,
+      ); // 200 bytes, exceeds 100 byte threshold
       final result = await customStore.store(
         data: data,
         mimeType: 'text/plain',
@@ -66,10 +68,7 @@ void main() {
   group('InMemoryArtifactStore - Fetch', () {
     test('fetches stored artifact by ref', () async {
       final data = utf8.encode('test data');
-      final result = await store.store(
-        data: data,
-        mimeType: 'text/plain',
-      );
+      final result = await store.store(data: data, mimeType: 'text/plain');
 
       final artifact = await store.fetch(result.ref);
 
@@ -79,10 +78,7 @@ void main() {
 
     test('returns null for non-existent ref', () async {
       final artifact = await store.fetch(
-        ArtifactRef(
-          kind: 'artifact',
-          id: 'non-existent',
-        ),
+        ArtifactRef(kind: 'artifact', id: 'non-existent'),
       );
 
       expect(artifact, isNull);
@@ -92,10 +88,7 @@ void main() {
   group('InMemoryArtifactStore - Delete', () {
     test('deletes stored artifact', () async {
       final data = utf8.encode('to be deleted');
-      final result = await store.store(
-        data: data,
-        mimeType: 'text/plain',
-      );
+      final result = await store.store(data: data, mimeType: 'text/plain');
 
       await store.fetch(result.ref); // Verify it exists
       await store.delete(result.ref);

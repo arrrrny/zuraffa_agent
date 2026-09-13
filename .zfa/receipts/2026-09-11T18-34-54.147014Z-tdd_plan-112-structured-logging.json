@@ -1,0 +1,42 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd plan",
+ "target": "112-structured-logging",
+ "repro": "zfa tdd plan",
+ "at": "2026-09-11T18:34:54.147014Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "specs/112-structured-logging/tdd/test-list.md",
+   "action": "update",
+   "sha256": "e16947d077b0e434de186b479fd24e0ebf749a2ed44f30ed8d97834404fc7a9d",
+   "bytes": 5319
+  },
+  {
+   "path": "specs/112-structured-logging/tdd/traceability.md",
+   "action": "update",
+   "sha256": "b238aedf98531d71e170e629795964f01152fb81cccb956cc409758d2b31162c",
+   "bytes": 2082
+  },
+  {
+   "path": "specs/112-structured-logging/tdd/ui-ledger.md",
+   "action": "update",
+   "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+   "bytes": 86,
+   "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+  },
+  {
+   "path": "specs/112-structured-logging/tdd/ui-ledger.json",
+   "action": "update",
+   "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "bytes": 2,
+   "snapshot": "[]"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

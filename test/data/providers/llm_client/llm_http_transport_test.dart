@@ -42,7 +42,9 @@ void main() {
 
     test('honors the stream flag', () {
       final body = buildChatCompletionRequest(
-        model: 'm', messages: const [ChatMessage(role: 'user', content: 'x')], stream: true,
+        model: 'm',
+        messages: const [ChatMessage(role: 'user', content: 'x')],
+        stream: true,
       );
       expect(body['stream'], isTrue);
     });
@@ -62,9 +64,13 @@ void main() {
             'content': 'PONG',
             'reasoning': 'the user asked for a single word',
           },
-        }
+        },
       ],
-      'usage': {'prompt_tokens': 20, 'completion_tokens': 97, 'total_tokens': 117},
+      'usage': {
+        'prompt_tokens': 20,
+        'completion_tokens': 97,
+        'total_tokens': 117,
+      },
     };
 
     test('parses content, reasoning, finish reason and usage', () {
@@ -77,30 +83,42 @@ void main() {
       expect(completion.usage.totalTokens, 117);
     });
 
-    test('reassembles reasoning from reasoning_details when reasoning is absent', () {
-      final json = Map<String, dynamic>.from(validJson);
-      (json['choices'][0] as Map)['message'] = {
-        'role': 'assistant',
-        'content': 'PONG',
-        'reasoning_details': [
-          {'type': 'reasoning.text', 'text': 'step one'},
-          {'type': 'reasoning.text', 'text': 'step two'},
-        ],
-      };
-      final completion = parseChatCompletionResponse(json);
-      expect(completion.content, 'PONG');
-      expect(completion.reasoning, 'step one\nstep two');
-    });
+    test(
+      'reassembles reasoning from reasoning_details when reasoning is absent',
+      () {
+        final json = Map<String, dynamic>.from(validJson);
+        (json['choices'][0] as Map)['message'] = {
+          'role': 'assistant',
+          'content': 'PONG',
+          'reasoning_details': [
+            {'type': 'reasoning.text', 'text': 'step one'},
+            {'type': 'reasoning.text', 'text': 'step two'},
+          ],
+        };
+        final completion = parseChatCompletionResponse(json);
+        expect(completion.content, 'PONG');
+        expect(completion.reasoning, 'step one\nstep two');
+      },
+    );
 
     test('throws when choices are missing', () {
       final json = Map<String, dynamic>.from(validJson)..remove('choices');
-      expect(() => parseChatCompletionResponse(json), throwsA(isA<LlmTransportException>()));
+      expect(
+        () => parseChatCompletionResponse(json),
+        throwsA(isA<LlmTransportException>()),
+      );
     });
 
     test('throws when content is empty', () {
       final json = Map<String, dynamic>.from(validJson);
-      (json['choices'][0] as Map)['message'] = {'role': 'assistant', 'content': ''};
-      expect(() => parseChatCompletionResponse(json), throwsA(isA<LlmTransportException>()));
+      (json['choices'][0] as Map)['message'] = {
+        'role': 'assistant',
+        'content': '',
+      };
+      expect(
+        () => parseChatCompletionResponse(json),
+        throwsA(isA<LlmTransportException>()),
+      );
     });
   });
 
@@ -135,16 +153,25 @@ void main() {
       );
     }
 
-    test('connects directly (no findProxy) when proxyUrl is null or empty', () async {
-      // null proxy
-      await exercise(proxyUrl: null);
-      expect(client.findProxyAssigned, isFalse,
-          reason: 'findProxy must not be installed when proxyUrl is null');
+    test(
+      'connects directly (no findProxy) when proxyUrl is null or empty',
+      () async {
+        // null proxy
+        await exercise(proxyUrl: null);
+        expect(
+          client.findProxyAssigned,
+          isFalse,
+          reason: 'findProxy must not be installed when proxyUrl is null',
+        );
 
-      // empty proxy
-      await exercise(proxyUrl: '');
-      expect(client.findProxyAssigned, isFalse,
-          reason: 'findProxy must not be installed when proxyUrl is empty');
-    });
+        // empty proxy
+        await exercise(proxyUrl: '');
+        expect(
+          client.findProxyAssigned,
+          isFalse,
+          reason: 'findProxy must not be installed when proxyUrl is empty',
+        );
+      },
+    );
   });
 }

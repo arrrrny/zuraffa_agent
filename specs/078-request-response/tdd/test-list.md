@@ -1,59 +1,64 @@
-# Test List: Request/response pattern (spec 078)
-
----
-feature: 078-request-response
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 9 # FR-001..FR-009 in spec.md
-planned_at: master (7fa7e82)
-updated_at: feat/spec-078-request-response (all A/U behaviors green, 6/6 mutants killed)
-suite_baseline: green # 919 passed / 2 skipped at 7fa7e82 (after 013 A1-A4)
----
+# Test List: 078-request-response
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Request/response round-trip through the controller: handler registered on the wrapped bus, `controller.request` returns the typed modified response | FR-001, FR-003 | example | PASSING | `test/events/request_response_test.dart::spec 078 — request/response::controller.request round-trips a typed handler response` |
-| A2  | Controller/bus parity: the same bus + handler answer identically through `EventBus.request` and `AgentController.request` (013 SC-003) | FR-001 | example | PASSING | `…::controller.request behaves identically to bus.request` |
-| A3  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 919/2 + new) | FR-009 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/events/request_response_test.dart`). | AC-8 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `AgentController` (new surface — RED) + `EventBus` (pins)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `controller.on<T>` subscribes exactly like `listen<T>` (alias) | FR-002 | unit | PASSING | `…::controller.on is an alias for listen` |
-| U2  | Multiple handlers → the MOST RECENTLY registered responds (override semantics) | FR-004 | pin | PASSING | `…::the last registered handler responds` |
-| U3  | A throwing handler's error propagates to the awaiting requester | FR-005 | pin | PASSING | `…::handler exceptions propagate to the requester` |
-| U4  | `request` with no registered handler → StateError naming the type | FR-006 | pin | PASSING | `…::request with no handler throws StateError` |
-| U5  | Response cast honesty: wrong R → TypeError, never a silent value | FR-007 | pin | PASSING | `…::a wrong response type surfaces as a TypeError` |
-| U6  | Late registration serves later requests; distinct request types dispatch independently | FR-008 | pin | PASSING | `…::registration is live and types dispatch independently` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `AgentController.request<R>(event)` MUST delegate to the | FR-001 | PENDING |
+| U2 | `AgentController.on<T>(listener)` MUST subscribe exactly | FR-002 | PENDING |
+| U3 | `AgentController` MUST expose its wrapped `EventBus` | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: (bus semantics, pinned): when multiple handlers are | FR-004 | PENDING |
+| U5 | (bus semantics, pinned): a handler exception MUST propagate | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: (bus semantics, pinned): `request` with no registered | FR-006 | PENDING |
+| U7 | (bus semantics, pinned): the response cast MUST be honest — | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: (bus semantics, pinned): handlers registered after earlier | FR-008 | PENDING |
+| U9 | The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart | FR-009 | PENDING |
 
-> **Pin honesty**: U2–U6 pass against current master behavior by design —
-> they pin FR-004..FR-008 which A3's cycle shipped unguarded. Each is
-> justified by a killer mutant (M3–M6) in verification.md.
+## Routing provenance
 
-## Edge cases & invariants
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-- Default-constructed controller: handlers register via `controller.bus`
-  (the wrap is transparent — FR-003).
-- Two request types registered concurrently dispatch to their own
-  handlers (no cross-talk).
-- Handler registered between two requests serves the second (live
-  registration).
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Out of scope
-
-- 013 FR-005 engine-emission wiring (documented deviation — the engine
-  channel is the sealed EngineEvent union / 075 EngineEventBus).
-- Async/queued dispatch, timeouts, wildcard handlers.
-- Changes to `EventBus` internals (pinned as-is; only `AgentController`
-  grows).
-
-## Verification commands
-
-- Single test: `dart test {file} -n "{name}"`
-- Full suite: `dart test`
-- Analyze: `dart analyze --fatal-infos`

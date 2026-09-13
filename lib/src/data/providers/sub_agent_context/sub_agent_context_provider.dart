@@ -18,16 +18,16 @@ class SubAgentContextProvider
   final List<SubAgentContext> _contexts;
 
   SubAgentContextProvider([SubAgentContext? active])
-      : _contexts = [
-          active ??
-              const SubAgentContext(
-                id: 'ctx-default',
-                subAgentSpecId: 'spec-default',
-                sessionId: 'session-default',
-                toolAllowlist: [],
-                budgetTurns: 10,
-              ),
-        ];
+    : _contexts = [
+        active ??
+            const SubAgentContext(
+              id: 'ctx-default',
+              subAgentSpecId: 'spec-default',
+              sessionId: 'session-default',
+              toolAllowlist: [],
+              budgetTurns: 10,
+            ),
+      ];
 
   @override
   Future<SubAgentContext> current(NoParams params) async => _contexts.last;

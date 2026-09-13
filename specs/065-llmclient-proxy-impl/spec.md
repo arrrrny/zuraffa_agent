@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Full LlmClient with Local Proxy Support
 
 **Feature Branch**: `065-llmclient-proxy-impl`
@@ -24,8 +26,11 @@ The agent sends a chat-completion request to the configured gateway and receives
 **Acceptance Scenarios**:
 
 1. **Given** a configured provider with `base_url`, a bearer `api_key`, a `proxy_url`, and a `model`, **When** the client sends a chat-completion request, **Then** the request is routed through `proxy_url` and a `200` response with a non-empty assistant message is returned.
+   **Type**: acceptance
 2. **Given** the proxy is reachable and the gateway returns a valid completion, **When** the response is parsed, **Then** the assistant content, any reasoning/thinking text, finish reason, and token usage are all exposed.
+   **Type**: acceptance
 3. **Given** the proxy is unreachable, **When** a request is attempted, **Then** the failure is surfaced as a typed error and the integration test skips rather than failing the suite.
+   **Type**: acceptance
 
 ---
 
@@ -39,8 +44,10 @@ The `LlmClient` data layer resolves the active client (provider, base URL, API k
 
 **Acceptance Scenarios**:
 
-1. **Given** provider configuration containing an active kilo provider with `proxy_url` and model `tencent/hy3:free`, **When** `current()` is called, **Then** it returns an `LlmClient` describing that provider and no longer throws.
-2. **Given** provider configuration, **When** `count()` is called, **Then** it returns the number of configured/usable clients without error.
+4. **Given** provider configuration containing an active kilo provider with `proxy_url` and model `tencent/hy3:free`, **When** `current()` is called, **Then** it returns an `LlmClient` describing that provider and no longer throws.
+   **Type**: acceptance
+5. **Given** provider configuration, **When** `count()` is called, **Then** it returns the number of configured/usable clients without error.
+   **Type**: acceptance
 
 ---
 
@@ -54,7 +61,8 @@ When the resolved client reports `supportsStreaming`, the client can consume str
 
 **Acceptance Scenarios**:
 
-1. **Given** a streaming-capable client, **When** a streaming request is made, **Then** content arrives as deltas and the final assembled message equals the non-streaming equivalent.
+6. **Given** a streaming-capable client, **When** a streaming request is made, **Then** content arrives as deltas and the final assembled message equals the non-streaming equivalent.
+   **Type**: acceptance
 
 ---
 
@@ -72,15 +80,25 @@ When the resolved client reports `supportsStreaming`, the client can consume str
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide an LLM client that sends a chat-completion request to a configured OpenAI-compatible gateway and returns a parsed completion.
+  traces: llmclientProxyImpl.fr1
 - **FR-002**: The client MUST route outbound requests through a configurable local HTTP proxy (`proxy_url`) when one is configured, and connect directly when none is set.
+  traces: llmclientProxyImpl.fr2
 - **FR-003**: The client MUST authenticate using a bearer API key sourced from provider configuration.
+  traces: llmclientProxyImpl.fr3
 - **FR-004**: The client MUST accept and forward a target model identifier in the request.
+  traces: llmclientProxyImpl.fr4
 - **FR-005**: The client MUST parse and expose the assistant message content, reasoning/thinking text, finish reason, and token usage from the gateway response.
+  traces: llmclientProxyImpl.fr5
 - **FR-006**: The `LlmClient` data layer MUST resolve the active client (provider, base URL, API key reference, proxy URL, model, capability flags) from configuration instead of throwing `UnimplementedError`.
+  traces: llmclientProxyImpl.fr6
 - **FR-007**: The implementation MUST respect the engine runtime `dart:io` purity gate — any transport using platform I/O MUST be confined to a consciously allowlisted I/O adapter (Constitution VII).
+  traces: llmclientProxyImpl.fr7
 - **FR-008**: The system MUST include an integration test that performs a real completion through the proxy and asserts a valid, non-empty response; the test MUST skip gracefully when the proxy is unreachable.
+  traces: llmclientProxyImpl.fr8
 - **FR-009**: Unit tests MUST cover request construction, proxy selection, and response parsing without any network access.
-- **FR-010**: The client SHOULD support streamed (SSE) completions when the resolved client advertises `supportsStreaming`.
+  traces: llmclientProxyImpl.fr9
+- **FR-010**: The system MUST satisfy this requirement: The client SHOULD support streamed (SSE) completions when the resolved client advertises `supportsStreaming`.
+  traces: llmclientProxyImpl.fr10
 
 ### Key Entities
 
@@ -88,6 +106,12 @@ When the resolved client reports `supportsStreaming`, the client can consume str
 - **ProviderConfig** (existing value object): `id`, `providerKind`, `baseUrl`, `models`, `timeoutMs` — the serializable config snapshot; the transport's secrets (`apiKey`) and egress (`proxyUrl`) are injected at construction rather than stored on the value object.
 - **ChatMessage / ChatCompletion** (new value objects): request messages (role + content) and a parsed response (content, reasoning, finishReason, usage).
 - **LlmTransport** (new): the I/O boundary that performs the HTTP call through the proxy and parses the response; the only component permitted to touch platform I/O.
+
+## Layer Contracts
+
+**Domain**:
+
+- `llmclientProxyImpl`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

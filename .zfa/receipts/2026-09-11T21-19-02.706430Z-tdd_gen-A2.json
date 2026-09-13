@@ -1,0 +1,29 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "A2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T21:19:02.706430Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "113-eventbus-error-observability"
+ },
+ "files": [
+  {
+   "path": "test/tdd/113-eventbus-error-observability/a2_test.dart",
+   "action": "create",
+   "sha256": "20ee985dedc7223be668a0fd66d2ad4b98947b53c7644354e44720ec9e90d71d",
+   "bytes": 1110,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen A2` (spec 044-test-tdd-generation).\n//\n// behavior_id: A2\n// source_criterion: AC-2\n// kind: acceptance\n// description: the hook is invoked with the\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/113-eventbus-error-observability/a2_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\nlibrary;\n\nimport 'package:test/test.dart';\nimport 'package:zuraffa_agent/tdd/113-eventbus-error-observability/a2_subject.dart' as subject;\n\nvoid main() {\n  group('A2 (AC-2)', () {\n    test('A2 \u2014 the hook is invoked with the', () {\n      final Object? result = (() {\n        try {\n          subject.subject_a2();\n          return null;\n        } on UnimplementedError catch (error) {\n          return error;\n        }\n      })();\n      expect(result, isNot(isA<UnimplementedError>()));\n    });\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/113-eventbus-error-observability/a2_subject.dart",
+   "action": "create",
+   "sha256": "5ceb2cf848ac841083efb936b7195e58bbf58876bc47d1c2d12f7d0840859ed6",
+   "bytes": 1765
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

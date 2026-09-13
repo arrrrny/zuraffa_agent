@@ -1,81 +1,60 @@
----
-feature: 25-repetition_tracker-datasource-pair
-loop: outside-in
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 7
-planned_at: ccca224
-updated_at: 25c0285
-suite_baseline: green
----
-
-# Test List: RepetitionTracker datasource + mock pair
+# Test List: 25-repetition_tracker-datasource-pair
 
 ## Outer loop: acceptance behaviors
 
-One per acceptance criterion in `spec.md`. Each stays red until the feature works
-end to end through its real entry point — the datasource public API (the surface
-an engine or replacing backend would call).
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                                  | traces    | kind    | state   | test                                                                                          |
-| --- | ----------------------------------------------------------------------------------------- | --------- | ------- | ------- | --------------------------------------------------------------------------------------------- |
-| A1  | Recording maxCalls-1 times keeps isLooping false and count tracks occurrences             | AC US1-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A2  | The maxCalls-th in-window occurrence trips isLooping (inclusive threshold)                | AC US1-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A3  | Two signatures loop independently — counts are keyed per signature, never shared          | AC US1-3  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A4  | After the window passes, count is 0 and isLooping reverts to false                        | AC US2-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A5  | Boundary: a record exactly window-old is expired; one strictly inside is alive            | AC US2-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A6  | reset() zeroes all counts, clears every loop signal, preserves current() configuration    | AC US3-1  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
-| A7  | record() returns the post-record in-window count (single round-trip read-after-write)     | AC US3-2  | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart`      |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | `isLooping` is false and `count` returns 2. | AC-1 | PENDING |
+| A2 | `isLooping` is true (threshold met — "more than N times in the last M seconds" is inclusive of the Nth hit). | AC-2 | PENDING |
+| A3 | both loop independently — counts are keyed per signature, never shared. | AC-3 | PENDING |
+| A4 | count is 0 and no loop is signalled. | AC-4 | PENDING |
+| A5 | only the second record counts (boundary: exactly `window` old is expired; strictly inside is alive). | AC-5 | PENDING |
+| A6 | all counts drop to 0, no signature loops, and `current()` still returns the same configuration. | AC-6 | PENDING |
+| A7 | it returns the post-record in-window count for that signature (single round-trip read-after-write). | AC-7 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them. Each line names one
-observable result.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/repetition_tracker/repetition_tracker.dart`
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The `RepetitionTracker` value object MUST expose the loop-detection configuration — `id`, `maxCalls` (N), `window` (M) — with value equality across all fields. | FR-001 | PENDING |
+| U2 | `RepetitionTracker` MUST expose a pure predicate `isRepetition(observedCalls)` that returns true iff `observedCalls >= maxCalls`, so threshold logic is testable without a datasource. | FR-002 | PENDING |
+| U3 | The datasource interface MUST define the persistence contract: `current()`, `reset()`, `record(signature)`, `count(signature)`, `isLooping(signature)` — all asynchronous. | FR-003 | PENDING |
+| U4 | `record` MUST accept an optional injectable timestamp; `count`/`isLooping` MUST accept an optional injectable evaluation time, so window behavior is deterministically testable. | FR-004 | PENDING |
+| U5 | The mock datasource MUST implement in-memory sliding-window tracking: per-signature timestamp lists, pruned to the window at write and read time. | FR-005 | PENDING |
+| U6 | `isLooping(signature)` MUST equal `current().isRepetition(count(signature))` — the signal is always derived from the live window count and the configured threshold. | FR-006 | PENDING |
+| U7 | `reset()` MUST clear every recorded signature history while preserving the tracker configuration returned by `current()`. | FR-007 | PENDING |
+| U8 | The entity, interface, and mock MUST keep constructor backward compatibility: `RepetitionTracker({required id})` and `RepetitionTrackerMockDatasource()` must keep compiling with sensible defaults (`maxCalls=5`, `window=60s`). | FR-008 | PENDING |
 
-| id  | behavior                                                                  | traces           | kind    | state   | test                                                                        |
-| --- | ------------------------------------------------------------------------- | ---------------- | ------- | ------- | --------------------------------------------------------------------------- |
-| U1  | Value equality across id, maxCalls and window                             | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U2  | Equal instances have equal hashCodes                                      | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U3  | Differing id, maxCalls or window makes instances unequal                  | FR-001, SC-004   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U4  | isRepetition is false at maxCalls-1 and true at maxCalls                  | FR-002, SC-001   | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U5  | Defaults: maxCalls=5 and window=60s when omitted                          | FR-008           | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
-| U6  | Constructor rejects maxCalls < 1                                          | FR edge-1        | example | DONE    | `test/domain/entities/repetition_tracker/repetition_tracker_test.dart`     |
+## Routing provenance
 
-### `lib/src/data/datasources/repetition_tracker/` (interface + mock)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                  | traces           | kind    | state   | test                                                                        |
-| --- | ------------------------------------------------------------------------- | ---------------- | ------- | ------- | --------------------------------------------------------------------------- |
-| U7  | Mock implements the datasource interface (compile parity, issues #25/#26) | FR-003           | example | BASELINE | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U8  | Injectable clock drives evaluation when no explicit now is passed         | FR-004           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U9  | isLooping equals current().isRepetition(count) for every signature        | FR-006           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U10 | record with an explicit at-timestamp is respected for window pruning      | FR-004           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
-| U11 | A late record older than the window is pruned on first evaluation         | edge-2           | example | DONE    | `test/data/datasources/repetition_tracker/repetition_tracker_mock_datasource_test.dart` |
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 47]
+route: A6 -> acceptance lane [declared: type marker, spec line 62]
+route: A7 -> acceptance lane [declared: type marker, spec line 64]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Invariants and edge cases still to place
-
-- The loop signal must never be sticky: it is always derived from the live
-  window count (FR-006) — covered by A4 (signal reverts after expiry) and U9.
-- Pruning happens on BOTH the write path (record) and the read path
-  (count/isLooping) — covered by U10/U11 (write path) and A4/A5 (read path).
-
-## Out of scope
-
-- A Hive- or remote-backed datasource implementation: interface contract only;
-  the mock is the reference implementation (spec Assumptions).
-- ToolCallSignature integration (producing the signature string): spec 29 owns
-  the key format; this pair consumes an opaque String.
-- LLM-call repetition beyond the shared signature mechanism: same record()
-  path, no distinct behavior.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md` at planning time, so this
-file is readable on its own:
-
-- Single test: `dart test <file> --plain-name "<test name>"`
-- Full suite: `dart test`
-- Coverage: not configured (see profile — corroboration only, never a gate)
-- Mutation (changed files): no tool configured — deliberate hand-mutants per
-  `/speckit.tdd.verify` Phase 4 (one small change, run the behavior's test,
-  expect failure, restore exactly, re-run suite)

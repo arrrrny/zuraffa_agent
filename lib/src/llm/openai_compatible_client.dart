@@ -118,8 +118,7 @@ class OpenAiCompatibleClient implements LlmClient {
       for (final fragment in (delta['tool_calls'] as List?) ?? const []) {
         final f = fragment as Map;
         final index = (f['index'] as num?)?.toInt() ?? 0;
-        final buffer =
-            toolBuffers.putIfAbsent(index, _OpenAiToolBuffer.new);
+        final buffer = toolBuffers.putIfAbsent(index, _OpenAiToolBuffer.new);
         final id = f['id'] as String?;
         if (id != null && id.isNotEmpty) buffer.id ??= id;
         final function = f['function'] as Map?;
@@ -160,17 +159,18 @@ class OpenAiCompatibleClient implements LlmClient {
   Future<void> close() async {}
 
   LlmHttpRequest _httpRequest(String body) => LlmHttpRequest(
-        uri: Uri.parse(
-            '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}chat/completions'),
-        headers: {
-          if (apiKey != null) 'authorization': 'Bearer $apiKey',
-          'content-type': 'application/json',
-        },
-        body: body,
-      );
+    uri: Uri.parse(
+      '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}chat/completions',
+    ),
+    headers: {
+      if (apiKey != null) 'authorization': 'Bearer $apiKey',
+      'content-type': 'application/json',
+    },
+    body: body,
+  );
 
-  Map<String, dynamic> _buildBody(LlmRequest request,
-      {required bool stream}) => {
+  Map<String, dynamic> _buildBody(LlmRequest request, {required bool stream}) =>
+      {
         'model': model,
         'messages': [
           if (request.systemPrompt != null)
@@ -203,9 +203,7 @@ class OpenAiCompatibleClient implements LlmClient {
       case UserMessage():
         return {
           'role': 'user',
-          'content': [
-            for (final block in message.content) _contentPart(block),
-          ],
+          'content': [for (final block in message.content) _contentPart(block)],
         };
       case AssistantMessage():
         final textParts = <Map<String, dynamic>>[];
@@ -231,7 +229,8 @@ class OpenAiCompatibleClient implements LlmClient {
           'role': 'assistant',
           if (textParts.length == 1)
             'content': textParts.single['text']
-          else if (textParts.isNotEmpty) 'content': textParts,
+          else if (textParts.isNotEmpty)
+            'content': textParts,
           if (toolCalls.isNotEmpty) 'tool_calls': toolCalls,
         };
       case ToolResultMessage():
@@ -285,8 +284,7 @@ class OpenAiCompatibleClient implements LlmClient {
   LlmResponse _parseGenerate(String body) {
     final json = jsonDecode(body) as Map<String, dynamic>;
     final choices = json['choices'] as List? ?? const [];
-    final choice =
-        choices.isEmpty ? <String, dynamic>{} : choices.first as Map;
+    final choice = choices.isEmpty ? <String, dynamic>{} : choices.first as Map;
     final message = (choice['message'] as Map?)?.cast<String, dynamic>() ?? {};
     return LlmResponse(
       content: (message['content'] as String?) ?? '',
@@ -295,8 +293,7 @@ class OpenAiCompatibleClient implements LlmClient {
           LlmToolCall(
             id: (tc as Map)['id'] as String? ?? '',
             name: ((tc['function'] as Map)['name'] as String?) ?? '',
-            arguments:
-                _parseArguments((tc['function'] as Map)['arguments']),
+            arguments: _parseArguments((tc['function'] as Map)['arguments']),
           ),
       ],
       usage: _parseUsage(json['usage']),
@@ -311,10 +308,11 @@ class OpenAiCompatibleClient implements LlmClient {
       outputTokens: (usage['completion_tokens'] as num?)?.toInt() ?? 0,
       cachedTokens:
           ((usage['prompt_tokens_details'] as Map?)?['cached_tokens'] as num?)
-                  ?.toInt() ??
-              0,
-      thoughtTokens: ((usage['completion_tokens_details']
-                  as Map?)?['reasoning_tokens'] as num?)
+              ?.toInt() ??
+          0,
+      thoughtTokens:
+          ((usage['completion_tokens_details'] as Map?)?['reasoning_tokens']
+                  as num?)
               ?.toInt() ??
           0,
     );

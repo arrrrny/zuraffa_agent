@@ -20,7 +20,8 @@ import '../datasources/stop_policy/stop_policy_datasource.dart';
 
 /// Data-layer implementation of [StopPolicyRepository] over any
 /// [StopPolicyDatasource].
-class StopPolicyRepositoryImpl with Loggable, FailureHandler
+class StopPolicyRepositoryImpl
+    with Loggable, FailureHandler
     implements StopPolicyRepository {
   StopPolicyRepositoryImpl(this._datasource);
 

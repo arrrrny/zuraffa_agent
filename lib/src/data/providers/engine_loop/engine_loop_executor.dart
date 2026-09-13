@@ -32,9 +32,7 @@ class EngineLoopExecutor {
       throw StateError('turnNumber must be >= 1, got $turnNumber');
     }
     if (turnNumber > loop.maxTurns) {
-      throw StateError(
-        'turn $turnNumber exceeds loop cap ${loop.maxTurns}',
-      );
+      throw StateError('turn $turnNumber exceeds loop cap ${loop.maxTurns}');
     }
     return llmClient.complete(messages);
   }

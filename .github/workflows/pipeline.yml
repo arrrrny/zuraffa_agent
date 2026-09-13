@@ -57,7 +57,13 @@ jobs:
           # datasources delegate I/O to this adapter instead of importing
           # dart:io directly. (spec 065)
           lib/src/data/datasources/jsonl_entity_storage.dart
-          lib/src/data/providers/llm_client/llm_http_transport.dart"
+          lib/src/data/providers/llm_client/llm_http_transport.dart
+          # PersistentAgentMemory: spec-076 file-backed memory stores —
+          # atomic JSON snapshots on local disk (write *.tmp, rename over
+          # target). Missed the allowlist when spec 076 landed (the gate
+          # was not run on that merge); added with justification by spec
+          # 105 / issue #107, which requires this gate green. (spec 076)
+          lib/src/engine/persistent_agent_memory.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then

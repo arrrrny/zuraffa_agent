@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "feature": "116-runnable-example",
+  "entries": [
+    {
+      "feature": "116-runnable-example",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T23:19:08.951261Z",
+      "finished_at": "2026-09-11T23:19:17.023850Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U1:hand",
+        "hand-step=U1:hand — replace the zfa:tdd: vacuous-guard guard at test/tdd/116-runnable-example/u1_test.dart with an assertion on the observable outcome, remove the marker, then re-run make (issue #1308)"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "U1",
+        "U2",
+        "U3",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 8,
+        "pending": 5,
+        "red": 3,
+        "green": 0,
+        "done": 0
+      },
+      "stopped_at": "U1:hand"
+    },
+    {
+      "feature": "116-runnable-example",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T23:19:08.948633Z",
+      "finished_at": "2026-09-11T23:19:17.025660Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U1:hand",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: RepetitionTracker datasource + mock pair
 
 **Feature Branch**: `25-repetition_tracker-datasource-pair`
@@ -21,8 +23,11 @@ As the engine loop, I feed every tool/LLM invocation signature to the repetition
 **Acceptance Scenarios**:
 
 1. **Given** a tracker configured `maxCalls=3, window=60s`, **When** the same signature is recorded 2 times, **Then** `isLooping` is false and `count` returns 2.
+   **Type**: acceptance
 2. **Given** the same tracker, **When** the same signature is recorded a 3rd time, **Then** `isLooping` is true (threshold met — "more than N times in the last M seconds" is inclusive of the Nth hit).
+   **Type**: acceptance
 3. **Given** two different signatures recorded 3 times each with `maxCalls=3`, **Then** both loop independently — counts are keyed per signature, never shared.
+   **Type**: acceptance
 
 ---
 
@@ -36,8 +41,10 @@ As the engine loop, I need calls older than the window to stop counting, so that
 
 **Acceptance Scenarios**:
 
-1. **Given** `window=60s` and 3 records at `T0`, **When** `count`/`isLooping` are evaluated at `T0+61s`, **Then** count is 0 and no loop is signalled.
-2. **Given** records at `T0` and `T0+50s` with `window=60s`, **When** evaluated at `T0+61s`, **Then** only the second record counts (boundary: exactly `window` old is expired; strictly inside is alive).
+4. **Given** `window=60s` and 3 records at `T0`, **When** `count`/`isLooping` are evaluated at `T0+61s`, **Then** count is 0 and no loop is signalled.
+   **Type**: acceptance
+5. **Given** records at `T0` and `T0+50s` with `window=60s`, **When** evaluated at `T0+61s`, **Then** only the second record counts (boundary: exactly `window` old is expired; strictly inside is alive).
+   **Type**: acceptance
 
 ---
 
@@ -51,8 +58,10 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 
 **Acceptance Scenarios**:
 
-1. **Given** a mock with 3 recorded signatures, **When** `reset()` is called, **Then** all counts drop to 0, no signature loops, and `current()` still returns the same configuration.
-2. **Given** any conforming implementation, **When** `record` returns, **Then** it returns the post-record in-window count for that signature (single round-trip read-after-write).
+6. **Given** a mock with 3 recorded signatures, **When** `reset()` is called, **Then** all counts drop to 0, no signature loops, and `current()` still returns the same configuration.
+   **Type**: acceptance
+7. **Given** any conforming implementation, **When** `record` returns, **Then** it returns the post-record in-window count for that signature (single round-trip read-after-write).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -66,13 +75,21 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 ### Functional Requirements
 
 - **FR-001**: The `RepetitionTracker` value object MUST expose the loop-detection configuration — `id`, `maxCalls` (N), `window` (M) — with value equality across all fields.
+  traces: RepetitionTracke.fr1
 - **FR-002**: `RepetitionTracker` MUST expose a pure predicate `isRepetition(observedCalls)` that returns true iff `observedCalls >= maxCalls`, so threshold logic is testable without a datasource.
+  traces: RepetitionTracke.fr2
 - **FR-003**: The datasource interface MUST define the persistence contract: `current()`, `reset()`, `record(signature)`, `count(signature)`, `isLooping(signature)` — all asynchronous.
+  traces: RepetitionTracke.fr3
 - **FR-004**: `record` MUST accept an optional injectable timestamp; `count`/`isLooping` MUST accept an optional injectable evaluation time, so window behavior is deterministically testable.
+  traces: RepetitionTracke.fr4
 - **FR-005**: The mock datasource MUST implement in-memory sliding-window tracking: per-signature timestamp lists, pruned to the window at write and read time.
+  traces: RepetitionTracke.fr5
 - **FR-006**: `isLooping(signature)` MUST equal `current().isRepetition(count(signature))` — the signal is always derived from the live window count and the configured threshold.
+  traces: RepetitionTracke.fr6
 - **FR-007**: `reset()` MUST clear every recorded signature history while preserving the tracker configuration returned by `current()`.
+  traces: RepetitionTracke.fr7
 - **FR-008**: The entity, interface, and mock MUST keep constructor backward compatibility: `RepetitionTracker({required id})` and `RepetitionTrackerMockDatasource()` must keep compiling with sensible defaults (`maxCalls=5`, `window=60s`).
+  traces: RepetitionTracke.fr8
 
 ### Key Entities *(include if feature involves data)*
 
@@ -80,6 +97,12 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 - **RepetitionTrackerDatasource** (interface): persistence contract over the tracker — read config, reset, record a call, count in-window calls, derive loop signal.
 - **RepetitionTrackerMockDatasource** (concrete): in-memory implementation with injectable clock for deterministic tests.
 - **ToolCallSignature** (owned by spec 29): the signature string passed to `record` is the canonical key a `ToolCallSignature` produces; this pair consumes it as an opaque `String`, keeping the two specs independently testable.
+
+## Layer Contracts
+
+**Domain**:
+
+- `RepetitionTracke`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 
@@ -97,3 +120,10 @@ As the application integrator, I replace the mock with a Hive/remote-backed impl
 - Default configuration `maxCalls=5, window=60s` aligns with the StopPolicy default `repetitionThreshold=5` already documented on `StopPolicyService.defaultPolicy`.
 - Persistence here means the interface contract; an actual Hive/remote backend is out of scope for this feature (the mock is the reference implementation).
 - Existing regression tests asserting `UnimplementedError` stubs are superseded by this refinement: the pair now ships real behavior (documented as drift remediation).
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

@@ -18,7 +18,9 @@ class ArtifactServiceConfig {
   final int thresholdBytes;
 
   ArtifactServiceConfig copyWith({int? thresholdBytes}) {
-    return ArtifactServiceConfig(thresholdBytes: thresholdBytes ?? this.thresholdBytes);
+    return ArtifactServiceConfig(
+      thresholdBytes: thresholdBytes ?? this.thresholdBytes,
+    );
   }
 }
 

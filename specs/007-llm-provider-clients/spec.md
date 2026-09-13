@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: LLM Provider Clients
 
 **Feature Branch**: `007-llm-provider-clients`
@@ -21,8 +23,11 @@ As the engine, I call any OpenAI-compatible API (self-host, Kimi, Groq, etc.) wi
 **Acceptance Scenarios**:
 
 1. **Given** an OpenAI-compatible endpoint, **When** streaming, **Then** content deltas, tool call fragments, and usage parse correctly. **[AC-1]**
+   **Type**: acceptance
 2. **Given** a malformed tool argument from the model, **When** parsed, **Then** it tolerates gracefully (empty map default). **[AC-2]**
+   **Type**: acceptance
 3. **Given** a non-2xx response, **When** received, **Then** a typed error with status code and body is thrown. **[AC-3]**
+   **Type**: acceptance
 
 ### User Story 2 - Anthropic client (Priority: P1)
 
@@ -34,8 +39,10 @@ As the engine, I call the Anthropic Messages API with thinking/reasoning support
 
 **Acceptance Scenarios**:
 
-1. **Given** an Anthropic endpoint, **When** streaming, **Then** thinking blocks and content blocks parse correctly. **[AC-4]**
-2. **Given** tool calls in the response, **When** accumulated, **Then** they assemble from streamed argument fragments. **[AC-5]**
+4. **Given** an Anthropic endpoint, **When** streaming, **Then** thinking blocks and content blocks parse correctly. **[AC-4]**
+   **Type**: acceptance
+5. **Given** tool calls in the response, **When** accumulated, **Then** they assemble from streamed argument fragments. **[AC-5]**
+   **Type**: acceptance
 
 ### User Story 3 - Gemini client (Priority: P1)
 
@@ -47,8 +54,10 @@ As the engine, I call the Google Generative AI API with JSON line streaming and 
 
 **Acceptance Scenarios**:
 
-1. **Given** a Gemini endpoint, **When** streaming, **Then** JSON line chunks parse correctly. **[AC-6]**
-2. **Given** a MALFORMED_FUNCTION_CALL, **When** retried, **Then** the client handles it gracefully. **[AC-7]**
+6. **Given** a Gemini endpoint, **When** streaming, **Then** JSON line chunks parse correctly. **[AC-6]**
+   **Type**: acceptance
+7. **Given** a MALFORMED_FUNCTION_CALL, **When** retried, **Then** the client handles it gracefully. **[AC-7]**
+   **Type**: acceptance
 
 ### User Story 4 - Shared contract tests (Priority: P1)
 
@@ -60,19 +69,27 @@ As a developer, all three clients pass one shared contract-test suite over recor
 
 **Acceptance Scenarios**:
 
-1. **Given** recorded fixtures for each provider, **When** the contract suite runs, **Then** all providers produce identical event sequences, tool-call buffering, and usage fields. **[AC-8]**
+8. **Given** recorded fixtures for each provider, **When** the contract suite runs, **Then** all providers produce identical event sequences, tool-call buffering, and usage fields. **[AC-8]**
+   **Type**: acceptance
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The engine MUST provide a unified `LlmClient` interface with `generate()` and `stream()` methods.
+  traces: LlmClien.fr1
 - **FR-002**: OpenAI-compatible, Anthropic, and Gemini clients MUST implement this interface.
+  traces: LlmClien.fr2
 - **FR-003**: All clients MUST support multimodal input (text, image, audio, document) and output.
+  traces: LlmClien.fr3
 - **FR-004**: All clients MUST support streaming with tool call fragment assembly.
+  traces: LlmClien.fr4
 - **FR-005**: All clients MUST track usage (input, output, cached, thought tokens).
+  traces: LlmClien.fr5
 - **FR-006**: All clients MUST implement retry with exponential backoff for 429/5xx.
+  traces: LlmClien.fr6
 - **FR-007**: All clients MUST be vendored from dart_agent_core with attribution; dart_agent_core MUST NOT appear in the dependency graph.
+  traces: LlmClien.fr7
 
 ### Key Entities
 
@@ -80,6 +97,12 @@ As a developer, all three clients pass one shared contract-test suite over recor
 - **LlmResponse**: content, toolCalls, usage, finishReason
 - **LlmResponseChunk**: content, thinking, toolCalls, usage, isComplete
 - **LlmUsage**: inputTokens, outputTokens, cachedTokens, thoughtTokens
+
+## Layer Contracts
+
+**Domain**:
+
+- `LlmClien`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

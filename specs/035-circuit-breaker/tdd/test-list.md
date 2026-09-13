@@ -1,82 +1,60 @@
----
-feature: 035-circuit-breaker
-loop: inside-out
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 9 # acceptance criteria AC US1-1..3, US2-1..3, US3-1..3 in spec.md
-planned_at: 727c618
-updated_at: 24372dc
-suite_baseline: green # 640 passed, 0 failed (post spec-034)
----
-
-# Test List: CircuitBreaker state machine — recovery readiness + persistence contract
+# Test List: 035-circuit-breaker
 
 ## Outer loop: acceptance behaviors
 
-The feature is a pure value object with no user-visible surface of its own,
-so the loop runs inside-out: acceptance behaviors are exercised through the
-breaker's public API (the read, the transitions, the serialization) — the
-entry points the fallback-chain coordinator and the persistence layer
-consume.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                       | traces     | kind             | state   | test                                                              |
-| --- | ------------------------------------------------------------------------------ | ---------- | ---------------- | ------- | ------------------------------------------------------------------ |
-| A1  | shouldProbe is false in closed (nothing to recover)                            | AC US1-1   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A2  | shouldProbe is false one tick before the cooldown boundary, true at it         | AC US1-2   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A3  | shouldProbe is false in halfOpen (probe in flight, not due)                    | AC US1-3   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A4  | A recovered breaker's next single failure stays closed on a fresh streak       | AC US2-1   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A5  | Fresh-threshold failures after recovery re-trip the breaker open               | AC US2-2   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A6  | A half-open failure re-trips open with probes reset and openedAt stamped       | AC US2-3   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A7  | Every state round-trips JSON field-exactly (closed/open/halfOpen)              | AC US3-1   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A8  | A restored open breaker continues its cooldown from the original openedAt      | AC US3-1   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| A9  | Mid-probe halfOpen resumes with partial halfOpenSuccesses after round-trip     | AC US3-2   | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | it is false — there is nothing to recover. | AC-1 | PENDING |
+| A2 | it is false; at exactly 30s it is true (boundary included: `elapsed >= cooldown`). | AC-2 | PENDING |
+| A3 | it is false — the probe is in flight, not due. | AC-3 | PENDING |
+| A4 | the breaker stays CLOSED with `failureCount == 1` — the old streak did not survive recovery. | AC-4 | PENDING |
+| A5 | it trips open again (a full fresh trip cycle). | AC-5 | PENDING |
+| A6 | it re-trips open immediately with `halfOpenSuccesses == 0` and `openedAt` stamped at the failure. | AC-6 | PENDING |
+| A7 | it is false and `shouldProbe(T+30s)` is true — the cooldown continued across the round-trip. | AC-7 | PENDING |
+| A8 | the restored breaker is still halfOpen with `halfOpenSuccesses == 1` — one more success closes it (mid-probe resume). | AC-8 | PENDING |
+| A9 | an `ArgumentError` names the offending field — never a silent default (a defaulted threshold would silently change trip behavior). | AC-9 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/circuit_breaker/circuit_breaker.dart` (shouldProbe)
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: The `CircuitBreaker` value object keeps its spec-exact nine-field surface and all transition semantics — `recordFailure`/`recordSuccess`/`tryHalfOpen` pure snapshot transitions, the `isOpen`/`isClosed`/`isHalfOpen` reads, value equality — unchanged (compile parity with the 12 existing tests). | FR-001 | PENDING |
+| U2 | `shouldProbe(DateTime now)` MUST return true iff `state == open && openedAt != null && now.difference(openedAt) >= cooldown` (inclusive boundary); false otherwise (closed, halfOpen, open-with-null-openedAt). It is a pure read — it MUST NOT transition the breaker (calling `tryHalfOpen` remains the coordinator's job). | FR-002 | PENDING |
+| U3 | The full recovery cycle MUST hold as a composed regression: trip (threshold failures) → cooldown → halfOpen → threshold successes → closed with `failureCount == 0`; a subsequent single failure stays closed with `failureCount == 1` (fresh streak); threshold fresh failures re-trip; a half-open failure re-trips open with `halfOpenSuccesses == 0` and `openedAt` stamped. | FR-003 | PENDING |
+| U4 | `toJson()` MUST emit all nine fields — `id`, `state` (state name), `failureCount`, `failureThreshold`, `cooldown` (microseconds int), `halfOpenSuccesses`, `halfOpenThreshold` always; `openedAt`, `lastFailureAt` only when non-null (ISO-8601) — and `CircuitBreaker.fromJson` MUST round-trip every state exactly (incl. mid-probe halfOpen and open-with-cooldown-remaining), with restored cooldown semantics identical to the original. | FR-004 | PENDING |
+| U5 | `fromJson` MUST throw `ArgumentError` naming the field on: missing/ill-typed required fields, unknown state string, negative counters, `failureThreshold`/`halfOpenThreshold` < 1, `cooldown` <= 0, or unparseable timestamps — never a silent default. | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: The clean-arch layers (`CircuitBreakerService.current/count`, `CircuitBreakerProvider`) keep their existing signatures and stubs (no behavioral change). | FR-006 | PENDING |
 
-| id  | behavior                                                                       | traces     | kind             | state   | test                                                              |
-| --- | ------------------------------------------------------------------------------ | ---------- | ---------------- | ------- | ------------------------------------------------------------------ |
-| U1  | shouldProbe is false for an open breaker with null openedAt (defensive)        | edge-1, FR-002 | example       | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| U2  | shouldProbe never transitions the breaker (read-only)                          | FR-002     | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
+## Routing provenance
 
-### `lib/src/domain/entities/circuit_breaker/circuit_breaker.dart` (persistence)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                       | traces     | kind             | state   | test                                                              |
-| --- | ------------------------------------------------------------------------------ | ---------- | ---------------- | ------- | ------------------------------------------------------------------ |
-| U3  | Malformed JSON throws ArgumentError naming the field (missing, unknown state, negative counters, thresholds < 1, cooldown <= 0, bad timestamps) | edge-3, FR-005 | example | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| U4  | openedAt/lastFailureAt serialize only when non-null (absent-never-fabricated)  | edge-4, FR-004 | example       | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| U5  | Cooldown duration round-trips exactly as microseconds (no drift)               | FR-004     | example          | DONE    | `test/domain/entities/circuit_breaker/circuit_breaker_test.dart` |
-| U6  | The 12 pre-existing provider/compile-parity tests keep passing unchanged       | FR-001, FR-006 | BASELINE     | BASELINE | `test/data/providers/circuit_breaker/circuit_breaker_provider_test.dart` |
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 47]
+route: A6 -> acceptance lane [declared: type marker, spec line 49]
+route: A7 -> acceptance lane [declared: type marker, spec line 64]
+route: A8 -> acceptance lane [declared: type marker, spec line 66]
+route: A9 -> acceptance lane [declared: type marker, spec line 68]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Invariants and edge cases still to place
-
-- Boundary discipline: A2 pins BOTH sides of `elapsed >= cooldown` (inclusive) with the same clock values tryHalfOpen uses — the read and the transition cannot diverge.
-- Read-only discipline: U2 — shouldProbe must not be a hidden transition.
-- Absent-never-fabricated serialization: U4 — the house discipline from 031-034.
-
-## Out of scope
-
-- Escalating backoff (cooldown doubling per re-trip): the epic's "backoff" is read as the fixed cooldown (documented edge); a future feature may extend.
-- Wiring `CircuitBreakerProvider` to a real store: separate feature (FR-006 keeps the stubs).
-- `lib/src/llm/circuit_breaker.dart` (the LLM-runtime breaker): separate spec family (007/008); this feature refines only the domain value object.
-- Health-snapshot mapping: spec 054's territory.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md` at planning time:
-
-- Single test: `dart test test/domain/entities/circuit_breaker/circuit_breaker_test.dart -n "<name>"` (mind regex-special characters — 033 cycle-log lesson)
-- File: `dart test test/domain/entities/circuit_breaker/circuit_breaker_test.dart`
-- Full suite: `dart test`
-- Mutation (changed files): no tool wired — deliberate hand-mutants per the profile
-
-## Mutation targets (deliberate-mutant sampling)
-
-| target | mutant | killed by |
-| ------ | ------ | --------- |
-| boundary | shouldProbe flips to strict `>` (exclusive boundary) | A2 |
-| read-only | shouldProbe transitions to halfOpen itself | U2 |
-| cooldown restore | fromJson resets openedAt to the parse time | A8 |
-| parse guard | fromJson defaults an unknown state string to closed | U3 |

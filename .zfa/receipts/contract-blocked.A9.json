@@ -1,0 +1,13 @@
+{
+  "schema": "contract-blocked.v1",
+  "behavior": "contract:A9",
+  "feature": "112-structured-logging",
+  "kind": "contract",
+  "contract": "AgentLog.levelPolicy",
+  "classification": "blocked",
+  "command": "dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a9_test.dart --plain-name \"AgentLog.levelPolicy() -> LevelTable (usecase contract)\"",
+  "exit_code": 1,
+  "output_excerpt": "00:00 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a9_test.dart\n00:01 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a9_test.dart\n00:02 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a9_test.dart\n00:02 +0: contract:A9 (AgentLog.levelPolicy) contract:A9 — AgentLog.levelPolicy() -> LevelTable (usecase contract)\n00:02 +0 -1: contract:A9 (AgentLog.levelPolicy) contract:A9 — AgentLog.levelPolicy() -> LevelTable (usecase contract) [E]",
+  "blocked_at": "2026-09-11T20:12:43.440234Z",
+  "reason": "the declared contract is not satisfied by the implementation — the cycle is BLOCKED and cannot proceed to GREEN (issue #1007)"
+}

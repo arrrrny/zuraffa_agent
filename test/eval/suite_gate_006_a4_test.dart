@@ -13,12 +13,12 @@ import 'package:zuraffa_agent/src/eval/suite_gate.dart';
 const kSuiteId = 'gm-suite';
 
 Suite suiteWith({required double gateThreshold}) => Suite(
-      id: kSuiteId,
-      name: 'golden missions',
-      tasks: const ['GM-1', 'GM-2'],
-      k: 2,
-      gateThreshold: gateThreshold,
-    );
+  id: kSuiteId,
+  name: 'golden missions',
+  tasks: const ['GM-1', 'GM-2'],
+  k: 2,
+  gateThreshold: gateThreshold,
+);
 
 void main() {
   test('A4: a suite scoring below the gate threshold fails with a per-task '

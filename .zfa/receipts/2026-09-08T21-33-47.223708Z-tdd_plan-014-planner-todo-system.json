@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "014-planner-todo-system",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:33:47.223708Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "014-planner-todo-system"
+  },
+  "files": [
+    {
+      "path": "specs/014-planner-todo-system/tdd/test-list.md",
+      "action": "update",
+      "sha256": "90ce01707f0399c9b96570d353fbbd0d988d94ede7f2defe8c52995d8968666a",
+      "bytes": 2961,
+      "snapshot": "# Test List: 014-planner-todo-system\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | the plan state is updated. | AC-1 | PENDING |\n| A2 | accurate counts are returned. | AC-2 | PENDING |\n| A3 | planner tools are available but optional. | AC-3 | PENDING |\n| A4 | planning is required before execution. | AC-4 | PENDING |\n| A5 | the plan state is preserved. | AC-5 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | A `write_todos` tool MUST be injectable into the agent. | FR-001 | PENDING |\n| U2 | Plan state MUST track steps with status (pending, in_progress, completed, cancelled). | FR-002 | PENDING |\n| U3 | Plan mode MUST be configurable (none, auto, must). | FR-003 | PENDING |\n| U4 | Plan state MUST persist across turns. | FR-004 | PENDING |\n| U5 | Plan changes MUST emit PlanChangedEvent. | FR-005 | PENDING |\n\n## Key entities\n\n| entity | fields |\n| ------ | ------ |\n| Planner |  |\n| PlanState |  |\n| PlanStep |  |\n| StepStatus |  |\n| PlanMode |  |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 41]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: A5 -> acceptance lane [declared: type marker, spec line 56]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/014-planner-todo-system/tdd/traceability.md",
+      "action": "update",
+      "sha256": "d5c8c97bb80dc104d8f8f8b4dc0c6174c7e0f5615ad08342a5547214de3e2eca",
+      "bytes": 1750,
+      "snapshot": "# Traceability: 014-planner-todo-system\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:e87d2eac50da0b2ff4e291d17384ba632e36ca321080be0d2bfa0eef52492d38\nstatements: 10\nautomated: 10\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a mission, **When** the model calls `write_todos`, **Then** the plan state is updated. | A1 | automated |\n| AC-2 | 27 | 2. **Given** a plan with pending/in_progress/completed steps, **When** the state is queried, **Then** accurate counts are returned. | A2 | automated |\n| AC-3 | 40 | 1. **Given** planMode=auto, **When** the mission starts, **Then** planner tools are available but optional. | A3 | automated |\n| AC-4 | 42 | 2. **Given** planMode=must, **When** the mission starts, **Then** planning is required before execution. | A4 | automated |\n| AC-5 | 55 | 1. **Given** a plan updated at turn 3, **When** turn 5 starts, **Then** the plan state is preserved. | A5 | automated |\n| FR-001 | 62 | - **FR-001**: A `write_todos` tool MUST be injectable into the agent. | U1 | automated |\n| FR-002 | 63 | - **FR-002**: Plan state MUST track steps with status (pending, in_progress, completed, cancelled). | U2 | automated |\n| FR-003 | 64 | - **FR-003**: Plan mode MUST be configurable (none, auto, must). | U3 | automated |\n| FR-004 | 65 | - **FR-004**: Plan state MUST persist across turns. | U4 | automated |\n| FR-005 | 66 | - **FR-005**: Plan changes MUST emit PlanChangedEvent. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/014-planner-todo-system/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/014-planner-todo-system/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

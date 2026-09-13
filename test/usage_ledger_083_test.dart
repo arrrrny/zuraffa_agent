@@ -59,63 +59,65 @@ UsageEntry _entry({
 /// entry with no model at all. Built fresh on every call so that two calls
 /// produce structurally-identical but instance-distinct entries.
 List<UsageEntry> _fixture() => [
-      _entry(
-        id: 'e_1',
-        callId: 'c_1',
-        turnNumber: 1,
-        modelId: 'gpt-4',
-        provider: 'openai',
-        inputTokens: 100,
-        outputTokens: 50,
-        cacheReadTokens: 10,
-      ),
-      _entry(
-        id: 'e_2',
-        callId: 'c_2',
-        turnNumber: 1,
-        modelId: 'claude-3',
-        provider: 'anthropic',
-        inputTokens: 200,
-        outputTokens: 80,
-        cacheWriteTokens: 20,
-      ),
-      _entry(
-        id: 'e_3',
-        callId: 'c_3',
-        turnNumber: 2,
-        modelId: 'gpt-4',
-        provider: 'openai',
-        inputTokens: 300,
-        outputTokens: 120,
-        cacheReadTokens: 30,
-        cacheWriteTokens: 40,
-      ),
-      _entry(
-        id: 'e_4',
-        callId: 'c_4',
-        turnNumber: 2,
-        inputTokens: 40, // no model — the null-model round-trip case
-        outputTokens: 10,
-      ),
-      _entry(
-        id: 'e_5',
-        callId: 'c_5',
-        turnNumber: 3,
-        modelId: 'claude-3',
-        provider: 'anthropic',
-        inputTokens: 500,
-        outputTokens: 200,
-      ),
-    ];
+  _entry(
+    id: 'e_1',
+    callId: 'c_1',
+    turnNumber: 1,
+    modelId: 'gpt-4',
+    provider: 'openai',
+    inputTokens: 100,
+    outputTokens: 50,
+    cacheReadTokens: 10,
+  ),
+  _entry(
+    id: 'e_2',
+    callId: 'c_2',
+    turnNumber: 1,
+    modelId: 'claude-3',
+    provider: 'anthropic',
+    inputTokens: 200,
+    outputTokens: 80,
+    cacheWriteTokens: 20,
+  ),
+  _entry(
+    id: 'e_3',
+    callId: 'c_3',
+    turnNumber: 2,
+    modelId: 'gpt-4',
+    provider: 'openai',
+    inputTokens: 300,
+    outputTokens: 120,
+    cacheReadTokens: 30,
+    cacheWriteTokens: 40,
+  ),
+  _entry(
+    id: 'e_4',
+    callId: 'c_4',
+    turnNumber: 2,
+    inputTokens: 40, // no model — the null-model round-trip case
+    outputTokens: 10,
+  ),
+  _entry(
+    id: 'e_5',
+    callId: 'c_5',
+    turnNumber: 3,
+    modelId: 'claude-3',
+    provider: 'anthropic',
+    inputTokens: 500,
+    outputTokens: 200,
+  ),
+];
 
 void main() {
   group('spec 083 — equality (FR-004)', () {
-    test('T1: structurally-identical ledgers are == and hash-equal',
-        () async {
+    test('T1: structurally-identical ledgers are == and hash-equal', () async {
       final a = UsageLedger(_fixture());
       final b = UsageLedger(_fixture());
-      expect(identical(a, b), isFalse,
-          reason: 'the fixtures must be distinct instances');
+      expect(
+        identical(a, b),
+        isFalse,
+        reason: 'the fixtures must be distinct instances',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
@@ -140,18 +142,24 @@ void main() {
       final shorter = List<UsageEntry>.from(_fixture())..removeLast();
       expect(UsageLedger(base), isNot(equals(UsageLedger(shorter))));
 
-      final reordered = List<UsageEntry>.from(_fixture())..insert(0, _fixture().removeLast());
-      expect(UsageLedger(base), isNot(equals(UsageLedger(reordered))),
-          reason: 'entry order is significant (ordered-sequence equality)');
+      final reordered = List<UsageEntry>.from(_fixture())
+        ..insert(0, _fixture().removeLast());
+      expect(
+        UsageLedger(base),
+        isNot(equals(UsageLedger(reordered))),
+        reason: 'entry order is significant (ordered-sequence equality)',
+      );
 
-      expect(UsageLedger(base), isNot(equals(UsageLedger([]))),
-          reason: 'non-empty vs empty');
+      expect(
+        UsageLedger(base),
+        isNot(equals(UsageLedger([]))),
+        reason: 'non-empty vs empty',
+      );
     });
   });
 
   group('spec 083 — serialization (FR-003)', () {
-    test('T3: fromJson(toJson()) == ledger with all five totals preserved',
-        () {
+    test('T3: fromJson(toJson()) == ledger with all five totals preserved', () {
       final ledger = UsageLedger(_fixture());
       final roundTripped = UsageLedger.fromJson(ledger.toJson());
 
@@ -207,21 +215,28 @@ void main() {
       final lengthBefore = ledger.length;
       final inputBefore = ledger.totalInputTokens;
 
-      source.add(_entry(
-        id: 'e_late',
-        callId: 'c_late',
-        turnNumber: 9,
-        inputTokens: 9999,
-        outputTokens: 9999,
-      ));
+      source.add(
+        _entry(
+          id: 'e_late',
+          callId: 'c_late',
+          turnNumber: 9,
+          inputTokens: 9999,
+          outputTokens: 9999,
+        ),
+      );
 
-      expect(ledger.length, lengthBefore,
-          reason: 'a projection must not see later source mutations');
+      expect(
+        ledger.length,
+        lengthBefore,
+        reason: 'a projection must not see later source mutations',
+      );
       expect(ledger.totalInputTokens, inputBefore);
 
-      expect(() => ledger.entries.add(_fixture().first),
-          throwsA(isA<UnsupportedError>()),
-          reason: 'the entries view is unmodifiable');
+      expect(
+        () => ledger.entries.add(_fixture().first),
+        throwsA(isA<UnsupportedError>()),
+        reason: 'the entries view is unmodifiable',
+      );
     });
   });
 
@@ -230,10 +245,7 @@ void main() {
       final ledger = UsageLedger(_fixture());
       final turnOne = ledger.byTurn(1);
 
-      final independent = UsageLedger([
-        _fixture()[0],
-        _fixture()[1],
-      ]);
+      final independent = UsageLedger([_fixture()[0], _fixture()[1]]);
       expect(turnOne, equals(independent));
 
       final roundTripped = UsageLedger.fromJson(turnOne.toJson());
@@ -241,8 +253,7 @@ void main() {
       expect(roundTripped.totalInputTokens, 300); // 100 + 200
     });
 
-    test('T7 (pin): byModel(m).byTurn(t) totals equal the intersection',
-        () {
+    test('T7 (pin): byModel(m).byTurn(t) totals equal the intersection', () {
       final ledger = UsageLedger(_fixture());
       final gpt4turn2 = ledger.byModel('gpt-4').byTurn(2);
 

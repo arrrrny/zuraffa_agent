@@ -16,13 +16,14 @@ class OversizedResultPolicyProvider
   final OversizedResultPolicy _active;
 
   OversizedResultPolicyProvider([OversizedResultPolicy? active])
-      : _active = active ??
-            const OversizedResultPolicy(
-              id: 'default',
-              thresholdBytes: 65536,
-              summaryMaxChars: 2000,
-              artifactStore: './artifacts',
-            );
+    : _active =
+          active ??
+          const OversizedResultPolicy(
+            id: 'default',
+            thresholdBytes: 65536,
+            summaryMaxChars: 2000,
+            artifactStore: './artifacts',
+          );
 
   @override
   Future<OversizedResultPolicy> current(NoParams params) async => _active;

@@ -30,8 +30,8 @@ class ClientHealth {
     this.cooldownWindowMs = 60000,
     DateTime? lastFailureAt,
     this.isHealthy = true,
-  })  : id = id ?? _generateId(),
-        lastFailureAt = lastFailureAt ?? DateTime.utc(2026, 1, 15);
+  }) : id = id ?? _generateId(),
+       lastFailureAt = lastFailureAt ?? DateTime.utc(2026, 1, 15);
 
   static String _generateId() {
     _idSequence += 1;
@@ -45,36 +45,34 @@ class ClientHealth {
     int? cooldownWindowMs,
     DateTime? lastFailureAt,
     bool? isHealthy,
-  }) =>
-      ClientHealth(
-        id: id ?? this.id,
-        state: state ?? this.state,
-        consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
-        cooldownWindowMs: cooldownWindowMs ?? this.cooldownWindowMs,
-        lastFailureAt: lastFailureAt ?? this.lastFailureAt,
-        isHealthy: isHealthy ?? this.isHealthy,
-      );
+  }) => ClientHealth(
+    id: id ?? this.id,
+    state: state ?? this.state,
+    consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
+    cooldownWindowMs: cooldownWindowMs ?? this.cooldownWindowMs,
+    lastFailureAt: lastFailureAt ?? this.lastFailureAt,
+    isHealthy: isHealthy ?? this.isHealthy,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'state': state,
-        'consecutiveFailures': consecutiveFailures,
-        'cooldownWindowMs': cooldownWindowMs,
-        'lastFailureAt': lastFailureAt.toIso8601String(),
-        'isHealthy': isHealthy,
-      };
+    'id': id,
+    'state': state,
+    'consecutiveFailures': consecutiveFailures,
+    'cooldownWindowMs': cooldownWindowMs,
+    'lastFailureAt': lastFailureAt.toIso8601String(),
+    'isHealthy': isHealthy,
+  };
 
   factory ClientHealth.fromJson(Map<String, dynamic> json) => ClientHealth(
-        id: json['id'] as String?,
-        state: json['state'] as String? ?? 'closed',
-        consecutiveFailures:
-            (json['consecutiveFailures'] as num?)?.toInt() ?? 0,
-        cooldownWindowMs: (json['cooldownWindowMs'] as num?)?.toInt() ?? 60000,
-        lastFailureAt: json['lastFailureAt'] is String
-            ? DateTime.parse(json['lastFailureAt'] as String)
-            : null,
-        isHealthy: json['isHealthy'] as bool? ?? true,
-      );
+    id: json['id'] as String?,
+    state: json['state'] as String? ?? 'closed',
+    consecutiveFailures: (json['consecutiveFailures'] as num?)?.toInt() ?? 0,
+    cooldownWindowMs: (json['cooldownWindowMs'] as num?)?.toInt() ?? 60000,
+    lastFailureAt: json['lastFailureAt'] is String
+        ? DateTime.parse(json['lastFailureAt'] as String)
+        : null,
+    isHealthy: json['isHealthy'] as bool? ?? true,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -89,9 +87,14 @@ class ClientHealth {
           isHealthy == other.isHealthy;
 
   @override
-  int get hashCode =>
-      Object.hash(id, state, consecutiveFailures, cooldownWindowMs,
-          lastFailureAt, isHealthy);
+  int get hashCode => Object.hash(
+    id,
+    state,
+    consecutiveFailures,
+    cooldownWindowMs,
+    lastFailureAt,
+    isHealthy,
+  );
 
   @override
   String toString() =>

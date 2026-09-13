@@ -1,0 +1,85 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd refactor",
+ "target": "112-structured-logging",
+ "repro": "zfa tdd refactor",
+ "at": "2026-09-11T19:32:01.070013Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "sanctioned": true,
+  "refactor": true,
+  "passes": [
+   "build",
+   "format",
+   "fix"
+  ],
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/112-structured-logging/a1_subject.dart",
+   "action": "update",
+   "sha256": "4b9cbb10a831a4810bd9f4723f77cd667061c8dc9e850e5955878a31533ff8d5",
+   "bytes": 667
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a2_subject.dart",
+   "action": "update",
+   "sha256": "65a669c564d5b86a67e5a51d5d794f33cf76645c0098a386b39a028e2de32c73",
+   "bytes": 756
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a3_subject.dart",
+   "action": "update",
+   "sha256": "ca65e15cfda2d1761b39bf66410400d29d6d5a60234dd238bf0bedfb136d35f7",
+   "bytes": 825
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a4_subject.dart",
+   "action": "update",
+   "sha256": "bb2c0d2fdb6758cff6bfb2c338c2be11f183e6dcdad2a1b42e2bfd9dc5c44223",
+   "bytes": 306
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a5_subject.dart",
+   "action": "update",
+   "sha256": "3a2951cc436308f80c9ceb95344ed2977a9b09bc0f6ab0e420a0402473aad719",
+   "bytes": 1900
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a6_subject.dart",
+   "action": "update",
+   "sha256": "ee65b563a227887592261c951f1604f3e42a26415950749402ba773c0a382df8",
+   "bytes": 3593
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a7_subject.dart",
+   "action": "update",
+   "sha256": "adc12a4de0d5f9761144c98d24643daaf94dd7085a26e447a0abb65c5e9bc031",
+   "bytes": 482
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/a8_subject.dart",
+   "action": "update",
+   "sha256": "126725fbeb028a227ccc34507a2a9df06a96a84d65b68efa457e7b49be01a5f5",
+   "bytes": 1021
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/u1_subject.dart",
+   "action": "update",
+   "sha256": "4d74b30ac9ffde6c4b29be43fba80b41f9b1d606496a6a016faebbb9b5cd50f3",
+   "bytes": 1704,
+   "snapshot": "// GENERATED STUB \u2014 `zfa tdd gen U1` (spec 044-test-tdd-generation\n// + issue #1259 contract derivation).\n//\n// behavior_id: U1\n// source_criterion: FR-001, AgentLog.logger\n// description: `AgentLog` MUST expose the named subsystem loggers `llm`,\n//\n// CONTRACT-DERIVED SUBJECT (issue #1259): the signature below is\n// derived from the spec's declared Layer Contract:\n//\n//     logger(subsystem) -> Logger\n//\n// The declared request and result types are preserved above. A\n// declared type whose entity does not exist yet renders as `Object?`\n// so the stub compiles cleanly (FR-011) \u2014 the degradation is\n// unconditional ONLY for entities that do not exist on disk; replace\n// it with the declared type once the entity lands. This is a MINIMAL\n// COMPILABLE STUB: it does NOT satisfy the behavior \u2014 the paired test\n// fails on first execution (honest red). Replace this stub body with\n// the real implementation of the declared contract to make the test\n// pass.\n// Declared parameters: subsystem: subsystem (non-existent entity types render as Object? until implemented)\n//\n// The subject name is derived from the behavior id and is deliberately\n// snake_cased \u2014 the generator KNOWS the name it emits, so the lint its\n// shape provably trips is suppressed here rather than renaming the\n// contract surface (issue #1035).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\n\n/// Subject for behavior U1 \u2014 declared contract:\n/// `logger(subsystem) -> Logger`.\n///\n/// Hand-step (spec 112): delegates to the real facade.\nLogger subject_u1(String subsystem) => AgentLog.logger(subsystem);\n"
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/u3_subject.dart",
+   "action": "update",
+   "sha256": "5ea6ac08d84e5eb5b848800bfebdd7935b3515bfc985a4974f2f4f71f9ce39ce",
+   "bytes": 1857,
+   "snapshot": "// GENERATED STUB \u2014 `zfa tdd gen U3` (spec 044-test-tdd-generation\n// + issue #1259 contract derivation).\n//\n// behavior_id: U3\n// source_criterion: FR-003, AgentLog.install\n// description: `ZuraffaLogging.install({level, onRecord})` MUST be the only\n//\n// CONTRACT-DERIVED SUBJECT (issue #1259): the signature below is\n// derived from the spec's declared Layer Contract:\n//\n//     install(level, onRecord) -> void\n//\n// The declared request and result types are preserved above. A\n// declared type whose entity does not exist yet renders as `Object?`\n// so the stub compiles cleanly (FR-011) \u2014 the degradation is\n// unconditional ONLY for entities that do not exist on disk; replace\n// it with the declared type once the entity lands. This is a MINIMAL\n// COMPILABLE STUB: it does NOT satisfy the behavior \u2014 the paired test\n// fails on first execution (honest red). Replace this stub body with\n// the real implementation of the declared contract to make the test\n// pass.\n// Declared parameters: level: level, onrecord: onRecord (non-existent entity types render as Object? until implemented)\n//\n// The subject name is derived from the behavior id and is deliberately\n// snake_cased \u2014 the generator KNOWS the name it emits, so the lint its\n// shape provably trips is suppressed here rather than renaming the\n// contract surface (issue #1035).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\n\n/// Subject for behavior U3 \u2014 declared contract:\n/// `install(level, onRecord) -> void`.\n///\n/// Throws [UnimplementedError] until the real implementation lands.\n/// Hand-step (spec 112): the real install.\nvoid subject_u3(Level level, void Function(LogRecord record)? onRecord) =>\n    ZuraffaLogging.install(level: level, onRecord: onRecord);\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

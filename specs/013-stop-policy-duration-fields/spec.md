@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: StopPolicy Duration field support
 
 **Branch**: `013-stop-policy-duration-fields` | **Date**: 2026-08-24
@@ -16,3 +18,17 @@ Extend the hand-curated `StopPolicy` value object (added in PR #45 for #27/#28) 
 - `dart test` — All pre-existing + 5 new tests pass
 
 ## Closes #13
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** U4: StopPolicyMockDatasource is a StopPolicyDatasource **Then** the pinned regression test passes (`test/data/datasources/stop_policy/stop_policy_mock_datasource_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** U5: a fresh mock current() returns StopPolicy.defaultPolicy **Then** the pinned regression test passes (`test/data/datasources/stop_policy/stop_policy_mock_datasource_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** A3 + U6: update(policy) then current() returns exactly the policy written **Then** the pinned regression test passes (`test/data/datasources/stop_policy/stop_policy_mock_datasource_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** U7: reset() on the mock restores the default **Then** the pinned regression test passes (`test/data/datasources/stop_policy/stop_policy_mock_datasource_test.dart`).
+   **Type**: acceptance

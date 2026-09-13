@@ -14,14 +14,14 @@
 import 'dart:async';
 
 import '../domain/entities/mcp_transport/mcp_transport.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_tool_descriptor.dart';
 
 /// Callback signature for an in-process MCP tool implementation.
-typedef InProcMcpTool = Future<Map<String, dynamic>> Function(
-  Map<String, dynamic> arguments,
-);
+typedef InProcMcpTool =
+    Future<Map<String, dynamic>> Function(Map<String, dynamic> arguments);
 
 /// In-process MCP client — local callbacks, zero IPC.
 ///
@@ -94,9 +94,7 @@ class InProcMcpClient implements McpClient {
   @override
   Future<List<McpToolDescriptor>> listTools() async {
     if (_state != McpClientState.connected) {
-      throw StateError(
-        'InProcMcpClient.listTools called in state $_state',
-      );
+      throw StateError('InProcMcpClient.listTools called in state $_state');
     }
     // Return a snapshot — callers may mutate the returned list without
     // affecting the client's internal state.
@@ -106,8 +104,9 @@ class InProcMcpClient implements McpClient {
   @override
   Future<McpCallResult> callTool(
     String name,
-    Map<String, dynamic> arguments,
-  ) async {
+    Map<String, dynamic> arguments, {
+    McpCallOptions? options,
+  }) async {
     if (_state != McpClientState.connected) {
       return McpCallError(
         code: 'client-not-connected',
@@ -121,9 +120,19 @@ class InProcMcpClient implements McpClient {
         message: 'InProcMcpClient: no tool registered as "$name"',
       );
     }
+    final opts = options ?? const McpCallOptions();
     try {
-      final result = await tool.callback(arguments);
+      final result = await tool
+          .callback(arguments)
+          .timeout(opts.effectiveTimeout);
       return McpCallOk(result);
+    } on TimeoutException {
+      return McpCallError(
+        code: 'timeout',
+        message:
+            'InProcMcpClient.callTool($name) timed out after '
+            '${opts.effectiveTimeout}',
+      );
     } catch (e) {
       return McpCallError(
         code: 'tool-threw',

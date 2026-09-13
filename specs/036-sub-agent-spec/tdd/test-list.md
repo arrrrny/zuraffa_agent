@@ -1,84 +1,58 @@
----
-feature: 036-sub-agent-spec
-loop: inside-out
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 7
-planned_at: 7da6902
-updated_at: ca10fd6
-suite_baseline: green
----
-
-# Test List: SubAgentSpec value object (validation + pinned semantics)
+# Test List: 036-sub-agent-spec
 
 ## Outer loop: acceptance behaviors
 
-One per acceptance criterion in `spec.md`. The feature is a pure value object with
-no user-visible surface of its own, so the loop runs inside-out (`loop:
-inside-out`): acceptance behaviors are exercised through the value object's public
-API — the constructor and getters — which IS the entry point a consumer (the
-future spec loader) uses.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| A1  | Empty name/description/systemPrompt construction throws ArgumentError           | AC US1-1 | example         | DONE    | `test/domain/entities/sub_agent_spec/sub_agent_spec_test.dart` |
-| A2  | Blank tool id or sub-agent name in an allowlist throws ArgumentError            | AC US1-2 | example         | DONE    | `test/domain/entities/sub_agent_spec/sub_agent_spec_test.dart` |
-| A3  | Non-positive budgets throw; zero-duration and null budgets stay valid           | AC US1-3 | example         | DONE    | `test/domain/entities/sub_agent_spec/sub_agent_spec_test.dart` |
-| A4  | Self-extends (extendsSpec == name) throws; a distinct parent constructs         | AC US2-1 | example         | DONE    | `test/domain/entities/sub_agent_spec/sub_agent_spec_test.dart` |
-| A5  | isLeaf/isRoot answer correctly across the four canonical shapes                 | AC US2-2 | characterization | DONE (BASELINE + pin) | provider suite (3 shapes) + `sub_agent_spec_test.dart` U10 pin (child+branch) |
-| A6  | Ten-field equality holds with independently constructed (non-const) lists       | AC US3-1 | characterization | DONE (BASELINE + pin) | `sub_agent_spec_test.dart` U12 pin (mutant-B killed) |
-| A7  | Single-field differences break equality                                         | AC US3-2 | characterization | DONE (BASELINE) | `test/data/providers/sub_agent_spec/sub_agent_spec_provider_test.dart` (tools + extends axes) |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | `ArgumentError` is thrown naming that field. | AC-1 | PENDING |
+| A2 | `ArgumentError` is thrown naming the list. | AC-2 | PENDING |
+| A3 | `ArgumentError` is thrown naming the budget field. | AC-3 | PENDING |
+| A4 | `ArgumentError` is thrown (1-cycles are ill-formed). | AC-4 | PENDING |
+| A5 | `isLeaf` == `subAgents.isEmpty`, `isRoot` == `extendsSpec == null`, and `hasBudgets` reflects the three budget fields (AC covered by existing tests — pinned, not new). | AC-5 | PENDING |
+| A6 | they are `==` and share `hashCode` (AC covered by existing tests — pinned, not new). | AC-6 | PENDING |
+| A7 | they are unequal. | AC-7 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-Grouped by the component from `plan.md` that owns them.
+One per functional requirement in `spec.md`.
 
-### `lib/src/domain/entities/sub_agent_spec/sub_agent_spec.dart`
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `SubAgentSpec` MUST reject with `ArgumentError` any construction where `name`, `description`, or `systemPrompt` is an empty string (the message MUST name the field). | FR-001 | PENDING |
+| U2 | `SubAgentSpec` MUST reject with `ArgumentError` any blank id (`''`) inside `tools` or `subAgents` (the message MUST name the offending list). | FR-002 | PENDING |
+| U3 | `SubAgentSpec` MUST reject with `ArgumentError` a non-positive budget when supplied: `maxTurns != null && maxTurns < 1`, `contextWindowTokens != null && contextWindowTokens < 1`, or `wallClockTimeout` with negative `Duration` (message MUST name the field). `Duration.zero` remains valid. | FR-003 | PENDING |
+| U4 | `SubAgentSpec` MUST reject with `ArgumentError` the 1-cycle `extendsSpec == name`. | FR-004 | PENDING |
+| U5 | The structural getters MUST keep their documented semantics: `isLeaf` == `subAgents.isEmpty`; `isRoot` == `extendsSpec == null`; `hasBudgets` == any of the three budget fields non-null. | FR-005 | PENDING |
+| U6 | Equality/hashCode MUST keep field-wise value semantics across all ten fields (list-aware for `tools`/`subAgents`), and MUST be constructible with non-const lists without breaking equality. | FR-006 | PENDING |
+| U7 | The clean-arch layers (`SubAgentSpecService.current/count`, `SubAgentSpecProvider`) MUST keep their existing signatures and stub behavior (UnimplementedError); no behavioral change to those layers in this feature. | FR-007 | PENDING |
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| U1  | Empty name throws ArgumentError naming 'name'                                   | FR-001   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `1eb07a2`) |
-| U2  | Empty description throws ArgumentError naming 'description'                     | FR-001   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `1eb07a2`) |
-| U3  | Empty systemPrompt throws ArgumentError naming 'systemPrompt'                   | FR-001   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `1eb07a2`) |
-| U4  | Blank id ('') inside tools throws ArgumentError naming 'tools'                  | FR-002   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `9391515`) |
-| U5  | Blank id ('') inside subAgents throws ArgumentError naming 'subAgents'          | FR-002   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `9391515`) |
-| U6  | maxTurns 0 throws, maxTurns 1 is valid (both sides of the boundary)             | FR-003   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `d6062c0`) |
-| U7  | contextWindowTokens 0 throws, 1 is valid (both sides of the boundary)           | FR-003   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `d6062c0`) |
-| U8  | Negative wallClockTimeout throws; Duration.zero valid; null valid               | FR-003   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `d6062c0`) |
-| U9  | extendsSpec == name throws 1-cycle ArgumentError; distinct parent valid         | FR-004   | example         | DONE    | `sub_agent_spec_test.dart` (red @ `953a0cd`) |
-| U10 | isLeaf/isRoot across root+leaf, root+branch, child+leaf, child+branch            | FR-005   | characterization | DONE (BASELINE + pin, mutant-A killed) | provider suite + `sub_agent_spec_test.dart` |
-| U11 | hasBudgets false (none) / true (all three) / true (only maxTurns)               | FR-005   | characterization | DONE (BASELINE) | `test/data/providers/sub_agent_spec/sub_agent_spec_provider_test.dart` |
-| U12 | Equality + hashCode hold with non-const, independently built tools/subAgents    | FR-006   | characterization | DONE (BASELINE + pin, mutant-B killed) | `sub_agent_spec_test.dart` |
-| U13 | Inequality on single-field change (tools axis, extends axis)                    | FR-006   | characterization | DONE (BASELINE) | `test/data/providers/sub_agent_spec/sub_agent_spec_provider_test.dart` |
+## Routing provenance
 
-### `lib/src/data/providers/sub_agent_spec/` + `lib/src/domain/services/` (layers untouched — FR-007)
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-| id  | behavior                                                                        | traces   | kind            | state   | test                                                        |
-| --- | ------------------------------------------------------------------------------- | -------- | --------------- | ------- | ----------------------------------------------------------- |
-| U14 | The 11 pre-existing compile-parity + stub tests keep passing unchanged          | FR-007   | characterization | DONE (BASELINE) | `test/data/providers/sub_agent_spec/sub_agent_spec_provider_test.dart` |
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 45]
+route: A5 -> acceptance lane [declared: type marker, spec line 47]
+route: A6 -> acceptance lane [declared: type marker, spec line 62]
+route: A7 -> acceptance lane [declared: type marker, spec line 64]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Invariants and edge cases still to place
-
-- `==`/`hashCode` consistency: the ten-field equality axes are reflected in
-  `Object.hash` (lists via `Object.hashAll`) — pinned by U12; hash distribution
-  itself is not deterministically assertable (031 precedent, M5 equivalent).
-- Validation ordering is unspecified on purpose: any ArgumentError from a
-  multi-invalid input satisfies the contract; tests use single-invalid inputs.
-
-## Out of scope
-
-- Wiring SubAgentSpecProvider to a registry (current/count behavior): separate
-  feature; FR-007 pins the stubs.
-- `extends` chain resolution beyond the 1-cycle check (unknown parents,
-  deep cycles): the YAML loader spec (057-yaml_agent_spec lineage) owns it.
-- String trimming/normalization of identity fields: loader's concern.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md`:
-
-- Single test: `dart test <file> --plain-name "<test name>"`
-- Full suite: `dart test`
-- Coverage: raw VM-format only (`dart test --coverage=...`); converter absent —
-  corroboration only, never a gate
-- Mutation: no tool configured — deliberate hand-mutants per
-  `/speckit.tdd.verify` Phase 4

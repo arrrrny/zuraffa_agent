@@ -16,13 +16,14 @@ class LoopSafetyRailsProvider
   final LoopSafetyRails _active;
 
   LoopSafetyRailsProvider([LoopSafetyRails? active])
-      : _active = active ??
-            const LoopSafetyRails(
-              outcomeType: 'Idle',
-              turnNumber: 0,
-              reason: 'no-safety-rail-triggered',
-              emittedAt: 0,
-            );
+    : _active =
+          active ??
+          const LoopSafetyRails(
+            outcomeType: 'Idle',
+            turnNumber: 0,
+            reason: 'no-safety-rail-triggered',
+            emittedAt: 0,
+          );
 
   @override
   Future<LoopSafetyRails> current(NoParams params) async => _active;

@@ -1,0 +1,30 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U3",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:19:35.858618Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "116-runnable-example"
+ },
+ "files": [
+  {
+   "path": "test/tdd/116-runnable-example/u3_test.dart",
+   "action": "create",
+   "sha256": "96402c37d4ef436784546c4e4ceb1f3fd87b56e7f176f93e3ed7b70715dfb69c",
+   "bytes": 1494,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen U3` (spec 044-test-tdd-generation).\n//\n// behavior_id: U3\n// source_criterion: FR-003, MinimalAgent.subprocess\n// kind: unit\n// description: A test MUST execute the example as a subprocess and assert\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/116-runnable-example/u3_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\n\nlibrary;\n\nimport 'dart:io';\n\nimport 'package:test/test.dart';\n\nimport 'package:zuraffa_agent/tdd/116-runnable-example/u3_subject.dart';\n\n\nvoid main() {\n  group('U3 (FR-003, MinimalAgent.subprocess)', () {\n    test('U3 \u2014 A test MUST execute the example as a subprocess and assert',\n        () async {\n      // Assertion-shaped guard: the stub fails HERE via assertion.\n      Object? guard;\n      try {\n        await subject_u3();\n        guard = 'ok';\n      } on UnimplementedError catch (e) {\n        guard = e;\n      }\n      expect(guard, isNot(isA<UnimplementedError>()));\n      final result = await subject_u3();\n      expect(result['exitCode'], 0);\n      expect(result['hasStart'], isTrue);\n      expect(result['hasComplete'], isTrue);\n      expect(result['hasStatus'], isTrue);\n    }, timeout: const Timeout(Duration(minutes: 3)));\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/116-runnable-example/u3_subject.dart",
+   "action": "create",
+   "sha256": "8e65c1983a51f7386b976dd81214fef944febdabd9076c2e869269353ca9b2ca",
+   "bytes": 775,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 116 U3): the subprocess check.\n// Returns exit code + whether the lifecycle lines are present.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\n/// Subject for behavior U3 \u2014 declared contract:\n/// `subprocess() -> ProcessResult`.\nFuture<Map<String, Object?>> subject_u3() async {\n  final result = await Process.run(Platform.resolvedExecutable, [\n    'run',\n    'example/minimal_agent.dart',\n  ], workingDirectory: Directory.current.path);\n  final out = result.stdout as String;\n  return {\n    'exitCode': result.exitCode,\n    'hasStart': out.contains('[event] MissionStarted'),\n    'hasComplete': out.contains('[event] MissionCompleted'),\n    'hasStatus': out.contains('status    : completed'),\n  };\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

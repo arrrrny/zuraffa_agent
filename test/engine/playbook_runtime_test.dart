@@ -34,8 +34,10 @@ class FakeToolDispatcher implements ToolDispatcher {
   FakeToolDispatcher([this.resultsByTool = const {}]);
 
   final Map<String, ToolDispatchResult> resultsByTool;
-  final List<({String toolName, Map<String, dynamic> arguments, bool isInternalMission})>
-      calls = [];
+  final List<
+    ({String toolName, Map<String, dynamic> arguments, bool isInternalMission})
+  >
+  calls = [];
 
   @override
   Future<ToolDispatchResult> dispatch({
@@ -62,23 +64,25 @@ class FakeToolDispatcher implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 /// Counts validateSchema/checkRiskTier delegations for U27 (the gate must
@@ -108,13 +112,13 @@ class DelegationSpy implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
@@ -126,7 +130,10 @@ class DelegationSpy implements ToolDispatcher {
   }
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) {
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) {
     riskCalls++;
     return true;
   }
@@ -135,16 +142,16 @@ class DelegationSpy implements ToolDispatcher {
 /// LLM client returning a FIFO script of completions (spec 069 exemplar).
 class ScriptedLlmClient extends LlmClientProvider {
   ScriptedLlmClient({required this.completions})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   int callCount = 0;
@@ -165,7 +172,9 @@ class ScriptedPlanner implements ToolCallPlanner {
 
   @override
   Future<List<ToolCall>> plan(
-      ChatCompletion completion, List<ChatMessage> transcript) async {
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async {
     _count++;
     return planByCall[_count] ?? const [];
   }
@@ -175,7 +184,11 @@ ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
     ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 const loop10 = EngineLoop(
@@ -185,6 +198,7 @@ const loop10 = EngineLoop(
   wallClockTimeoutMs: 60000,
   repetitionThreshold: 5,
 );
+
 /// The Germany country playbook document (allowlist gate).
 const _deYaml = '''
 id: pb-de-001
@@ -254,14 +268,14 @@ class RunObservation {
   final String constrainedResponse;
 
   List<SteeringInjected> get steeringEvents => [
-        for (final e in events)
-          if (e is SteeringInjected) e,
-      ];
+    for (final e in events)
+      if (e is SteeringInjected) e,
+  ];
 
   List<ToolCallCompleted> get toolEvents => [
-        for (final e in events)
-          if (e is ToolCallCompleted) e,
-      ];
+    for (final e in events)
+      if (e is ToolCallCompleted) e,
+  ];
 }
 
 void main() {
@@ -353,14 +367,11 @@ void main() {
 
       // FIFO: playbook messages are appended AFTER the pre-existing pending
       // message — document order preserved head -> tail.
-      expect(
-        seeded.pending.map((m) => m.content),
-        [
-          'queued by the user before the playbook',
-          'First.',
-          'Second.',
-        ],
-      );
+      expect(seeded.pending.map((m) => m.content), [
+        'queued by the user before the playbook',
+        'First.',
+        'Second.',
+      ]);
       // The input queue is unmutated (value semantics — FR-007).
       expect(input.pending, hasLength(1));
       expect(input.pending.single, preexisting);
@@ -511,8 +522,10 @@ void main() {
         description: 'd',
         toolGate: const PlaybookToolGate(mode: PlaybookGateMode.blocklist),
       );
-      final openGate = PlaybookRuntime(playbook: openPlaybook, clock: fakeClock)
-          .gateDispatcher(inner);
+      final openGate = PlaybookRuntime(
+        playbook: openPlaybook,
+        clock: fakeClock,
+      ).gateDispatcher(inner);
       final passed = await openGate.dispatch(
         toolName: 'shell',
         arguments: {},
@@ -539,17 +552,20 @@ void main() {
       final results = await gated.dispatchBatch(
         calls: [
           const ToolCall(
-              toolName: 'search',
-              arguments: {},
-              executionMode: 'sequential'),
+            toolName: 'search',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
           const ToolCall(
-              toolName: 'shell',
-              arguments: {},
-              executionMode: 'sequential'),
+            toolName: 'shell',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
           const ToolCall(
-              toolName: 'search',
-              arguments: {},
-              executionMode: 'sequential'),
+            toolName: 'search',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
         ],
         isInternalMission: false,
       );
@@ -563,10 +579,7 @@ void main() {
 
       // Schema validation and risk-tier checks delegate to the wrapped
       // dispatcher untouched.
-      expect(
-        gated.validateSchema(schema: {}, arguments: {}),
-        isEmpty,
-      );
+      expect(gated.validateSchema(schema: {}, arguments: {}), isEmpty);
       expect(spy.schemaCalls, 1);
       expect(
         gated.checkRiskTier(riskTier: 'safe', isInternalMission: false),
@@ -579,14 +592,14 @@ void main() {
   group('spec 104 — PlaybookRuntime response', () {
     test('U28: maxChars truncation boundaries', () {
       PlaybookRuntime runtimeWith(int? maxChars) => PlaybookRuntime(
-            playbook: Playbook(
-              id: 'de-001',
-              name: 'x',
-              description: 'd',
-              response: PlaybookResponse(maxChars: maxChars),
-            ),
-            clock: fakeClock,
-          );
+        playbook: Playbook(
+          id: 'de-001',
+          name: 'x',
+          description: 'd',
+          response: PlaybookResponse(maxChars: maxChars),
+        ),
+        clock: fakeClock,
+      );
       const marker = '[playbook:de-001] response truncated at 5 characters';
 
       // No cap: unchanged.
@@ -642,18 +655,18 @@ void main() {
     final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
     final events = <EngineEvent>[];
     final inner = FakeToolDispatcher();
-    final queue = runtime.seedSteering(SteeringQueue(
-      id: 'q-104',
-      pending: const [],
-      processedCount: 0,
-    ));
+    final queue = runtime.seedSteering(
+      SteeringQueue(id: 'q-104', pending: const [], processedCount: 0),
+    );
     final runner = MissionRunner(
       executor: EngineLoopExecutor(
         loop10,
-        ScriptedLlmClient(completions: [
-          completionOf('need tools', finish: 'tool_calls'),
-          completionOf('x' * finalResponseLength),
-        ]),
+        ScriptedLlmClient(
+          completions: [
+            completionOf('need tools', finish: 'tool_calls'),
+            completionOf('x' * finalResponseLength),
+          ],
+        ),
       ),
       toolDispatcher: runtime.gateDispatcher(inner),
       stopPolicy: const StopPolicy(
@@ -699,51 +712,55 @@ void main() {
       expect(userContents, containsAll(contents));
     });
 
-    test('A4: playbook tool gating refuses the blocked tool in a mission',
-        () async {
-      final run = await runUnderPlaybook(
-        _deYaml,
-        plannedCalls: [
-          ToolCall(
+    test(
+      'A4: playbook tool gating refuses the blocked tool in a mission',
+      () async {
+        final run = await runUnderPlaybook(
+          _deYaml,
+          plannedCalls: [
+            ToolCall(
               toolName: 'shell',
               arguments: {'cmd': 'ls'},
-              executionMode: 'sequential'),
-          ToolCall(
+              executionMode: 'sequential',
+            ),
+            ToolCall(
               toolName: 'search',
               arguments: {'q': 'markets'},
-              executionMode: 'sequential'),
-        ],
-      );
+              executionMode: 'sequential',
+            ),
+          ],
+        );
 
-      // The allowlist gate refuses shell with the typed failure...
-      final shellEvent = run.toolEvents
-          .firstWhere((e) => e.toolName == 'shell');
-      expect(shellEvent.ok, isFalse);
-      // ...the refusal lands in the transcript as the tool message...
-      expect(
-        run.result.transcript
-            .where((m) => m.role == 'tool')
-            .map((m) => m.content)
-            .contains('tool not allowed: shell'),
-        isTrue,
-      );
-      // ...the inner dispatcher NEVER saw it...
-      expect(
-        run.dispatcher.calls.map((c) => c.toolName),
-        isNot(contains('shell')),
-      );
-      // ...while the allowlisted search dispatched with its arguments.
-      expect(
-        run.dispatcher.calls.map((c) => c.toolName),
-        contains('search'),
-      );
-      final searchCall = run.dispatcher.calls
-          .firstWhere((c) => c.toolName == 'search');
-      expect(searchCall.arguments, {'q': 'markets'});
-      final searchEvent = run.toolEvents
-          .firstWhere((e) => e.toolName == 'search');
-      expect(searchEvent.ok, isTrue);
-    });
+        // The allowlist gate refuses shell with the typed failure...
+        final shellEvent = run.toolEvents.firstWhere(
+          (e) => e.toolName == 'shell',
+        );
+        expect(shellEvent.ok, isFalse);
+        // ...the refusal lands in the transcript as the tool message...
+        expect(
+          run.result.transcript
+              .where((m) => m.role == 'tool')
+              .map((m) => m.content)
+              .contains('tool not allowed: shell'),
+          isTrue,
+        );
+        // ...the inner dispatcher NEVER saw it...
+        expect(
+          run.dispatcher.calls.map((c) => c.toolName),
+          isNot(contains('shell')),
+        );
+        // ...while the allowlisted search dispatched with its arguments.
+        expect(run.dispatcher.calls.map((c) => c.toolName), contains('search'));
+        final searchCall = run.dispatcher.calls.firstWhere(
+          (c) => c.toolName == 'search',
+        );
+        expect(searchCall.arguments, {'q': 'markets'});
+        final searchEvent = run.toolEvents.firstWhere(
+          (e) => e.toolName == 'search',
+        );
+        expect(searchEvent.ok, isTrue);
+      },
+    );
 
     test('A5: response constraints shape the mission response', () async {
       final run = await runUnderPlaybook(_deYaml);
@@ -763,62 +780,70 @@ void main() {
       // At the limit: a response of exactly maxChars characters passes
       // through unconstrained (remediation T020 — the audit's off-by-one
       // mutant escaped this acceptance test; U28 caught it at unit level).
-      final atLimit =
-          await runUnderPlaybook(_deYaml, finalResponseLength: 120);
+      final atLimit = await runUnderPlaybook(_deYaml, finalResponseLength: 120);
       expect(atLimit.result.summary, hasLength(120));
       expect(atLimit.constrainedResponse, 'x' * 120);
     });
 
-    test('A6: three documents, one code path — behavior follows the document (R5#4)',
-        () async {
-      const planned = <ToolCall>[
-        ToolCall(
+    test(
+      'A6: three documents, one code path — behavior follows the document (R5#4)',
+      () async {
+        const planned = <ToolCall>[
+          ToolCall(
             toolName: 'shell',
             arguments: {'cmd': 'ls'},
-            executionMode: 'sequential'),
-        ToolCall(
+            executionMode: 'sequential',
+          ),
+          ToolCall(
             toolName: 'search',
             arguments: {'q': 'markets'},
-            executionMode: 'sequential'),
-      ];
-      // The SAME composition, three different documents.
-      final de = await runUnderPlaybook(_deYaml, plannedCalls: planned);
-      final jp = await runUnderPlaybook(_jpYaml, plannedCalls: planned);
-      final fr = await runUnderPlaybook(_frYaml, plannedCalls: planned);
+            executionMode: 'sequential',
+          ),
+        ];
+        // The SAME composition, three different documents.
+        final de = await runUnderPlaybook(_deYaml, plannedCalls: planned);
+        final jp = await runUnderPlaybook(_jpYaml, plannedCalls: planned);
+        final fr = await runUnderPlaybook(_frYaml, plannedCalls: planned);
 
-      // Germany: allowlist [search, fetch] — search dispatched, shell
-      // refused; 2 entries + de directive injected; capped at 120.
-      expect(de.dispatcher.calls.map((c) => c.toolName), ['search']);
-      expect(de.steeringEvents, hasLength(3));
-      expect(
+        // Germany: allowlist [search, fetch] — search dispatched, shell
+        // refused; 2 entries + de directive injected; capped at 120.
+        expect(de.dispatcher.calls.map((c) => c.toolName), ['search']);
+        expect(de.steeringEvents, hasLength(3));
+        expect(
           de.constrainedResponse,
           'x' * 120 +
-              '[playbook:pb-de-001] response truncated at 120 characters');
+              '[playbook:pb-de-001] response truncated at 120 characters',
+        );
 
-      // Japan: blocklist [search] — search REFUSED (the opposite of
-      // Germany on the same code), shell dispatched; 1 entry + jp
-      // directive; capped at 80.
-      expect(jp.dispatcher.calls.map((c) => c.toolName), ['shell']);
-      expect(jp.steeringEvents, hasLength(2));
-      expect(
+        // Japan: blocklist [search] — search REFUSED (the opposite of
+        // Germany on the same code), shell dispatched; 1 entry + jp
+        // directive; capped at 80.
+        expect(jp.dispatcher.calls.map((c) => c.toolName), ['shell']);
+        expect(jp.steeringEvents, hasLength(2));
+        expect(
           jp.constrainedResponse,
-          'x' * 80 +
-              '[playbook:pb-jp-001] response truncated at 80 characters');
+          'x' * 80 + '[playbook:pb-jp-001] response truncated at 80 characters',
+        );
 
-      // France (novel document): allowlist [translate] — both planned
-      // tools refused; no language directive (none declared); capped at 200.
-      expect(fr.dispatcher.calls, isEmpty);
-      expect(fr.steeringEvents, hasLength(1));
-      expect(
+        // France (novel document): allowlist [translate] — both planned
+        // tools refused; no language directive (none declared); capped at 200.
+        expect(fr.dispatcher.calls, isEmpty);
+        expect(fr.steeringEvents, hasLength(1));
+        expect(
           fr.constrainedResponse,
           'x' * 200 +
-              '[playbook:pb-fr-001] response truncated at 200 characters');
+              '[playbook:pb-fr-001] response truncated at 200 characters',
+        );
 
-      // The observable behavior differs per document on every surface —
-      // steering, gating, and response constraints — through one code path.
-      expect(de.steeringEvents.first.content, 'Greet in German.');
-      expect(jp.steeringEvents.first.content, 'Greet in Japanese.');
-      expect(fr.steeringEvents.first.content, 'Answer in French market idiom.');
-    });
+        // The observable behavior differs per document on every surface —
+        // steering, gating, and response constraints — through one code path.
+        expect(de.steeringEvents.first.content, 'Greet in German.');
+        expect(jp.steeringEvents.first.content, 'Greet in Japanese.');
+        expect(
+          fr.steeringEvents.first.content,
+          'Answer in French market idiom.',
+        );
+      },
+    );
   });
 }

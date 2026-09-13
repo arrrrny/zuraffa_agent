@@ -53,10 +53,10 @@ class SteeringMessage {
   /// fields are required, so none is ever omitted. The timestamp is an
   /// ISO-8601 string (UTC instants round-trip exactly).
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'content': content,
-        'injectedAt': injectedAt.toIso8601String(),
-      };
+    'id': id,
+    'content': content,
+    'injectedAt': injectedAt.toIso8601String(),
+  };
 
   /// Parses a [SteeringMessage] from its JSON shape (see [toJson]).
   /// Throws [ArgumentError] naming the offending key when a required
@@ -66,18 +66,30 @@ class SteeringMessage {
     String requireString(String key) {
       final value = json[key];
       if (value is! String) {
-        throw ArgumentError.value(value, key, 'SteeringMessage.$key must be a non-null string');
+        throw ArgumentError.value(
+          value,
+          key,
+          'SteeringMessage.$key must be a non-null string',
+        );
       }
       return value;
     }
 
     final injectedRaw = json['injectedAt'];
     if (injectedRaw is! String) {
-      throw ArgumentError.value(injectedRaw, 'injectedAt', 'SteeringMessage.injectedAt must be an ISO-8601 string');
+      throw ArgumentError.value(
+        injectedRaw,
+        'injectedAt',
+        'SteeringMessage.injectedAt must be an ISO-8601 string',
+      );
     }
     final injectedAt = DateTime.tryParse(injectedRaw);
     if (injectedAt == null) {
-      throw ArgumentError.value(injectedRaw, 'injectedAt', 'SteeringMessage.injectedAt is not a parseable ISO-8601 timestamp');
+      throw ArgumentError.value(
+        injectedRaw,
+        'injectedAt',
+        'SteeringMessage.injectedAt is not a parseable ISO-8601 timestamp',
+      );
     }
 
     return SteeringMessage(

@@ -42,6 +42,32 @@ class ThinkingLevelChangeEntry {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ThinkingLevelChangeEntry copyWithField<T>(
+    Field<ThinkingLevelChangeEntry, T> field,
+    T value,
+  ) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'parentId':
+        return copyWith(parentId: value as String?);
+      case 'timestamp':
+        return copyWith(timestamp: value as DateTime);
+      case 'thinkingLevel':
+        return copyWith(thinkingLevel: value as String);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ThinkingLevelChangeEntry has no settable field with this name',
+        );
+    }
+  }
+
   ThinkingLevelChangeEntry copyWithThinkingLevelChangeEntry({
     String? id,
     String? parentId,

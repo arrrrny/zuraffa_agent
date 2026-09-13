@@ -1,105 +1,110 @@
-# Test List: EngineEvent.ToolCallCompleted
-
----
-feature: 21-engine-event-tool-call-completed
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # profile present at HEAD (verified during setup)
-spec_criteria: 4 # spec.md declares no explicit SC-###/FR-### ids; count reflects the 4 acceptance behaviors derived from its Files + Verification sections (is-A identity, payload value-object, analyze gate, full-suite gate)
-planned_at: b9ba15c # master HEAD at cycle start
-updated_at: b9ba15c
-suite_baseline: green # 909 passed / 2 skipped (pre-existing KIMI_API_KEY integration skips) at b9ba15c; green criterion for this feature = its tests pass AND full-suite delta vs baseline is 0 new failures
----
-
-## Context at cycle start
-
-`ToolCallCompleted` (part file, `part` directive, sealed-switch arm, is-A +
-payload tests) already ships on master: `lib/src/engine/events/tool_call_completed.dart`
-landed and `test/engine/events/engine_event_test.dart` carries its `#21` group
-before this TDD pass ran. This cycle therefore records the spec-kit TDD
-artifacts for an already-shipped, TEST-AFTER feature.
-
-**Discrepancy found (spec vs shipped code):** spec.md's Files section requires
-the `describe(EngineEvent)` switch to be extended with a `ToolCallCompleted`
-case "and add is-A + payload tests." Shipped code did the is-A and payload
-tests, and the switch arm IS present (compile-time exhaustive, no `default`),
-but there is **no dedicated `describe(EngineEvent) switch routes
-ToolCallCompleted to tool_call_completed(toolName)` assertion test** — unlike the
-sibling specs #16/#17/#18 (and `ProviderError`) which each carry such a
-routing-assertion test. The routing for #21 is therefore only guaranteed at
-compile time via the shared exhaustive-switch test, not behaviorally asserted.
-Recorded as DONE (arm present, suite green) and flagged below as a recommended
-follow-up; the shipped code is followed for the DONE determination per the
-hard rule.
+# Test List: 21-engine-event-tool-call-completed
 
 ## Outer loop: acceptance behaviors
 
-Per `spec.md`'s Verification section, the acceptance behaviors for this spec are
-exercised through `test/engine/events/engine_event_test.dart` (this is a library
-feature; the public `EngineEvent` library is the entry surface).
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | `ToolCallCompleted` is `is EngineEvent` AND `is ToolCallCompleted` | spec.md §Files | example | DONE | `test/engine/events/engine_event_test.dart::arrarrny/zuraffa_agent#21 — EngineEvent.ToolCallCompleted::ToolCallCompleted is an EngineEvent` (shipped; re-verified this cycle) |
-| A2  | `ToolCallCompleted` carries `emittedAt`, `toolName`, `callId`, `ok` as independently assertable values (distinct `toolName`/`callId` strings and `ok: true` round-trip to their own fields) | spec.md §Files | example | DONE | `…::ToolCallCompleted carries payload fields` (shipped; re-verified this cycle) |
-| A3  | `dart analyze --fatal-infos` exits 0 | spec.md §Verification | gate | DONE | CI gate `.github/workflows/pipeline.yml::verify / Analyze` |
-| A4  | `dart test` passes all 909 baseline + new tests | spec.md §Verification | gate | DONE | full suite green at HEAD (see cycle-log.md for exact counts) |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-13 | PENDING |
+| A14 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-14 | PENDING |
+| A15 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-15 | PENDING |
+| A16 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-16 | PENDING |
+| A17 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-17 | PENDING |
+| A18 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-18 | PENDING |
+| A19 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-19 | PENDING |
+| A20 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-20 | PENDING |
+| A21 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-21 | PENDING |
+| A22 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-22 | PENDING |
+| A23 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-23 | PENDING |
+| A24 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-24 | PENDING |
+| A25 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-25 | PENDING |
+| A26 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-26 | PENDING |
+| A27 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-27 | PENDING |
+| A28 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-28 | PENDING |
+| A29 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-29 | PENDING |
+| A30 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-30 | PENDING |
+| A31 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-31 | PENDING |
+| A32 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-32 | PENDING |
+| A33 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-33 | PENDING |
+| A34 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-34 | PENDING |
+| A35 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-35 | PENDING |
+| A36 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-36 | PENDING |
+| A37 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-37 | PENDING |
+| A38 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-38 | PENDING |
+| A39 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-39 | PENDING |
+| A40 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-40 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/events/tool_call_completed.dart` (part file — shipped on master)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `final class ToolCallCompleted extends EngineEvent` declared as `part of 'engine_event.dart';` with `final DateTime emittedAt; final String toolName; final String callId; final bool ok;` and a `const` all-required constructor — value semantics, immutable | spec.md §Files | example | DONE | A1, A2 (above) |
-| U2  | `emittedAt`, `toolName`, `callId`, `ok` constructor parameters bind to the fields of the same name (no cross-binding) | spec.md §Files | example | DONE | A2 distinct-values assertions |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
 
-### `lib/src/engine/events/engine_event.dart` (sealed base)
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U3  | `engine_event.dart` includes `part 'tool_call_completed.dart';` directive, picked up by the sealed library | spec.md §Files | gate | DONE | CI Analyze gate |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### Test file: `test/engine/events/engine_event_test.dart`
+route: A1 -> acceptance lane [declared: type marker, spec line 29]
+route: A2 -> acceptance lane [declared: type marker, spec line 31]
+route: A3 -> acceptance lane [declared: type marker, spec line 33]
+route: A4 -> acceptance lane [declared: type marker, spec line 35]
+route: A5 -> acceptance lane [declared: type marker, spec line 37]
+route: A6 -> acceptance lane [declared: type marker, spec line 39]
+route: A7 -> acceptance lane [declared: type marker, spec line 41]
+route: A8 -> acceptance lane [declared: type marker, spec line 43]
+route: A9 -> acceptance lane [declared: type marker, spec line 45]
+route: A10 -> acceptance lane [declared: type marker, spec line 47]
+route: A11 -> acceptance lane [declared: type marker, spec line 49]
+route: A12 -> acceptance lane [declared: type marker, spec line 51]
+route: A13 -> acceptance lane [declared: type marker, spec line 53]
+route: A14 -> acceptance lane [declared: type marker, spec line 55]
+route: A15 -> acceptance lane [declared: type marker, spec line 57]
+route: A16 -> acceptance lane [declared: type marker, spec line 59]
+route: A17 -> acceptance lane [declared: type marker, spec line 61]
+route: A18 -> acceptance lane [declared: type marker, spec line 63]
+route: A19 -> acceptance lane [declared: type marker, spec line 65]
+route: A20 -> acceptance lane [declared: type marker, spec line 67]
+route: A21 -> acceptance lane [declared: type marker, spec line 69]
+route: A22 -> acceptance lane [declared: type marker, spec line 71]
+route: A23 -> acceptance lane [declared: type marker, spec line 73]
+route: A24 -> acceptance lane [declared: type marker, spec line 75]
+route: A25 -> acceptance lane [declared: type marker, spec line 77]
+route: A26 -> acceptance lane [declared: type marker, spec line 79]
+route: A27 -> acceptance lane [declared: type marker, spec line 81]
+route: A28 -> acceptance lane [declared: type marker, spec line 83]
+route: A29 -> acceptance lane [declared: type marker, spec line 85]
+route: A30 -> acceptance lane [declared: type marker, spec line 87]
+route: A31 -> acceptance lane [declared: type marker, spec line 89]
+route: A32 -> acceptance lane [declared: type marker, spec line 91]
+route: A33 -> acceptance lane [declared: type marker, spec line 93]
+route: A34 -> acceptance lane [declared: type marker, spec line 95]
+route: A35 -> acceptance lane [declared: type marker, spec line 97]
+route: A36 -> acceptance lane [declared: type marker, spec line 99]
+route: A37 -> acceptance lane [declared: type marker, spec line 101]
+route: A38 -> acceptance lane [declared: type marker, spec line 103]
+route: A39 -> acceptance lane [declared: type marker, spec line 105]
+route: A40 -> acceptance lane [declared: type marker, spec line 107]
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U4  | The `describe(EngineEvent)` `switch` handles `ToolCallCompleted` (exhaustive with no `default` arm); the arm is present in the shared `#24` exhaustive-switch test and the shared routing-switch literals | spec.md §Files | example | DONE | `…::switch over EngineEvent is exhaustive with all current subtypes` (arm present at line 31; compiles, proving the routing arm exists) — **DISCREPANCY:** no dedicated `describe(EngineEvent) switch routes ToolCallCompleted to tool_call_completed(toolName)` assertion test (see Context) |
-
-## Invariants and edge cases still to place
-
-- Dedicated routing-assertion test (the `describe(EngineEvent) switch routes
-  ToolCallCompleted to tool_call_completed(toolName)` form that #16/#17/#18 /
-  ProviderError carry): ABSENT in shipped code — see Context discrepancy.
-  Recommended follow-up, not required by the spec's literal "extend switch with
-  case" wording.
-- `ok: false` (error return) and correlation with `ToolCallStarted` via `callId`:
-  not asserted at the type level; the tool dispatch layer owns `ok` semantics and
-  `callId` correlation (issue #22). Tests assert a representative `ok: true` and a
-  distinct `callId` round-trip.
-- `final class` drop mutant (subclassable): unenforceable — the sealed-class
-  final-class drop is not detectable by a test, same caveat as #16/#17/#18.
-
-## Out of scope
-
-- The 8 sibling event subtypes — each has its own spec (#16/#17/#18 precede; the
-  other five predate). `ToolCallStarted` (issue #22) is the paired start event.
-- The concrete tool dispatch layer that emits `ToolCallCompleted` — spec-002 /
-  spec-003 tools.
-- json_serializable / Zorphy annotations for `ToolCallCompleted` — issue #15 /
-  spec-015-engine-event-json-part.
-- Re-landing the class itself: already shipped on master; this cycle completes
-  the spec-kit TDD artifacts.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md` at planning time:
-
-- Single test: `dart test {file} -n "{name}"`
-- Full suite: `dart test`
-- Coverage: `dart test --coverage=.dart_coverage {files}`
-- Mutation: `package:mutation_test` NOT in lockfile — audit falls back to deliberate mutants
-
-Applied to this feature:
-
-- Single feature: `dart test test/engine/events/engine_event_test.dart -n "ToolCallCompleted"`
-- Analyze gate: `dart analyze --fatal-infos`

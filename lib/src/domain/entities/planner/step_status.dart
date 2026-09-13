@@ -1,6 +1,6 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#1 (epic — native agent engine) and
-// specs/014-planner-todo-system (gap-analysis row 7: Planner/TODO system,
+// specs/014-planner-todo-system (gap-analysis row 7: planner todo system,
 // modeled after dart_agent_core's write_todos tool with PlanState).
 //
 // StepStatus — the lifecycle of a single PlanStep. Spec-exact from
@@ -28,5 +28,6 @@ enum StepStatus {
 
   /// True for [completed] and [cancelled] — the step will never
   /// transition again. A plan is complete when every step is terminal.
-  bool get isTerminal => this == StepStatus.completed || this == StepStatus.cancelled;
+  bool get isTerminal =>
+      this == StepStatus.completed || this == StepStatus.cancelled;
 }

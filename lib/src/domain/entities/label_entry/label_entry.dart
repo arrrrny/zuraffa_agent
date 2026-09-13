@@ -9,10 +9,8 @@ part 'label_entry.g.dart';
 /// LabelEntry entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $LabelEntry {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
   String get label;
 }
-

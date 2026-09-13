@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A1",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T22:57:47.660962Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "115-agent-platform-packages"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/115-agent-platform-packages/a1_subject.dart",
+   "action": "update",
+   "sha256": "8a11ffddc2c1336ad61e972f4e3f1abd2b4b4369ea68e5cc48b94ce9a06c3e6e",
+   "bytes": 293,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 115 A1): compose the agent home\n// layout from a host-provided home.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:zuraffa_agent/zuraffa_agent.dart';\n\nAgentHomeLayout subject_a1() => AgentHomeResolver.compose('/support');\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

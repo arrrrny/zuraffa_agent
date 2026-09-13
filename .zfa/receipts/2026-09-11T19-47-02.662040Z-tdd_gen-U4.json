@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U4",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T19:47:02.662040Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "test/tdd/112-structured-logging/u4_test.dart",
+   "action": "create",
+   "sha256": "a6958c94f7a411f6bebd8e1f8a768be9f63d245755de99af155a1313f5916473",
+   "bytes": 2039
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/u4_subject.dart",
+   "action": "create",
+   "sha256": "6322ea95a0540a2e0463c025162db54bd4610688abf36da0dfc3cbb5bd4a5e0b",
+   "bytes": 1759
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

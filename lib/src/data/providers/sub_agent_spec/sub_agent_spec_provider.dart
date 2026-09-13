@@ -16,12 +16,13 @@ class SubAgentSpecProvider
   final SubAgentSpec _active;
 
   SubAgentSpecProvider([SubAgentSpec? active])
-      : _active = active ??
-            SubAgentSpec(
-              name: 'explore',
-              description: 'Default exploratory sub-agent.',
-              systemPrompt: 'You are an explorer.',
-            );
+    : _active =
+          active ??
+          SubAgentSpec(
+            name: 'explore',
+            description: 'Default exploratory sub-agent.',
+            systemPrompt: 'You are an explorer.',
+          );
 
   @override
   Future<SubAgentSpec> current(NoParams params) async => _active;

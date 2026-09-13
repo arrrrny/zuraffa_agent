@@ -43,11 +43,13 @@ void main() {
     });
 
     test('AudioBlock.fromJson without optional durationMs', () {
-      final block = ContentBlock.fromJson({
-        '_type': 'audio',
-        'data': 'audiodata',
-        'mimeType': 'audio/mp3',
-      }) as AudioBlock;
+      final block =
+          ContentBlock.fromJson({
+                '_type': 'audio',
+                'data': 'audiodata',
+                'mimeType': 'audio/mp3',
+              })
+              as AudioBlock;
       expect(block.durationMs, isNull);
     });
 
@@ -65,11 +67,13 @@ void main() {
     });
 
     test('DocumentBlock.fromJson without optional title', () {
-      final block = ContentBlock.fromJson({
-        '_type': 'document',
-        'data': 'docdata',
-        'mimeType': 'application/pdf',
-      }) as DocumentBlock;
+      final block =
+          ContentBlock.fromJson({
+                '_type': 'document',
+                'data': 'docdata',
+                'mimeType': 'application/pdf',
+              })
+              as DocumentBlock;
       expect(block.title, isNull);
     });
 
@@ -108,10 +112,12 @@ void main() {
     });
 
     test('ThinkingBlock.fromJson without optional signature', () {
-      final block = ContentBlock.fromJson({
-        '_type': 'thinking',
-        'thinking': 'reasoning text',
-      }) as ThinkingBlock;
+      final block =
+          ContentBlock.fromJson({
+                '_type': 'thinking',
+                'thinking': 'reasoning text',
+              })
+              as ThinkingBlock;
       expect(block.signature, isNull);
     });
 
@@ -168,7 +174,8 @@ void main() {
         name: 'search',
         arguments: {'query': 'test', 'limit': 10},
       );
-      final restored = ContentBlock.fromJson(original.toJson()) as ToolCallBlock;
+      final restored =
+          ContentBlock.fromJson(original.toJson()) as ToolCallBlock;
       expect(restored.arguments, equals({'query': 'test', 'limit': 10}));
     });
 
@@ -193,20 +200,21 @@ void main() {
     });
 
     test('UserMessage.fromJson with string content', () {
-      final msg = AgentMessage.fromJson({
-        'role': 'user',
-        'content': 'hello',
-        'timestamp': ts(fixedTime),
-      }) as UserMessage;
+      final msg =
+          AgentMessage.fromJson({
+                'role': 'user',
+                'content': 'hello',
+                'timestamp': ts(fixedTime),
+              })
+              as UserMessage;
       expect(msg.content.first, isA<TextBlock>());
       expect((msg.content.first as TextBlock).text, 'hello');
     });
 
     test('UserMessage.fromJson with empty content', () {
-      final msg = AgentMessage.fromJson({
-        'role': 'user',
-        'timestamp': ts(fixedTime),
-      }) as UserMessage;
+      final msg =
+          AgentMessage.fromJson({'role': 'user', 'timestamp': ts(fixedTime)})
+              as UserMessage;
       expect(msg.content, isEmpty);
     });
 
@@ -222,15 +230,17 @@ void main() {
     });
 
     test('ToolResultMessage.fromJson', () {
-      final msg = AgentMessage.fromJson({
-        'role': 'toolResult',
-        'toolCallId': 'tc_1',
-        'toolName': 'search',
-        'content': 'result data',
-        'isError': false,
-        'artifactRefs': <Map<String, dynamic>>[],
-        'timestamp': ts(fixedTime),
-      }) as ToolResultMessage;
+      final msg =
+          AgentMessage.fromJson({
+                'role': 'toolResult',
+                'toolCallId': 'tc_1',
+                'toolName': 'search',
+                'content': 'result data',
+                'isError': false,
+                'artifactRefs': <Map<String, dynamic>>[],
+                'timestamp': ts(fixedTime),
+              })
+              as ToolResultMessage;
       expect(msg.toolCallId, 'tc_1');
       expect(msg.toolName, 'search');
       expect(msg.content, 'result data');
@@ -251,12 +261,14 @@ void main() {
     });
 
     test('CustomMessage.fromJson', () {
-      final msg = AgentMessage.fromJson({
-        'role': 'custom',
-        'messageType': 'status',
-        'payload': {'key': 'value'},
-        'timestamp': ts(fixedTime),
-      }) as CustomMessage;
+      final msg =
+          AgentMessage.fromJson({
+                'role': 'custom',
+                'messageType': 'status',
+                'payload': {'key': 'value'},
+                'timestamp': ts(fixedTime),
+              })
+              as CustomMessage;
       expect(msg.messageType, 'status');
       expect(msg.payload, {'key': 'value'});
     });
@@ -303,10 +315,7 @@ void main() {
     });
 
     test('CustomMessage preserves fields', () {
-      final original = CustomMessage(
-        messageType: 'ping',
-        payload: {'ts': 123},
-      );
+      final original = CustomMessage(messageType: 'ping', payload: {'ts': 123});
       final restored =
           AgentMessage.fromJson(original.toJson()) as CustomMessage;
       expect(restored.messageType, 'ping');

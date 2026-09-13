@@ -20,22 +20,28 @@ void main() {
       );
     });
 
-    test('U9: getCurrent delegates to the datasource for the matching id', () async {
-      final ds = StopPolicyMockDatasource();
-      const strict = StopPolicy(
-        id: 'strict',
-        maxTurns: 3,
-        wallClockTimeout: Duration(seconds: 30),
-        repetitionThreshold: 2,
-      );
-      await ds.update(strict);
+    test(
+      'U9: getCurrent delegates to the datasource for the matching id',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        const strict = StopPolicy(
+          id: 'strict',
+          maxTurns: 3,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 2,
+        );
+        await ds.update(strict);
 
-      final repo = StopPolicyRepositoryImpl(ds);
-      expect(await repo.getCurrent('strict'), equals(strict));
-      // edge-2 corollary: after the full replace, the default id is
-      // unreachable — StateError, not a stale value.
-      await expectLater(repo.getCurrent('default'), throwsA(isA<StateError>()));
-    });
+        final repo = StopPolicyRepositoryImpl(ds);
+        expect(await repo.getCurrent('strict'), equals(strict));
+        // edge-2 corollary: after the full replace, the default id is
+        // unreachable — StateError, not a stale value.
+        await expectLater(
+          repo.getCurrent('default'),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
     test('A6: getCurrent with an unknown id raises StateError', () async {
       final repo = StopPolicyRepositoryImpl(StopPolicyMockDatasource());
@@ -59,35 +65,45 @@ void main() {
       expect(await repo.getCurrent('relaxed'), equals(relaxed));
     });
 
-    test('U9: reset delegates (restores the default through the repository)', () async {
-      final ds = StopPolicyMockDatasource();
-      final repo = StopPolicyRepositoryImpl(ds);
-      const strict = StopPolicy(
-        id: 'strict',
-        maxTurns: 3,
-        wallClockTimeout: Duration(seconds: 30),
-        repetitionThreshold: 2,
-      );
-      await repo.update(strict);
-      await repo.reset('strict');
-      expect(await repo.getCurrent('default'), equals(StopPolicy.defaultPolicy));
-    });
+    test(
+      'U9: reset delegates (restores the default through the repository)',
+      () async {
+        final ds = StopPolicyMockDatasource();
+        final repo = StopPolicyRepositoryImpl(ds);
+        const strict = StopPolicy(
+          id: 'strict',
+          maxTurns: 3,
+          wallClockTimeout: Duration(seconds: 30),
+          repetitionThreshold: 2,
+        );
+        await repo.update(strict);
+        await repo.reset('strict');
+        expect(
+          await repo.getCurrent('default'),
+          equals(StopPolicy.defaultPolicy),
+        );
+      },
+    );
 
     test('edge-2: id-mismatched update makes the old id unreachable', () async {
       final ds = StopPolicyMockDatasource();
       final repo = StopPolicyRepositoryImpl(ds);
-      await repo.update(const StopPolicy(
-        id: 'old',
-        maxTurns: 10,
-        wallClockTimeout: Duration.zero,
-        repetitionThreshold: 5,
-      ));
-      await repo.update(const StopPolicy(
-        id: 'new',
-        maxTurns: 20,
-        wallClockTimeout: Duration.zero,
-        repetitionThreshold: 5,
-      ));
+      await repo.update(
+        const StopPolicy(
+          id: 'old',
+          maxTurns: 10,
+          wallClockTimeout: Duration.zero,
+          repetitionThreshold: 5,
+        ),
+      );
+      await repo.update(
+        const StopPolicy(
+          id: 'new',
+          maxTurns: 20,
+          wallClockTimeout: Duration.zero,
+          repetitionThreshold: 5,
+        ),
+      );
       await expectLater(repo.getCurrent('old'), throwsA(isA<StateError>()));
     });
   });

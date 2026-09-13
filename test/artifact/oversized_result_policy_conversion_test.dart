@@ -22,72 +22,81 @@ import 'package:zuraffa_agent/src/domain/entities/tool_result/tool_result.dart';
 
 void main() {
   group('R3#3 - oversized tool result threshold enforcement', () {
-    test('a tool result exceeding the policy threshold is auto-converted to an ArtifactRef', () async {
-      final store = InMemoryArtifactStore(
-        config: const ArtifactServiceConfig(thresholdBytes: 100),
-      );
-      final policy = const OversizedResultPolicy(
-        id: 'test',
-        thresholdBytes: 100,
-        summaryMaxChars: 64,
-        artifactStore: './artifacts',
-      );
-      final large = ToolResult.success(content: 'x' * 200);
+    test(
+      'a tool result exceeding the policy threshold is auto-converted to an ArtifactRef',
+      () async {
+        final store = InMemoryArtifactStore(
+          config: const ArtifactServiceConfig(thresholdBytes: 100),
+        );
+        final policy = const OversizedResultPolicy(
+          id: 'test',
+          thresholdBytes: 100,
+          summaryMaxChars: 64,
+          artifactStore: './artifacts',
+        );
+        final large = ToolResult.success(content: 'x' * 200);
 
-      final converted = await enforceOversizedResultPolicy(
-        result: large,
-        policy: policy,
-        artifactService: store,
-      );
+        final converted = await enforceOversizedResultPolicy(
+          result: large,
+          policy: policy,
+          artifactService: store,
+        );
 
-      expect(converted.isSummarized, isTrue);
-      expect(converted.artifactRef, isNotNull);
-      expect(converted.artifactRef!.kind, 'artifact');
-    });
+        expect(converted.isSummarized, isTrue);
+        expect(converted.artifactRef, isNotNull);
+        expect(converted.artifactRef!.kind, 'artifact');
+      },
+    );
 
-    test('the full body of a converted result is retrievable by artifact id', () async {
-      final store = InMemoryArtifactStore(
-        config: const ArtifactServiceConfig(thresholdBytes: 100),
-      );
-      final policy = const OversizedResultPolicy(
-        id: 'test',
-        thresholdBytes: 100,
-        summaryMaxChars: 64,
-        artifactStore: './artifacts',
-      );
-      final body = 'x' * 200;
-      final converted = await enforceOversizedResultPolicy(
-        result: ToolResult.success(content: body),
-        policy: policy,
-        artifactService: store,
-      );
+    test(
+      'the full body of a converted result is retrievable by artifact id',
+      () async {
+        final store = InMemoryArtifactStore(
+          config: const ArtifactServiceConfig(thresholdBytes: 100),
+        );
+        final policy = const OversizedResultPolicy(
+          id: 'test',
+          thresholdBytes: 100,
+          summaryMaxChars: 64,
+          artifactStore: './artifacts',
+        );
+        final body = 'x' * 200;
+        final converted = await enforceOversizedResultPolicy(
+          result: ToolResult.success(content: body),
+          policy: policy,
+          artifactService: store,
+        );
 
-      final artifact = await store.fetch(converted.artifactRef!);
-      expect(artifact, isNotNull);
-      expect(utf8.decode(artifact!.data), equals(body));
-    });
+        final artifact = await store.fetch(converted.artifactRef!);
+        expect(artifact, isNotNull);
+        expect(utf8.decode(artifact!.data), equals(body));
+      },
+    );
 
-    test('a tool result within the threshold is left unchanged (no artifactRef)', () async {
-      final store = InMemoryArtifactStore(
-        config: const ArtifactServiceConfig(thresholdBytes: 100),
-      );
-      final policy = const OversizedResultPolicy(
-        id: 'test',
-        thresholdBytes: 100,
-        summaryMaxChars: 64,
-        artifactStore: './artifacts',
-      );
-      final small = ToolResult.success(content: 'small');
+    test(
+      'a tool result within the threshold is left unchanged (no artifactRef)',
+      () async {
+        final store = InMemoryArtifactStore(
+          config: const ArtifactServiceConfig(thresholdBytes: 100),
+        );
+        final policy = const OversizedResultPolicy(
+          id: 'test',
+          thresholdBytes: 100,
+          summaryMaxChars: 64,
+          artifactStore: './artifacts',
+        );
+        final small = ToolResult.success(content: 'small');
 
-      final converted = await enforceOversizedResultPolicy(
-        result: small,
-        policy: policy,
-        artifactService: store,
-      );
+        final converted = await enforceOversizedResultPolicy(
+          result: small,
+          policy: policy,
+          artifactService: store,
+        );
 
-      expect(converted.isSummarized, isFalse);
-      expect(converted.artifactRef, isNull);
-      expect(converted.content, equals('small'));
-    });
+        expect(converted.isSummarized, isFalse);
+        expect(converted.artifactRef, isNull);
+        expect(converted.content, equals('small'));
+      },
+    );
   });
 }

@@ -16,13 +16,14 @@ class ReplayDiffProvider
   final ReplayDiff _active;
 
   ReplayDiffProvider([ReplayDiff? active])
-      : _active = active ??
-            const ReplayDiff(
-              id: 'default',
-              missionId: 'mission-0',
-              driftDetected: false,
-              diffSummary: null,
-            );
+    : _active =
+          active ??
+          const ReplayDiff(
+            id: 'default',
+            missionId: 'mission-0',
+            driftDetected: false,
+            diffSummary: null,
+          );
 
   @override
   Future<ReplayDiff> current(NoParams params) async => _active;

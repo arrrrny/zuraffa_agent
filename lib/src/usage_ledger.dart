@@ -67,22 +67,23 @@ class UsageLedger {
   /// Serializes the projection (spec 083 FR-003): the entries' own JSON
   /// forms, in order. Monomorphic — no `_type` tag needed.
   Map<String, dynamic> toJson() => {
-        'entries': [for (final e in _entries) e.toJson()],
-      };
+    'entries': [for (final e in _entries) e.toJson()],
+  };
 
   /// Rebuilds a ledger from its serialized form. Round-trips [toJson]:
   /// `UsageLedger.fromJson(ledger.toJson()) == ledger`.
   factory UsageLedger.fromJson(Map<String, dynamic> json) => UsageLedger([
-        for (final e in (json['entries'] as List? ?? const []))
-          UsageEntry.fromJson(Map<String, dynamic>.from(e as Map)),
-      ]);
+    for (final e in (json['entries'] as List? ?? const []))
+      UsageEntry.fromJson(Map<String, dynamic>.from(e as Map)),
+  ]);
 
   /// The serialized entry sequence — the equality substrate (spec 083
   /// FR-004). Lazy + memoized: sub-ledger construction stays cheap and the
   /// encode happens at most once per instance. Deterministic because
   /// [UsageEntry.toJson] builds its map from a fixed literal key order.
-  late final String _encoded =
-      jsonEncode([for (final e in _entries) e.toJson()]);
+  late final String _encoded = jsonEncode([
+    for (final e in _entries) e.toJson(),
+  ]);
 
   /// Ordered-sequence equality (spec 083 FR-004): two ledgers are equal
   /// iff their entries serialize identically, in order. Defined THROUGH

@@ -10,15 +10,35 @@ import 'package:zuraffa_agent/src/data/providers/dispatch_tool/dispatch_tool_pro
 void main() {
   group('arrarrny/zuraffa_agent#6 - DispatchTool value equality', () {
     test('DispatchTool equality is value-based across all fields', () {
-      final a = DispatchTool(id: 'id-a', toolName: 'dispatch', subAgentSpecId: 'ref-1', riskTier: 'safe');
-      final b = DispatchTool(id: 'id-a', toolName: 'dispatch', subAgentSpecId: 'ref-1', riskTier: 'safe');
+      final a = DispatchTool(
+        id: 'id-a',
+        toolName: 'dispatch',
+        subAgentSpecId: 'ref-1',
+        riskTier: 'safe',
+      );
+      final b = DispatchTool(
+        id: 'id-a',
+        toolName: 'dispatch',
+        subAgentSpecId: 'ref-1',
+        riskTier: 'safe',
+      );
       expect(a, equals(b));
       expect(a.hashCode, b.hashCode);
     });
 
     test('DispatchTool inequality differs when a field changes', () {
-      final a = DispatchTool(id: 'id-a', toolName: 'dispatch', subAgentSpecId: 'ref-1', riskTier: 'safe');
-      final b = DispatchTool(id: 'id-b', toolName: 'dispatch', subAgentSpecId: 'ref-2', riskTier: 'safe');
+      final a = DispatchTool(
+        id: 'id-a',
+        toolName: 'dispatch',
+        subAgentSpecId: 'ref-1',
+        riskTier: 'safe',
+      );
+      final b = DispatchTool(
+        id: 'id-b',
+        toolName: 'dispatch',
+        subAgentSpecId: 'ref-2',
+        riskTier: 'safe',
+      );
       expect(a == b, isFalse);
     });
   });
@@ -29,18 +49,32 @@ void main() {
       expect(provider, isA<DispatchToolService>());
     });
 
-    test('DispatchToolProvider.current returns the built-in dispatch tool', () async {
-      final tool = await DispatchToolProvider().current(NoParams());
-      expect(tool, isA<DispatchTool>());
-      expect(tool.toolName, 'dispatch');
-      expect(tool.subAgentSpecId, isNotEmpty);
-      expect(tool.riskTier, 'safe');
-    });
+    test(
+      'DispatchToolProvider.current returns the built-in dispatch tool',
+      () async {
+        final tool = await DispatchToolProvider().current(NoParams());
+        expect(tool, isA<DispatchTool>());
+        expect(tool.toolName, 'dispatch');
+        expect(tool.subAgentSpecId, isNotEmpty);
+        expect(tool.riskTier, 'safe');
+      },
+    );
 
-    test('DispatchToolProvider.current honours an injected dispatch tool', () async {
-      final injected = DispatchTool(id: 'custom', toolName: 'dispatch', subAgentSpecId: 'explore', riskTier: 'confirm');
-      expect(await DispatchToolProvider(injected).current(NoParams()), equals(injected));
-    });
+    test(
+      'DispatchToolProvider.current honours an injected dispatch tool',
+      () async {
+        final injected = DispatchTool(
+          id: 'custom',
+          toolName: 'dispatch',
+          subAgentSpecId: 'explore',
+          riskTier: 'confirm',
+        );
+        expect(
+          await DispatchToolProvider(injected).current(NoParams()),
+          equals(injected),
+        );
+      },
+    );
 
     test('DispatchToolProvider.count returns 1', () async {
       expect(await DispatchToolProvider().count(NoParams()), 1);

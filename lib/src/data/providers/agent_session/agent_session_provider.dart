@@ -15,13 +15,14 @@ class AgentSessionProvider
   final AgentSession _active;
 
   AgentSessionProvider([AgentSession? active])
-      : _active = active ??
-            AgentSession(
-              id: 'default',
-              rootEntryId: 'root',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
+    : _active =
+          active ??
+          AgentSession(
+            id: 'default',
+            rootEntryId: 'root',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
 
   @override
   Future<AgentSession> current(NoParams params) async => _active;

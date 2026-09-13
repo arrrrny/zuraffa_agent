@@ -7,7 +7,11 @@ final class SteeringInjected extends EngineEvent {
   final String content;
   final DateTime injectedAt;
 
-  const SteeringInjected({required this.emittedAt, required this.content, required this.injectedAt});
+  const SteeringInjected({
+    required this.emittedAt,
+    required this.content,
+    required this.injectedAt,
+  });
 
   @override
   bool operator ==(Object other) =>

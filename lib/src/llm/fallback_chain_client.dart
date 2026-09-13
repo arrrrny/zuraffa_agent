@@ -124,14 +124,15 @@ class FallbackChainClient implements LlmClient {
   /// Live health snapshot (spec 008 FR-005 / US3): one [ClientHealth] per
   /// provider, reflecting breaker states at the moment of the call.
   Map<String, ClientHealth> healthSnapshot() => {
-        for (final p in providers) p.id: _breakers[p.id]!.health(),
-      };
+    for (final p in providers) p.id: _breakers[p.id]!.health(),
+  };
 
   /// Context-overflow detection: a 400 whose body indicates the request
   /// exceeded the model's context window — a smaller/other model may fit.
   static final RegExp _contextOverflowPattern = RegExp(
-      r'context length|context_window|maximum context|too long|too many tokens',
-      caseSensitive: false);
+    r'context length|context_window|maximum context|too long|too many tokens',
+    caseSensitive: false,
+  );
 
   static bool _isContextOverflow(LlmHttpException error) {
     if (error.statusCode != 400 && error.statusCode != 413) return false;

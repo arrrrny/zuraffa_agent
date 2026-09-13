@@ -26,7 +26,11 @@ class DartIoFreeGate {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DartIoFreeGate &&
-          runtimeType == other.runtimeType && id == other.id && gateName == other.gateName && enforcedPaths == other.enforcedPaths && violationCount == other.violationCount);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          gateName == other.gateName &&
+          enforcedPaths == other.enforcedPaths &&
+          violationCount == other.violationCount);
 
   @override
   int get hashCode => Object.hash(id, gateName, enforcedPaths, violationCount);

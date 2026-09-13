@@ -16,13 +16,14 @@ class DartIoFreeGateProvider
   final DartIoFreeGate _active;
 
   DartIoFreeGateProvider([DartIoFreeGate? active])
-      : _active = active ??
-            const DartIoFreeGate(
-              id: 'default',
-              gateName: 'dart-io-free',
-              enforcedPaths: ['lib/src'],
-              violationCount: 0,
-            );
+    : _active =
+          active ??
+          const DartIoFreeGate(
+            id: 'default',
+            gateName: 'dart-io-free',
+            enforcedPaths: ['lib/src'],
+            violationCount: 0,
+          );
 
   @override
   Future<DartIoFreeGate> current(NoParams params) async => _active;

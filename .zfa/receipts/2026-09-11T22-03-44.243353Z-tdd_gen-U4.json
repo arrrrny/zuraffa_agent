@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "U4",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T22:03:44.243353Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "114-jsonl-single-writer-streaming"
+ },
+ "files": [
+  {
+   "path": "test/tdd/114-jsonl-single-writer-streaming/u4_test.dart",
+   "action": "create",
+   "sha256": "22cc1f564d7a7e6ed6cb15d991783a837bc65d5d7368a2b05a5964a9a972ba93",
+   "bytes": 1255
+  },
+  {
+   "path": "lib/tdd/114-jsonl-single-writer-streaming/u4_subject.dart",
+   "action": "create",
+   "sha256": "c23d3259305dfe023163212d35d1fc2978acc13f30bacbe0662d9c0e13c0ad64",
+   "bytes": 755
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

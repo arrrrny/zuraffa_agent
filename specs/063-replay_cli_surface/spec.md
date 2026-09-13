@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: ReplayCliSurface (zfa agent replay)
 
 **Branch**: `063-replay_cli_surface` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ zfa agent replay CLI surface — declarative replay invocation (mission id, reco
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #7 (Eval Harness)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurface equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurface inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurfaceProvider is a ReplayCliSurfaceService **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurfaceProvider.current returns the active replay CLI surface **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurfaceProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** ReplayCliSurfaceProvider honours an injected value object **Then** the pinned regression test passes (`test/data/providers/replay_cli_surface/replay_cli_surface_provider_test.dart`).
+   **Type**: acceptance

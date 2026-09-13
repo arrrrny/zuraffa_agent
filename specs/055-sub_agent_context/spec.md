@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: SubAgentContext (isolated context)
 
 **Branch**: `055-sub_agent_context` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Isolated sub-agent execution context — own session, own tool allowlist, own bu
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #6 (Sub-agents & Declarative)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContext equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContext inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContextProvider is a SubAgentContextService **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContextProvider.current returns the active context **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContextProvider.current returns a supplied active context **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** SubAgentContextProvider.count returns the tracked context count **Then** the pinned regression test passes (`test/data/providers/sub_agent_context/sub_agent_context_provider_test.dart`).
+   **Type**: acceptance

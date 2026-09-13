@@ -2,6 +2,12 @@
 //
 // Hand-written integration glue against zfa-generated entity types only.
 // Uses dart:io indirectly via hive_ce (quarantined per Constitution VII).
+//
+// SINGLE-WRITER CONTRACT (spec 114, issue #136): Hive boxes are NOT safe
+// for cross-process access — one writer per box per process. There is no
+// cross-process lock here (the JSONL store has SessionLock); open a
+// second process against the same box files only for read-only tooling,
+// and never concurrently.
 
 import 'package:hive_ce/hive.dart';
 
@@ -20,6 +26,7 @@ class HiveSessionStorage implements SessionStorage {
 
   static const _metaBoxName = '_zuraffa_meta';
   static const _activeLeafKey = 'activeLeafId';
+  static const _schemaVersionKey = 'schemaVersion';
 
   late Box<SessionTreeEntry> _entryBox;
   late Box<String> _metaBox;
@@ -31,7 +38,24 @@ class HiveSessionStorage implements SessionStorage {
     _entryBox = await Hive.openBox<SessionTreeEntry>(boxName);
     _metaBox = await Hive.openBox<String>(_metaBoxName);
 
-    return StoreOpenResult(loadedEntriesCount: _entryBox.length);
+    // Schema-version stamp (spec 110, issue #122): Hive stores hydrated
+    // objects rather than raw maps, so value-level migrations are deferred;
+    // the stamp makes the persisted version observable. A box without a
+    // stamp is legacy (pre-versioning) and is stamped forward.
+    final existing = _metaBox.get(_schemaVersionKey);
+    final schemaVersion = existing == null
+        ? SessionSchema.currentVersion
+        : int.parse(existing);
+    await _metaBox.put(_schemaVersionKey, '${SessionSchema.currentVersion}');
+
+    return StoreOpenResult(
+      loadedEntriesCount: _entryBox.length,
+      schemaVersion: SessionSchema.currentVersion,
+      migratedFromVersion:
+          existing == null || schemaVersion < SessionSchema.currentVersion
+          ? schemaVersion
+          : null,
+    );
   }
 
   @override
@@ -47,6 +71,15 @@ class HiveSessionStorage implements SessionStorage {
   @override
   Future<List<SessionTreeEntry>> getEntries() async {
     return _entryBox.values.toList();
+  }
+
+  @override
+  Stream<SessionTreeEntry> entries() async* {
+    // Lazy pull by key index — no full values materialization.
+    for (var i = 0; i < _entryBox.length; i++) {
+      final entry = _entryBox.getAt(i);
+      if (entry != null) yield entry;
+    }
   }
 
   @override

@@ -41,7 +41,10 @@ class GeminiClient implements LlmClient {
   Future<LlmResponse> generate(LlmRequest request) async {
     final response = await sendWithRetry(
       transport: transport,
-      request: _httpRequest(':generateContent', jsonEncode(_buildBody(request))),
+      request: _httpRequest(
+        ':generateContent',
+        jsonEncode(_buildBody(request)),
+      ),
       config: retryConfig,
       clock: clock,
       provider: providerName,
@@ -54,7 +57,10 @@ class GeminiClient implements LlmClient {
   Stream<LlmResponseChunk> stream(LlmRequest request) async* {
     final response = await openStreamWithRetry(
       transport: transport,
-      request: _httpRequest(':streamGenerateContent?alt=sse', jsonEncode(_buildBody(request))),
+      request: _httpRequest(
+        ':streamGenerateContent?alt=sse',
+        jsonEncode(_buildBody(request)),
+      ),
       config: retryConfig,
       clock: clock,
       provider: providerName,
@@ -90,11 +96,15 @@ class GeminiClient implements LlmClient {
           }
           final functionCall = p['functionCall'] as Map?;
           if (functionCall != null) {
-            toolCalls.add(LlmToolCall(
-              id: (functionCall['id'] as String?) ?? 'call_${toolCalls.length}',
-              name: (functionCall['name'] as String?) ?? '',
-              arguments: _asMap(functionCall['args']),
-            ));
+            toolCalls.add(
+              LlmToolCall(
+                id:
+                    (functionCall['id'] as String?) ??
+                    'call_${toolCalls.length}',
+                name: (functionCall['name'] as String?) ?? '',
+                arguments: _asMap(functionCall['args']),
+              ),
+            );
           }
         }
         final reason = c['finishReason'] as String?;
@@ -121,62 +131,52 @@ class GeminiClient implements LlmClient {
   Future<void> close() async {}
 
   LlmHttpRequest _httpRequest(String action, String body) => LlmHttpRequest(
-        uri: Uri.parse(
-            '$baseUrl/models/$model$action'),
-        headers: {
-          'x-goog-api-key': ?apiKey,
-          'content-type': 'application/json',
-        },
-        body: body,
-      );
+    uri: Uri.parse('$baseUrl/models/$model$action'),
+    headers: {'x-goog-api-key': ?apiKey, 'content-type': 'application/json'},
+    body: body,
+  );
 
   Map<String, dynamic> _buildBody(LlmRequest request) => {
-        if (request.systemPrompt != null)
-          'systemInstruction': {
-            'parts': [
-              {'text': request.systemPrompt},
-            ],
-          },
-        'contents': [
-          for (final message in request.messages) _messageToContent(message),
+    if (request.systemPrompt != null)
+      'systemInstruction': {
+        'parts': [
+          {'text': request.systemPrompt},
         ],
-        if (request.tools != null)
-          'tools': [
-            {
-              'functionDeclarations': [
-                for (final tool in request.tools!)
-                  {
-                    'name': tool.name,
-                    'description': tool.description,
-                    'parameters': tool.parameters,
-                  },
-              ],
-            },
+      },
+    'contents': [
+      for (final message in request.messages) _messageToContent(message),
+    ],
+    if (request.tools != null)
+      'tools': [
+        {
+          'functionDeclarations': [
+            for (final tool in request.tools!)
+              {
+                'name': tool.name,
+                'description': tool.description,
+                'parameters': tool.parameters,
+              },
           ],
-        if (request.temperature != null || request.maxTokens != null)
-          'generationConfig': {
-            if (request.temperature != null)
-              'temperature': request.temperature,
-            if (request.maxTokens != null)
-              'maxOutputTokens': request.maxTokens,
-          },
-      };
+        },
+      ],
+    if (request.temperature != null || request.maxTokens != null)
+      'generationConfig': {
+        if (request.temperature != null) 'temperature': request.temperature,
+        if (request.maxTokens != null) 'maxOutputTokens': request.maxTokens,
+      },
+  };
 
   Map<String, dynamic> _messageToContent(AgentMessage message) {
     switch (message) {
       case UserMessage():
         return {
           'role': 'user',
-          'parts': [
-            for (final block in message.content) _blockToPart(block),
-          ],
+          'parts': [for (final block in message.content) _blockToPart(block)],
         };
       case AssistantMessage():
         return {
           'role': 'model',
-          'parts': [
-            for (final block in message.content) _blockToPart(block),
-          ],
+          'parts': [for (final block in message.content) _blockToPart(block)],
         };
       case ToolResultMessage():
         return {
@@ -243,8 +243,8 @@ class GeminiClient implements LlmClient {
     var finishReason = 'stop';
     if (candidates.isNotEmpty) {
       final candidate = candidates.first as Map;
-      finishReason = _normalizeFinishReason(
-              candidate['finishReason'] as String?) ??
+      finishReason =
+          _normalizeFinishReason(candidate['finishReason'] as String?) ??
           'stop';
       final content = (candidate['content'] as Map?) ?? const {};
       final parts = (content['parts'] as List?) ?? const [];
@@ -253,11 +253,13 @@ class GeminiClient implements LlmClient {
         if (p['text'] is String) text.write(p['text'] as String);
         final functionCall = p['functionCall'] as Map?;
         if (functionCall != null) {
-          toolCalls.add(LlmToolCall(
-            id: (functionCall['id'] as String?) ?? 'call_${toolCalls.length}',
-            name: (functionCall['name'] as String?) ?? '',
-            arguments: _asMap(functionCall['args']),
-          ));
+          toolCalls.add(
+            LlmToolCall(
+              id: (functionCall['id'] as String?) ?? 'call_${toolCalls.length}',
+              name: (functionCall['name'] as String?) ?? '',
+              arguments: _asMap(functionCall['args']),
+            ),
+          );
         }
       }
     }
@@ -275,7 +277,8 @@ class GeminiClient implements LlmClient {
       inputTokens: (metadata['promptTokenCount'] as num?)?.toInt() ?? 0,
       outputTokens: (metadata['candidatesTokenCount'] as num?)?.toInt() ?? 0,
       cachedTokens: (metadata['cachedContentTokenCount'] as num?)?.toInt() ?? 0,
-      thoughtTokens: (metadata['thoughtsTokenCount'] as num?)?.toInt() ??
+      thoughtTokens:
+          (metadata['thoughtsTokenCount'] as num?)?.toInt() ??
           (metadata['thoughtTokenCount'] as num?)?.toInt() ??
           0,
     );

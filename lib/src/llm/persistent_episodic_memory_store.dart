@@ -36,16 +36,18 @@ class PersistentEpisodicMemoryStore extends EpisodicMemoryStore {
 
     final encoded = jsonEncode(memory.toJson());
     final now = DateTime.now().toUtc();
-    await storage.appendEntry(CustomTreeEntry(
-      id: memory.id,
-      timestamp: now,
-      record: CustomEntry(
+    await storage.appendEntry(
+      CustomTreeEntry(
         id: memory.id,
         timestamp: now,
-        customType: kEpisodicMemoryCustomType,
-        payload: encoded,
+        record: CustomEntry(
+          id: memory.id,
+          timestamp: now,
+          customType: kEpisodicMemoryCustomType,
+          payload: encoded,
+        ),
       ),
-    ));
+    );
   }
 
   /// Rebuilds the in-memory entries from the storage backend — the "engine

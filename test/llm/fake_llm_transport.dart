@@ -43,8 +43,9 @@ class FakeLlmTransport implements LlmTransport {
   ScriptedResponse _next(String method) {
     if (_cursor >= _script.length) {
       throw StateError(
-          'FakeLlmTransport($provider): no scripted response left for $method '
-          '(scripted ${_script.length} responses, got call #${_cursor + 1})');
+        'FakeLlmTransport($provider): no scripted response left for $method '
+        '(scripted ${_script.length} responses, got call #${_cursor + 1})',
+      );
     }
     return _script[_cursor++];
   }
@@ -55,7 +56,9 @@ class FakeLlmTransport implements LlmTransport {
     final scripted = _next('send');
     if (scripted.networkError != null) {
       throw LlmNetworkException(
-          provider: provider, cause: scripted.networkError!);
+        provider: provider,
+        cause: scripted.networkError!,
+      );
     }
     return LlmHttpResponse(
       statusCode: scripted.statusCode,
@@ -70,7 +73,9 @@ class FakeLlmTransport implements LlmTransport {
     final scripted = _next('openStream');
     if (scripted.networkError != null) {
       throw LlmNetworkException(
-          provider: provider, cause: scripted.networkError!);
+        provider: provider,
+        cause: scripted.networkError!,
+      );
     }
     return LlmStreamResponse(
       statusCode: scripted.statusCode,

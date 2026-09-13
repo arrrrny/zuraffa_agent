@@ -15,33 +15,55 @@ import 'package:zuraffa_agent/src/domain/entities/tool_call_signature/tool_call_
 
 void main() {
   group('spec 029 — ToolCallSignature datasource pair', () {
-    test('U7: ToolCallSignatureMockDatasource is a ToolCallSignatureDatasource', () {
-      expect(ToolCallSignatureMockDatasource(), isA<ToolCallSignatureDatasource>());
-    });
+    test(
+      'U7: ToolCallSignatureMockDatasource is a ToolCallSignatureDatasource',
+      () {
+        expect(
+          ToolCallSignatureMockDatasource(),
+          isA<ToolCallSignatureDatasource>(),
+        );
+      },
+    );
 
     group('A1..A2 + U8..U9 capture/lookup (cycle 2)', () {
-      test('A1: capture(sig) then lookup(sig.key) returns the equal signature', () async {
-        final ds = ToolCallSignatureMockDatasource();
-        const sig = ToolCallSignature(toolName: 'webview.browse', argumentHash: 'abc123', version: 1);
-        await ds.capture(sig);
-        final found = await ds.lookup(sig.key);
-        expect(found, isNotNull);
-        expect(found, equals(sig));
-      });
+      test(
+        'A1: capture(sig) then lookup(sig.key) returns the equal signature',
+        () async {
+          final ds = ToolCallSignatureMockDatasource();
+          const sig = ToolCallSignature(
+            toolName: 'webview.browse',
+            argumentHash: 'abc123',
+            version: 1,
+          );
+          await ds.capture(sig);
+          final found = await ds.lookup(sig.key);
+          expect(found, isNotNull);
+          expect(found, equals(sig));
+        },
+      );
 
-      test('A2 + U8: lookup of a never-captured key reports absence (null, no throw)', () async {
-        final ds = ToolCallSignatureMockDatasource();
-        final found = await ds.lookup('never@1:captured');
-        expect(found, isNull);
-      });
+      test(
+        'A2 + U8: lookup of a never-captured key reports absence (null, no throw)',
+        () async {
+          final ds = ToolCallSignatureMockDatasource();
+          final found = await ds.lookup('never@1:captured');
+          expect(found, isNull);
+        },
+      );
 
-      test('U9: empty toolName / argument hash are valid content with well-formed keys', () async {
-        final ds = ToolCallSignatureMockDatasource();
-        const emptyContent = ToolCallSignature(toolName: '', argumentHash: '');
-        expect(emptyContent.key, equals('@1:'));
-        await ds.capture(emptyContent);
-        expect(await ds.lookup('@1:'), equals(emptyContent));
-      });
+      test(
+        'U9: empty toolName / argument hash are valid content with well-formed keys',
+        () async {
+          final ds = ToolCallSignatureMockDatasource();
+          const emptyContent = ToolCallSignature(
+            toolName: '',
+            argumentHash: '',
+          );
+          expect(emptyContent.key, equals('@1:'));
+          await ds.capture(emptyContent);
+          expect(await ds.lookup('@1:'), equals(emptyContent));
+        },
+      );
 
       test('A1: two distinct contents coexist in the store', () async {
         final ds = ToolCallSignatureMockDatasource();
@@ -66,9 +88,15 @@ void main() {
 
       test('A6: count reflects distinct captured signatures', () async {
         final ds = ToolCallSignatureMockDatasource();
-        await ds.capture(const ToolCallSignature(toolName: 'a', argumentHash: 'h'));
-        await ds.capture(const ToolCallSignature(toolName: 'b', argumentHash: 'h'));
-        await ds.capture(const ToolCallSignature(toolName: 'c', argumentHash: 'h'));
+        await ds.capture(
+          const ToolCallSignature(toolName: 'a', argumentHash: 'h'),
+        );
+        await ds.capture(
+          const ToolCallSignature(toolName: 'b', argumentHash: 'h'),
+        );
+        await ds.capture(
+          const ToolCallSignature(toolName: 'c', argumentHash: 'h'),
+        );
         expect(await ds.count(), equals(3));
       });
 

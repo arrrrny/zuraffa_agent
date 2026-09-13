@@ -16,15 +16,16 @@ class CompactionStrategyProvider
   final CompactionStrategy _active;
 
   CompactionStrategyProvider([CompactionStrategy? active])
-      : _active = active ??
-            const CompactionStrategy(
-              id: 'selective',
-              sessionId: '',
-              retainEntryIds: [],
-              summarizeEntryIds: [],
-              artifactRefs: [],
-              compactedAt: 0,
-            );
+    : _active =
+          active ??
+          const CompactionStrategy(
+            id: 'selective',
+            sessionId: '',
+            retainEntryIds: [],
+            summarizeEntryIds: [],
+            artifactRefs: [],
+            compactedAt: 0,
+          );
 
   @override
   Future<CompactionStrategy> current(NoParams params) async => _active;

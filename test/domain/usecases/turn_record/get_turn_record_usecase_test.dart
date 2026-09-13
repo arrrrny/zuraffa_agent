@@ -21,8 +21,9 @@ void main() {
   group('GetTurnRecordUseCase', () {
     final tTurnRecord = MockTurnRecord();
     test('should call repository.get and return result', () async {
-      when(() => mockRepository.get(any()))
-          .thenAnswer((_) async => tTurnRecord);
+      when(
+        () => mockRepository.get(any()),
+      ).thenAnswer((_) async => tTurnRecord);
       final result = await useCase.call(
         QueryParams<TurnRecord>(filter: Eq(TurnRecordFields.id, '1')),
       );

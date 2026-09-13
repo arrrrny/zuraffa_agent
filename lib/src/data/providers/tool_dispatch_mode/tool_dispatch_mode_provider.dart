@@ -15,13 +15,14 @@ class ToolDispatchModeProvider
   final ToolDispatchMode _active;
 
   ToolDispatchModeProvider([ToolDispatchMode? active])
-      : _active = active ??
-            const ToolDispatchMode(
-              id: 'default',
-              mode: 'sequential',
-              maxParallel: 1,
-              failFast: true,
-            );
+    : _active =
+          active ??
+          const ToolDispatchMode(
+            id: 'default',
+            mode: 'sequential',
+            maxParallel: 1,
+            failFast: true,
+          );
 
   @override
   Future<ToolDispatchMode> current(NoParams params) async => _active;

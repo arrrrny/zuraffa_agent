@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Eval Harness — Golden Missions, Record/Replay, pass@k
 
 **Feature Branch**: `006-eval-harness-golden`
@@ -21,7 +23,9 @@ As an engine developer, I record a mission once — LLM responses + tool traffic
 **Acceptance Scenarios**:
 
 1. **Given** a recorded cassette (LLM responses keyed by request, tool results), **When** replayed, **Then** the engine consumes recordings instead of live calls with identical event order.
+   **Type**: acceptance
 2. **Given** a replay whose inputs drift from the recording (prompt change), **Then** the harness reports a mismatch loudly — never silently passes.
+   **Type**: acceptance
 
 ### User Story 2 - pass@k / pass^k metrics (Priority: P1)
 
@@ -33,8 +37,10 @@ As a release engineer, I compute pass@k (unbiased estimator) and pass^k (empiric
 
 **Acceptance Scenarios**:
 
-1. **Given** a suite with k samples per task and known pass counts, **When** scored, **Then** pass@k matches the analytic value.
-2. **Given** a release gate of pass@k ≥ threshold, **When** a suite scores below, **Then** CI fails with per-task breakdown.
+3. **Given** a suite with k samples per task and known pass counts, **When** scored, **Then** pass@k matches the analytic value.
+   **Type**: acceptance
+4. **Given** a release gate of pass@k ≥ threshold, **When** a suite scores below, **Then** CI fails with per-task breakdown.
+   **Type**: acceptance
 
 ### User Story 3 - Grader matrix (Priority: P1)
 
@@ -46,9 +52,12 @@ As a suite author, I grade missions with exact matchers, schema validators, or m
 
 **Acceptance Scenarios**:
 
-1. **Given** a task with an exact grader, **Then** byte-equality decides.
-2. **Given** a schema grader, **Then** JSON-Schema validity decides.
-3. **Given** a model-judge grader (recorded judge), **Then** the parsed verdict decides, and the judge call is replayed deterministically.
+5. **Given** a task with an exact grader, **Then** byte-equality decides.
+   **Type**: acceptance
+6. **Given** a schema grader, **Then** JSON-Schema validity decides.
+   **Type**: acceptance
+7. **Given** a model-judge grader (recorded judge), **Then** the parsed verdict decides, and the judge call is replayed deterministically.
+   **Type**: acceptance
 
 ### User Story 4 - Integration surfaces (Priority: P2)
 
@@ -60,7 +69,8 @@ As the ecosystem, the harness feeds `zfa agent replay` (CLI lives in the plugin,
 
 **Acceptance Scenarios**:
 
-1. **Given** GM-1..GM-5 defined as harness suites, **When** CI runs, **Then** all report and gate correctly.
+8. **Given** GM-1..GM-5 defined as harness suites, **When** CI runs, **Then** all report and gate correctly.
+   **Type**: acceptance
 
 ### User Story 5 - Portable runtime (Priority: P2)
 
@@ -72,7 +82,8 @@ As CI, the eval runtime executes everywhere — no dart:io imports on the runtim
 
 **Acceptance Scenarios**:
 
-1. **Given** the eval runtime package, **When** scanned, **Then** no dart:io imports exist (CLI/loader layers exempt).
+9. **Given** the eval runtime package, **When** scanned, **Then** no dart:io imports exist (CLI/loader layers exempt).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -86,16 +97,27 @@ As CI, the eval runtime executes everywhere — no dart:io imports on the runtim
 ### Functional Requirements
 
 - **FR-001**: The harness MUST record LLM + tool traffic and replay deterministically, detecting input drift.
+  traces: evalHarnessGolden.fr1
 - **FR-002**: Scoring MUST implement pass@k (unbiased estimator) and pass^k (empirical) with per-task breakdowns.
+  traces: evalHarnessGolden.fr2
 - **FR-003**: Graders MUST include exact, schema, and model-judge (recorded) types.
+  traces: evalHarnessGolden.fr3
 - **FR-004**: The harness MUST be consumable by `zfa agent replay` (plugin CLI) and dws_playground suites.
+  traces: evalHarnessGolden.fr4
 - **FR-005**: The eval runtime MUST be dart:io-free (enforced by static gate).
+  traces: evalHarnessGolden.fr5
 
 ### Key Entities
 
 - **GoldenMission**: recorded cassette + task definition + grader bindings.
 - **Suite**: task set + k + gate threshold.
 - **Recorder/Replayer**: pluggable at LlmClient and tool-registry boundaries (no engine internals touched).
+
+## Layer Contracts
+
+**Domain**:
+
+- `evalHarnessGolden`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -43,9 +43,12 @@ import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../logging/agent_log.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
+import '../config/zuraffa_config.dart';
+import '../security/tool_result_sanitizer.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -122,14 +125,14 @@ class MissionResult {
 
   @override
   int get hashCode => Object.hash(
-        missionId,
-        status,
-        turnsUsed,
-        Object.hashAll(transcript),
-        summary,
-        goal,
-        goalAchieved,
-      );
+    missionId,
+    status,
+    turnsUsed,
+    Object.hashAll(transcript),
+    summary,
+    goal,
+    goalAchieved,
+  );
 
   @override
   String toString() =>
@@ -168,13 +171,17 @@ class MissionRunner {
     RepetitionTrackerDatasource? repetitionTracker,
     required void Function(EngineEvent) onEvent,
     DateTime Function()? clock,
-  })  : _executor = executor,
-        _toolDispatcher = toolDispatcher,
-        _stopPolicy = stopPolicy,
-        _queue = steeringQueue,
-        _repetition = repetitionTracker,
-        _onEvent = onEvent,
-        _clock = clock ?? DateTime.now;
+    ZuraffaConfig? config,
+    ToolResultSanitizer? toolResultSanitizer,
+  }) : _executor = executor,
+       _toolDispatcher = toolDispatcher,
+       _stopPolicy = stopPolicy,
+       _queue = steeringQueue,
+       _repetition = repetitionTracker,
+       _onEvent = onEvent,
+       _clock = clock ?? DateTime.now,
+       _config = config,
+       _toolResultSanitizer = toolResultSanitizer;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -183,6 +190,16 @@ class MissionRunner {
   final RepetitionTrackerDatasource? _repetition;
   final void Function(EngineEvent) _onEvent;
   final DateTime Function() _clock;
+
+  /// Optional runtime configuration (spec 107, issue #121). When supplied,
+  /// [run] validates it first and refuses to start on any issue — fail fast
+  /// at startup instead of at first turn.
+  final ZuraffaConfig? _config;
+
+  /// Optional tool-output sanitizer (spec 109, issue #118). When supplied,
+  /// every dispatched tool's output (success content and error text) is
+  /// redacted BEFORE it joins the transcript — the LLM egress boundary.
+  final ToolResultSanitizer? _toolResultSanitizer;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -218,6 +235,17 @@ class MissionRunner {
     Goal? goal,
     GoalEvaluator? goalEvaluator,
   }) async {
+    final config = _config;
+    if (config != null) {
+      final issues = config.validate();
+      if (issues.isNotEmpty) {
+        throw StateError(
+          'MissionRunner: configuration failed startup validation '
+          '(spec 107 / issue #121):\n'
+          '${issues.map((i) => '  - ${i.message}').join('\n')}',
+        );
+      }
+    }
     if ((goal == null) != (goalEvaluator == null)) {
       throw ArgumentError.value(
         goal == null ? 'goalEvaluator' : 'goal',
@@ -228,17 +256,17 @@ class MissionRunner {
     final start = _clock();
     final deadline =
         (_stopPolicy.enabled && _stopPolicy.wallClockTimeout != Duration.zero)
-            ? start.add(_stopPolicy.wallClockTimeout)
-            : null;
+        ? start.add(_stopPolicy.wallClockTimeout)
+        : null;
     final effectiveMaxTurns = _stopPolicy.enabled
         ? math.min(_executor.loop.maxTurns, _stopPolicy.maxTurns)
         : _executor.loop.maxTurns;
 
-    _onEvent(MissionStarted(
-      emittedAt: start,
-      missionId: missionId,
-      startedAt: start,
-    ));
+    _onEvent(
+      MissionStarted(emittedAt: start, missionId: missionId, startedAt: start),
+    );
+    // Spec 112 FR-005: mission lifecycle INFO — id + outcome only.
+    AgentLog.missionInfo(missionId: missionId, outcome: 'started');
 
     final transcript = List<ChatMessage>.of(messages);
     var turnsUsed = 0;
@@ -264,18 +292,21 @@ class MissionRunner {
       while (_queue != null && !_queue!.isEmpty) {
         final popped = _queue!.pop();
         _queue = popped.queue;
-        transcript.add(ChatMessage(role: 'user', content: popped.message.content));
-        _onEvent(SteeringInjected(
-          emittedAt: _clock(),
-          content: popped.message.content,
-          injectedAt: popped.message.injectedAt,
-        ));
+        transcript.add(
+          ChatMessage(role: 'user', content: popped.message.content),
+        );
+        _onEvent(
+          SteeringInjected(
+            emittedAt: _clock(),
+            content: popped.message.content,
+            injectedAt: popped.message.injectedAt,
+          ),
+        );
       }
 
-      _onEvent(TurnStarted(
-        emittedAt: _clock(),
-        turnId: '$missionId-turn-$turnsUsed',
-      ));
+      _onEvent(
+        TurnStarted(emittedAt: _clock(), turnId: '$missionId-turn-$turnsUsed'),
+      );
 
       final ChatCompletion completion;
       try {
@@ -283,11 +314,13 @@ class MissionRunner {
       } catch (e) {
         // The turn never finished: no assistant message, no TurnCompleted.
         // The mission still gets its terminal event.
-        _onEvent(ProviderError(
-          emittedAt: _clock(),
-          providerName: _executor.llmClient.config.id,
-          error: e.toString(),
-        ));
+        _onEvent(
+          ProviderError(
+            emittedAt: _clock(),
+            providerName: _executor.llmClient.config.id,
+            error: e.toString(),
+          ),
+        );
         status = MissionStatus.providerFailed;
         break;
       }
@@ -295,11 +328,13 @@ class MissionRunner {
       // The assistant message carries this turn's thinking block alongside the
       // tool-role results that follow it, so a thinking model's reasoning is
       // still in context when turn N+1 is assembled (spec 002 FR-002).
-      transcript.add(ChatMessage(
-        role: 'assistant',
-        content: completion.content,
-        thinking: completion.reasoning,
-      ));
+      transcript.add(
+        ChatMessage(
+          role: 'assistant',
+          content: completion.content,
+          thinking: completion.reasoning,
+        ),
+      );
 
       final calls = (planner == null)
           ? const <ToolCall>[]
@@ -316,26 +351,34 @@ class MissionRunner {
       for (var i = 0; i < calls.length; i++) {
         final call = calls[i];
         final callId = '$missionId-call-$turnsUsed-$i';
-        _onEvent(ToolCallStarted(
-          emittedAt: _clock(),
-          toolName: call.toolName,
-          callId: callId,
-        ));
+        _onEvent(
+          ToolCallStarted(
+            emittedAt: _clock(),
+            toolName: call.toolName,
+            callId: callId,
+          ),
+        );
         final result = await _toolDispatcher.dispatch(
           toolName: call.toolName,
           arguments: call.arguments,
           isInternalMission: false,
         );
-        transcript.add(ChatMessage(
-          role: 'tool',
-          content: result.success ? result.result : result.error,
-        ));
-        _onEvent(ToolCallCompleted(
-          emittedAt: _clock(),
-          toolName: call.toolName,
-          callId: callId,
-          ok: result.success,
-        ));
+        // Sanitize at the egress boundary (spec 109, issue #118): the
+        // transcript is what the next request relays to the model vendor.
+        final rawContent = result.success ? result.result : result.error;
+        final sanitizer = _toolResultSanitizer;
+        final toolContent = sanitizer == null
+            ? rawContent
+            : sanitizer.sanitize(rawContent).content;
+        transcript.add(ChatMessage(role: 'tool', content: toolContent));
+        _onEvent(
+          ToolCallCompleted(
+            emittedAt: _clock(),
+            toolName: call.toolName,
+            callId: callId,
+            ok: result.success,
+          ),
+        );
 
         // Repetition guard: the dispatched call's signature is recorded and
         // re-evaluated against the tracker's threshold. Hitting it ends the
@@ -386,12 +429,15 @@ class MissionRunner {
       }
     }
 
-    _onEvent(MissionCompleted(
-      emittedAt: _clock(),
-      missionId: missionId,
-      status: status.name,
-      summary: summary,
-    ));
+    _onEvent(
+      MissionCompleted(
+        emittedAt: _clock(),
+        missionId: missionId,
+        status: status.name,
+        summary: summary,
+      ),
+    );
+    AgentLog.missionInfo(missionId: missionId, outcome: status.name);
 
     return MissionResult(
       missionId: missionId,

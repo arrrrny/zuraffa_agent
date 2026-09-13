@@ -16,14 +16,15 @@ class SessionBranchProvider
   final SessionBranch _active;
 
   SessionBranchProvider([SessionBranch? active])
-      : _active = active ??
-            const SessionBranch(
-              id: 'branch-default',
-              sessionId: 'session-default',
-              forkedFromEntryId: 'entry-root',
-              forkedAt: 0,
-              isActive: true,
-            );
+    : _active =
+          active ??
+          const SessionBranch(
+            id: 'branch-default',
+            sessionId: 'session-default',
+            forkedFromEntryId: 'entry-root',
+            forkedAt: 0,
+            isActive: true,
+          );
 
   @override
   Future<SessionBranch> current(NoParams params) async => _active;

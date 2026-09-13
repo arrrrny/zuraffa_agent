@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Grader sealed (exact/schema/model-judge)
 
 **Branch**: `062-grader_sealed` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ Sealed grader — ExactGrader, SchemaGrader, ModelJudgeGrader (recorded) (epic #
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #7 (Eval Harness)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** GraderSealed equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** GraderSealed inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** GraderSealedProvider is a GraderSealedService **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** GraderSealedProvider.current returns the active grader snapshot **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** GraderSealedProvider.current honors an injected snapshot **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** GraderSealedProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/grader_sealed/grader_sealed_provider_test.dart`).
+   **Type**: acceptance

@@ -42,6 +42,32 @@ class CompactionSummary {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  CompactionSummary copyWithField<T>(
+    Field<CompactionSummary, T> field,
+    T value,
+  ) {
+    switch (field.name) {
+      case 'decisions':
+        return copyWith(decisions: value as List<String>);
+      case 'toolNames':
+        return copyWith(toolNames: value as List<String>);
+      case 'keyResults':
+        return copyWith(keyResults: value as List<String>);
+      case 'planState':
+        return copyWith(planState: value as String?);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'CompactionSummary has no settable field with this name',
+        );
+    }
+  }
+
   CompactionSummary copyWithCompactionSummary({
     List<String>? decisions,
     List<String>? toolNames,

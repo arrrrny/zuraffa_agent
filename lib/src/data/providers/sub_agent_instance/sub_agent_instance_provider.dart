@@ -16,13 +16,14 @@ class SubAgentInstanceProvider
   final SubAgentInstance _active;
 
   SubAgentInstanceProvider([SubAgentInstance? active])
-      : _active = active ??
-            const SubAgentInstance(
-              id: 'instance-default',
-              subAgentSpecId: 'spec-default',
-              parentSessionId: 'session-default',
-              totalRuns: 0,
-            );
+    : _active =
+          active ??
+          const SubAgentInstance(
+            id: 'instance-default',
+            subAgentSpecId: 'spec-default',
+            parentSessionId: 'session-default',
+            totalRuns: 0,
+          );
 
   @override
   Future<SubAgentInstance> current(NoParams params) async => _active;

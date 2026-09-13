@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: StopPolicy datasource + mock pair
 
 **Feature Branch**: `27-stop_policy-datasource-pair`
@@ -21,7 +23,9 @@ As the engine loop, I read the currently active StopPolicy (max turns, wall-cloc
 **Acceptance Scenarios**:
 
 1. **Given** a fresh chain wired over the mock datasource, **When** `current` is called, **Then** the default policy is returned (`maxTurns=100`, `wallClockTimeout=0`, `repetitionThreshold=5`, `enabled=true`, `id='default'`).
+   **Type**: acceptance
 2. **Given** a policy persisted via `update`, **When** `current` is called, **Then** the updated policy is returned — the read always reflects the last write.
+   **Type**: acceptance
 
 ---
 
@@ -35,8 +39,10 @@ As the engine operator, I tighten the policy before a risky mission (lower `maxT
 
 **Acceptance Scenarios**:
 
-1. **Given** any current policy, **When** `update(policy)` completes, **Then** `current()` returns a policy equal to the one written (full replace; value objects are immutable).
-2. **Given** a non-default policy active, **When** `reset()` is called, **Then** `current()` returns the default policy and any subsequent `update` starts again from a clean state.
+3. **Given** any current policy, **When** `update(policy)` completes, **Then** `current()` returns a policy equal to the one written (full replace; value objects are immutable).
+   **Type**: acceptance
+4. **Given** a non-default policy active, **When** `reset()` is called, **Then** `current()` returns the default policy and any subsequent `update` starts again from a clean state.
+   **Type**: acceptance
 
 ---
 
@@ -50,8 +56,10 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 
 **Acceptance Scenarios**:
 
-1. **Given** the provider is constructed over a datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state); the repository consumes the same datasource for id-keyed access.
-2. **Given** `getCurrent` is called with an id that matches no stored policy, **Then** a typed error surfaces (no silent default substitution — a wrong-id read is a wiring bug).
+5. **Given** the provider is constructed over a datasource, **When** any service method is called, **Then** the call is served by that datasource (observable through returned state); the repository consumes the same datasource for id-keyed access.
+   **Type**: acceptance
+6. **Given** `getCurrent` is called with an id that matches no stored policy, **Then** a typed error surfaces (no silent default substitution — a wrong-id read is a wiring bug).
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -65,11 +73,17 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 ### Functional Requirements
 
 - **FR-001**: The `StopPolicy` value object MUST expose the spec-002-exact surface (`id`, `maxTurns`, `wallClockTimeout`, `repetitionThreshold`, `enabled`) with value equality, and MUST carry the canonical default (`maxTurns=100`, `wallClockTimeout=0`, `repetitionThreshold=5`, `enabled=true`) as a single constant.
+  traces: StopPolicyProvide.fr1
 - **FR-002**: The datasource interface MUST define the persistence contract for the single-instance value object: `current()`, `update(policy)`, `reset()` — all asynchronous.
+  traces: StopPolicyProvide.fr2
 - **FR-003**: The mock datasource MUST implement the contract in memory: seeded with the default, `update` fully replaces, `reset` restores the default, `current` returns the live value.
+  traces: StopPolicyProvide.fr3
 - **FR-004**: A concrete repository (`StopPolicyRepositoryImpl`) MUST implement the domain `StopPolicyRepository` (`getCurrent(id)`, `update(policy)`, `reset(id)`) by delegating to the datasource, raising `StateError` on an id mismatch.
+  traces: StopPolicyProvide.fr4
 - **FR-005**: The provider MUST implement the domain `StopPolicyService` (`current(NoParams)`, `defaultPolicy(NoParams)`) by consuming the datasource's id-less `current()` for the live policy (the service surface is id-less by design — `NoParams`), and by returning the canonical default constant for `defaultPolicy`. The repository remains the id-keyed domain-facing seam over the same datasource; both consume the datasource.
+  traces: StopPolicyProvide.fr5
 - **FR-006**: Constructor backward compatibility MUST hold: `StopPolicyProvider()` and `StopPolicyMockDatasource()` parameterless constructions keep compiling; the provider defaults its wiring to a fresh mock datasource.
+  traces: StopPolicyProvide.fr6
 
 ### Key Entities *(include if feature involves data)*
 
@@ -78,6 +92,12 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 - **StopPolicyMockDatasource** (concrete): in-memory implementation seeded with the default.
 - **StopPolicyRepository / StopPolicyRepositoryImpl** (domain interface / data implementation): id-keyed gateway over the datasource.
 - **StopPolicyService / StopPolicyProvider** (domain interface / data implementation): the engine-facing surface — current policy + canonical default.
+
+## Layer Contracts
+
+**Domain**:
+
+- `StopPolicyProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 
@@ -96,3 +116,10 @@ As the application integrator, I swap the mock datasource for a Hive/remote-back
 - Enforcement of stop conditions (comparing turn counts against `maxTurns`, firing typed outcomes) belongs to the engine loop (spec 002/046), NOT to the datasource pair — the pair only persists and serves the policy.
 - The default policy values are frozen by the existing `StopPolicyService.defaultPolicy` documentation; this feature makes `StopPolicy.defaultPolicy` the single source of truth for them.
 - Existing tests asserting provider `UnimplementedError` stubs are superseded (drift remediation) — the provider now ships real delegation.
+
+
+## External Dependencies & Contracts
+
+| Dependency | Type | Contracts | Priority |
+| --- | --- | --- | --- |
+| Hive | storage: declared external dependency, used by the implemented datasources | datasource contract per requirement statements | none |

@@ -12,7 +12,12 @@ class ScriptedOutcome {
   /// Error thrown AFTER [chunks] were already emitted (mid-stream failure).
   final Object? streamError;
 
-  const ScriptedOutcome({this.response, this.error, this.chunks, this.streamError});
+  const ScriptedOutcome({
+    this.response,
+    this.error,
+    this.chunks,
+    this.streamError,
+  });
 }
 
 class FakeLlmClient implements LlmClient {
@@ -35,8 +40,9 @@ class FakeLlmClient implements LlmClient {
   ScriptedOutcome _next() {
     if (_cursor >= outcomes.length) {
       throw StateError(
-          'FakeLlmClient($providerName): no scripted outcome left '
-          '(scripted ${outcomes.length}, got call #${_cursor + 1})');
+        'FakeLlmClient($providerName): no scripted outcome left '
+        '(scripted ${outcomes.length}, got call #${_cursor + 1})',
+      );
     }
     return outcomes[_cursor++];
   }

@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Memory distiller — auto-promotion session → long-term
 
 **Branch**: `feat/spec-077-memory-distiller` (off `feat/spec-076-memory-persistence` `fdc9f89`) | **Date**: 2026-08-29
@@ -80,28 +82,39 @@ skipped (with reason), and what remains in the session.
 - **FR-001**: `DistillationPolicy` MUST expose `salienceThreshold`
   (default `0.7`) and `maxPerSession` (`int?`, default null = uncapped),
   with house value semantics.
+  traces: MemoryDistille.fr1
 - **FR-002**: `distill(sessionId)` MUST promote exactly the session
   records with `salience >= threshold`, via the facade's `promote()`
   (identity-preserving: id, content, createdAt, salience unchanged).
-- **FR-003**: Boundary: `salience == threshold` promotes.
-- **FR-004**: A record whose normalized content (trim + case-fold) already
+  traces: MemoryDistille.fr2
+- **FR-003**: The system MUST satisfy this requirement: Boundary: `salience == threshold` promotes.
+  traces: MemoryDistille.fr3
+- **FR-004**: The system MUST satisfy this requirement: A record whose normalized content (trim + case-fold) already
   exists in long-term memory MUST be skipped with
   `duplicateOfLongTerm` and MUST remain in session memory.
+  traces: MemoryDistille.fr4
 - **FR-005**: With `maxPerSession` set, promotions MUST be capped to the
   top-N candidates (salience desc, then createdAt asc — older first among
   equals); overflow skipped with `capReached`.
+  traces: MemoryDistille.fr5
 - **FR-006**: Below-threshold records MUST be skipped with
   `belowThreshold` and remain in session memory.
+  traces: MemoryDistille.fr6
 - **FR-007**: `distill` MUST be idempotent — a second run on the same
   session promotes nothing new and adds no long-term duplicates.
-- **FR-008**: Unknown / empty session → empty report, no throw.
+  traces: MemoryDistille.fr7
+- **FR-008**: The system MUST satisfy this requirement: Unknown / empty session → empty report, no throw.
+  traces: MemoryDistille.fr8
 - **FR-009**: `DistillationReport` MUST carry `promoted` (ids, promotion
   order), `skipped` (`SkippedRecord`: id + reason), and `sessionRemaining`
   (records still in session after the run), with house value semantics.
-- **FR-010**: Composed with the 076 persistent stores, distilled records
+  traces: MemoryDistille.fr9
+- **FR-010**: The system MUST satisfy this requirement: Composed with the 076 persistent stores, distilled records
   MUST be durable (present after store rebuild).
-- **FR-011**: Gates — `dart analyze --fatal-infos` exit 0; full `dart
+  traces: MemoryDistille.fr10
+- **FR-011**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart
   test` green.
+  traces: MemoryDistille.fr11
 
 ### Key entities
 
@@ -123,3 +136,36 @@ skipped (with reason), and what remains in the session.
 - Builds on: spec 076 (persistent stores) for FR-010 — this branch stacks
   on 076.
 - Feeds: session-end hooks (future), the agent's own memory hygiene.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** DistillationPolicy defaults and validation **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** distills a mixed-salience session — gate, identity, residue **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** boundary salience equal to threshold promotes; default is 0.7 **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** duplicate guard skips content already known to long-term **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** same-content session siblings dedupe within one run **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** cap promotes the best N — salience desc, older first among equals **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** distill is idempotent — no double promotion, no duplicates **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** unknown session distills to an empty report **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+9. **Given** the feature implementation under its clean-architecture seams **When** DistillationReport accounts for every record **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+10. **Given** the feature implementation under its clean-architecture seams **When** distilled knowledge is durable across a store rebuild **Then** the pinned regression test passes (`test/engine/memory_distiller_test.dart`).
+   **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `MemoryDistille`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`, `fr10(...) -> Result`, `fr11(...) -> Result`
+

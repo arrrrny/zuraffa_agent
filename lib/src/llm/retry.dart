@@ -5,6 +5,7 @@
 // retained.
 //
 
+import '../logging/agent_log.dart';
 import 'llm_clock.dart';
 import 'llm_client.dart';
 import 'llm_transport.dart';
@@ -50,9 +51,19 @@ Future<LlmHttpResponse> sendWithRetry({
         // Spec 084 FR-005: terminal, attempt-annotated — same type and
         // cause as the underlying failure, plus the count.
         throw LlmNetworkException(
-            provider: provider, cause: e.cause, attempts: attempt);
+          provider: provider,
+          cause: e.cause,
+          attempts: attempt,
+        );
       }
-      await clock.sleep(_delayFor(attempt, config, jitter));
+      final delay = _delayFor(attempt, config, jitter);
+      // Spec 112 FR-005: resilience WARNING per scheduled retry.
+      AgentLog.retryWarning(
+        attempt: attempt,
+        delay: Duration(milliseconds: delay),
+        error: e,
+      );
+      await clock.sleep(delay);
       continue;
     }
     if (response.isOk) return response;
@@ -66,9 +77,20 @@ Future<LlmHttpResponse> sendWithRetry({
         attempts: attempt,
       );
     }
-    await clock.sleep(
-        _retryAfterMs(response.headers) ??
-            _delayFor(attempt, config, jitter));
+    final waitMs =
+        _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter);
+    AgentLog.retryWarning(
+      attempt: attempt,
+      delay: Duration(milliseconds: waitMs),
+      error: LlmHttpException(
+        provider: provider,
+        statusCode: response.statusCode,
+        body: response.body,
+        headers: response.headers,
+        attempts: attempt,
+      ),
+    );
+    await clock.sleep(waitMs);
   }
 }
 
@@ -117,9 +139,18 @@ Future<LlmStreamResponse> openStreamWithRetry({
       if (attempt >= config.maxAttempts) {
         // Spec 084 FR-005: terminal, attempt-annotated (stream parity).
         throw LlmNetworkException(
-            provider: provider, cause: e.cause, attempts: attempt);
+          provider: provider,
+          cause: e.cause,
+          attempts: attempt,
+        );
       }
-      await clock.sleep(_delayFor(attempt, config, jitter));
+      final delay = _delayFor(attempt, config, jitter);
+      AgentLog.retryWarning(
+        attempt: attempt,
+        delay: Duration(milliseconds: delay),
+        error: e,
+      );
+      await clock.sleep(delay);
       continue;
     }
     if (response.isOk) return response;
@@ -133,7 +164,19 @@ Future<LlmStreamResponse> openStreamWithRetry({
         attempts: attempt,
       );
     }
-    await clock.sleep(
-        _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter));
+    final waitMs =
+        _retryAfterMs(response.headers) ?? _delayFor(attempt, config, jitter);
+    AgentLog.retryWarning(
+      attempt: attempt,
+      delay: Duration(milliseconds: waitMs),
+      error: LlmHttpException(
+        provider: provider,
+        statusCode: response.statusCode,
+        body: '',
+        headers: response.headers,
+        attempts: attempt,
+      ),
+    );
+    await clock.sleep(waitMs);
   }
 }

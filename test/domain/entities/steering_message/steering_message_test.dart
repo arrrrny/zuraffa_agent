@@ -111,7 +111,9 @@ void main() {
 
         expect(
           () => SteeringMessage.fromJson(json),
-          throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'content')),
+          throwsA(
+            isA<ArgumentError>().having((e) => e.name, 'name', 'content'),
+          ),
         );
       });
 
@@ -124,47 +126,58 @@ void main() {
 
         expect(
           () => SteeringMessage.fromJson(json),
-          throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'content')),
+          throwsA(
+            isA<ArgumentError>().having((e) => e.name, 'name', 'content'),
+          ),
         );
       });
 
       test('U8: missing injectedAt throws ArgumentError naming injectedAt', () {
-        const json = <String, dynamic>{
-          'id': 'msg-1',
-          'content': 'hello',
-        };
+        const json = <String, dynamic>{'id': 'msg-1', 'content': 'hello'};
 
         expect(
           () => SteeringMessage.fromJson(json),
-          throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt')),
+          throwsA(
+            isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt'),
+          ),
         );
       });
 
-      test('U9: non-string injectedAt throws ArgumentError naming injectedAt', () {
-        final json = <String, dynamic>{
-          'id': 'msg-1',
-          'content': 'hello',
-          'injectedAt': 12345,
-        };
+      test(
+        'U9: non-string injectedAt throws ArgumentError naming injectedAt',
+        () {
+          final json = <String, dynamic>{
+            'id': 'msg-1',
+            'content': 'hello',
+            'injectedAt': 12345,
+          };
 
-        expect(
-          () => SteeringMessage.fromJson(json),
-          throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt')),
-        );
-      });
+          expect(
+            () => SteeringMessage.fromJson(json),
+            throwsA(
+              isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt'),
+            ),
+          );
+        },
+      );
 
-      test('U10: unparseable injectedAt throws ArgumentError naming injectedAt', () {
-        const json = <String, dynamic>{
-          'id': 'msg-1',
-          'content': 'hello',
-          'injectedAt': 'not-a-timestamp',
-        };
+      test(
+        'U10: unparseable injectedAt throws ArgumentError naming injectedAt',
+        () {
+          const json = <String, dynamic>{
+            'id': 'msg-1',
+            'content': 'hello',
+            'injectedAt': 'not-a-timestamp',
+          };
 
-        expect(
-          () => SteeringMessage.fromJson(json),
-          throwsA(isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt')),
-        );
-      });
+          expect(
+            () => SteeringMessage.fromJson(json),
+            throwsA(
+              isA<ArgumentError>().having((e) => e.name, 'name', 'injectedAt'),
+            ),
+          );
+        },
+      );
     });
 
     // ----------------------------------------------------------------
@@ -196,10 +209,12 @@ void main() {
       });
 
       test('U14: differing injectedAt breaks ==', () {
-        final a = SteeringMessage(
-            id: 'm', content: 'c', injectedAt: ts);
+        final a = SteeringMessage(id: 'm', content: 'c', injectedAt: ts);
         final b = SteeringMessage(
-            id: 'm', content: 'c', injectedAt: ts.add(const Duration(seconds: 1)));
+          id: 'm',
+          content: 'c',
+          injectedAt: ts.add(const Duration(seconds: 1)),
+        );
 
         expect(a == b, isFalse);
       });
@@ -273,9 +288,14 @@ void main() {
           id: 'msg-tz',
           content: 'hello',
           // Construct a non-UTC time: 2026-08-29 14:00:00 +02:00
-          injectedAt: DateTime(2026, 8, 29, 14, 0, 0).subtract(
-            const Duration(hours: 2),
-          ),
+          injectedAt: DateTime(
+            2026,
+            8,
+            29,
+            14,
+            0,
+            0,
+          ).subtract(const Duration(hours: 2)),
         );
 
         final rebuilt = SteeringMessage.fromJson(original.toJson());
@@ -321,7 +341,7 @@ void main() {
       test('U23: includes type name and id; long content truncated', () {
         final msg = SteeringMessage(
           id: 'msg-1',
-          content: 'a' * 100,  // 100 chars — well over the 40-char truncation
+          content: 'a' * 100, // 100 chars — well over the 40-char truncation
           injectedAt: DateTime.utc(2026, 1, 1),
         );
 

@@ -25,16 +25,16 @@ import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 /// witness) and returns a FIFO script of completions.
 class CapturingLlmClient extends LlmClientProvider {
   CapturingLlmClient({required this.completions})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final List<ChatCompletion> completions;
   final List<List<ChatMessage>> seenMessages = [];
@@ -79,38 +79,40 @@ class RecordingDispatcher implements ToolDispatcher {
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 /// LLM client that throws on its first completion — drives a provider error.
 class ThrowingLlmClient extends LlmClientProvider {
   ThrowingLlmClient({this.error = 'boom'})
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   final String error;
 
@@ -140,7 +142,11 @@ ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
     ChatCompletion(
       content: content,
       finishReason: finish,
-      usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+      usage: const TokenUsage(
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+      ),
     );
 
 SubAgentSpec spec({
@@ -148,16 +154,15 @@ SubAgentSpec spec({
   int? maxTurns,
   Duration? wallClockTimeout,
   List<String> tools = const ['search'],
-}) =>
-    SubAgentSpec(
-      name: 'explore',
-      description: 'explores the repo',
-      systemPrompt: 'You are the explorer.',
-      tools: tools,
-      riskTier: riskTier,
-      maxTurns: maxTurns,
-      wallClockTimeout: wallClockTimeout,
-    );
+}) => SubAgentSpec(
+  name: 'explore',
+  description: 'explores the repo',
+  systemPrompt: 'You are the explorer.',
+  tools: tools,
+  riskTier: riskTier,
+  maxTurns: maxTurns,
+  wallClockTimeout: wallClockTimeout,
+);
 
 const instance = SubAgentInstance(
   id: 'inst-1',
@@ -170,7 +175,10 @@ void main() {
   group('spec 070 — AllowlistToolDispatcher standalone', () {
     test('delegates allowlisted calls', () async {
       final inner = RecordingDispatcher();
-      final allow = AllowlistToolDispatcher(inner: inner, allowlist: {'search'});
+      final allow = AllowlistToolDispatcher(
+        inner: inner,
+        allowlist: {'search'},
+      );
 
       final result = await allow.dispatch(
         toolName: 'search',
@@ -185,30 +193,46 @@ void main() {
       expect(inner.calls.single.isInternalMission, isTrue);
     });
 
-    test('refuses non-allowlisted calls without touching the inner dispatcher',
-        () async {
-      final inner = RecordingDispatcher();
-      final allow = AllowlistToolDispatcher(inner: inner, allowlist: {'search'});
+    test(
+      'refuses non-allowlisted calls without touching the inner dispatcher',
+      () async {
+        final inner = RecordingDispatcher();
+        final allow = AllowlistToolDispatcher(
+          inner: inner,
+          allowlist: {'search'},
+        );
 
-      final result = await allow.dispatch(
-        toolName: 'shell',
-        arguments: const {},
-        isInternalMission: false,
-      );
+        final result = await allow.dispatch(
+          toolName: 'shell',
+          arguments: const {},
+          isInternalMission: false,
+        );
 
-      expect(result.success, isFalse);
-      expect(result.error, 'tool not allowed: shell');
-      expect(inner.calls, isEmpty);
-    });
+        expect(result.success, isFalse);
+        expect(result.error, 'tool not allowed: shell');
+        expect(inner.calls, isEmpty);
+      },
+    );
 
     test('batch enforces the allowlist per call', () async {
       final inner = RecordingDispatcher();
-      final allow = AllowlistToolDispatcher(inner: inner, allowlist: {'search'});
+      final allow = AllowlistToolDispatcher(
+        inner: inner,
+        allowlist: {'search'},
+      );
 
       final results = await allow.dispatchBatch(
         calls: const [
-          ToolCall(toolName: 'search', arguments: {}, executionMode: 'sequential'),
-          ToolCall(toolName: 'shell', arguments: {}, executionMode: 'sequential'),
+          ToolCall(
+            toolName: 'search',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
+          ToolCall(
+            toolName: 'shell',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
         ],
         isInternalMission: false,
       );
@@ -230,43 +254,47 @@ void main() {
       fakeNow = DateTime.utc(2026, 1, 1);
     });
 
-    test('child runs in an isolated context and returns only a summary', () async {
-      final llm = CapturingLlmClient(completions: [completionOf('found 3 files')]);
-      final dispatcher = RecordingDispatcher();
-      final service = SubAgentDispatchService(
-        toolDispatcher: dispatcher,
-        llmClient: llm,
-      );
+    test(
+      'child runs in an isolated context and returns only a summary',
+      () async {
+        final llm = CapturingLlmClient(
+          completions: [completionOf('found 3 files')],
+        );
+        final dispatcher = RecordingDispatcher();
+        final service = SubAgentDispatchService(
+          toolDispatcher: dispatcher,
+          llmClient: llm,
+        );
 
-      final result = await service.dispatch(
-        spec: spec(),
-        mission: 'find the tests',
-        instance: instance,
-      );
+        final result = await service.dispatch(
+          spec: spec(),
+          mission: 'find the tests',
+          instance: instance,
+        );
 
-      // Isolation witness: the child saw EXACTLY system + mission.
-      expect(llm.seenMessages, hasLength(1));
-      expect(
-        llm.seenMessages.single,
-        const [
+        // Isolation witness: the child saw EXACTLY system + mission.
+        expect(llm.seenMessages, hasLength(1));
+        expect(llm.seenMessages.single, const [
           ChatMessage(role: 'system', content: 'You are the explorer.'),
           ChatMessage(role: 'user', content: 'find the tests'),
-        ],
-      );
+        ]);
 
-      // Result-only return: summary present, no transcript anywhere on the
-      // result type (static shape — enforced by what compiles below).
-      expect(result.status, SubAgentDispatchStatus.completed);
-      expect(result.resultSummary, 'found 3 files');
-      expect(result.instanceId, 'inst-1');
-      expect(result.specName, 'explore');
-    });
+        // Result-only return: summary present, no transcript anywhere on the
+        // result type (static shape — enforced by what compiles below).
+        expect(result.status, SubAgentDispatchStatus.completed);
+        expect(result.resultSummary, 'found 3 files');
+        expect(result.instanceId, 'inst-1');
+        expect(result.specName, 'explore');
+      },
+    );
 
     test('tool allowlist is enforced at the dispatch boundary', () async {
-      final llm = CapturingLlmClient(completions: [
-        completionOf('need tools', finish: 'tool_calls'),
-        completionOf('done'),
-      ]);
+      final llm = CapturingLlmClient(
+        completions: [
+          completionOf('need tools', finish: 'tool_calls'),
+          completionOf('done'),
+        ],
+      );
       final dispatcher = RecordingDispatcher();
       final events = <EngineEvent>[];
       final service = SubAgentDispatchService(
@@ -280,8 +308,16 @@ void main() {
         instance: instance,
         planner: ScriptedPlanner({
           1: const [
-            ToolCall(toolName: 'search', arguments: {}, executionMode: 'sequential'),
-            ToolCall(toolName: 'shell', arguments: {}, executionMode: 'sequential'),
+            ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'shell',
+              arguments: {},
+              executionMode: 'sequential',
+            ),
           ],
         }),
         onEvent: events.add,
@@ -305,7 +341,8 @@ void main() {
 
     test('spec maxTurns budget caps the child mission', () async {
       final llm = CapturingLlmClient(
-          completions: [completionOf('t1', finish: 'tool_calls')]);
+        completions: [completionOf('t1', finish: 'tool_calls')],
+      );
       final service = SubAgentDispatchService(
         toolDispatcher: RecordingDispatcher(),
         llmClient: llm,
@@ -317,7 +354,11 @@ void main() {
         instance: instance,
         planner: ScriptedPlanner({
           1: const [
-            ToolCall(toolName: 'search', arguments: {}, executionMode: 'sequential'),
+            ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential',
+            ),
           ],
         }),
       );
@@ -351,7 +392,9 @@ void main() {
     });
 
     test('admin-risk spec is refused without a grant', () async {
-      final llm = CapturingLlmClient(completions: [completionOf('should not run')]);
+      final llm = CapturingLlmClient(
+        completions: [completionOf('should not run')],
+      );
       final dispatcher = RecordingDispatcher();
       final service = SubAgentDispatchService(
         toolDispatcher: dispatcher,
@@ -414,8 +457,9 @@ void main() {
     });
 
     test('spec wallClockTimeout caps the child mission', () async {
-      final llm =
-          CapturingLlmClient(completions: [completionOf('working', finish: 'tool_calls')]);
+      final llm = CapturingLlmClient(
+        completions: [completionOf('working', finish: 'tool_calls')],
+      );
       llm.afterCall = (_) => fakeNow = fakeNow.add(const Duration(seconds: 10));
       final service = SubAgentDispatchService(
         toolDispatcher: RecordingDispatcher(),
@@ -428,7 +472,11 @@ void main() {
         instance: instance,
         planner: ScriptedPlanner({
           1: const [
-            ToolCall(toolName: 'search', arguments: {}, executionMode: 'sequential'),
+            ToolCall(
+              toolName: 'search',
+              arguments: {},
+              executionMode: 'sequential',
+            ),
           ],
         }),
         clock: fakeClock,
@@ -438,86 +486,91 @@ void main() {
       expect(result.instance.lastRunOutcome, 'budgetExhausted');
     });
 
-    test('provider failure maps MissionStatus.providerFailed to providerFailed',
-        () async {
-      final llm = ThrowingLlmClient();
-      final events = <EngineEvent>[];
-      final service = SubAgentDispatchService(
-        toolDispatcher: RecordingDispatcher(),
-        llmClient: llm,
-      );
+    test(
+      'provider failure maps MissionStatus.providerFailed to providerFailed',
+      () async {
+        final llm = ThrowingLlmClient();
+        final events = <EngineEvent>[];
+        final service = SubAgentDispatchService(
+          toolDispatcher: RecordingDispatcher(),
+          llmClient: llm,
+        );
 
-      final result = await service.dispatch(
-        spec: spec(),
-        mission: 'go',
-        instance: instance,
-        onEvent: events.add,
-      );
+        final result = await service.dispatch(
+          spec: spec(),
+          mission: 'go',
+          instance: instance,
+          onEvent: events.add,
+        );
 
-      expect(result.status, SubAgentDispatchStatus.providerFailed);
-      expect(result.resultSummary, isNull);
-      expect(events.whereType<ProviderError>(), isNotEmpty);
-      expect(result.instance.totalRuns, 3);
-      expect(result.instance.lastRunOutcome, 'providerFailed');
-    });
+        expect(result.status, SubAgentDispatchStatus.providerFailed);
+        expect(result.resultSummary, isNull);
+        expect(events.whereType<ProviderError>(), isNotEmpty);
+        expect(result.instance.totalRuns, 3);
+        expect(result.instance.lastRunOutcome, 'providerFailed');
+      },
+    );
 
-    test('SubAgentDispatchResult value semantics and context snapshot', () async {
-      final llm = CapturingLlmClient(completions: [completionOf('done')]);
-      final service = SubAgentDispatchService(
-        toolDispatcher: RecordingDispatcher(),
-        llmClient: llm,
-      );
+    test(
+      'SubAgentDispatchResult value semantics and context snapshot',
+      () async {
+        final llm = CapturingLlmClient(completions: [completionOf('done')]);
+        final service = SubAgentDispatchService(
+          toolDispatcher: RecordingDispatcher(),
+          llmClient: llm,
+        );
 
-      final result = await service.dispatch(
-        spec: spec(maxTurns: 4),
-        mission: 'go',
-        instance: instance,
-      );
+        final result = await service.dispatch(
+          spec: spec(maxTurns: 4),
+          mission: 'go',
+          instance: instance,
+        );
 
-      // Context snapshot documents the isolation envelope.
-      expect(result.context.subAgentSpecId, 'explore');
-      expect(result.context.sessionId, 'inst-1');
-      expect(result.context.toolAllowlist, ['search']);
-      expect(result.context.budgetTurns, 4);
+        // Context snapshot documents the isolation envelope.
+        expect(result.context.subAgentSpecId, 'explore');
+        expect(result.context.sessionId, 'inst-1');
+        expect(result.context.toolAllowlist, ['search']);
+        expect(result.context.budgetTurns, 4);
 
-      // Null maxTurns falls back to the service default.
-      final result2 = await service.dispatch(
-        spec: spec(),
-        mission: 'go',
-        instance: instance,
-      );
-      expect(result2.context.budgetTurns, 10);
+        // Null maxTurns falls back to the service default.
+        final result2 = await service.dispatch(
+          spec: spec(),
+          mission: 'go',
+          instance: instance,
+        );
+        expect(result2.context.budgetTurns, 10);
 
-      // Value semantics: identical fields => ==, equal hashCode.
-      final a = SubAgentDispatchResult(
-        instanceId: 'i',
-        specName: 's',
-        status: SubAgentDispatchStatus.completed,
-        resultSummary: 'x',
-        instance: instance,
-        context: result.context,
-      );
-      final b = SubAgentDispatchResult(
-        instanceId: 'i',
-        specName: 's',
-        status: SubAgentDispatchStatus.completed,
-        resultSummary: 'x',
-        instance: instance,
-        context: result.context,
-      );
-      final c = SubAgentDispatchResult(
-        instanceId: 'i',
-        specName: 's',
-        status: SubAgentDispatchStatus.refusedRiskTier,
-        resultSummary: 'x',
-        instance: instance,
-        context: result.context,
-      );
-      expect(a == b, isTrue);
-      expect(a.hashCode, b.hashCode);
-      expect(a == c, isFalse);
-      expect(a.toString(), contains('i'));
-      expect(a.toString(), contains('completed'));
-    });
+        // Value semantics: identical fields => ==, equal hashCode.
+        final a = SubAgentDispatchResult(
+          instanceId: 'i',
+          specName: 's',
+          status: SubAgentDispatchStatus.completed,
+          resultSummary: 'x',
+          instance: instance,
+          context: result.context,
+        );
+        final b = SubAgentDispatchResult(
+          instanceId: 'i',
+          specName: 's',
+          status: SubAgentDispatchStatus.completed,
+          resultSummary: 'x',
+          instance: instance,
+          context: result.context,
+        );
+        final c = SubAgentDispatchResult(
+          instanceId: 'i',
+          specName: 's',
+          status: SubAgentDispatchStatus.refusedRiskTier,
+          resultSummary: 'x',
+          instance: instance,
+          context: result.context,
+        );
+        expect(a == b, isTrue);
+        expect(a.hashCode, b.hashCode);
+        expect(a == c, isFalse);
+        expect(a.toString(), contains('i'));
+        expect(a.toString(), contains('completed'));
+      },
+    );
   });
 }

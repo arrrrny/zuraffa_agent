@@ -1,0 +1,30 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "A2",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T23:19:12.199830Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "116-runnable-example"
+ },
+ "files": [
+  {
+   "path": "test/tdd/116-runnable-example/a2_test.dart",
+   "action": "create",
+   "sha256": "c7f196b2341421ed845ad7d3bcd96efa3596727e6503da18db73fb7cf966f4b8",
+   "bytes": 1271,
+   "snapshot": "// GENERATED TEST \u2014 `zfa tdd gen A2` (spec 044-test-tdd-generation).\n//\n// behavior_id: A2\n// source_criterion: AC-2\n// kind: acceptance\n// description: it\n//\n// This test asserts the observable behavior described above. It is\n// \"honest red\" on first execution: the paired subject at\n// `package:zuraffa_agent/tdd/116-runnable-example/a2_subject.dart` is unimplemented, so the test fails through an\n// assertion (not an uncaught error, compile/load error, skip, or\n// placeholder). Replace the subject's\n// stub body with real implementation to make this test pass.\n\n// zfa:tdd: contract:A2:hand \u2014 hand step completed before first red certification (issue #1411)\n\nlibrary;\n\nimport 'package:test/test.dart';\n\nimport 'package:zuraffa_agent/tdd/116-runnable-example/a2_subject.dart';\n\n\nvoid main() {\n  group('A2 (AC-2)', () {\n    test('A2 \u2014 it', ()  {\n      // Assertion-shaped guard: the stub fails HERE via assertion.\n      Object? outcome;\n      try {\n        outcome = subject_a2();\n        outcome = 'ok';\n      } on UnimplementedError catch (e) {\n        outcome = e;\n      }\n      expect(outcome, isNot(isA<UnimplementedError>()));\n      final offenders = subject_a2();\n      expect(offenders, isEmpty, reason: 'no keys/endpoints in example');\n    });\n  });\n}\n"
+  },
+  {
+   "path": "lib/tdd/116-runnable-example/a2_subject.dart",
+   "action": "create",
+   "sha256": "54815b8e02ae793b604d7b2f32dcec2a3f38142e5c24f78cdd3da49611fb7f1d",
+   "bytes": 666,
+   "snapshot": "// GENERATED STUB \u2014 hand-stepped (spec 116 A2): source hygiene check \u2014\n// returns offending literals found in the example sources (empty = OK).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'dart:io';\n\nList<String> subject_a2() {\n  const files = [\n    'example/minimal_agent.dart',\n    'example/engine/echo_llm_client.dart',\n  ];\n  const forbidden = ['sk-', 'api.openai.com', 'api.anthropic.com'];\n  final offenders = <String>[];\n  for (final f in files) {\n    final content = File(f).readAsStringSync();\n    for (final needle in forbidden) {\n      if (content.contains(needle)) offenders.add('$f: $needle');\n    }\n  }\n  return offenders;\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

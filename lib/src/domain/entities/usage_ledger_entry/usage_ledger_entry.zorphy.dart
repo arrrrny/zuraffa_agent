@@ -67,6 +67,39 @@ class UsageLedgerEntry {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  UsageLedgerEntry copyWithField<T>(Field<UsageLedgerEntry, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'parentId':
+        return copyWith(parentId: value as String?);
+      case 'timestamp':
+        return copyWith(timestamp: value as DateTime);
+      case 'callId':
+        return copyWith(callId: value as String);
+      case 'turnNumber':
+        return copyWith(turnNumber: value as int);
+      case 'inputTokens':
+        return copyWith(inputTokens: value as int);
+      case 'outputTokens':
+        return copyWith(outputTokens: value as int);
+      case 'cacheReadTokens':
+        return copyWith(cacheReadTokens: value as int);
+      case 'cacheWriteTokens':
+        return copyWith(cacheWriteTokens: value as int);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'UsageLedgerEntry has no settable field with this name',
+        );
+    }
+  }
+
   UsageLedgerEntry copyWithUsageLedgerEntry({
     String? id,
     String? parentId,

@@ -7,12 +7,14 @@ part 'compaction_summary.zorphy.dart';
 part 'compaction_summary.g.dart';
 
 /// CompactionSummary entity
-@Zorphy(kind: ZorphyKind.valueObject, generateJson: true, generateCompareTo: true)
+@Zorphy(
+  kind: ZorphyKind.valueObject,
+  generateJson: true,
+  generateCompareTo: true,
+)
 abstract class $CompactionSummary {
-
   List<String> get decisions;
   List<String> get toolNames;
   List<String> get keyResults;
   String? get planState;
 }
-

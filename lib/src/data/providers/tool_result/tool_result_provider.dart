@@ -8,19 +8,24 @@
 // Mirrors the ProviderConfigProvider / EngineLoopProvider pattern
 // (spec 052 / 045).
 
-import 'package:zuraffa/zuraffa.dart';
+// `ToolResult` is hidden because zuraffa >=6.2.0's agent runtime
+// (src/agent/policy/policy_hook.dart) exports its own; spec 031's ToolResult
+// value object is the one in scope here.
+import 'package:zuraffa/zuraffa.dart' hide ToolResult;
 
 import '../../../domain/entities/tool_result/tool_result.dart';
 import '../../../domain/services/tool_result_service.dart';
 
-class ToolResultProvider with Loggable, FailureHandler implements ToolResultService {
+class ToolResultProvider
+    with Loggable, FailureHandler
+    implements ToolResultService {
   /// Default result returned when no tool result has been emitted yet.
   static const ToolResult empty = ToolResult(content: '');
 
   final List<ToolResult> _results;
 
   ToolResultProvider([List<ToolResult>? results])
-      : _results = List<ToolResult>.of(results ?? const <ToolResult>[]);
+    : _results = List<ToolResult>.of(results ?? const <ToolResult>[]);
 
   /// Records [result] as the latest emitted tool result and returns it.
   ToolResult emit(ToolResult result) {

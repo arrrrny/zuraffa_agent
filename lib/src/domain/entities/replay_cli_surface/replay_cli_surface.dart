@@ -26,7 +26,11 @@ class ReplayCliSurface {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ReplayCliSurface &&
-          runtimeType == other.runtimeType && id == other.id && missionId == other.missionId && graderMatrixId == other.graderMatrixId && verbosity == other.verbosity);
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          missionId == other.missionId &&
+          graderMatrixId == other.graderMatrixId &&
+          verbosity == other.verbosity);
 
   @override
   int get hashCode => Object.hash(id, missionId, graderMatrixId, verbosity);

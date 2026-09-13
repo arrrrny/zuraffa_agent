@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "feature": "114-jsonl-single-writer-streaming",
+  "entries": [
+    {
+      "feature": "114-jsonl-single-writer-streaming",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T22:00:16.093571Z",
+      "finished_at": "2026-09-11T22:01:09.493214Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U1:hand",
+        "hand-step=U1:hand — replace _arg0() in test/tdd/114-jsonl-single-writer-streaming/u1_test.dart with a representative mutation — then re-run zfa tdd make U1 (issue #1323)"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 6,
+        "red": 5,
+        "green": 0,
+        "done": 0
+      },
+      "stopped_at": "U1:hand"
+    },
+    {
+      "feature": "114-jsonl-single-writer-streaming",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T22:00:16.090642Z",
+      "finished_at": "2026-09-11T22:01:09.495234Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U1:hand",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "114-jsonl-single-writer-streaming",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T22:11:05.275262Z",
+      "finished_at": "2026-09-11T22:11:56.014430Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:verify-red"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A2",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 2,
+        "red": 0,
+        "green": 5,
+        "done": 3,
+        "blocked": 1
+      },
+      "stopped_at": "contract:A1:verify-red"
+    },
+    {
+      "feature": "114-jsonl-single-writer-streaming",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T22:11:05.272337Z",
+      "finished_at": "2026-09-11T22:11:56.016016Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:verify-red",
+        "engine lane result=blocked — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [],
+      "stopped_at": null
+    }
+  ]
+}

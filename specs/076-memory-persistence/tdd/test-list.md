@@ -1,68 +1,80 @@
-# Test List: Agent memory persistence (spec 076)
-
----
-feature: 076-memory-persistence
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 10 # FR-001..FR-010 in spec.md
-planned_at: feat/spec-073-agent-memory (4dd76e2)
-updated_at: feat/spec-076-memory-persistence (all A/U behaviors green, 5/5 mutants killed)
-suite_baseline: green # 925 passed / 2 skipped at 4dd76e2 (073 branch tip)
----
+# Test List: 076-memory-persistence
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Restart round-trip: remember + link → fresh store instances on the same files → restore() → record and link survive with value-object equality | FR-002, FR-003, FR-006, FR-008 | example | PASSING | `test/engine/persistent_agent_memory_test.dart::spec 076 — persistence::restore round-trips records and links with full fidelity` |
-| A2  | Crash-safety: across a mutation sequence no `.tmp` survives and the target file parses as valid JSON after every step | FR-007 | example | PASSING | `…::atomic writes leave no temp files and always-valid JSON` |
-| A3  | One corrupt entry among good ones is skipped on restore (010 precedent); a wholly unparseable file fails loud with StateError | FR-004 | example | PASSING | `…::restore skips malformed entries but fails loud on a corrupt file` |
-| A4  | Full-system story: facade over persistent stores → remember (LT + session), link, promote → rebuild from restored stores → recall finds both long-term, graph resolves | FR-008, FR-009 | example | PASSING | `…::full system persistence — promote survives a restart` |
-| A5  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 925/2 + new) | FR-010 | gate | PASSING | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-13 | PENDING |
+| A14 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-14 | PENDING |
+| A15 | the pinned regression test passes (`test/engine/persistent_agent_memory_test.dart`). | AC-15 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/persistent_agent_memory.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | Codec round-trips a record: id, content, tags set, source triple, UTC createdAt, salience | FR-001 | unit | PASSING | `…::MemoryJsonCodec round-trips records and links` |
-| U2  | Write-through: remember lands the record in the file's records array | FR-002 | unit | PASSING | `…::PersistentLongTermMemoryStore write-through persists to disk` |
-| U3  | Same-id replace: file ends with one record carrying the new content | FR-005 | unit | PASSING | `…::same-id replace writes through without duplication` |
-| U4  | Missing file → restore leaves the store empty, no throw | FR-003 | unit | PASSING | `…::restore on a missing file starts empty` |
-| U5  | Graph write-through + restore: type, note, createdAt survive; idempotent re-link replaces in the snapshot | FR-006 | unit | PASSING | `…::PersistentMemoryGraph round-trips links and replaces idempotently` |
-| U6  | Write-through creates missing parent directories | FR-007 | unit | PASSING | `…::write-through creates missing parent directories` |
-| U7  | A JSON document of the wrong shape (top-level array, missing `records`/`links`) → `StateError` | FR-004 | unit | PASSING | `…::restore fails loud on a JSON document of the wrong shape` |
-| U8  | An unsupported snapshot `version` → `StateError`, not a silently truncated load | FR-004 | unit | PASSING | `…::restore fails loud on an unsupported snapshot version` |
-| U9  | A record whose `tags` is not a list is skipped, not loaded with its tags dropped | FR-004 | unit | PASSING | `…::restore skips a record whose tags are not a list` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `MemoryJsonCodec` MUST losslessly round-trip `MemoryRecord` | FR-001 | PENDING |
+| U2 | `PersistentLongTermMemoryStore` MUST mirror every `remember` | FR-002 | PENDING |
+| U3 | `restore()` MUST rebuild the store from the file; a missing | FR-003 | PENDING |
+| U4 | During restore, malformed individual entries MUST be skipped; | FR-004 | PENDING |
+| U5 | Same-id replace MUST write through without duplicating the | FR-005 | PENDING |
+| U6 | `PersistentMemoryGraph` MUST mirror every `link` (including | FR-006 | PENDING |
+| U7 | Writes MUST be atomic — content lands in a `*.tmp` sibling | FR-007 | PENDING |
+| U8 | The facade MUST compose with persistent stores such that | FR-008 | PENDING |
+| U9 | `SessionMemoryStore` MUST NOT be persisted (evaporating layer; | FR-009 | PENDING |
+| U10 | The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart test` | FR-010 | PENDING |
 
-> **U6–U9 (review round, HEAD `27371ab`)** — added after the spec-076 code
-> review, each driven test-first against the unfixed implementation:
->
-> | id | red command | decisive failure |
-> | -- | ----------- | ---------------- |
-> | U6 | `dart test test/engine/persistent_agent_memory_test.dart` | `Expected: true / Actual: <false>` with `file.parent.createSync` removed — the branch was previously untested |
-> | U7 | same | characterization only — pins the two `StateError` branches no test reached; no production change |
-> | U8 | same | a `{"version":2}` file loaded as an empty v1 store instead of throwing |
-> | U9 | same | `Expected: false / Actual: <true>` — the bad-tags record loaded with its tags silently dropped, which the next write-through would make permanent |
+## Routing provenance
 
-## Edge cases & invariants
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-- Corrupt individual entry (not a map / bad field / bad salience / blank
-  source) → skipped, remaining good entries load (FR-004).
-- Corrupt whole file (`{not json`) → `StateError` (FR-004).
-- Directory of the target file may not exist yet → created on write.
-- Session memory deliberately not persisted (FR-009) — pinned by A4's
-  session note only surviving *via promotion*.
+route: A1 -> acceptance lane [declared: type marker, spec line 138]
+route: A2 -> acceptance lane [declared: type marker, spec line 140]
+route: A3 -> acceptance lane [declared: type marker, spec line 142]
+route: A4 -> acceptance lane [declared: type marker, spec line 144]
+route: A5 -> acceptance lane [declared: type marker, spec line 146]
+route: A6 -> acceptance lane [declared: type marker, spec line 148]
+route: A7 -> acceptance lane [declared: type marker, spec line 150]
+route: A8 -> acceptance lane [declared: type marker, spec line 152]
+route: A9 -> acceptance lane [declared: type marker, spec line 154]
+route: A10 -> acceptance lane [declared: type marker, spec line 156]
+route: A11 -> acceptance lane [declared: type marker, spec line 158]
+route: A12 -> acceptance lane [declared: type marker, spec line 160]
+route: A13 -> acceptance lane [declared: type marker, spec line 162]
+route: A14 -> acceptance lane [declared: type marker, spec line 164]
+route: A15 -> acceptance lane [declared: type marker, spec line 166]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Out of scope
-
-- `SessionMemoryStore` persistence (evaporating layer — spec 073 contract).
-- Append-log format, cross-process locking, migration across versions.
-- Any change to `lib/src/engine/agent_memory.dart`.
-
-## Verification commands
-
-- Single test: `dart test {file} -n "{name}"`
-- Full suite: `dart test`
-- Analyze: `dart analyze --fatal-infos`

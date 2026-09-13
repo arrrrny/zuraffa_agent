@@ -1,63 +1,50 @@
-# Test List: EngineEvent sealed library + TurnStarted
-
----
-feature: 024-engine-event-turn-started
-loop: outside-in
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 4 # acceptance criteria SC-001..SC-004 in spec.md
-planned_at: 4cdf63b
-updated_at: HEAD
-suite_baseline: green # 134 pre-existing tests on the parent commit; green criterion for this feature = its tests pass AND full-suite delta vs baseline is 0 new failures
----
+# Test List: 024-engine-event-turn-started
 
 ## Outer loop: acceptance behaviors
 
-One per success criterion in `spec.md`, exercised through the new `test/engine/events/engine_event_test.dart` suite (this is a library feature; the public `EngineEvent` library is the entry surface — no separate acceptance runner, per the stack profile).
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | `TurnStarted` is `is EngineEvent` — sealed-class subtype check compiles & succeeds | SC-001, SC-003, FR-001, FR-002 | example | DONE | `test/engine/events/engine_event_test.dart::arrarrny/zuraffa_agent#24 — sealed EngineEvent library::TurnStarted is an EngineEvent` |
-| A2  | `TurnStarted` carries `emittedAt` and optional `turnId` (null for ephemeral turns) | SC-001, FR-002 | example | DONE | `test/engine/events/engine_event_test.dart::…::TurnStarted carries emittedAt + optional turnId` + `…::TurnStarted.turnId defaults to null for ephemeral turns` |
-| A3  | A `switch` over `EngineEvent` is exhaustive when every current subtype is handled with no `default` arm — proves the sealed union is well-formed | SC-001, SC-003, FR-004 | example | DONE | `test/engine/events/engine_event_test.dart::…::switch over EngineEvent is exhaustive with all current subtypes` |
-| A4  | `dart analyze --fatal-infos` reports zero `invalid_use_of_type_outside_library` codes on `lib/src/engine/events/` (compiler-level guarantee — surfaced by the analyzer gate in CI, not by a `dart test`) | SC-001, SC-003, FR-004 | gate | DONE | CI gate `.github/workflows/pipeline.yml::verify / Analyze` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | `dart analyze` reports no `invalid_use_of_type_outside_library` error. | AC-1 | PENDING |
+| A2 | it succeeds with no `exhaustive_switch` warnings (the `switch` over `EngineEvent` in the test uses a `default` arm OR is checked with `is TurnStarted`). | AC-2 | PENDING |
+| A3 | the switch is exhaustive when expanded as `switch (e) { case TurnStarted(): ... }`. | AC-3 | PENDING |
+| A4 | `dart analyze` succeeds with no new errors. | AC-4 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/events/engine_event.dart` (sealed base)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `EngineEvent` is `sealed` so subtypes declared in foreign libraries are rejected with `invalid_use_of_type_outside_library` (compiler guard — verified by the green analyzer gate, not by a runtime test) | FR-001, FR-004 | gate | DONE | CI Analyze gate |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | `lib/src/engine/events/engine_event.dart` MUST declare `sealed class EngineEvent` with `part 'turn_started.dart';` and `part 'engine_event.g.dart';` directives. | FR-001 | PENDING |
+| U2 | `lib/src/engine/events/turn_started.dart` MUST be `part of 'engine_event.dart';` and declare `final class TurnStarted extends EngineEvent` with a `const TurnStarted();` constructor and any payload fields the engine will emit (start-of-turn timestamp `DateTime`, optional `turnId` `String?`). | FR-002 | PENDING |
+| U3 | `lib/src/engine/events/engine_event.dart` MUST export the `EngineEvent` library through `lib/zuraffa_agent.dart` (i.e., add `export 'src/engine/events/engine_event.dart';`). | FR-003 | PENDING |
+| U4 | `dart analyze --fatal-infos` MUST report zero issues on `lib/` and on the new files in particular. | FR-004 | PENDING |
+| U5 | A new test file at `test/engine/events/engine_event_test.dart` MUST assert: (a) `TurnStarted()` is `is EngineEvent`; (b) `TurnStarted()` is `is TurnStarted`; (c) a `switch` over `EngineEvent` with a single `TurnStarted` case + `default` compiles and runs. | FR-005 | PENDING |
+| U6 | `dart test` MUST pass all pre-existing tests (now 134 after PR #32) + new tests = ≥ 137 passing. | FR-006 | PENDING |
 
-### `lib/src/engine/events/turn_started.dart` (part file)
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U2  | `TurnStarted` declares `final DateTime emittedAt; final String? turnId;` with a `const TurnStarted({required this.emittedAt, this.turnId})` constructor — value semantics, immutable | FR-002 | example | DONE | A2 (above) |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-### `lib/zuraffa_agent.dart` (public export)
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 30]
+route: A4 -> acceptance lane [declared: type marker, spec line 43]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U3  | `export 'src/engine/events/engine_event.dart';` is reachable from the public package entry, so downstream consumers can `import 'package:zuraffa_agent/zuraffa_agent.dart'` and see `EngineEvent` + `TurnStarted` | FR-003 | example | DONE | indirect — `engine_event_test.dart` imports via `package:zuraffa_agent/src/engine/events/engine_event.dart`; the public-export reachability is structurally enforced by the analyzer when consumers use the barrel. |
-
-## Invariants and edge cases still to place
-
-- Exhaustive `switch` over `EngineEvent` while there is only one subtype: handled by adding a `default`/`_` arm — covered by the sibling-spec evolution (#23 `TurnCompleted`, #22 `ToolCallStarted`, …) which extend the switch exhaustively. The current test demonstrates the multi-subtype exhaustive form.
-- JSON serialization of `EngineEvent` subtypes: tracked separately as issue #15 (`engine-event-json-part`); the `part 'engine_event.g.dart';` directive is already in place so the generator can emit it later without re-touching the file. No test here — out of scope for #24.
-- `DateTime` purity: `DateTime` is `dart:core` — does not pull in `dart:io` (constitution VII). Implicit; no dedicated test.
-
-## Out of scope
-
-- The 8 sibling event subtypes (#16..#23) — each has its own spec and PR.
-- The json_serializable part (#15) — separate spec.
-- Emission of `TurnStarted` by the engine loop (spec-002) — this spec delivers the data type only.
-
-## Verification commands
-
-Copied verbatim from `.specify/memory/tdd-profile.md`:
-
-- Single test: `dart test test/engine/events/engine_event_test.dart --name "TurnStarted" --reporter expanded`
-- Full suite: `dart test`
-- Coverage: `dart test --coverage=coverage` (not run — `package:coverage` not installed; profile forbids mid-loop dep additions)
-- Mutation: none installed — deliberate mutants per rubric (see `verification.md`)

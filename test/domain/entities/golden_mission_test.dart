@@ -19,14 +19,16 @@ GoldenMission makeMission({
   return GoldenMission(
     id: id ?? 'gm-1',
     name: name ?? 'security-scan',
-    cassette: cassette ?? {
-      'llm_responses': [
-        {'request_hash': 'abc123', 'response': 'Analysis complete.'}
-      ],
-      'tool_results': [
-        {'tool': 'read_file', 'result': 'File contents...'}
-      ],
-    },
+    cassette:
+        cassette ??
+        {
+          'llm_responses': [
+            {'request_hash': 'abc123', 'response': 'Analysis complete.'},
+          ],
+          'tool_results': [
+            {'tool': 'read_file', 'result': 'File contents...'},
+          ],
+        },
     taskDefinition: taskDefinition ?? 'Scan codebase for vulnerabilities.',
     graderBindings: graderBindings ?? ['exact-match', 'schema-validate'],
   );

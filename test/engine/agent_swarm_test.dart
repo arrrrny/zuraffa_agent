@@ -20,13 +20,17 @@ import 'package:zuraffa_agent/src/engine/sub_agent_dispatch.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
 /// Per-member script: how long the dispatch "runs" and how it ends.
-typedef MemberScript = ({Duration delay, SubAgentDispatchStatus status, String? summary});
+typedef MemberScript = ({
+  Duration delay,
+  SubAgentDispatchStatus status,
+  String? summary,
+});
 
 /// Dispatch-service fake: scripts latency + outcome by instance id (the
 /// swarm synthesizes instance.id == task.id) and probes concurrency.
 class ScriptedDispatchService extends SubAgentDispatchService {
   ScriptedDispatchService(this.behavior)
-      : super(toolDispatcher: _InertDispatcher(), llmClient: _InertLlmClient());
+    : super(toolDispatcher: _InertDispatcher(), llmClient: _InertLlmClient());
 
   final Map<String, MemberScript> behavior;
   int active = 0;
@@ -76,39 +80,39 @@ class _InertDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      throw StateError('inert inner dispatcher — never reached');
+  }) async => throw StateError('inert inner dispatcher — never reached');
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      throw StateError('inert inner dispatcher — never reached');
+  }) async => throw StateError('inert inner dispatcher — never reached');
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 class _InertLlmClient extends LlmClientProvider {
   _InertLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['m'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['m'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
@@ -118,23 +122,27 @@ class _InertLlmClient extends LlmClientProvider {
 /// Real LLM client for the end-to-end integration test.
 class SingleAnswerLlmClient extends LlmClientProvider {
   SingleAnswerLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'kilo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['tencent/hy3:free'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'test-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'kilo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['tencent/hy3:free'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'test-key',
+      );
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
       ChatCompletion(
         content: 'swarm answer',
         finishReason: 'stop',
-        usage: const TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
+        usage: const TokenUsage(
+          promptTokens: 1,
+          completionTokens: 1,
+          totalTokens: 2,
+        ),
       );
 }
 
@@ -144,49 +152,47 @@ class PassThroughDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'ok:$toolName',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'ok:$toolName',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
   }) async => [
-        for (final call in calls)
-          await dispatch(
-            toolName: call.toolName,
-            arguments: call.arguments,
-            isInternalMission: isInternalMission,
-          ),
-      ];
+    for (final call in calls)
+      await dispatch(
+        toolName: call.toolName,
+        arguments: call.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) => true;
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) => true;
 }
 
 SubAgentSpec memberSpec(String name) => SubAgentSpec(
-      name: name,
-      description: 'swarm member $name',
-      systemPrompt: 'You are $name.',
-    );
+  name: name,
+  description: 'swarm member $name',
+  systemPrompt: 'You are $name.',
+);
 
-SwarmTask taskOf(String id, {Duration delay = Duration.zero}) => SwarmTask(
-      id: id,
-      spec: memberSpec(id),
-      mission: 'do $id',
-    );
+SwarmTask taskOf(String id, {Duration delay = Duration.zero}) =>
+    SwarmTask(id: id, spec: memberSpec(id), mission: 'do $id');
 
 const ok = SubAgentDispatchStatus.completed;
 const failed = SubAgentDispatchStatus.providerFailed;
@@ -196,11 +202,17 @@ void main() {
     test('members dispatch concurrently (overlap provable)', () async {
       final service = ScriptedDispatchService({
         for (final id in ['a', 'b', 'c'])
-          id: (delay: const Duration(milliseconds: 20), status: ok, summary: 's-$id'),
+          id: (
+            delay: const Duration(milliseconds: 20),
+            status: ok,
+            summary: 's-$id',
+          ),
       });
       final swarm = AgentSwarm(dispatchService: service);
 
-      final result = await swarm.run(tasks: [taskOf('a'), taskOf('b'), taskOf('c')]);
+      final result = await swarm.run(
+        tasks: [taskOf('a'), taskOf('b'), taskOf('c')],
+      );
 
       expect(service.maxActive, 3);
       expect(result.status, SwarmStatus.completed);
@@ -217,8 +229,16 @@ void main() {
 
     test('allCompleted returns a barrier over task-ordered results', () async {
       final service = ScriptedDispatchService({
-        'a': (delay: const Duration(milliseconds: 30), status: ok, summary: 'slow-a'),
-        'b': (delay: const Duration(milliseconds: 5), status: ok, summary: 'fast-b'),
+        'a': (
+          delay: const Duration(milliseconds: 30),
+          status: ok,
+          summary: 'slow-a',
+        ),
+        'b': (
+          delay: const Duration(milliseconds: 5),
+          status: ok,
+          summary: 'fast-b',
+        ),
       });
       final swarm = AgentSwarm(dispatchService: service);
 
@@ -235,8 +255,16 @@ void main() {
 
     test('allCompleted reports partialFailure when a member fails', () async {
       final service = ScriptedDispatchService({
-        'a': (delay: const Duration(milliseconds: 5), status: ok, summary: 'fine'),
-        'b': (delay: const Duration(milliseconds: 5), status: failed, summary: null),
+        'a': (
+          delay: const Duration(milliseconds: 5),
+          status: ok,
+          summary: 'fine',
+        ),
+        'b': (
+          delay: const Duration(milliseconds: 5),
+          status: failed,
+          summary: null,
+        ),
       });
       final swarm = AgentSwarm(dispatchService: service);
 
@@ -247,50 +275,84 @@ void main() {
       expect(result.results.map((r) => r.status), [ok, failed]);
     });
 
-    test('firstCompleted wins on completion order, not submission order', () async {
-      final service = ScriptedDispatchService({
-        'a': (delay: const Duration(milliseconds: 30), status: ok, summary: 'slow-a'),
-        'b': (delay: const Duration(milliseconds: 5), status: ok, summary: 'fast-b'),
-      });
-      final swarm = AgentSwarm(dispatchService: service);
+    test(
+      'firstCompleted wins on completion order, not submission order',
+      () async {
+        final service = ScriptedDispatchService({
+          'a': (
+            delay: const Duration(milliseconds: 30),
+            status: ok,
+            summary: 'slow-a',
+          ),
+          'b': (
+            delay: const Duration(milliseconds: 5),
+            status: ok,
+            summary: 'fast-b',
+          ),
+        });
+        final swarm = AgentSwarm(dispatchService: service);
 
-      final result = await swarm.run(
-        tasks: [taskOf('a'), taskOf('b')],
-        strategy: SwarmStrategy.firstCompleted,
-      );
+        final result = await swarm.run(
+          tasks: [taskOf('a'), taskOf('b')],
+          strategy: SwarmStrategy.firstCompleted,
+        );
 
-      expect(result.status, SwarmStatus.firstCompleted);
-      expect(result.winner, isNotNull);
-      expect(result.winner!.taskId, 'b');
-      expect(result.winner!.summary, 'fast-b');
-      expect(result.results, hasLength(1));
-      expect(result.results.single.taskId, 'b');
-      expect(result.completedCount, 1);
-    });
+        expect(result.status, SwarmStatus.firstCompleted);
+        expect(result.winner, isNotNull);
+        expect(result.winner!.taskId, 'b');
+        expect(result.winner!.summary, 'fast-b');
+        expect(result.results, hasLength(1));
+        expect(result.results.single.taskId, 'b');
+        expect(result.completedCount, 1);
+      },
+    );
 
-    test('firstCompleted without any success degrades to partialFailure', () async {
-      final service = ScriptedDispatchService({
-        'a': (delay: const Duration(milliseconds: 5), status: failed, summary: null),
-        'b': (delay: const Duration(milliseconds: 5), status: failed, summary: null),
-      });
-      final swarm = AgentSwarm(dispatchService: service);
+    test(
+      'firstCompleted without any success degrades to partialFailure',
+      () async {
+        final service = ScriptedDispatchService({
+          'a': (
+            delay: const Duration(milliseconds: 5),
+            status: failed,
+            summary: null,
+          ),
+          'b': (
+            delay: const Duration(milliseconds: 5),
+            status: failed,
+            summary: null,
+          ),
+        });
+        final swarm = AgentSwarm(dispatchService: service);
 
-      final result = await swarm.run(
-        tasks: [taskOf('a'), taskOf('b')],
-        strategy: SwarmStrategy.firstCompleted,
-      );
+        final result = await swarm.run(
+          tasks: [taskOf('a'), taskOf('b')],
+          strategy: SwarmStrategy.firstCompleted,
+        );
 
-      expect(result.status, SwarmStatus.partialFailure);
-      expect(result.winner, isNull);
-      expect(result.results, hasLength(2));
-      expect(result.completedCount, 0);
-    });
+        expect(result.status, SwarmStatus.partialFailure);
+        expect(result.winner, isNull);
+        expect(result.results, hasLength(2));
+        expect(result.completedCount, 0);
+      },
+    );
 
     test('quorum reached on the k-th success', () async {
       final service = ScriptedDispatchService({
-        'fast': (delay: const Duration(milliseconds: 5), status: ok, summary: 's-fast'),
-        'mid': (delay: const Duration(milliseconds: 10), status: ok, summary: 's-mid'),
-        'slow': (delay: const Duration(milliseconds: 25), status: failed, summary: null),
+        'fast': (
+          delay: const Duration(milliseconds: 5),
+          status: ok,
+          summary: 's-fast',
+        ),
+        'mid': (
+          delay: const Duration(milliseconds: 10),
+          status: ok,
+          summary: 's-mid',
+        ),
+        'slow': (
+          delay: const Duration(milliseconds: 25),
+          status: failed,
+          summary: null,
+        ),
       });
       final swarm = AgentSwarm(dispatchService: service);
 
@@ -310,9 +372,21 @@ void main() {
 
     test('quorum unmet fails with the true success count', () async {
       final service = ScriptedDispatchService({
-        'a': (delay: const Duration(milliseconds: 5), status: failed, summary: null),
-        'b': (delay: const Duration(milliseconds: 10), status: failed, summary: null),
-        'c': (delay: const Duration(milliseconds: 15), status: failed, summary: null),
+        'a': (
+          delay: const Duration(milliseconds: 5),
+          status: failed,
+          summary: null,
+        ),
+        'b': (
+          delay: const Duration(milliseconds: 10),
+          status: failed,
+          summary: null,
+        ),
+        'c': (
+          delay: const Duration(milliseconds: 15),
+          status: failed,
+          summary: null,
+        ),
       });
       final swarm = AgentSwarm(dispatchService: service);
 
@@ -327,38 +401,42 @@ void main() {
       expect(result.results, hasLength(3));
     });
 
-    test('validation rejects empty, duplicate-id, and bad-quorum runs', () async {
-      final service = ScriptedDispatchService({
-        'a': (delay: Duration.zero, status: ok, summary: 's'),
-        'b': (delay: Duration.zero, status: ok, summary: 's'),
-      });
-      final swarm = AgentSwarm(dispatchService: service);
+    test(
+      'validation rejects empty, duplicate-id, and bad-quorum runs',
+      () async {
+        final service = ScriptedDispatchService({
+          'a': (delay: Duration.zero, status: ok, summary: 's'),
+          'b': (delay: Duration.zero, status: ok, summary: 's'),
+        });
+        final swarm = AgentSwarm(dispatchService: service);
 
-      await expectLater(
-        swarm.run(tasks: []),
-        throwsArgumentError,
-      );
-      await expectLater(
-        swarm.run(tasks: [taskOf('a'), taskOf('a')]),
-        throwsArgumentError,
-      );
-      await expectLater(
-        swarm.run(tasks: [taskOf('a')], strategy: SwarmStrategy.quorum),
-        throwsArgumentError,
-      );
-      await expectLater(
-        swarm.run(tasks: [taskOf('a')], strategy: SwarmStrategy.quorum, quorum: 0),
-        throwsArgumentError,
-      );
-      await expectLater(
-        swarm.run(
-          tasks: [taskOf('a'), taskOf('b')],
-          strategy: SwarmStrategy.quorum,
-          quorum: 3,
-        ),
-        throwsArgumentError,
-      );
-    });
+        await expectLater(swarm.run(tasks: []), throwsArgumentError);
+        await expectLater(
+          swarm.run(tasks: [taskOf('a'), taskOf('a')]),
+          throwsArgumentError,
+        );
+        await expectLater(
+          swarm.run(tasks: [taskOf('a')], strategy: SwarmStrategy.quorum),
+          throwsArgumentError,
+        );
+        await expectLater(
+          swarm.run(
+            tasks: [taskOf('a')],
+            strategy: SwarmStrategy.quorum,
+            quorum: 0,
+          ),
+          throwsArgumentError,
+        );
+        await expectLater(
+          swarm.run(
+            tasks: [taskOf('a'), taskOf('b')],
+            strategy: SwarmStrategy.quorum,
+            quorum: 3,
+          ),
+          throwsArgumentError,
+        );
+      },
+    );
 
     test('single-task swarm runs a real child mission end-to-end', () async {
       final service = SubAgentDispatchService(
@@ -369,7 +447,9 @@ void main() {
       final events = <EngineEvent>[];
 
       final result = await swarm.run(
-        tasks: [SwarmTask(id: 't1', spec: memberSpec('explore'), mission: 'find it')],
+        tasks: [
+          SwarmTask(id: 't1', spec: memberSpec('explore'), mission: 'find it'),
+        ],
         onEvent: events.add,
       );
 
@@ -393,9 +473,24 @@ void main() {
       expect(t1 == t3, isFalse);
       expect(t1.toString(), contains('x'));
 
-      final r1 = const SwarmTaskResult(taskId: 'x', specName: 'a', status: ok, summary: 's');
-      final r2 = const SwarmTaskResult(taskId: 'x', specName: 'a', status: ok, summary: 's');
-      final r3 = const SwarmTaskResult(taskId: 'x', specName: 'a', status: failed, summary: 's');
+      final r1 = const SwarmTaskResult(
+        taskId: 'x',
+        specName: 'a',
+        status: ok,
+        summary: 's',
+      );
+      final r2 = const SwarmTaskResult(
+        taskId: 'x',
+        specName: 'a',
+        status: ok,
+        summary: 's',
+      );
+      final r3 = const SwarmTaskResult(
+        taskId: 'x',
+        specName: 'a',
+        status: failed,
+        summary: 's',
+      );
       expect(r1 == r2, isTrue);
       expect(r1.hashCode, r2.hashCode);
       expect(r1 == r3, isFalse);

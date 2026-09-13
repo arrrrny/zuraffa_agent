@@ -106,7 +106,11 @@ class AgentSession {
   /// when [entryId] is empty.
   AgentSession appendEntry(String entryId, {DateTime? at}) {
     if (entryId.isEmpty) {
-      throw ArgumentError.value(entryId, 'entryId', 'entry id must not be empty');
+      throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'entry id must not be empty',
+      );
     }
     final ts = at ?? DateTime.now();
     return AgentSession(
@@ -172,7 +176,11 @@ class AgentSession {
     String requireString(String key) {
       final value = json[key];
       if (value is! String) {
-        throw ArgumentError.value(value, key, 'AgentSession.$key must be a non-null string');
+        throw ArgumentError.value(
+          value,
+          key,
+          'AgentSession.$key must be a non-null string',
+        );
       }
       return value;
     }
@@ -180,11 +188,19 @@ class AgentSession {
     DateTime requireTimestamp(String key) {
       final value = json[key];
       if (value is! String) {
-        throw ArgumentError.value(value, key, 'AgentSession.$key must be an ISO-8601 string');
+        throw ArgumentError.value(
+          value,
+          key,
+          'AgentSession.$key must be an ISO-8601 string',
+        );
       }
       final parsed = DateTime.tryParse(value);
       if (parsed == null) {
-        throw ArgumentError.value(value, key, 'AgentSession.$key is not a parseable ISO-8601 timestamp');
+        throw ArgumentError.value(
+          value,
+          key,
+          'AgentSession.$key is not a parseable ISO-8601 timestamp',
+        );
       }
       return parsed;
     }
@@ -193,7 +209,11 @@ class AgentSession {
       final value = json[key];
       if (value == null) return null;
       if (value is! String) {
-        throw ArgumentError.value(value, key, 'AgentSession.$key must be a string when present');
+        throw ArgumentError.value(
+          value,
+          key,
+          'AgentSession.$key must be a string when present',
+        );
       }
       return value;
     }
@@ -224,14 +244,14 @@ class AgentSession {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        missionId,
-        rootEntryId,
-        currentEntryId,
-        parentSessionId,
-        createdAt,
-        updatedAt,
-      );
+    id,
+    missionId,
+    rootEntryId,
+    currentEntryId,
+    parentSessionId,
+    createdAt,
+    updatedAt,
+  );
 
   @override
   String toString() =>

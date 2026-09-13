@@ -13,19 +13,22 @@ import 'package:zuraffa_agent/src/domain/entities/ui_tree_payload/ui_tree_payloa
 /// Shared 3-level fixture: depth 3, nodeCount 5 (Column -> [Text, Row ->
 /// [Text, Text]]).
 Map<String, dynamic> _tree() => {
-      'type': 'Column',
-      'props': {'padding': 8},
+  'type': 'Column',
+  'props': {'padding': 8},
+  'children': [
+    {
+      'type': 'Text',
+      'props': {'value': 'hi'},
+    },
+    {
+      'type': 'Row',
       'children': [
-        {'type': 'Text', 'props': {'value': 'hi'}},
-        {
-          'type': 'Row',
-          'children': [
-            {'type': 'Text'},
-            {'type': 'Text'},
-          ]
-        },
-      ]
-    };
+        {'type': 'Text'},
+        {'type': 'Text'},
+      ],
+    },
+  ],
+};
 
 void main() {
   group('spec 038 — UiTreePayload serialization (FR-001/002)', () {
@@ -70,8 +73,13 @@ void main() {
       };
       expect(
         () => UiTreePayload.fromJson(json),
-        throwsA(isA<ArgumentError>()
-            .having((e) => e.name, 'name', contains('mimeType'))),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('mimeType'),
+          ),
+        ),
       );
     });
 
@@ -84,8 +92,13 @@ void main() {
       };
       expect(
         () => UiTreePayload.fromJson(json),
-        throwsA(isA<ArgumentError>()
-            .having((e) => e.name, 'name', contains('mimeType'))),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('mimeType'),
+          ),
+        ),
       );
     });
 
@@ -98,57 +111,78 @@ void main() {
       };
       expect(
         () => UiTreePayload.fromJson({...base, 'vocabularyId': ''}),
-        throwsA(isA<ArgumentError>()
-            .having((e) => e.name, 'name', contains('vocabularyId'))),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('vocabularyId'),
+          ),
+        ),
       );
       expect(
         () => UiTreePayload.fromJson({...base, 'schemaVersion': ''}),
-        throwsA(isA<ArgumentError>()
-            .having((e) => e.name, 'name', contains('schemaVersion'))),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.name,
+            'name',
+            contains('schemaVersion'),
+          ),
+        ),
       );
       expect(
-        () => UiTreePayload.fromJson({...base, 'tree': <String, dynamic>{}}
-          ..['tree'] = ['not', 'a', 'map']),
-        throwsA(isA<ArgumentError>()
-            .having((e) => e.name, 'name', contains('tree'))),
+        () => UiTreePayload.fromJson(
+          {...base, 'tree': <String, dynamic>{}}
+            ..['tree'] = ['not', 'a', 'map'],
+        ),
+        throwsA(
+          isA<ArgumentError>().having((e) => e.name, 'name', contains('tree')),
+        ),
       );
     });
   });
 
   group('spec 038 — UiTreePayload.diff (FR-003/004)', () {
-    UiTreePayload p(Map<String, dynamic> tree,
-            {String vocab = 'shadcn-ui@1.0.0', String schema = '1.0.0'}) =>
-        UiTreePayload(vocabularyId: vocab, schemaVersion: schema, tree: tree);
+    UiTreePayload p(
+      Map<String, dynamic> tree, {
+      String vocab = 'shadcn-ui@1.0.0',
+      String schema = '1.0.0',
+    }) => UiTreePayload(vocabularyId: vocab, schemaVersion: schema, tree: tree);
 
     test('U3: mixed fixture reports exact added/removed/changed sets', () {
       final before = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'hi'}},
+          {
+            'type': 'Text',
+            'props': {'value': 'hi'},
+          },
           {'type': 'Text'},
           {
             'type': 'Row',
             'children': [
               {'type': 'Text'},
-            ]
+            ],
           },
-        ]
+        ],
       };
       // After: child 0 props changed; child 1 removed; child 3 added;
       // nested Row's first Text unchanged.
       final after = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'bye'}}, // changed -> root/0
+          {
+            'type': 'Text',
+            'props': {'value': 'bye'},
+          }, // changed -> root/0
           // child 1 removed -> root/1
           {
             'type': 'Row',
             'children': [
               {'type': 'Text'},
-            ]
+            ],
           }, // shifted to index 1 — compared positionally
           {'type': 'Spacer'}, // added -> root/2... see expectations below
-        ]
+        ],
       };
       final delta = p(before).diff(p(after));
       // Positional semantics: index 0 changed (props differ); index 1:
@@ -172,32 +206,47 @@ void main() {
       final before = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'a'}},
-          {'type': 'Text', 'props': {'value': 'b'}},
-        ]
+          {
+            'type': 'Text',
+            'props': {'value': 'a'},
+          },
+          {
+            'type': 'Text',
+            'props': {'value': 'b'},
+          },
+        ],
       };
       final after = {
         'type': 'Column',
         'children': [
-          {'type': 'Text', 'props': {'value': 'a'}},
-          {'type': 'Text', 'props': {'value': 'B'}}, // changed root/1
+          {
+            'type': 'Text',
+            'props': {'value': 'a'},
+          },
+          {
+            'type': 'Text',
+            'props': {'value': 'B'},
+          }, // changed root/1
           {'type': 'Spacer'}, // added root/2
-        ]
+        ],
       };
       final delta = p(before).diff(p(after));
       expect(delta.changedPaths, ['root/1']);
       expect(delta.addedPaths, ['root/2']);
       expect(delta.removedPaths, isEmpty);
       // Root-level props change lands at 'root'.
-      final rootChanged = p({
-        'type': 'Column',
-        'props': {'padding': 8},
-        'children': <dynamic>[],
-      }).diff(p({
-        'type': 'Column',
-        'props': {'padding': 16},
-        'children': <dynamic>[],
-      }));
+      final rootChanged =
+          p({
+            'type': 'Column',
+            'props': {'padding': 8},
+            'children': <dynamic>[],
+          }).diff(
+            p({
+              'type': 'Column',
+              'props': {'padding': 16},
+              'children': <dynamic>[],
+            }),
+          );
       expect(rootChanged.changedPaths, ['root']);
     });
 
@@ -250,10 +299,7 @@ void main() {
       );
       expect(d1, equals(d2));
       expect(d1.hashCode, d2.hashCode);
-      expect(
-        d1.toString(),
-        contains('+1'),
-      ); // summary form carries counts
+      expect(d1.toString(), contains('+1')); // summary form carries counts
     });
 
     test('U10: UiTreeDiff path lists are deterministically ordered', () {

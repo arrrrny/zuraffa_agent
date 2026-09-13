@@ -29,7 +29,8 @@ void main() {
     // ----------------------------------------------------------------
     group('parseSkill happy path', () {
       test('U1: well-formed input returns a fully-populated Skill', () {
-        const content = '---\n'
+        const content =
+            '---\n'
             'name: my-skill\n'
             'description: A useful skill.\n'
             '---\n'
@@ -45,7 +46,8 @@ void main() {
       });
 
       test('U2: missing description field is tolerated (empty string)', () {
-        const content = '---\n'
+        const content =
+            '---\n'
             'name: no-desc\n'
             '---\n'
             'body text\n';
@@ -57,7 +59,8 @@ void main() {
       });
 
       test('U3: empty body after closing delimiter is tolerated', () {
-        const content = '---\n'
+        const content =
+            '---\n'
             'name: empty-body\n'
             '---\n';
         final skill = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
@@ -67,7 +70,8 @@ void main() {
       });
 
       test('U4: extra frontmatter keys are preserved on Skill.metadata', () {
-        const content = '---\n'
+        const content =
+            '---\n'
             'name: with-meta\n'
             'description: has metadata\n'
             'version: 1.0.0\n'
@@ -91,35 +95,33 @@ void main() {
         expect(skill.metadata.containsKey('description'), isFalse);
       });
 
-      test('U5: metadata is a defensive copy and values are coerced to plain Dart types', () {
-        const content = '---\n'
-            'name: defensive\n'
-            'version: 1.0.0\n'
-            'metadata:\n'
-            '  source: foo\n'
-            '---\n'
-            'body\n';
-        final first = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
-        // Mutate the returned map — must not affect a second parse.
-        first.metadata['version'] = 'tampered';
-        final second = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
+      test(
+        'U5: metadata is a defensive copy and values are coerced to plain Dart types',
+        () {
+          const content =
+              '---\n'
+              'name: defensive\n'
+              'version: 1.0.0\n'
+              'metadata:\n'
+              '  source: foo\n'
+              '---\n'
+              'body\n';
+          final first = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
+          // Mutate the returned map — must not affect a second parse.
+          first.metadata['version'] = 'tampered';
+          final second = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
 
-        expect(second.metadata['version'], '1.0.0');
+          expect(second.metadata['version'], '1.0.0');
 
-        // The nested value must be a plain Dart Map (not a YamlMap node),
-        // so callers don't accidentally depend on the yaml package's
-        // internal node types.
-        expect(
-          second.metadata['metadata'],
-          isA<Map<String, Object?>>(),
-        );
-        expect(
-          (second.metadata['metadata'] as Map)['source'],
-          'foo',
-        );
-        // And the top-level metadata map itself is a plain Dart Map.
-        expect(second.metadata, isA<Map<String, Object?>>());
-      });
+          // The nested value must be a plain Dart Map (not a YamlMap node),
+          // so callers don't accidentally depend on the yaml package's
+          // internal node types.
+          expect(second.metadata['metadata'], isA<Map<String, Object?>>());
+          expect((second.metadata['metadata'] as Map)['source'], 'foo');
+          // And the top-level metadata map itself is a plain Dart Map.
+          expect(second.metadata, isA<Map<String, Object?>>());
+        },
+      );
     });
 
     // ----------------------------------------------------------------
@@ -207,10 +209,16 @@ void main() {
       test(
         'A1 / U-load: well-formed directory returns parsed skills in order',
         () async {
-          await writeSkill('SKILL.md', '---\nname: first\ndescription: a\n---\nbody-1\n');
+          await writeSkill(
+            'SKILL.md',
+            '---\nname: first\ndescription: a\n---\nbody-1\n',
+          );
           // tiny delay so the second file's mtime/listing is after the first
           await Future<void>.delayed(const Duration(milliseconds: 5));
-          await writeSkill('second.skill.md', '---\nname: second\ndescription: b\n---\nbody-2\n');
+          await writeSkill(
+            'second.skill.md',
+            '---\nname: second\ndescription: b\n---\nbody-2\n',
+          );
 
           final skills = await loadSkills(tempDir.path);
           expect(skills, hasLength(2));
@@ -229,7 +237,10 @@ void main() {
       );
 
       test('U11: malformed file surfaces as SkillFormatException', () async {
-        await writeSkill('SKILL.md', '---\nname: ok\ndescription: good\n---\ngood body\n');
+        await writeSkill(
+          'SKILL.md',
+          '---\nname: ok\ndescription: good\n---\ngood body\n',
+        );
         await writeSkill(
           'broken.skill.md',
           '---\ndescription: missing name field\n---\nbody\n',
@@ -239,27 +250,37 @@ void main() {
           () => loadSkills(tempDir.path),
           throwsA(
             isA<SkillFormatException>()
-                .having((e) => e.sourcePath, 'sourcePath', contains('broken.skill.md'))
+                .having(
+                  (e) => e.sourcePath,
+                  'sourcePath',
+                  contains('broken.skill.md'),
+                )
                 .having((e) => e.reason, 'reason', 'missing-name'),
           ),
         );
       });
 
-      test('U12: filename rules — SKILL.md and *.skill.md match, README.md ignored', () async {
-        await writeSkill('SKILL.md', '---\nname: alpha\n---\nbody-a\n');
-        await writeSkill('beta.skill.md', '---\nname: beta\n---\nbody-b\n');
-        await writeSkill('README.md', '# not a skill file\n');
+      test(
+        'U12: filename rules — SKILL.md and *.skill.md match, README.md ignored',
+        () async {
+          await writeSkill('SKILL.md', '---\nname: alpha\n---\nbody-a\n');
+          await writeSkill('beta.skill.md', '---\nname: beta\n---\nbody-b\n');
+          await writeSkill('README.md', '# not a skill file\n');
 
-        final skills = await loadSkills(tempDir.path);
-        final names = skills.map((s) => s.name).toSet();
-        expect(names, {'alpha', 'beta'});
-        expect(skills, hasLength(2));
-      });
+          final skills = await loadSkills(tempDir.path);
+          final names = skills.map((s) => s.name).toSet();
+          expect(names, {'alpha', 'beta'});
+          expect(skills, hasLength(2));
+        },
+      );
 
       test('U13: does NOT recurse into subdirectories', () async {
         await writeSkill('SKILL.md', '---\nname: top\n---\ntop body\n');
         // Nested skill file in a subdirectory — must be ignored.
-        await writeSkill('nested/SKILL.md', '---\nname: nested\n---\nnested body\n');
+        await writeSkill(
+          'nested/SKILL.md',
+          '---\nname: nested\n---\nnested body\n',
+        );
 
         final skills = await loadSkills(tempDir.path);
         expect(skills, hasLength(1));
@@ -275,39 +296,42 @@ void main() {
         expect(formatSkillsForSystemPrompt(const <Skill>[]), '');
       });
 
-      test('U15: two skills render as two ## Skill: blocks separated by a blank line', () {
-        final skills = <Skill>[
-          const Skill(
-            name: 'first',
-            description: 'desc-1',
-            instructions: 'body-1',
-            sourcePath: '/a/SKILL.md',
-            metadata: {},
-          ),
-          const Skill(
-            name: 'second',
-            description: 'desc-2',
-            instructions: 'body-2',
-            sourcePath: '/b/SKILL.md',
-            metadata: {},
-          ),
-        ];
-        final rendered = formatSkillsForSystemPrompt(skills);
+      test(
+        'U15: two skills render as two ## Skill: blocks separated by a blank line',
+        () {
+          final skills = <Skill>[
+            const Skill(
+              name: 'first',
+              description: 'desc-1',
+              instructions: 'body-1',
+              sourcePath: '/a/SKILL.md',
+              metadata: {},
+            ),
+            const Skill(
+              name: 'second',
+              description: 'desc-2',
+              instructions: 'body-2',
+              sourcePath: '/b/SKILL.md',
+              metadata: {},
+            ),
+          ];
+          final rendered = formatSkillsForSystemPrompt(skills);
 
-        // Block 1 then a blank line then block 2.
-        expect(
-          rendered,
-          '## Skill: first\n'
-          'desc-1\n'
-          '\n'
-          'body-1\n'
-          '\n'
-          '## Skill: second\n'
-          'desc-2\n'
-          '\n'
-          'body-2\n',
-        );
-      });
+          // Block 1 then a blank line then block 2.
+          expect(
+            rendered,
+            '## Skill: first\n'
+            'desc-1\n'
+            '\n'
+            'body-1\n'
+            '\n'
+            '## Skill: second\n'
+            'desc-2\n'
+            '\n'
+            'body-2\n',
+          );
+        },
+      );
     });
   });
 }

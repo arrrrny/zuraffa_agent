@@ -1,0 +1,702 @@
+{
+  "schema": 1,
+  "feature": "113-eventbus-error-observability",
+  "entries": [
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:18:57.246442Z",
+      "finished_at": "2026-09-11T21:19:36.505307Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U1:verify-red",
+        "step_error=U1:verify-red outcome=compile-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A2"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 6,
+        "red": 4,
+        "green": 1,
+        "done": 0
+      },
+      "stopped_at": "U1:verify-red",
+      "error": {
+        "behavior": "U1",
+        "step": "verify-red",
+        "outcome": "compile-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd verify-red U1 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent",
+        "output": "zfa tdd verify-red: behavior U1\n   feature: 113-eventbus-error-observability\n   test: test/tdd/113-eventbus-error-observability/u1_test.dart\n   command: dart test {file} --plain-name \"{name}\"\n   runner exit: 1\n   classification: compile-error\nverify-red: behavior=U1 classification=compile-error certified=false feature=113-eventbus-error-observability\n\nzfa tdd verify-red: classification compile-error — fix the compile error in the test or its subject, then re-run `zfa tdd verify-red <behavior-id>`\n   no evidence written"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:18:57.243541Z",
+      "finished_at": "2026-09-11T21:19:36.506600Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U1:verify-red",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:20:47.404518Z",
+      "finished_at": "2026-09-11T21:23:55.766117Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U2:verify-red",
+        "step_error=U2:verify-red outcome=compile-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A2"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 5,
+        "red": 0,
+        "green": 3,
+        "done": 3
+      },
+      "stopped_at": "U2:verify-red",
+      "error": {
+        "behavior": "U2",
+        "step": "verify-red",
+        "outcome": "compile-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd verify-red U2 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent",
+        "output": "zfa tdd verify-red: behavior U2\n   feature: 113-eventbus-error-observability\n   test: test/tdd/113-eventbus-error-observability/u2_test.dart\n   command: dart test {file} --plain-name \"{name}\"\n   runner exit: 1\n   classification: compile-error\nverify-red: behavior=U2 classification=compile-error certified=false feature=113-eventbus-error-observability\n\nzfa tdd verify-red: classification compile-error — fix the compile error in the test or its subject, then re-run `zfa tdd verify-red <behavior-id>`\n   no evidence written"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:20:47.400330Z",
+      "finished_at": "2026-09-11T21:23:55.767591Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U2:verify-red",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:25:21.462795Z",
+      "finished_at": "2026-09-11T21:29:38.922172Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U3:make"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A2"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 3,
+        "red": 1,
+        "green": 0,
+        "done": 7
+      },
+      "stopped_at": "U3:make"
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:25:21.458348Z",
+      "finished_at": "2026-09-11T21:29:38.923541Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U3:make",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:30:04.141272Z",
+      "finished_at": "2026-09-11T21:30:04.244168Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U3:make"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 3,
+        "red": 1,
+        "green": 0,
+        "done": 7
+      },
+      "stopped_at": "U3:make"
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:30:04.137153Z",
+      "finished_at": "2026-09-11T21:30:04.246865Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U3:make",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:30:20.090546Z",
+      "finished_at": "2026-09-11T21:30:20.207910Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U3:hand",
+        "hand-step=U3:hand — replace _arg0() in test/tdd/113-eventbus-error-observability/u3_test.dart with a representative error — then re-run zfa tdd make U3 (issue #1323)"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 3,
+        "red": 1,
+        "green": 0,
+        "done": 7
+      },
+      "stopped_at": "U3:hand"
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:30:20.085213Z",
+      "finished_at": "2026-09-11T21:30:20.209006Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U3:hand",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:31:48.790462Z",
+      "finished_at": "2026-09-11T21:33:26.304357Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=U4:verify-red",
+        "step_error=U4:verify-red outcome=compile-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 3,
+        "red": 0,
+        "green": 0,
+        "done": 8
+      },
+      "stopped_at": "U4:verify-red",
+      "error": {
+        "behavior": "U4",
+        "step": "verify-red",
+        "outcome": "compile-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd verify-red U4 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent",
+        "output": "zfa tdd verify-red: behavior U4\n   feature: 113-eventbus-error-observability\n   test: test/tdd/113-eventbus-error-observability/u4_test.dart\n   command: dart test {file} --plain-name \"{name}\"\n   runner exit: 1\n   classification: compile-error\nverify-red: behavior=U4 classification=compile-error certified=false feature=113-eventbus-error-observability\n\nzfa tdd verify-red: classification compile-error — fix the compile error in the test or its subject, then re-run `zfa tdd verify-red <behavior-id>`\n   no evidence written"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:31:48.786362Z",
+      "finished_at": "2026-09-11T21:33:26.306210Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at U4:verify-red",
+        "engine lane result=stopped — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "stopped",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:33:57.443892Z",
+      "finished_at": "2026-09-11T21:33:59.571711Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:verify-red"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 1,
+        "red": 0,
+        "green": 0,
+        "done": 9,
+        "blocked": 1
+      },
+      "stopped_at": "contract:A1:verify-red"
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:33:57.441500Z",
+      "finished_at": "2026-09-11T21:33:59.573082Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:verify-red",
+        "engine lane result=blocked — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "blocked",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:34:26.281105Z",
+      "finished_at": "2026-09-11T21:35:57.965050Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:refactor",
+        "step_error=contract:A1:refactor outcome=runner-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 1,
+        "red": 0,
+        "green": 1,
+        "done": 9
+      },
+      "stopped_at": "contract:A1:refactor",
+      "error": {
+        "behavior": "contract:A1",
+        "step": "refactor",
+        "outcome": "runner-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd refactor contract:A1 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent --suite-baseline /Users/arrrrny/Developer/zuraffa_agent/specs/113-eventbus-error-observability/tdd/run-baseline.json",
+        "output": "zfa tdd refactor: preflight suite\n   command: dart test\n   preflight exit: 0\n   suite baseline: cached (2026-09-11T18:52:45.590096Z) — 8 pre-existing failure(s) excluded from the green verdicts (issue #922)\nzfa tdd refactor: applying passes\n   pass: build\n     command: /Users/arrrrny/.local/bin/zfa build\n     exit: 1\n     changed: (none)\n   pass \"build\" failed — misfire-stop.\nzfa tdd refactor: re-proof suite\n   command: dart test\n   re-proof exit: 0\nrefactor: feature=113-eventbus-error-observability outcome=runner-error applied=0"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:34:26.278052Z",
+      "finished_at": "2026-09-11T21:35:57.967333Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:refactor",
+        "engine lane result=runner-error — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:36:45.284188Z",
+      "finished_at": "2026-09-11T21:38:11.054884Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:refactor",
+        "step_error=contract:A1:refactor outcome=runner-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 0,
+        "red": 0,
+        "green": 2,
+        "done": 9
+      },
+      "stopped_at": "contract:A1:refactor",
+      "error": {
+        "behavior": "contract:A1",
+        "step": "refactor",
+        "outcome": "runner-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd refactor contract:A1 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent --suite-baseline /Users/arrrrny/Developer/zuraffa_agent/specs/113-eventbus-error-observability/tdd/run-baseline.json",
+        "output": "zfa tdd refactor: preflight suite\n   command: dart test\n   preflight exit: 0\n   suite baseline: cached (2026-09-11T18:52:45.590096Z) — 8 pre-existing failure(s) excluded from the green verdicts (issue #922)\nzfa tdd refactor: applying passes\n   pass: build\n     command: /Users/arrrrny/.local/bin/zfa build\n     exit: 1\n     changed: (none)\n   pass \"build\" failed — misfire-stop.\nzfa tdd refactor: re-proof suite\n   command: dart test\n   re-proof exit: 0\nrefactor: feature=113-eventbus-error-observability outcome=runner-error applied=0"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:36:45.279751Z",
+      "finished_at": "2026-09-11T21:38:11.057277Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:refactor",
+        "engine lane result=runner-error — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [],
+      "stopped_at": null
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "engine",
+      "phase": "drive",
+      "started_at": "2026-09-11T21:38:23.967887Z",
+      "finished_at": "2026-09-11T21:39:43.959716Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "stopped_at=contract:A1:refactor",
+        "step_error=contract:A1:refactor outcome=runner-error exit=1"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "contract:A1",
+        "contract:A3"
+      ],
+      "counts": {
+        "total": 11,
+        "pending": 0,
+        "red": 0,
+        "green": 2,
+        "done": 9
+      },
+      "stopped_at": "contract:A1:refactor",
+      "error": {
+        "behavior": "contract:A1",
+        "step": "refactor",
+        "outcome": "runner-error",
+        "exit_code": 1,
+        "command": "/Users/arrrrny/.local/bin/zfa tdd refactor contract:A1 --feature 113-eventbus-error-observability --project /Users/arrrrny/Developer/zuraffa_agent --suite-baseline /Users/arrrrny/Developer/zuraffa_agent/specs/113-eventbus-error-observability/tdd/run-baseline.json",
+        "output": "zfa tdd refactor: preflight suite\n   command: dart test\n   preflight exit: 0\n   suite baseline: cached (2026-09-11T18:52:45.590096Z) — 8 pre-existing failure(s) excluded from the green verdicts (issue #922)\nzfa tdd refactor: applying passes\n   pass: build\n     command: /Users/arrrrny/.local/bin/zfa build\n     exit: 1\n     changed: (none)\n   pass \"build\" failed — misfire-stop.\nzfa tdd refactor: re-proof suite\n   command: dart test\n   re-proof exit: 0\nrefactor: feature=113-eventbus-error-observability outcome=runner-error applied=0"
+      }
+    },
+    {
+      "feature": "113-eventbus-error-observability",
+      "cycle": "meta",
+      "phase": "aggregate",
+      "started_at": "2026-09-11T21:38:23.964562Z",
+      "finished_at": "2026-09-11T21:39:43.962662Z",
+      "gate_state": "red",
+      "receipts": [
+        "tdd/04-engine-receipt.json"
+      ],
+      "violations": [
+        "engine lane stopped at contract:A1:refactor",
+        "engine lane result=runner-error — fail fast, no skin step spawned"
+      ],
+      "refs": {
+        "engine_receipt": "tdd/04-engine-receipt.json",
+        "skin_receipt": null,
+        "contract_schema": null
+      },
+      "result": "runner-error",
+      "behaviors": [],
+      "stopped_at": null
+    }
+  ]
+}

@@ -31,37 +31,37 @@ import 'package:zuraffa_agent/src/eval/suite_gate.dart';
 /// takes a second turn; turn 2 finishes naturally with `finalAnswer` as the
 /// summary. Replaying it never touches the network.
 Map<String, dynamic> _cassette(String finalAnswer) => {
-      'completions': [
-        {
-          'content': 'I will use a tool first',
-          'reasoning': 'plan the tool call',
-          'finishReason': 'tool_calls',
-          'usage': {
-            'prompt_tokens': 10,
-            'completion_tokens': 4,
-            'total_tokens': 14,
-          },
-        },
-        {
-          'content': finalAnswer,
-          'finishReason': 'stop',
-          'usage': {
-            'prompt_tokens': 20,
-            'completion_tokens': 5,
-            'total_tokens': 25,
-          },
-        },
-      ],
-    };
+  'completions': [
+    {
+      'content': 'I will use a tool first',
+      'reasoning': 'plan the tool call',
+      'finishReason': 'tool_calls',
+      'usage': {
+        'prompt_tokens': 10,
+        'completion_tokens': 4,
+        'total_tokens': 14,
+      },
+    },
+    {
+      'content': finalAnswer,
+      'finishReason': 'stop',
+      'usage': {
+        'prompt_tokens': 20,
+        'completion_tokens': 5,
+        'total_tokens': 25,
+      },
+    },
+  ],
+};
 
 /// A golden mission whose replay answers with [finalAnswer].
 GoldenMission _mission(String id, String finalAnswer) => GoldenMission(
-      id: id,
-      name: id,
-      cassette: _cassette(finalAnswer),
-      taskDefinition: 'run the mission and answer',
-      graderBindings: const ['exact'],
-    );
+  id: id,
+  name: id,
+  cassette: _cassette(finalAnswer),
+  taskDefinition: 'run the mission and answer',
+  graderBindings: const ['exact'],
+);
 
 /// A replay client that always reports success, regardless of the tool.
 class _OkDispatcher implements ToolDispatcher {
@@ -70,56 +70,54 @@ class _OkDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'ok',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'ok',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      [
-        for (final c in calls)
-          await dispatch(
-            toolName: c.toolName,
-            arguments: c.arguments,
-            isInternalMission: isInternalMission,
-          )
-      ];
+  }) async => [
+    for (final c in calls)
+      await dispatch(
+        toolName: c.toolName,
+        arguments: c.arguments,
+        isInternalMission: isInternalMission,
+      ),
+  ];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const [];
+  }) => const [];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }
 
 /// Dispatches one search call after any `tool_calls` turn, then stops.
 class _SearchThenStopPlanner implements ToolCallPlanner {
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async =>
-      completion.finishReason == 'tool_calls'
-          ? const [
-              ToolCall(
-                toolName: 'search',
-                arguments: {'q': 'x'},
-                executionMode: 'sequential',
-              )
-            ]
-          : const [];
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async => completion.finishReason == 'tool_calls'
+      ? const [
+          ToolCall(
+            toolName: 'search',
+            arguments: {'q': 'x'},
+            executionMode: 'sequential',
+          ),
+        ]
+      : const [];
 }
 
 final _kDispatcher = _OkDispatcher();
@@ -172,8 +170,9 @@ Future<TaskSamples> _sampleTask(
 ) async {
   var c = 0;
   for (var i = 0; i < n; i++) {
-    final mission =
-        i < correctCount ? correctMission : _mission(correctMission.id, 'WRONG-ANSWER');
+    final mission = i < correctCount
+        ? correctMission
+        : _mission(correctMission.id, 'WRONG-ANSWER');
     final summary = await _runOnce(mission);
     if (_gradeExact(summary, expected)) c++;
   }
@@ -182,12 +181,12 @@ Future<TaskSamples> _sampleTask(
 
 /// The GM-1..GM-5 suite: k=2 samples per task, gate at 0.8 pass@k.
 Suite _suite() => Suite(
-      id: 'gm-suite',
-      name: 'GM-1..GM-5',
-      tasks: const ['GM-1', 'GM-2', 'GM-3', 'GM-4', 'GM-5'],
-      k: 2,
-      gateThreshold: 0.8,
-    );
+  id: 'gm-suite',
+  name: 'GM-1..GM-5',
+  tasks: const ['GM-1', 'GM-2', 'GM-3', 'GM-4', 'GM-5'],
+  k: 2,
+  gateThreshold: 0.8,
+);
 
 void main() {
   // k=2, n=5: a task with every sample correct scores pass@k = 1.0.
@@ -217,30 +216,32 @@ void main() {
   });
 
   // Two tasks pass (1.0) and three fail (0.0): suite mean = 0.4 < 0.8 → fail.
-  test('A8: GM-1..GM-5 suite — tasks below threshold fail the gate → exitCode 1',
-      () async {
-    final suite = _suite();
-    final failing = {'GM-3', 'GM-4', 'GM-5'};
-    final samples = <String, TaskSamples>{};
-    for (final id in suite.tasks) {
-      final expected = 'answer-$id';
-      final mission = _mission(id, expected);
-      final correct = failing.contains(id) ? 0 : 5;
-      samples[id] = await _sampleTask(mission, expected, 5, correct);
-    }
+  test(
+    'A8: GM-1..GM-5 suite — tasks below threshold fail the gate → exitCode 1',
+    () async {
+      final suite = _suite();
+      final failing = {'GM-3', 'GM-4', 'GM-5'};
+      final samples = <String, TaskSamples>{};
+      for (final id in suite.tasks) {
+        final expected = 'answer-$id';
+        final mission = _mission(id, expected);
+        final correct = failing.contains(id) ? 0 : 5;
+        samples[id] = await _sampleTask(mission, expected, 5, correct);
+      }
 
-    final decision = SuiteGate.evaluate(suite: suite, samples: samples);
+      final decision = SuiteGate.evaluate(suite: suite, samples: samples);
 
-    expect(decision.passed, isFalse);
-    expect(decision.exitCode, 1);
-    // (2 passing * 1.0 + 3 failing * 0.0) / 5 tasks = 0.4
-    expect(decision.score, 0.4);
-    expect(decision.report, contains('FAIL suite ${suite.id}'));
-    final byTask = {for (final r in decision.breakdown) r.taskId: r};
-    expect(byTask['GM-1']!.passed, isTrue);
-    expect(byTask['GM-2']!.passed, isTrue);
-    expect(byTask['GM-3']!.passed, isFalse);
-    expect(byTask['GM-4']!.passed, isFalse);
-    expect(byTask['GM-5']!.passed, isFalse);
-  });
+      expect(decision.passed, isFalse);
+      expect(decision.exitCode, 1);
+      // (2 passing * 1.0 + 3 failing * 0.0) / 5 tasks = 0.4
+      expect(decision.score, 0.4);
+      expect(decision.report, contains('FAIL suite ${suite.id}'));
+      final byTask = {for (final r in decision.breakdown) r.taskId: r};
+      expect(byTask['GM-1']!.passed, isTrue);
+      expect(byTask['GM-2']!.passed, isTrue);
+      expect(byTask['GM-3']!.passed, isFalse);
+      expect(byTask['GM-4']!.passed, isFalse);
+      expect(byTask['GM-5']!.passed, isFalse);
+    },
+  );
 }

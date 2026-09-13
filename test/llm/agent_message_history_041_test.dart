@@ -15,19 +15,20 @@ import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memor
 import 'package:zuraffa_agent/src/llm/agent_message_history.dart';
 
 EpisodicMemory _memory(String id, String goal) => EpisodicMemory(
-      id: id,
-      summary: '<state_snapshot><overall_goal>$goal</overall_goal></state_snapshot>',
-      messages: [UserMessage.text('older-$goal')],
-    );
+  id: id,
+  summary:
+      '<state_snapshot><overall_goal>$goal</overall_goal></state_snapshot>',
+  messages: [UserMessage.text('older-$goal')],
+);
 
 AgentMessageHistory _threeMessages() => AgentMessageHistory(
-      messages: [
-        UserMessage.text('first'),
-        UserMessage.text('second'),
-        UserMessage.text('third'),
-      ],
-      episodicMemories: [_memory('snap-1', 'goal-1')],
-    );
+  messages: [
+    UserMessage.text('first'),
+    UserMessage.text('second'),
+    UserMessage.text('third'),
+  ],
+  episodicMemories: [_memory('snap-1', 'goal-1')],
+);
 
 void main() {
   group('spec 041 — AgentMessageHistory.truncate (FR-004)', () {
@@ -36,9 +37,7 @@ void main() {
       final truncated = history.truncate(2);
       expect(truncated.messages, hasLength(2));
       expect(
-        (truncated.messages.first as UserMessage)
-            .content
-            .first is TextBlock,
+        (truncated.messages.first as UserMessage).content.first is TextBlock,
         isTrue,
       );
       expect(
@@ -53,8 +52,9 @@ void main() {
       );
       expect(truncated.episodicMemories, hasLength(1));
       expect(truncated.episodicMemories.first.id, 'snap-1');
-      expect(truncated.memorySummaries,
-          ['<state_snapshot><overall_goal>goal-1</overall_goal></state_snapshot>']);
+      expect(truncated.memorySummaries, [
+        '<state_snapshot><overall_goal>goal-1</overall_goal></state_snapshot>',
+      ]);
     });
 
     test('U5: truncate(0) empties messages, memories survive', () {
@@ -110,8 +110,10 @@ void main() {
       final grown = history.addMemory(_memory('snap-2', 'second'));
       expect(grown.episodicMemories, hasLength(2));
       expect(grown.episodicMemories.last.id, 'snap-2');
-      expect(grown.memorySummaries.last,
-          contains('<overall_goal>second</overall_goal>'));
+      expect(
+        grown.memorySummaries.last,
+        contains('<overall_goal>second</overall_goal>'),
+      );
       expect(history.episodicMemories, hasLength(1)); // immutable
     });
   });

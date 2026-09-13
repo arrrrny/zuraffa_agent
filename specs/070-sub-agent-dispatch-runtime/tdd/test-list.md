@@ -1,54 +1,72 @@
-# Test List: Sub-agent dispatch runtime
-
----
-feature: 070-sub-agent-dispatch-runtime
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 8 # FR-001..FR-008 in spec.md
-planned_at: 8a5bd83 # feat/spec-069-mission-runner HEAD (stack base)
-updated_at: HEAD
-suite_baseline: green # 925 passed / 2 skipped at 8a5bd83
----
+# Test List: 070-sub-agent-dispatch-runtime
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | Isolation: the child LLM receives EXACTLY `[system: spec.systemPrompt, user: mission]` — no parent context; the result carries the child's final content as `resultSummary` and exposes NO transcript | FR-001 | example | DONE | `test/engine/sub_agent_dispatch_test.dart::spec 070 — SubAgentDispatchService::child runs in an isolated context and returns only a summary` |
-| A2  | Allowlist: an out-of-allowlist tool call is refused at the boundary (inner dispatcher NEVER sees it) with `ok: false` + `error` naming the tool; an allowlisted call delegates and succeeds; mission continues | FR-002 | example | DONE | `…::tool allowlist is enforced at the dispatch boundary` |
-| A3  | Budgets: `spec.maxTurns: 1` with a tool-looping child stops after 1 turn — dispatch status `budgetExhausted` | FR-003 | example | DONE | `…::spec maxTurns budget caps the child mission` |
-| A4  | Instance bookkeeping: `totalRuns` 2 → 3 and `lastRunOutcome` = status name on a completed dispatch; input instance untouched | FR-004 | example | DONE | `…::completed dispatch updates the instance bookkeeping` |
-| A5  | Risk tier gate: admin-tier spec without `adminGranted` → `refusedRiskTier`, zero LLM calls, instance returned unchanged | FR-005 | example | DONE | `…::admin-risk spec is refused without a grant` |
-| A6  | Risk tier gate (positive): the same admin spec WITH `adminGranted: true` runs normally | FR-005 | example | DONE | `…::admin-risk spec runs with an explicit grant` |
-| A7  | Event forwarding: child `MissionStarted.missionId == instance.id` reaches the caller's `onEvent` | FR-006 | example | DONE | `…::child events forward with the instance id as mission id` |
-| A8  | `SubAgentDispatchResult` value semantics + `context` snapshot (`subAgentSpecId`, `sessionId`, `toolAllowlist`, `budgetTurns`) | FR-007 | example | DONE | `…::SubAgentDispatchResult value semantics and context snapshot` |
-| A9  | Gates: `dart analyze --fatal-infos` exit 0; full `dart test` green (baseline 925/2 + new) | FR-008 | gate | DONE | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/engine/sub_agent_dispatch_test.dart`). | AC-13 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/sub_agent_dispatch.dart` (new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `AllowlistToolDispatcher.dispatch` delegates allowlisted calls with passthrough result and `isInternalMission` preserved | FR-002 | example | DONE | `…::AllowlistToolDispatcher standalone::delegates allowlisted calls` |
-| U2  | `AllowlistToolDispatcher.dispatch` refuses non-allowlisted calls: inner untouched, `success: false`, error `tool not allowed: <name>` | FR-002 | example | DONE | `…::AllowlistToolDispatcher standalone::refuses non-allowlisted calls without touching the inner dispatcher` |
-| U3  | `dispatchBatch` enforces per call (mixed allow/forbidden batch → 1 delegated, 1 refused) | FR-002 | example | DONE | `…::AllowlistToolDispatcher standalone::batch enforces the allowlist per call` |
-| U4  | Wall-clock budget: `spec.wallClockTimeout` + injected clock stops the child `budgetExhausted` | FR-003 | example | DONE | `…::spec wallClockTimeout caps the child mission` |
-| U5  | `maxTurns` null → `fallbackMaxTurns` used (context.budgetTurns reflects it) | FR-003, FR-007 | example | DONE | A8 budgetTurns assert with default-cap spec |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: Isolated child context: `dispatch(spec, mission, instance)` | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: Tool allowlist enforcement: the child's tool dispatch is | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: Budgets: the child `EngineLoop`/`StopPolicy` pair is built | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: Instance bookkeeping: a completed dispatch (any run status) | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: Risk tier gate: when `spec.riskTier == RiskTier.admin` and | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: Event forwarding: the child mission's `EngineEvent`s flow to | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: `SubAgentDispatchResult` is a house-pattern value object | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: Gates: `dart analyze --fatal-infos` clean; `dart test` green | FR-008 | PENDING |
 
-## Invariants and edge cases
+## Routing provenance
 
-- Isolation invariant: NOTHING except `[system, user]` reaches the child; NOTHING except the summary leaves it (A1 is the compile-shape + runtime witness).
-- Refusal invariant: a refused dispatch makes zero LLM calls and zero tool dispatches (A5).
-- Bookkeeping invariant: the input `SubAgentInstance` is never mutated — the updated one is a new object (A4 asserts input unchanged).
-- Terminal mapping: child `completed`/`budgetExhausted`/`providerFailed` map 1:1 onto dispatch statuses (A1/A3 + provider-failure test if budgeted — A3 suffices for the budget arm; provider arm covered by mapping code review + mutants).
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Mutation plan (deliberate, one at a time, cp-restored)
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A10 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A11 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A12 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A13 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-| id  | mutant | killed by |
-| --- | ------ | --------- |
-| M1  | Allowlist check inverted (`allowlist.contains` → `!contains`) | A2/U2 (forbidden delegates, allowed refused) |
-| M2  | `totalRuns` not incremented (return input instance) | A4 |
-| M3  | System-prompt message dropped from the child context | A1 (captured child messages) |
-| M4  | Risk-tier gate removed (admin always runs) | A5 (LLM called / status wrong) |
-| M5  | `lastRunOutcome` hardcoded `'done'` | A3/A4 (status-name assertion) |

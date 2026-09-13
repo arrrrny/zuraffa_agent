@@ -9,7 +9,6 @@ part 'tool_invocation_record.g.dart';
 /// ToolInvocationRecord entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $ToolInvocationRecord {
-
   String get id;
   String? get parentId;
   DateTime get timestamp;
@@ -19,4 +18,3 @@ abstract class $ToolInvocationRecord {
   bool get isError;
   int get durationMs;
 }
-

@@ -1,0 +1,23 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd compose",
+ "target": "A3",
+ "repro": "zfa tdd compose",
+ "at": "2026-09-11T18:54:00.674357Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "lib/tdd/112-structured-logging/a3_subject.dart",
+   "action": "update",
+   "sha256": "ca65e15cfda2d1761b39bf66410400d29d6d5a60234dd238bf0bedfb136d35f7",
+   "bytes": 825,
+   "snapshot": "// Hand-stepped acceptance subject (spec 112, AC-3): install at WARNING;\n// FINE and INFO are filtered, WARNING and SEVERE are delivered.\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\nimport 'package:logging/logging.dart';\n\nimport 'package:zuraffa_agent/src/logging/agent_log.dart';\nimport 'package:zuraffa_agent/src/logging/memory_log_sink.dart';\n\nList<LogRecord> subject_a3() {\n  ZuraffaLogging.reset();\n  final sink = MemoryLogSink();\n  ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);\n  AgentLog.llm.log(AgentLog.transportLevel, 'a fine record');\n  AgentLog.llm.log(AgentLog.lifecycleLevel, 'an info record');\n  AgentLog.mcp.log(AgentLog.resilienceLevel, 'a warning record');\n  AgentLog.mcp.log(AgentLog.terminalLevel, 'a severe record');\n  ZuraffaLogging.reset();\n  return sink.records;\n}\n"
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

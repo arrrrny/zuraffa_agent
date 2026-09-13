@@ -23,12 +23,13 @@ class UiTreePayloadProvider
   final UiTreePayload _active;
 
   UiTreePayloadProvider([UiTreePayload? active])
-      : _active = active ??
-            UiTreePayload(
-              vocabularyId: 'shadcn-ui@1.0.0',
-              schemaVersion: '1.0.0',
-              tree: _kDefaultTree,
-            );
+    : _active =
+          active ??
+          UiTreePayload(
+            vocabularyId: 'shadcn-ui@1.0.0',
+            schemaVersion: '1.0.0',
+            tree: _kDefaultTree,
+          );
 
   @override
   Future<UiTreePayload> current(NoParams params) async => _active;

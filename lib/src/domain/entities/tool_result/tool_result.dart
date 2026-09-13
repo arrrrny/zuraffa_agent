@@ -67,10 +67,10 @@ class ToolResult {
     Map<String, dynamic>? structuredPayload,
     ArtifactRef? artifactRef,
   }) : this(
-          content: content,
-          structuredPayload: structuredPayload,
-          artifactRef: artifactRef,
-        );
+         content: content,
+         structuredPayload: structuredPayload,
+         artifactRef: artifactRef,
+       );
 
   /// Constructs an error result — [content] carries the failure message
   /// for the model; [structuredPayload] may carry typed error details.
@@ -79,11 +79,11 @@ class ToolResult {
     Map<String, dynamic>? structuredPayload,
     ArtifactRef? artifactRef,
   }) : this(
-          content: content,
-          structuredPayload: structuredPayload,
-          artifactRef: artifactRef,
-          isError: true,
-        );
+         content: content,
+         structuredPayload: structuredPayload,
+         artifactRef: artifactRef,
+         isError: true,
+       );
 
   /// Constructs an oversized result (spec-003 §4.3): the full body lives
   /// behind [artifactRef]; the model-facing [summary] is bounded by the
@@ -95,11 +95,11 @@ class ToolResult {
     Map<String, dynamic>? structuredPayload,
     bool isError = false,
   }) : this(
-          content: summary,
-          structuredPayload: structuredPayload,
-          artifactRef: artifactRef,
-          isError: isError,
-        );
+         content: summary,
+         structuredPayload: structuredPayload,
+         artifactRef: artifactRef,
+         isError: isError,
+       );
 
   /// True when this result carries an oversized artifact reference; the
   /// model-facing [content] is a summary, not the full body.
@@ -110,10 +110,7 @@ class ToolResult {
   /// `isError` always. The artifactRef shape matches ArtifactRef's
   /// generated JSON: `{kind, id, uri?}`.
   Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{
-      'content': content,
-      'isError': isError,
-    };
+    final json = <String, dynamic>{'content': content, 'isError': isError};
     final payload = structuredPayload;
     if (payload != null) json['structuredPayload'] = payload;
     final ref = artifactRef;

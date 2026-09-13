@@ -10,11 +10,7 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart'
-    show
-        DeleteParams,
-        ListQueryParams,
-        QueryParams,
-        UpdateParams;
+    show DeleteParams, ListQueryParams, QueryParams, UpdateParams;
 
 import 'package:zuraffa_agent/src/domain/entities/tool_invocation_record/tool_invocation_record.dart';
 import 'package:zuraffa_agent/src/data/datasources/tool_invocation_record/tool_invocation_record_datasource.dart';

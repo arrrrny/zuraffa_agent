@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: PassKEmpirical (pass^k metric)
 
 **Branch**: `061-pass_k_empirical` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ pass^k empirical metric — fraction of k independent runs that succeeded (epic 
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #7 (Eval Harness)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpirical equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpirical inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpiricalProvider is a PassKEmpiricalService **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpiricalProvider.current returns the active pass^k snapshot **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpiricalProvider.current honors an injected snapshot **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** PassKEmpiricalProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/pass_k_empirical/pass_k_empirical_provider_test.dart`).
+   **Type**: acceptance

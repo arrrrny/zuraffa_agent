@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "012-agent-hooks-pipeline",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:33:17.669807Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "012-agent-hooks-pipeline"
+  },
+  "files": [
+    {
+      "path": "specs/012-agent-hooks-pipeline/tdd/test-list.md",
+      "action": "update",
+      "sha256": "a55bdf946c3b466448f02f9e664fb643e83ea02ffa1563b5f3093ec85d7a25db",
+      "bytes": 3814,
+      "snapshot": "# Test List: 012-agent-hooks-pipeline\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | the hook is called at each point with the point's typed context. [AC-1] | AC-1 | PENDING |\n| A2 | the modified request is what the pipeline hands back to the engine (and the engine's LlmClient receives it). [AC-2] | AC-2 | PENDING |\n| A3 | a synthetic result is returned without executing the tool. [AC-3] | AC-3 | PENDING |\n| A4 | both are called in registration order at every point. [AC-4] | AC-4 | PENDING |\n| A5 | the run stops with a typed error (HookAbortError carrying the hook name and reason) and later hooks are not called. [AC-5] | AC-5 | PENDING |\n| A6 | B observes A's modification (sequential fold). [AC-6] | AC-6 | PENDING |\n| A7 | a synthetic result is returned and the tool is not executed. [AC-3 — same scenario pinned from the result side] | AC-7 | PENDING |\n| A8 | the engine calls the LLM again. [AC-7] | AC-8 | PENDING |\n| A9 | every point continues with the context unmodified (a bare hook is a no-op). [AC-8] | AC-9 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | The engine MUST support registering multiple hooks per lifecycle point. | FR-001 | PENDING |\n| U2 | Hooks MUST be called in registration order at each lifecycle point. | FR-002 | PENDING |\n| U3 | Each hook point MUST have typed context and result classes. | FR-003 | PENDING |\n| U4 | Any hook MUST be able to abort the run with a typed error. | FR-004 | PENDING |\n| U5 | Hooks MUST be able to modify model calls, tool calls, and tool results. | FR-005 | PENDING |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 30]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: A5 -> acceptance lane [declared: type marker, spec line 45]\nroute: A6 -> acceptance lane [declared: type marker, spec line 47]\nroute: A7 -> acceptance lane [declared: type marker, spec line 60]\nroute: A8 -> acceptance lane [declared: type marker, spec line 62]\nroute: A9 -> acceptance lane [declared: type marker, spec line 64]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/012-agent-hooks-pipeline/tdd/traceability.md",
+      "action": "update",
+      "sha256": "35883ea7931dd0b65283b74ae2fe581708839cdbb1416fd488344f1f76651b05",
+      "bytes": 2908,
+      "snapshot": "# Traceability: 012-agent-hooks-pipeline\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:d6692cda9d130a417903187e0aa935e0a296f17dd0fa3ca92d8d614cada13027\nstatements: 14\nautomated: 14\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** a registered hook, **When** the pipeline runs the 9 lifecycle points, **Then** the hook is called at each point with the point's typed context. **[AC-1]** | A1 | automated |\n| AC-2 | 27 | 2. **Given** a hook that modifies the model call, **When** beforeModelCall fires, **Then** the modified request is what the pipeline hands back to the engine (and the engine's LlmClient receives it). **[AC-2]** | A2 | automated |\n| AC-3 | 29 | 3. **Given** a hook that denies a tool call, **When** beforeToolCall fires, **Then** a synthetic result is returned without executing the tool. **[AC-3]** | A3 | automated |\n| AC-4 | 42 | 1. **Given** two hooks, **When** the pipeline runs, **Then** both are called in registration order at every point. **[AC-4]** | A4 | automated |\n| AC-5 | 44 | 2. **Given** a hook that aborts, **When** it fires, **Then** the run stops with a typed error (HookAbortError carrying the hook name and reason) and later hooks are not called. **[AC-5]** | A5 | automated |\n| AC-6 | 46 | 3. **Given** hook A modifies the context, **When** hook B runs after it, **Then** B observes A's modification (sequential fold). **[AC-6]** | A6 | automated |\n| AC-7 | 59 | 1. **Given** a beforeToolCall hook returning deny, **When** the tool call reaches the hook, **Then** a synthetic result is returned and the tool is not executed. **[AC-3 — same scenario pinned from the result side]** | A7 | automated |\n| AC-8 | 61 | 2. **Given** an afterModelCall hook returning retry, **When** the hook fires, **Then** the engine calls the LLM again. **[AC-7]** | A8 | automated |\n| AC-9 | 63 | 3. **Given** default (un-overridden) hook methods, **When** the pipeline runs, **Then** every point continues with the context unmodified (a bare hook is a no-op). **[AC-8]** | A9 | automated |\n| FR-001 | 70 | - **FR-001**: The engine MUST support registering multiple hooks per lifecycle point. | U1 | automated |\n| FR-002 | 71 | - **FR-002**: Hooks MUST be called in registration order at each lifecycle point. | U2 | automated |\n| FR-003 | 72 | - **FR-003**: Each hook point MUST have typed context and result classes. | U3 | automated |\n| FR-004 | 73 | - **FR-004**: Any hook MUST be able to abort the run with a typed error. | U4 | automated |\n| FR-005 | 74 | - **FR-005**: Hooks MUST be able to modify model calls, tool calls, and tool results. | U5 | automated |\n\n"
+    },
+    {
+      "path": "specs/012-agent-hooks-pipeline/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/012-agent-hooks-pipeline/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

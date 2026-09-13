@@ -1,0 +1,44 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd plan",
+  "target": "007-llm-provider-clients",
+  "repro": "zfa tdd plan",
+  "at": "2026-09-08T21:39:04.762014Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "007-llm-provider-clients"
+  },
+  "files": [
+    {
+      "path": "specs/007-llm-provider-clients/tdd/test-list.md",
+      "action": "update",
+      "sha256": "bfa799ed6cbe314cc07981665763aa23caf1f7f84156b5a5a33860a7b24d7033",
+      "bytes": 4014,
+      "snapshot": "# Test List: 007-llm-provider-clients\n\n## Outer loop: acceptance behaviors\n\nOne per acceptance criterion in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| A1 | content deltas, tool call fragments, and usage parse correctly. [AC-1] | AC-1 | PENDING |\n| A2 | it tolerates gracefully (empty map default). [AC-2] | AC-2 | PENDING |\n| A3 | a typed error with status code and body is thrown. [AC-3] | AC-3 | PENDING |\n| A4 | thinking blocks and content blocks parse correctly. [AC-4] | AC-4 | PENDING |\n| A5 | they assemble from streamed argument fragments. [AC-5] | AC-5 | PENDING |\n| A6 | JSON line chunks parse correctly. [AC-6] | AC-6 | PENDING |\n| A7 | the client handles it gracefully. [AC-7] | AC-7 | PENDING |\n| A8 | all providers produce identical event sequences, tool-call buffering, and usage fields. [AC-8] | AC-8 | PENDING |\n\n## Outer loop: widget behaviors\n\nUI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.\n\nThe `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.\n\n| id | behavior | kind | traces | state |\n| -- | -------- | ---- | ------ | ----- |\n\n## Inner loop: unit behaviors\n\nOne per functional requirement in `spec.md`.\n\n| id | behavior | traces | state |\n| -- | -------- | ------ | ----- |\n| U1 | The engine MUST provide a unified `LlmClient` interface with `generate()` and `stream()` methods. | FR-001 | PENDING |\n| U2 | OpenAI-compatible, Anthropic, and Gemini clients MUST implement this interface. | FR-002 | PENDING |\n| U3 | All clients MUST support multimodal input (text, image, audio, document) and output. | FR-003 | PENDING |\n| U4 | All clients MUST support streaming with tool call fragment assembly. | FR-004 | PENDING |\n| U5 | All clients MUST track usage (input, output, cached, thought tokens). | FR-005 | PENDING |\n| U6 | All clients MUST implement retry with exponential backoff for 429/5xx. | FR-006 | PENDING |\n| U7 | All clients MUST be vendored from dart_agent_core with attribution; dart_agent_core MUST NOT appear in the dependency graph. | FR-007 | PENDING |\n\n## Routing provenance\n\nPer-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.\n\nroute: A1 -> acceptance lane [declared: type marker, spec line 26]\nroute: A2 -> acceptance lane [declared: type marker, spec line 28]\nroute: A3 -> acceptance lane [declared: type marker, spec line 30]\nroute: A4 -> acceptance lane [declared: type marker, spec line 43]\nroute: A5 -> acceptance lane [declared: type marker, spec line 45]\nroute: A6 -> acceptance lane [declared: type marker, spec line 58]\nroute: A7 -> acceptance lane [declared: type marker, spec line 60]\nroute: A8 -> acceptance lane [declared: type marker, spec line 73]\nroute: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\nroute: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]\n\n"
+    },
+    {
+      "path": "specs/007-llm-provider-clients/tdd/traceability.md",
+      "action": "update",
+      "sha256": "4143ecbb3ab0a220bbc70672dd5f875794948bc7b3d3f73630fc822286e44b9f",
+      "bytes": 2805,
+      "snapshot": "# Traceability: 007-llm-provider-clients\n\nCoverage proof for `zfa tdd plan` (bug #846): every FR/AC requirement statement maps to a behavior row or an explicit manual declaration. Verify re-checks the hash — a spec edited after plan is drift (exit 3, re-plan required).\n\n<!-- tdd:traceability\nspec-hash: sha256:0c04571528d6cc0c7fe26b602a79118f4b7362aac271a74b7805827be782ab53\nstatements: 15\nautomated: 15\nmanual: 0\nopen-gaps: 0\n-->\n\n| requirement | line | statement | behavior | status |\n| --- | --- | --- | --- | --- |\n| AC-1 | 25 | 1. **Given** an OpenAI-compatible endpoint, **When** streaming, **Then** content deltas, tool call fragments, and usage parse correctly. **[AC-1]** | A1 | automated |\n| AC-2 | 27 | 2. **Given** a malformed tool argument from the model, **When** parsed, **Then** it tolerates gracefully (empty map default). **[AC-2]** | A2 | automated |\n| AC-3 | 29 | 3. **Given** a non-2xx response, **When** received, **Then** a typed error with status code and body is thrown. **[AC-3]** | A3 | automated |\n| AC-4 | 42 | 4. **Given** an Anthropic endpoint, **When** streaming, **Then** thinking blocks and content blocks parse correctly. **[AC-4]** | A4 | automated |\n| AC-5 | 44 | 5. **Given** tool calls in the response, **When** accumulated, **Then** they assemble from streamed argument fragments. **[AC-5]** | A5 | automated |\n| AC-6 | 57 | 6. **Given** a Gemini endpoint, **When** streaming, **Then** JSON line chunks parse correctly. **[AC-6]** | A6 | automated |\n| AC-7 | 59 | 7. **Given** a MALFORMED_FUNCTION_CALL, **When** retried, **Then** the client handles it gracefully. **[AC-7]** | A7 | automated |\n| AC-8 | 72 | 8. **Given** recorded fixtures for each provider, **When** the contract suite runs, **Then** all providers produce identical event sequences, tool-call buffering, and usage fields. **[AC-8]** | A8 | automated |\n| FR-001 | 79 | - **FR-001**: The engine MUST provide a unified `LlmClient` interface with `generate()` and `stream()` methods. | U1 | automated |\n| FR-002 | 80 | - **FR-002**: OpenAI-compatible, Anthropic, and Gemini clients MUST implement this interface. | U2 | automated |\n| FR-003 | 81 | - **FR-003**: All clients MUST support multimodal input (text, image, audio, document) and output. | U3 | automated |\n| FR-004 | 82 | - **FR-004**: All clients MUST support streaming with tool call fragment assembly. | U4 | automated |\n| FR-005 | 83 | - **FR-005**: All clients MUST track usage (input, output, cached, thought tokens). | U5 | automated |\n| FR-006 | 84 | - **FR-006**: All clients MUST implement retry with exponential backoff for 429/5xx. | U6 | automated |\n| FR-007 | 85 | - **FR-007**: All clients MUST be vendored from dart_agent_core with attribution; dart_agent_core MUST NOT appear in the dependency graph. | U7 | automated |\n\n"
+    },
+    {
+      "path": "specs/007-llm-provider-clients/tdd/ui-ledger.md",
+      "action": "update",
+      "sha256": "314298c2022e5bf9f867847269c1eb76e3848ce20821f4a2bdddbe5899719c4c",
+      "bytes": 86,
+      "snapshot": "# UI Surface Ledger\n\n| surface | kind | proven by | state |\n| --- | --- | --- | --- |\n"
+    },
+    {
+      "path": "specs/007-llm-provider-clients/tdd/ui-ledger.json",
+      "action": "update",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2,
+      "snapshot": "[]"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

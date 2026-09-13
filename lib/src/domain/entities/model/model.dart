@@ -7,11 +7,13 @@ part 'model.zorphy.dart';
 part 'model.g.dart';
 
 /// Model entity
-@Zorphy(kind: ZorphyKind.valueObject, generateJson: true, generateCompareTo: true)
+@Zorphy(
+  kind: ZorphyKind.valueObject,
+  generateJson: true,
+  generateCompareTo: true,
+)
 abstract class $Model {
-
   String get provider;
   String get modelId;
   int get contextWindow;
 }
-

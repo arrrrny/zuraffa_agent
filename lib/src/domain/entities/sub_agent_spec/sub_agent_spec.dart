@@ -103,22 +103,35 @@ class SubAgentSpec {
       throw ArgumentError.value(name, 'name', 'must not be empty');
     }
     if (description.isEmpty) {
-      throw ArgumentError.value(description, 'description', 'must not be empty');
+      throw ArgumentError.value(
+        description,
+        'description',
+        'must not be empty',
+      );
     }
     if (systemPrompt.isEmpty) {
       throw ArgumentError.value(
-          systemPrompt, 'systemPrompt', 'must not be empty');
+        systemPrompt,
+        'systemPrompt',
+        'must not be empty',
+      );
     }
     // FR-002 (spec 036): allowlist ids must be non-blank — a blank id in a
     // YAML-loaded allowlist is loader drift that would silently widen or
     // corrupt dispatch checks.
     if (tools.any((id) => id.isEmpty)) {
-      throw ArgumentError.value(tools, 'tools',
-          'must not contain blank tool ids');
+      throw ArgumentError.value(
+        tools,
+        'tools',
+        'must not contain blank tool ids',
+      );
     }
     if (subAgents.any((id) => id.isEmpty)) {
-      throw ArgumentError.value(subAgents, 'subAgents',
-          'must not contain blank sub-agent ids');
+      throw ArgumentError.value(
+        subAgents,
+        'subAgents',
+        'must not contain blank sub-agent ids',
+      );
     }
     // FR-003 (spec 036): budgets, when supplied, must be positive.
     // Duration.zero stays valid — it is the documented "no wall-clock
@@ -127,18 +140,27 @@ class SubAgentSpec {
       throw ArgumentError.value(maxTurns, 'maxTurns', 'must be >= 1 when set');
     }
     if (contextWindowTokens != null && contextWindowTokens! < 1) {
-      throw ArgumentError.value(contextWindowTokens, 'contextWindowTokens',
-          'must be >= 1 when set');
+      throw ArgumentError.value(
+        contextWindowTokens,
+        'contextWindowTokens',
+        'must be >= 1 when set',
+      );
     }
     if (wallClockTimeout != null && wallClockTimeout!.isNegative) {
-      throw ArgumentError.value(wallClockTimeout, 'wallClockTimeout',
-          'must not be negative');
+      throw ArgumentError.value(
+        wallClockTimeout,
+        'wallClockTimeout',
+        'must not be negative',
+      );
     }
     // FR-004 (spec 036): the extendsSpec == name 1-cycle is ill-formed.
     // Deeper cycles and unknown parents are the loader's concern.
     if (extendsSpec == name) {
-      throw ArgumentError.value(extendsSpec, 'extendsSpec',
-          'must not equal name (self-inheritance cycle)');
+      throw ArgumentError.value(
+        extendsSpec,
+        'extendsSpec',
+        'must not equal name (self-inheritance cycle)',
+      );
     }
   }
 
@@ -155,7 +177,9 @@ class SubAgentSpec {
   /// a non-root spec with no budgets and no parent budgets is
   /// ill-formed.
   bool get hasBudgets =>
-      maxTurns != null || wallClockTimeout != null || contextWindowTokens != null;
+      maxTurns != null ||
+      wallClockTimeout != null ||
+      contextWindowTokens != null;
 
   @override
   bool operator ==(Object other) =>
@@ -184,17 +208,17 @@ class SubAgentSpec {
 
   @override
   int get hashCode => Object.hash(
-        name,
-        description,
-        systemPrompt,
-        extendsSpec,
-        Object.hashAll(tools),
-        Object.hashAll(subAgents),
-        riskTier,
-        maxTurns,
-        wallClockTimeout,
-        contextWindowTokens,
-      );
+    name,
+    description,
+    systemPrompt,
+    extendsSpec,
+    Object.hashAll(tools),
+    Object.hashAll(subAgents),
+    riskTier,
+    maxTurns,
+    wallClockTimeout,
+    contextWindowTokens,
+  );
 
   @override
   String toString() =>

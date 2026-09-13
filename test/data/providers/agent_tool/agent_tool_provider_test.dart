@@ -32,11 +32,14 @@ void main() {
       expect(RiskTier.values.length, 3);
     });
 
-    test('RiskTier.requiresConfirmation is false for safe, true for confirm+admin', () {
-      expect(RiskTier.safe.requiresConfirmation, isFalse);
-      expect(RiskTier.confirm.requiresConfirmation, isTrue);
-      expect(RiskTier.admin.requiresConfirmation, isTrue);
-    });
+    test(
+      'RiskTier.requiresConfirmation is false for safe, true for confirm+admin',
+      () {
+        expect(RiskTier.safe.requiresConfirmation, isFalse);
+        expect(RiskTier.confirm.requiresConfirmation, isTrue);
+        expect(RiskTier.admin.requiresConfirmation, isTrue);
+      },
+    );
 
     test('RiskTier.isAdmin is true only for admin', () {
       expect(RiskTier.safe.isAdmin, isFalse);
@@ -46,42 +49,48 @@ void main() {
   });
 
   group('arrarrny/zuraffa_agent#4 — AgentTool declaration entity', () {
-    test('AgentTool defaults to safe / sequential when riskTier/executionMode omitted', () {
-      final tool = AgentTool(
-        id: 'fs.read',
-        description: 'Read a file from local disk.',
-      );
-      expect(tool.id, 'fs.read');
-      expect(tool.description, 'Read a file from local disk.');
-      expect(tool.riskTier, RiskTier.safe);
-      expect(tool.executionMode, ExecutionMode.sequential);
-      expect(tool.paramsSchema, isNull);
-      expect(tool.requiresConfirmation, isFalse);
-      expect(tool.isAdmin, isFalse);
-    });
+    test(
+      'AgentTool defaults to safe / sequential when riskTier/executionMode omitted',
+      () {
+        final tool = AgentTool(
+          id: 'fs.read',
+          description: 'Read a file from local disk.',
+        );
+        expect(tool.id, 'fs.read');
+        expect(tool.description, 'Read a file from local disk.');
+        expect(tool.riskTier, RiskTier.safe);
+        expect(tool.executionMode, ExecutionMode.sequential);
+        expect(tool.paramsSchema, isNull);
+        expect(tool.requiresConfirmation, isFalse);
+        expect(tool.isAdmin, isFalse);
+      },
+    );
 
-    test('AgentTool carries riskTier + executionMode + paramsSchema when provided', () {
-      final tool = AgentTool(
-        id: 'fs.write',
-        description: 'Write a file to local disk.',
-        riskTier: RiskTier.confirm,
-        executionMode: ExecutionMode.parallel,
-        paramsSchema: {
-          'type': 'object',
-          'properties': {
-            'path': {'type': 'string'},
-            'content': {'type': 'string'},
+    test(
+      'AgentTool carries riskTier + executionMode + paramsSchema when provided',
+      () {
+        final tool = AgentTool(
+          id: 'fs.write',
+          description: 'Write a file to local disk.',
+          riskTier: RiskTier.confirm,
+          executionMode: ExecutionMode.parallel,
+          paramsSchema: {
+            'type': 'object',
+            'properties': {
+              'path': {'type': 'string'},
+              'content': {'type': 'string'},
+            },
+            'required': ['path', 'content'],
           },
-          'required': ['path', 'content'],
-        },
-      );
-      expect(tool.riskTier, RiskTier.confirm);
-      expect(tool.executionMode, ExecutionMode.parallel);
-      expect(tool.requiresConfirmation, isTrue);
-      expect(tool.isAdmin, isFalse);
-      expect(tool.paramsSchema, isNotNull);
-      expect(tool.paramsSchema!['type'], 'object');
-    });
+        );
+        expect(tool.riskTier, RiskTier.confirm);
+        expect(tool.executionMode, ExecutionMode.parallel);
+        expect(tool.requiresConfirmation, isTrue);
+        expect(tool.isAdmin, isFalse);
+        expect(tool.paramsSchema, isNotNull);
+        expect(tool.paramsSchema!['type'], 'object');
+      },
+    );
 
     test('AgentTool.requiresConfirmation is true for admin', () {
       final tool = AgentTool(
@@ -96,7 +105,9 @@ void main() {
     test('AgentTool equality is value-based across all five fields', () {
       final schema = {
         'type': 'object',
-        'properties': {'path': {'type': 'string'}},
+        'properties': {
+          'path': {'type': 'string'},
+        },
       };
       final a = AgentTool(
         id: 'web.fetch',
@@ -122,7 +133,9 @@ void main() {
         description: 'Fetch a URL.',
         paramsSchema: {
           'type': 'object',
-          'properties': {'path': {'type': 'string'}},
+          'properties': {
+            'path': {'type': 'string'},
+          },
         },
       );
       final b = AgentTool(
@@ -130,7 +143,9 @@ void main() {
         description: 'Fetch a URL.',
         paramsSchema: {
           'type': 'object',
-          'properties': {'path': {'type': 'number'}}, // differs
+          'properties': {
+            'path': {'type': 'number'},
+          }, // differs
         },
       );
       expect(a == b, isFalse);
@@ -143,30 +158,38 @@ void main() {
       expect(provider, isA<AgentToolService>());
     });
 
-    test('AgentToolProvider.current returns a built-in default tool when the registry is empty', () async {
-      final tool = await AgentToolProvider().current(NoParams());
-      expect(tool, isA<AgentTool>());
-      expect(tool.id, isNotEmpty);
-      expect(tool.riskTier, RiskTier.safe);
-      expect(tool.executionMode, ExecutionMode.sequential);
-    });
+    test(
+      'AgentToolProvider.current returns a built-in default tool when the registry is empty',
+      () async {
+        final tool = await AgentToolProvider().current(NoParams());
+        expect(tool, isA<AgentTool>());
+        expect(tool.id, isNotEmpty);
+        expect(tool.riskTier, RiskTier.safe);
+        expect(tool.executionMode, ExecutionMode.sequential);
+      },
+    );
 
     test('AgentToolProvider.count returns 0 for an empty registry', () async {
       expect(await AgentToolProvider().count(NoParams()), 0);
     });
 
-    test('AgentToolProvider.current returns the most-recently-registered tool', () async {
-      final provider = AgentToolProvider();
-      provider.register(AgentTool(id: 'fs.read', description: 'Read a file.'));
-      final latest = AgentTool(
-        id: 'fs.write',
-        description: 'Write a file.',
-        riskTier: RiskTier.confirm,
-      );
-      provider.register(latest);
-      expect(await provider.current(NoParams()), equals(latest));
-      expect(await provider.count(NoParams()), 2);
-    });
+    test(
+      'AgentToolProvider.current returns the most-recently-registered tool',
+      () async {
+        final provider = AgentToolProvider();
+        provider.register(
+          AgentTool(id: 'fs.read', description: 'Read a file.'),
+        );
+        final latest = AgentTool(
+          id: 'fs.write',
+          description: 'Write a file.',
+          riskTier: RiskTier.confirm,
+        );
+        provider.register(latest);
+        expect(await provider.current(NoParams()), equals(latest));
+        expect(await provider.count(NoParams()), 2);
+      },
+    );
 
     test('AgentToolProvider accepts a seeded registry', () async {
       final seeded = AgentTool(id: 'web.fetch', description: 'Fetch a URL.');

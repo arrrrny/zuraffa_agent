@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: ToolResult value object (no id) + clean-arch layers
 
 **Feature Branch**: `031-tool-result-value-object`
@@ -21,8 +23,11 @@ As the engine, I construct tool results that are either successes (content the m
 **Acceptance Scenarios**:
 
 1. **Given** a success result with content + structuredPayload, **When** serialized to JSON and parsed back, **Then** the parsed value equals the original (content, payload, isError all preserved).
+   **Type**: acceptance
 2. **Given** an error result, **When** serialized and parsed back, **Then** `isError` is still true and the content (error message) is preserved.
+   **Type**: acceptance
 3. **Given** an error result with no structuredPayload, **When** serialized, **Then** the payload key is absent/null — not an empty object masquerading as data.
+   **Type**: acceptance
 
 ---
 
@@ -36,9 +41,12 @@ As the engine (spec 003 US4), when a tool returns a body beyond the size thresho
 
 **Acceptance Scenarios**:
 
-1. **Given** a 2 MB body and the oversized path, **When** the result is built, **Then** content is a bounded summary, `artifactRef` is non-null, and `isSummarized` is true.
-2. **Given** a summarized result, **When** serialized and parsed back, **Then** the artifactRef (kind, id, uri) survives the round-trip.
-3. **Given** an inline (non-summarized) result, **When** `isSummarized` is checked, **Then** it is false and serialization omits the artifactRef.
+4. **Given** a 2 MB body and the oversized path, **When** the result is built, **Then** content is a bounded summary, `artifactRef` is non-null, and `isSummarized` is true.
+   **Type**: acceptance
+5. **Given** a summarized result, **When** serialized and parsed back, **Then** the artifactRef (kind, id, uri) survives the round-trip.
+   **Type**: acceptance
+6. **Given** an inline (non-summarized) result, **When** `isSummarized` is checked, **Then** it is false and serialization omits the artifactRef.
+   **Type**: acceptance
 
 ---
 
@@ -52,8 +60,10 @@ As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing p
 
 **Acceptance Scenarios**:
 
-1. **Given** two equal results with distinct-but-equal payload map instances, **When** hashed, **Then** the hashCodes are equal (the contract the scaffold violates).
-2. **Given** results differing in content, payload, isError, or artifactRef, **Then** they are unequal.
+7. **Given** two equal results with distinct-but-equal payload map instances, **When** hashed, **Then** the hashCodes are equal (the contract the scaffold violates).
+   **Type**: acceptance
+8. **Given** results differing in content, payload, isError, or artifactRef, **Then** they are unequal.
+   **Type**: acceptance
 
 ### Edge Cases
 
@@ -68,18 +78,31 @@ As a library consumer, I store ToolResults in sets/maps (dedup, replay diffing p
 ### Functional Requirements
 
 - **FR-001**: The `ToolResult` value object MUST keep the spec-003-exact field surface — `content` (String), `structuredPayload` (Map?), `artifactRef` (ArtifactRef?) — with NO `id` field, and MUST add `isError` (bool, default false) as the success/error discriminator.
+  traces: ToolResultProvide.fr1
 - **FR-002**: Named constructors `ToolResult.success` and `ToolResult.error` MUST construct results with `isError` false/true respectively; `isError` participates in equality and hashCode.
+  traces: ToolResultProvide.fr2
 - **FR-003**: `toJson()` MUST produce a JSON map with `content`, `structuredPayload` (null-safe), `artifactRef` (nested kind/id/uri, null-safe), and `isError`; `ToolResult.fromJson` MUST round-trip all four fields exactly.
+  traces: ToolResultProvide.fr3
 - **FR-004**: The oversized path (`ToolResult.oversized`) MUST require a summary and an artifactRef; such results report `isSummarized == true` (artifactRef non-null).
+  traces: ToolResultProvide.fr4
 - **FR-005**: `isSummarized` MUST remain the derived getter (artifactRef != null) — true for any result carrying a ref, false otherwise; serialization omits a null artifactRef.
+  traces: ToolResultProvide.fr5
 - **FR-006**: Equality MUST compare content, structuredPayload (deep map equality), isError, and artifactRef; `hashCode` MUST be consistent with equality (equal results — including distinct-but-equal payload instances, any insertion order — hash equally) and MUST fold the payload in an order-independent way so payload-only differences stop colliding deterministically.
+  traces: ToolResultProvide.fr6
 - **FR-007**: The clean-arch layers (`ToolResultService.current/count`, `ToolResultProvider`) MUST keep their existing signatures and compile parity; the provider stubs remain UnimplementedError (no behavioral change in this feature — the value object semantics are the deliverable).
+  traces: ToolResultProvide.fr7
 
 ### Key Entities *(include if feature involves data)*
 
 - **ToolResult** (value object): model-facing tool dispatch result — content + structuredPayload + artifactRef + isError; success/error factories; JSON round-trip; summarized discipline.
 - **ArtifactRef** (existing, spec-exact): kind + id + uri; nested serialization handled by ToolResult's toJson/fromJson.
 - **ToolResultService / ToolResultProvider** (existing interfaces): unchanged surfaces; compile parity pinned by the existing tests.
+
+## Layer Contracts
+
+**Domain**:
+
+- `ToolResultProvide`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`
 
 ## Success Criteria *(mandatory)*
 

@@ -39,8 +39,11 @@ class PlaybookLoader {
   Playbook loadYaml(String source) {
     final dynamic document = yaml.loadYaml(source);
     if (document is! Map) {
-      throw ArgumentError.value(document, 'document',
-          'a playbook document must be a mapping at the top level');
+      throw ArgumentError.value(
+        document,
+        'document',
+        'a playbook document must be a mapping at the top level',
+      );
     }
     return loadJson(Map<String, dynamic>.from(document));
   }
@@ -68,7 +71,10 @@ class PlaybookLoader {
     final value = json[key];
     if (value is! String || value.isEmpty) {
       throw ArgumentError.value(
-          value, key, 'playbook.$key must be a non-empty string');
+        value,
+        key,
+        'playbook.$key must be a non-empty string',
+      );
     }
     return value;
   }
@@ -78,7 +84,10 @@ class PlaybookLoader {
     if (value == null) return null;
     if (value is! String) {
       throw ArgumentError.value(
-          value, key, 'playbook.$key must be a string when present');
+        value,
+        key,
+        'playbook.$key must be a string when present',
+      );
     }
     return value;
   }
@@ -87,23 +96,35 @@ class PlaybookLoader {
     if (raw == null) return const [];
     if (raw is! List) {
       throw ArgumentError.value(
-          raw, 'steering', 'playbook.steering must be a list of entries');
+        raw,
+        'steering',
+        'playbook.steering must be a list of entries',
+      );
     }
     final entries = <PlaybookSteering>[];
     for (final entry in raw) {
       if (entry is! Map) {
         throw ArgumentError.value(
-            entry, 'steering', 'playbook.steering entries must be mappings');
+          entry,
+          'steering',
+          'playbook.steering entries must be mappings',
+        );
       }
       final content = entry['content'];
       if (content is! String || content.isEmpty) {
-        throw ArgumentError.value(content, 'content',
-            'playbook.steering entries must carry non-empty content');
+        throw ArgumentError.value(
+          content,
+          'content',
+          'playbook.steering entries must carry non-empty content',
+        );
       }
       final entryId = entry['id'];
       if (entryId != null && entryId is! String) {
         throw ArgumentError.value(
-            entryId, 'id', 'steering entry id must be a string when present');
+          entryId,
+          'id',
+          'steering entry id must be a string when present',
+        );
       }
       entries.add(PlaybookSteering(id: entryId as String?, content: content));
     }
@@ -114,12 +135,18 @@ class PlaybookLoader {
     if (raw == null) return const PlaybookToolGate(mode: PlaybookGateMode.off);
     if (raw is! Map) {
       throw ArgumentError.value(
-          raw, 'toolGating', 'playbook.toolGating must be a mapping');
+        raw,
+        'toolGating',
+        'playbook.toolGating must be a mapping',
+      );
     }
     final modeRaw = raw['mode'];
     if (modeRaw != null && modeRaw is! String) {
       throw ArgumentError.value(
-          modeRaw, 'mode', 'toolGating.mode must be a string');
+        modeRaw,
+        'mode',
+        'toolGating.mode must be a string',
+      );
     }
     final PlaybookGateMode mode;
     switch (modeRaw as String?) {
@@ -131,8 +158,11 @@ class PlaybookLoader {
       case 'blocklist':
         mode = PlaybookGateMode.blocklist;
       default:
-        throw ArgumentError.value(modeRaw, 'mode',
-            'toolGating.mode must be one of: off, allowlist, blocklist');
+        throw ArgumentError.value(
+          modeRaw,
+          'mode',
+          'toolGating.mode must be one of: off, allowlist, blocklist',
+        );
     }
     return PlaybookToolGate(
       mode: mode,
@@ -145,17 +175,26 @@ class PlaybookLoader {
     if (raw == null) return const [];
     if (raw is! List) {
       throw ArgumentError.value(
-          raw, key, 'toolGating.$key must be a list of tool names');
+        raw,
+        key,
+        'toolGating.$key must be a list of tool names',
+      );
     }
     final tools = <String>[];
     for (final tool in raw) {
       if (tool is! String) {
         throw ArgumentError.value(
-            tool, key, 'toolGating.$key entries must be strings');
+          tool,
+          key,
+          'toolGating.$key entries must be strings',
+        );
       }
       if (tool.isEmpty) {
         throw ArgumentError.value(
-            tool, key, 'toolGating.$key must not contain blank tool ids');
+          tool,
+          key,
+          'toolGating.$key must not contain blank tool ids',
+        );
       }
       tools.add(tool);
     }
@@ -166,17 +205,26 @@ class PlaybookLoader {
     if (raw == null) return const PlaybookResponse();
     if (raw is! Map) {
       throw ArgumentError.value(
-          raw, 'response', 'playbook.response must be a mapping');
+        raw,
+        'response',
+        'playbook.response must be a mapping',
+      );
     }
     final language = raw['language'];
     if (language != null && (language is! String || language.isEmpty)) {
-      throw ArgumentError.value(language, 'language',
-          'response.language must be a non-empty string when present');
+      throw ArgumentError.value(
+        language,
+        'language',
+        'response.language must be a non-empty string when present',
+      );
     }
     final maxChars = raw['maxChars'];
     if (maxChars != null && (maxChars is! int || maxChars < 1)) {
       throw ArgumentError.value(
-          maxChars, 'maxChars', 'response.maxChars must be a positive integer');
+        maxChars,
+        'maxChars',
+        'response.maxChars must be a positive integer',
+      );
     }
     return PlaybookResponse(
       language: language as String?,

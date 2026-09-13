@@ -1,70 +1,55 @@
----
-feature: 013-event-bus
-loop: outside-in # EventBus + AgentController are a user-visible pub/sub + request/response surface (plugin developers)
-profile: .specify/memory/tdd-profile.md
-spec_criteria: 4 # numbered Acceptance Scenarios across 3 user stories in spec.md (no global AC ids; traced to FR-xxx)
-planned_at: fce207d
-updated_at: fce207d
-suite_baseline: green # 909 passed, 2 skipped
----
-
-# Test List: Event Bus (spec 013)
-
-> Derived from `spec.md` (User Scenarios & Testing → Acceptance Scenarios, and
-> FR-001..FR-005) on `master` @ `fce207d`. **OUTER-ONLY**: `plan.md` is absent, so
-> only the outer-loop acceptance behaviors are derived here; the inner loop is
-> deferred (see below). A repo-wide case-insensitive search for `EventBus` /
-> `AgentController` in `lib/` and `test/` returned **no matches** — the feature has
-> no shipped implementation or tests yet, so every A behavior is `PENDING`.
+# Test List: 013-event-bus
 
 ## Outer loop: acceptance behaviors
 
-One per numbered Acceptance Scenario in `spec.md`. Each stays `PENDING` until the
-bus and controller are driven end to end and asserted.
+One per acceptance criterion in `spec.md`.
 
-| id  | behavior                                                                                       | traces       | kind    | state   | test |
-| --- | --------------------------------------------------------------------------------------------- | ------------ | ------- | ------- | ---- |
-| A1  | A subscriber to `LLMChunkEvent` receives each chunk event as the model streams                | FR-001       | example | DONE    | `test/events/event_bus_test.dart::A1: a subscriber to LLMChunkEvent receives each chunk event` |
-| A2  | Multiple subscribers each receive an event when it fires                                       | FR-001, FR-003 | example | DONE    | `test/events/event_bus_test.dart::A2: multiple subscribers each receive an event, in registration order` |
-| A3  | A registered `BeforeToolCallRequest` handler's response is used when the event fires           | FR-002       | example | DONE    | `test/events/event_bus_test.dart::A3: a registered BeforeToolCallRequest handler response is used` |
-| A4  | An `AgentController.publish()` delivers the event to all listeners (identical to EventBus)     | FR-004       | example | DONE    | `test/events/event_bus_test.dart::A4: AgentController.publish delivers to all listeners like EventBus` |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | each chunk event is delivered. | AC-1 | PENDING |
+| A2 | all subscribers receive it. | AC-2 | PENDING |
+| A3 | the handler's response is used. | AC-3 | PENDING |
+| A4 | all listeners receive the event. | AC-4 | PENDING |
 
-## Inner loop: deferred — plan.md absent
+## Outer loop: widget behaviors
 
-`plan.md` does not exist for this feature, so the inner-loop unit behaviors (per
-component) cannot be derived. `/speckit.tdd.plan` must be re-run once `plan.md`
-exists to populate the `U1..` table (typed `on<T>`/`emit<T>`, `request<R>`/
-`registerHandler<T,R>`, synchronous in-order delivery, controller wrappers, event
-types). This list records only the outer-loop acceptance behaviors.
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
 
-## Edge cases & invariants (from spec.md)
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
 
-Carried from the spec's FRs / Key Entities; not yet placed as numbered behaviors:
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
-- Events delivered synchronously in registration order (FR-003).
-- Typed pub/sub (`on<T>`, `emit<T>`) and typed request/response (`request<R>`, `registerHandler<T,R>`) are distinct contracts.
-- Engine emits lifecycle events through the bus (FR-005) — depends on spec 002's event emission landing.
+## Inner loop: unit behaviors
 
-## Shipped unit/provider coverage (reported, not followed)
+One per functional requirement in `spec.md`.
 
-A case-insensitive search for `eventbus` / `agentcontroller` across `lib/` and
-`test/` found **no** implementation or tests. This feature is not yet built; the A
-behaviors above are greenfield. (Related engine event types from spec 002 live in
-`lib/src/engine/...` and are tested separately — they are not this bus.)
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | An `EventBus` MUST support typed pub/sub (on<T>, emit<T>). | FR-001 | PENDING |
+| U2 | An `EventBus` MUST support typed request/response (request<R>, registerHandler<T,R>). | FR-002 | PENDING |
+| U3 | Events MUST be delivered synchronously in registration order. | FR-003 | PENDING |
+| U4 | An `AgentController` MUST wrap EventBus with convenience methods. | FR-004 | PENDING |
+| U5 | The engine MUST emit lifecycle events through the bus. | FR-005 | PENDING |
 
-## Out of scope
+## Key entities
 
-- Inner-loop unit behaviors: deferred until `plan.md` (see above).
-- Engine-side emission wiring (FR-005): depends on spec 002 landing its event stream.
-- Observability integrations consuming the bus (spec 012 hooks): downstream consumers.
+| entity | fields |
+| ------ | ------ |
+| EventBus |  |
+| AgentController |  |
 
-## Verification commands
+## Routing provenance
 
-Copied verbatim from `.specify/memory/tdd-profile.md` at planning time:
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-- Single test: `dart test {file} -n "{name}"`
-- Full suite: `dart test`
-- Coverage: `dart test --coverage=.dart_coverage {files}` (format with
-  `dart run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --in=.dart_coverage -l`)
-- Mutation / property-based: **not available** in this repo (no `mutation_test` /
-  `glados` in the lockfile).
+route: A1 -> acceptance lane [declared: type marker, spec line 26]
+route: A2 -> acceptance lane [declared: type marker, spec line 28]
+route: A3 -> acceptance lane [declared: type marker, spec line 41]
+route: A4 -> acceptance lane [declared: type marker, spec line 54]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+

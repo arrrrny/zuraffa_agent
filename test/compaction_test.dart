@@ -95,8 +95,11 @@ void main() {
         (i) => UserMessage.text('Message $i with enough text to use tokens'),
       );
       expect(
-        shouldCompact(messages, 2500,
-            settings: const CompactionSettings(reserveTokens: 100)),
+        shouldCompact(
+          messages,
+          2500,
+          settings: const CompactionSettings(reserveTokens: 100),
+        ),
         isTrue,
       );
     });
@@ -109,8 +112,11 @@ void main() {
         (i) => UserMessage.text('Short message $i'),
       );
       expect(
-        shouldCompact(messages, 8192,
-            settings: const CompactionSettings(reserveTokens: 100)),
+        shouldCompact(
+          messages,
+          8192,
+          settings: const CompactionSettings(reserveTokens: 100),
+        ),
         isFalse,
       );
     });
@@ -121,8 +127,11 @@ void main() {
         (i) => UserMessage.text('Long message $i with lots of content here'),
       );
       expect(
-        shouldCompact(messages, 2000,
-            settings: const CompactionSettings(enabled: false)),
+        shouldCompact(
+          messages,
+          2000,
+          settings: const CompactionSettings(enabled: false),
+        ),
         isFalse,
       );
     });
@@ -225,10 +234,12 @@ void main() {
           id: 'e_1',
           parentId: null,
           timestamp: fixedTime,
-          message: AssistantMessage(content: [
-            TextBlock('Decision: use Hive for storage'),
-            TextBlock('Decision: implement JSONL fallback'),
-          ]),
+          message: AssistantMessage(
+            content: [
+              TextBlock('Decision: use Hive for storage'),
+              TextBlock('Decision: implement JSONL fallback'),
+            ],
+          ),
         ),
       ];
       final summary = await summarizer.summarize(
@@ -288,15 +299,18 @@ void main() {
             id: 'e_1',
             parentId: null,
             timestamp: fixedTime,
-            message: AssistantMessage(content: [
-              TextBlock('Decision: new decision'),
-            ]),
+            message: AssistantMessage(
+              content: [TextBlock('Decision: new decision')],
+            ),
           ),
         ],
         keptEntries: const [],
         previousSummary: previous,
       );
-      expect(summary.decisions, containsAll(['prior decision', 'new decision']));
+      expect(
+        summary.decisions,
+        containsAll(['prior decision', 'new decision']),
+      );
       expect(summary.toolNames, contains('prior_tool'));
     });
   });

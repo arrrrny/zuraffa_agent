@@ -47,11 +47,7 @@ void main() {
 
   group('arrarrny/zuraffa_agent#2 — SteeringQueue immutable snapshot', () {
     test('SteeringQueue is constructible empty with no lastInjectedAt', () {
-      final q = SteeringQueue(
-        id: 'q-1',
-        pending: const [],
-        processedCount: 0,
-      );
+      final q = SteeringQueue(id: 'q-1', pending: const [], processedCount: 0);
       expect(q.id, 'q-1');
       expect(q.pending, isEmpty);
       expect(q.processedCount, 0);
@@ -102,16 +98,8 @@ void main() {
       final ts = DateTime.utc(2026, 8, 24, 9, 0, 0);
       final m1 = SteeringMessage(id: 'm-1', content: 'x', injectedAt: ts);
       final m2 = SteeringMessage(id: 'm-2', content: 'y', injectedAt: ts);
-      final a = SteeringQueue(
-        id: 'q-1',
-        pending: [m1],
-        processedCount: 0,
-      );
-      final b = SteeringQueue(
-        id: 'q-1',
-        pending: [m2],
-        processedCount: 0,
-      );
+      final a = SteeringQueue(id: 'q-1', pending: [m1], processedCount: 0);
+      final b = SteeringQueue(id: 'q-1', pending: [m2], processedCount: 0);
       expect(a == b, isFalse);
     });
   });
@@ -131,20 +119,26 @@ void main() {
       expect(q.lastInjectedAt, isNull);
     });
 
-    test('SteeringQueueProvider.current returns a supplied active queue', () async {
-      final ts = DateTime.utc(2026, 8, 24, 9, 0, 0);
-      final m = SteeringMessage(id: 'm-1', content: 'x', injectedAt: ts);
-      final active = SteeringQueue(
-        id: 'q-x',
-        pending: [m],
-        processedCount: 2,
-        lastInjectedAt: ts,
-      );
-      expect(await SteeringQueueProvider(active).current(NoParams()), active);
-    });
+    test(
+      'SteeringQueueProvider.current returns a supplied active queue',
+      () async {
+        final ts = DateTime.utc(2026, 8, 24, 9, 0, 0);
+        final m = SteeringMessage(id: 'm-1', content: 'x', injectedAt: ts);
+        final active = SteeringQueue(
+          id: 'q-x',
+          pending: [m],
+          processedCount: 2,
+          lastInjectedAt: ts,
+        );
+        expect(await SteeringQueueProvider(active).current(NoParams()), active);
+      },
+    );
 
-    test('SteeringQueueProvider.count returns the tracked queue count', () async {
-      expect(await SteeringQueueProvider().count(NoParams()), 1);
-    });
+    test(
+      'SteeringQueueProvider.count returns the tracked queue count',
+      () async {
+        expect(await SteeringQueueProvider().count(NoParams()), 1);
+      },
+    );
   });
 }

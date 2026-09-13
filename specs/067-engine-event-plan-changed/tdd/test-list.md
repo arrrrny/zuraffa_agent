@@ -1,56 +1,120 @@
-# Test List: EngineEvent.PlanChanged
-
----
-feature: 067-engine-event-plan-changed
-loop: outside-in
-profile: .specify/memory/tdd-profile.md # referenced by sibling 023; file absent at HEAD — 023 artifact as de-facto rubric + constitution.md Principles II/V/X
-spec_criteria: 5 # FR-001..FR-005 in spec.md
-planned_at: 30b4b94 # master HEAD at cycle start
-updated_at: HEAD
-suite_baseline: green # 911 passed / 2 skipped (pre-existing KIMI_API_KEY integration skips) at 30b4b94
----
+# Test List: 067-engine-event-plan-changed
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | `PlanChanged` is `is EngineEvent` AND `is PlanChanged` | FR-001 | example | DONE | `test/engine/events/engine_event_test.dart::spec 067 — EngineEvent.PlanChanged::PlanChanged is an EngineEvent` |
-| A2  | `PlanChanged` carries `emittedAt` and the domain `change: PlanChangedEvent` payload; `change.previous`/`change.next` are the exact `PlanState` instances passed in | FR-001 | example | DONE | `…::PlanChanged carries emittedAt + the PlanChangedEvent payload` |
-| A3  | The exhaustive `describe(EngineEvent)` switch routes `PlanChanged` to `plan_changed(<next plan id>)` | FR-003 | example | DONE | `…::describe(EngineEvent) switch routes PlanChanged to plan_changed(next plan id)` |
-| A4  | Value semantics at birth: equal (`emittedAt`, `change`) ⇒ `==` and equal `hashCode`; varying either field ⇒ unequal; `toString` renders both fields | FR-004 | example | DONE | `…::PlanChanged value semantics (born with spec 066 pattern)` |
-| A5  | `dart analyze --fatal-infos` exits 0 and `dart test` passes baseline + new | FR-005 | gate | DONE | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-11 | PENDING |
+| A12 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-12 | PENDING |
+| A13 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-13 | PENDING |
+| A14 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-14 | PENDING |
+| A15 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-15 | PENDING |
+| A16 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-16 | PENDING |
+| A17 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-17 | PENDING |
+| A18 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-18 | PENDING |
+| A19 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-19 | PENDING |
+| A20 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-20 | PENDING |
+| A21 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-21 | PENDING |
+| A22 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-22 | PENDING |
+| A23 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-23 | PENDING |
+| A24 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-24 | PENDING |
+| A25 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-25 | PENDING |
+| A26 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-26 | PENDING |
+| A27 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-27 | PENDING |
+| A28 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-28 | PENDING |
+| A29 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-29 | PENDING |
+| A30 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-30 | PENDING |
+| A31 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-31 | PENDING |
+| A32 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-32 | PENDING |
+| A33 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-33 | PENDING |
+| A34 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-34 | PENDING |
+| A35 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-35 | PENDING |
+| A36 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-36 | PENDING |
+| A37 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-37 | PENDING |
+| A38 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-38 | PENDING |
+| A39 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-39 | PENDING |
+| A40 | the pinned regression test passes (`test/engine/events/engine_event_test.dart`). | AC-40 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### `lib/src/engine/events/plan_changed.dart` (part file — new)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | `final class PlanChanged extends EngineEvent` declared `part of 'engine_event.dart';` with `emittedAt` + `change` and a const all-required constructor | FR-001 | example | DONE | A1, A2 + mutants M1/M2 |
-| U2  | `engine_event.dart` includes `part 'plan_changed.dart';` and imports the domain `PlanChangedEvent` | FR-002 | gate | DONE | compile gate + mutant M3 |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: `final class PlanChanged extends EngineEvent` declared as `part of 'engine_event.dart';` carrying `emittedAt: DateTime` (when the engine emitted the event) and `change: PlanChangedEvent` (the domain payload pairing the previous/next `PlanState` snapshots). The two timestamps are distinct concepts: `emittedAt` is the engine emission time; `change.emittedAt` is when the plan change was applied. | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: `engine_event.dart` includes `part 'plan_changed.dart';` and imports the domain `PlanChangedEvent` (no cycle: planner entities import nothing from `engine/events`). | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: The exhaustive `describe(EngineEvent)` switch handles `PlanChanged`, routing to `plan_changed(<next plan id>)`. | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: `PlanChanged` carries value semantics at birth: `==` (identical-or-runtimeType-and-fields, comparing `emittedAt` and `change`), `hashCode` (`Object.hash(emittedAt, change)`), `toString` (`PlanChanged(emittedAt: …, change: …)` delegating to `PlanChangedEvent.toString`). | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: `dart analyze --fatal-infos` clean; `dart test` green (baseline 911/2 at `30b4b94` + new tests). | FR-005 | PENDING |
 
-### Test file: `test/engine/events/engine_event_test.dart`
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U3  | The shared `#24` group's `describe(EngineEvent)` switch is extended with the `PlanChanged` arm (exhaustive, no `default`) | FR-003 | example | DONE | shared switch test compiles and passes; mutant M4 proves the arm is load-bearing |
-| U4  | `==` compares `emittedAt` AND `change`; `hashCode` = `Object.hash(emittedAt, change)`; `toString` = `PlanChanged(emittedAt: …, change: …)` | FR-004 | example | DONE | A4 + mutants M1/M2 |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-## Invariants and edge cases
+route: A1 -> acceptance lane [declared: type marker, spec line 59]
+route: A2 -> acceptance lane [declared: type marker, spec line 61]
+route: A3 -> acceptance lane [declared: type marker, spec line 63]
+route: A4 -> acceptance lane [declared: type marker, spec line 65]
+route: A5 -> acceptance lane [declared: type marker, spec line 67]
+route: A6 -> acceptance lane [declared: type marker, spec line 69]
+route: A7 -> acceptance lane [declared: type marker, spec line 71]
+route: A8 -> acceptance lane [declared: type marker, spec line 73]
+route: A9 -> acceptance lane [declared: type marker, spec line 75]
+route: A10 -> acceptance lane [declared: type marker, spec line 77]
+route: A11 -> acceptance lane [declared: type marker, spec line 79]
+route: A12 -> acceptance lane [declared: type marker, spec line 81]
+route: A13 -> acceptance lane [declared: type marker, spec line 83]
+route: A14 -> acceptance lane [declared: type marker, spec line 85]
+route: A15 -> acceptance lane [declared: type marker, spec line 87]
+route: A16 -> acceptance lane [declared: type marker, spec line 89]
+route: A17 -> acceptance lane [declared: type marker, spec line 91]
+route: A18 -> acceptance lane [declared: type marker, spec line 93]
+route: A19 -> acceptance lane [declared: type marker, spec line 95]
+route: A20 -> acceptance lane [declared: type marker, spec line 97]
+route: A21 -> acceptance lane [declared: type marker, spec line 99]
+route: A22 -> acceptance lane [declared: type marker, spec line 101]
+route: A23 -> acceptance lane [declared: type marker, spec line 103]
+route: A24 -> acceptance lane [declared: type marker, spec line 105]
+route: A25 -> acceptance lane [declared: type marker, spec line 107]
+route: A26 -> acceptance lane [declared: type marker, spec line 109]
+route: A27 -> acceptance lane [declared: type marker, spec line 111]
+route: A28 -> acceptance lane [declared: type marker, spec line 113]
+route: A29 -> acceptance lane [declared: type marker, spec line 115]
+route: A30 -> acceptance lane [declared: type marker, spec line 117]
+route: A31 -> acceptance lane [declared: type marker, spec line 119]
+route: A32 -> acceptance lane [declared: type marker, spec line 121]
+route: A33 -> acceptance lane [declared: type marker, spec line 123]
+route: A34 -> acceptance lane [declared: type marker, spec line 125]
+route: A35 -> acceptance lane [declared: type marker, spec line 127]
+route: A36 -> acceptance lane [declared: type marker, spec line 129]
+route: A37 -> acceptance lane [declared: type marker, spec line 131]
+route: A38 -> acceptance lane [declared: type marker, spec line 133]
+route: A39 -> acceptance lane [declared: type marker, spec line 135]
+route: A40 -> acceptance lane [declared: type marker, spec line 137]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-- `emittedAt` vs `change.emittedAt` are distinct instants (engine emission time vs plan-change application time) — the payload test constructs them differently.
-- Empty plans (`steps: []`) render deterministically in `toString` without `PlanStep` noise — used for the exact-string assertion.
-- Equality delegates to `PlanChangedEvent.==` (domain semantics, spec 014) — equal domain events with equal `emittedAt` produce equal engine events.
-
-## Out of scope
-
-- The engine-loop emission site (epic #2 successor work).
-- Sibling subtypes' semantics (spec 066 / PR #77).
-- JSON serialization (issue #15 / spec 015).
-
-## Verification commands
-
-- Single feature: `dart test test/engine/events/engine_event_test.dart --name "PlanChanged" --reporter expanded`
-- Full suite: `dart test`
-- Analyze gate: `dart analyze --fatal-infos`
-- Mutation: deliberate mutants, one at a time, `cp`-restored (see `verification.md`)

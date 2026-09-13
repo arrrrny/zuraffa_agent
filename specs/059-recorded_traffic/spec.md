@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: RecordedTraffic (LLM + tool capture)
 
 **Branch**: `059-recorded_traffic` | **Date**: 2026-08-24
@@ -18,3 +20,21 @@ LLM + tool traffic recording — every LLM call and tool dispatch captured as a 
 - `dart test` - All pre-existing + 5 new tests pass
 
 ## Advances #7 (Eval Harness)
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** RecordedTraffic equality is value-based across all fields **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** RecordedTraffic inequality differs when a field changes **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** RecordedTrafficProvider is a RecordedTrafficService **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** RecordedTrafficProvider.current returns the active traffic snapshot **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** RecordedTrafficProvider.current honors an injected snapshot **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** RecordedTrafficProvider.count returns 1 **Then** the pinned regression test passes (`test/data/providers/recorded_traffic/recorded_traffic_provider_test.dart`).
+   **Type**: acceptance

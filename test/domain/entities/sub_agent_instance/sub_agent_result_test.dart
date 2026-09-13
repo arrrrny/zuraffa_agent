@@ -20,16 +20,19 @@ void main() {
       expect(r.failureReason, isNull);
     });
 
-    test('A3: a failure result is typed with a kind and reason, and is not ok', () {
-      final r = SubAgentResult.failure(
-        instanceId: 'inst-2',
-        failureKind: SubAgentFailureKind.toolError,
-        failureReason: 'tool read_file denied',
-      );
-      expect(r.ok, isFalse);
-      expect(r.failureKind, SubAgentFailureKind.toolError);
-      expect(r.failureReason, 'tool read_file denied');
-    });
+    test(
+      'A3: a failure result is typed with a kind and reason, and is not ok',
+      () {
+        final r = SubAgentResult.failure(
+          instanceId: 'inst-2',
+          failureKind: SubAgentFailureKind.toolError,
+          failureReason: 'tool read_file denied',
+        );
+        expect(r.ok, isFalse);
+        expect(r.failureKind, SubAgentFailureKind.toolError);
+        expect(r.failureReason, 'tool read_file denied');
+      },
+    );
 
     test('value equality across fields', () {
       final a = SubAgentResult.failure(

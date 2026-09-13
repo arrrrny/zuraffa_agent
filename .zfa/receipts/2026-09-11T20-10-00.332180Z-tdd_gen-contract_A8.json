@@ -1,0 +1,28 @@
+{
+ "schema": "proof.v1",
+ "command": "tdd gen",
+ "target": "contract:A8",
+ "repro": "zfa tdd gen",
+ "at": "2026-09-11T20:10:00.332180Z",
+ "generator_version": "6.2.2",
+ "input": {
+  "feature": "112-structured-logging"
+ },
+ "files": [
+  {
+   "path": "test/tdd/112-structured-logging/contract_a8_test.dart",
+   "action": "create",
+   "sha256": "fd469e6acbe4d656c68bfd54385cd9062ac1224895564dfac1488f3dbe130c65",
+   "bytes": 2987
+  },
+  {
+   "path": "lib/tdd/112-structured-logging/contract_a8_subject.dart",
+   "action": "create",
+   "sha256": "bfc4f29aad0ed78d548313405db69ffaee6922c4107e98094909e4f61e80449c",
+   "bytes": 1403
+  }
+ ],
+ "receipt_version": 1,
+ "min_core_version": "6.0.0",
+ "generated_against_core": "6.2.2"
+}

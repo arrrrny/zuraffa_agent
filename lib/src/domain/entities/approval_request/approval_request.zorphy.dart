@@ -47,6 +47,31 @@ class ApprovalRequest {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ApprovalRequest copyWithField<T>(Field<ApprovalRequest, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'toolName':
+        return copyWith(toolName: value as String);
+      case 'arguments':
+        return copyWith(arguments: value as Map<String, dynamic>);
+      case 'requestedAt':
+        return copyWith(requestedAt: value as DateTime);
+      case 'timeoutMs':
+        return copyWith(timeoutMs: value as int);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ApprovalRequest has no settable field with this name',
+        );
+    }
+  }
+
   ApprovalRequest copyWithApprovalRequest({
     String? id,
     String? toolName,

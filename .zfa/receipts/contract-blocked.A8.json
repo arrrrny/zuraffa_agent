@@ -1,0 +1,13 @@
+{
+  "schema": "contract-blocked.v1",
+  "behavior": "contract:A8",
+  "feature": "112-structured-logging",
+  "kind": "contract",
+  "contract": "AgentLog.install",
+  "classification": "blocked",
+  "command": "dart test /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a8_test.dart --plain-name \"AgentLog.install(level, onRecord) -> void (usecase contract)\"",
+  "exit_code": 1,
+  "output_excerpt": "00:00 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a8_test.dart\n00:01 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a8_test.dart\n00:02 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a8_test.dart\n00:03 +0: loading /Users/arrrrny/Developer/zuraffa_agent/test/tdd/112-structured-logging/contract_a8_test.dart\n00:03 +0: contract:A8 (AgentLog.install) contract:A8 — AgentLog.install(level, onRecord) -> void (usecase contract)",
+  "blocked_at": "2026-09-11T20:10:05.813585Z",
+  "reason": "the declared contract is not satisfied by the implementation — the cycle is BLOCKED and cannot proceed to GREEN (issue #1007)"
+}

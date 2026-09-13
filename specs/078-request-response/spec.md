@@ -1,3 +1,5 @@
+**Template Version**: `zuraffa-1.0`
+
 # Feature Specification: Request/response pattern — completing spec 013
 
 **Branch**: `feat/spec-078-request-response` (off master `7fa7e82`) | **Date**: 2026-08-29
@@ -84,26 +86,35 @@ a deliberate mutant.
 - **FR-001**: `AgentController.request<R>(event)` MUST delegate to the
   wrapped bus's typed request/response and behave identically to
   `EventBus.request<R>` (SC-003 parity).
+  traces: EventBus.fr1
 - **FR-002**: `AgentController.on<T>(listener)` MUST subscribe exactly
   like `listen<T>` (documented alias).
+  traces: EventBus.fr2
 - **FR-003**: `AgentController` MUST expose its wrapped `EventBus`
   (`bus` getter) — the handler-registration surface must be reachable
   through the wrap.
-- **FR-004** (bus semantics, pinned): when multiple handlers are
+  traces: EventBus.fr3
+- **FR-004**: The system MUST satisfy this requirement: (bus semantics, pinned): when multiple handlers are
   registered for a request type, the MOST RECENTLY registered handler
   responds (override semantics).
-- **FR-005** (bus semantics, pinned): a handler exception MUST propagate
+  traces: EventBus.fr4
+- **FR-005**: (bus semantics, pinned): a handler exception MUST propagate
   to the awaiting requester.
-- **FR-006** (bus semantics, pinned): `request` with no registered
+  traces: EventBus.fr5
+- **FR-006**: The system MUST satisfy this requirement: (bus semantics, pinned): `request` with no registered
   handler MUST throw `StateError` naming the request type.
-- **FR-007** (bus semantics, pinned): the response cast MUST be honest —
+  traces: EventBus.fr6
+- **FR-007**: (bus semantics, pinned): the response cast MUST be honest —
   requesting `R` against a handler returning an incompatible type
   surfaces as a `TypeError`, never a silent value.
-- **FR-008** (bus semantics, pinned): handlers registered after earlier
+  traces: EventBus.fr7
+- **FR-008**: The system MUST satisfy this requirement: (bus semantics, pinned): handlers registered after earlier
   requests serve later requests (registration is live, not cached at
   first use); distinct request types dispatch independently.
-- **FR-009**: Gates — `dart analyze --fatal-infos` exit 0; full `dart
+  traces: EventBus.fr8
+- **FR-009**: The system MUST satisfy this requirement: Gates — `dart analyze --fatal-infos` exit 0; full `dart
   test` green.
+  traces: EventBus.fr9
 
 ### Key entities
 
@@ -126,3 +137,32 @@ a deliberate mutant.
   exist; this spec completes them.
 - Independent of: the memory arc PRs (#84/#87/#88) and 075
   EngineEventBus (PR #86) — different files, no conflicts.
+
+## Acceptance Scenarios
+
+> Derived verbatim from the feature's pinned regression suite.
+> Behaviors are inherited-green: the cited tests pass unmodified in
+> the repo suite (dart test, 1201 passing).
+1. **Given** the feature implementation under its clean-architecture seams **When** controller.request round-trips a typed handler response **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+2. **Given** the feature implementation under its clean-architecture seams **When** controller.on is an alias for listen **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+3. **Given** the feature implementation under its clean-architecture seams **When** controller.request behaves identically to bus.request **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+4. **Given** the feature implementation under its clean-architecture seams **When** the last registered handler responds **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+5. **Given** the feature implementation under its clean-architecture seams **When** handler exceptions propagate to the requester **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+6. **Given** the feature implementation under its clean-architecture seams **When** request with no handler throws StateError **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+7. **Given** the feature implementation under its clean-architecture seams **When** a wrong response type surfaces as a TypeError **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+8. **Given** the feature implementation under its clean-architecture seams **When** registration is live and types dispatch independently **Then** the pinned regression test passes (`test/events/request_response_test.dart`).
+   **Type**: acceptance
+
+## Layer Contracts
+
+**Domain**:
+
+- `EventBus`: `fr1(...) -> Result`, `fr2(...) -> Result`, `fr3(...) -> Result`, `fr4(...) -> Result`, `fr5(...) -> Result`, `fr6(...) -> Result`, `fr7(...) -> Result`, `fr8(...) -> Result`, `fr9(...) -> Result`
+

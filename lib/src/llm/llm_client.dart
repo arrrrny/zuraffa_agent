@@ -173,9 +173,13 @@ class LlmResponse {
           finishReason == other.finishReason;
 
   @override
-  int get hashCode =>
-      Object.hash(content, thinking, Object.hashAll(toolCalls), usage,
-          finishReason);
+  int get hashCode => Object.hash(
+    content,
+    thinking,
+    Object.hashAll(toolCalls),
+    usage,
+    finishReason,
+  );
 
   @override
   String toString() =>
@@ -215,12 +219,13 @@ class LlmResponseChunk {
 
   @override
   int get hashCode => Object.hash(
-      content,
-      thinking,
-      Object.hashAll(toolCalls),
-      usage,
-      isComplete,
-      finishReason);
+    content,
+    thinking,
+    Object.hashAll(toolCalls),
+    usage,
+    isComplete,
+    finishReason,
+  );
 
   @override
   String toString() =>
@@ -253,7 +258,7 @@ class LlmHttpException implements Exception {
   @override
   String toString() => attempts > 1
       ? 'LlmHttpException: $provider returned HTTP $statusCode: $body '
-          '(after $attempts attempts)'
+            '(after $attempts attempts)'
       : 'LlmHttpException: $provider returned HTTP $statusCode: $body';
 }
 

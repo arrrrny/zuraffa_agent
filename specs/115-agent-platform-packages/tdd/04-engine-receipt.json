@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "feature": "115-agent-platform-packages",
+  "lane": "engine",
+  "verdict": "error",
+  "result": "blocked",
+  "behaviors": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "U5",
+    "contract:A1",
+    "contract:A2",
+    "contract:A3",
+    "contract:A4",
+    "contract:A5",
+    "contract:A6",
+    "contract:A7",
+    "contract:A8"
+  ],
+  "counts": {
+    "total": 19,
+    "pending": 7,
+    "red": 0,
+    "green": 6,
+    "done": 5,
+    "blocked": 1
+  },
+  "stopped_at": "contract:A1:verify-red",
+  "at": "2026-09-11T23:05:15.477313Z"
+}

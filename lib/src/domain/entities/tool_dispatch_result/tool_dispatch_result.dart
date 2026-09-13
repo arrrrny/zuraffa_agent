@@ -9,10 +9,8 @@ part 'tool_dispatch_result.g.dart';
 /// ToolDispatchResult entity
 @Zorphy(generateJson: true, generateCompareTo: true)
 abstract class $ToolDispatchResult {
-
   bool get success;
   String get result;
   String get error;
   List<String> get artifactRefs;
 }
-

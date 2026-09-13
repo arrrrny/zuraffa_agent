@@ -1,69 +1,72 @@
-# Test List: Eval Suite Health & Release Gate (spec 085)
-
----
-feature: 085-eval-suite-health
-loop: outside-in
-profile: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
-spec_criteria: 10 # FR-001..FR-010 in spec.md
-planned_at: master (29b7fef)
-updated_at: 085-eval-suite-health
-suite_baseline: green # 1073 passed / 2 skipped at 29b7fef
----
+# Test List: 085-eval-suite-health
 
 ## Outer loop: acceptance behaviors
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| A1  | The gate is trustworthy in the corners: an empty suite fails closed, a zero-run task vetoes instead of crashing, and the veto is machine-readable | FR-005, FR-006, FR-007, SC-001..SC-003 | example | PLANNED | `test/eval/suite_gate_085_test.dart` (T1–T4) |
-| A2  | Gates: `dart analyze` clean vs baseline; full `dart test` green including the unmodified spec-006 `suite_gate_006_a4_test.dart` | FR-010 | gate | PLANNED | gates at branch HEAD (counts in verification.md) |
+One per acceptance criterion in `spec.md`.
+
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| A1 | the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`). | AC-1 | PENDING |
+| A2 | the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`). | AC-2 | PENDING |
+| A3 | the pinned regression test passes (`test/eval/suite_gate_006_a4_test.dart`). | AC-3 | PENDING |
+| A4 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-4 | PENDING |
+| A5 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-5 | PENDING |
+| A6 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-6 | PENDING |
+| A7 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-7 | PENDING |
+| A8 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-8 | PENDING |
+| A9 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-9 | PENDING |
+| A10 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-10 | PENDING |
+| A11 | the pinned regression test passes (`test/eval/suite_gate_085_test.dart`). | AC-11 | PENDING |
+
+## Outer loop: widget behaviors
+
+UI acceptance scenarios (bug #830): asserted through a testWidgets pair — a view-builder subject stub plus a widget test that pumps the view and asserts the scenario.
+
+The `kind` cell is the finder-kind taxonomy (issue #1140): the scenario verbs' predicted assertion classes — presence, absence, route-outcome, enabled-state, sequence — or `none` when no finder is derivable. `zfa tdd gen` selects the assertion template by it and refuses a row whose kind column drifted from the scenario prose; verify-red's kind gate (issue #959/#964) certifies on the same vocabulary.
+
+| id | behavior | kind | traces | state |
+| -- | -------- | ---- | ------ | ----- |
 
 ## Inner loop: unit behaviors
 
-### New surface (RED)
+One per functional requirement in `spec.md`.
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U1  | Zero-task suite at threshold 0.0 → `passed == false`, `exitCode == 1`, report names the fail-closed reason | FR-007 | unit | PLANNED | T1 |
-| U2  | `TaskSamples(n: 0)` → no throw; task scores 0.0 with zero-runs detail; gate vetoed | FR-005 | unit | PLANNED | T2 |
-| U3  | Mixed missing + zero-run → `incomplete == true`, `incompleteTaskIds` in suite order; complete suite → false/empty | FR-006 | unit | PLANNED | T3 |
+| id | behavior | traces | state |
+| -- | -------- | ------ | ----- |
+| U1 | The system MUST satisfy this requirement: Each declared task's score is the unbiased pass@k estimator | FR-001 | PENDING |
+| U2 | The system MUST satisfy this requirement: The suite score is the mean of the per-task pass@k values | FR-002 | PENDING |
+| U3 | The system MUST satisfy this requirement: The threshold decision is `>=`: a score exactly equal to | FR-003 | PENDING |
+| U4 | The system MUST satisfy this requirement: A declared task with NO samples entry is INCOMPLETE: it | FR-004 | PENDING |
+| U5 | The system MUST satisfy this requirement: A declared task whose samples entry has `n == 0` (zero | FR-005 | PENDING |
+| U6 | The system MUST satisfy this requirement: `GateDecision` exposes `incomplete` (bool) and | FR-006 | PENDING |
+| U7 | The system MUST satisfy this requirement: A suite with ZERO declared tasks FAILS the gate | FR-007 | PENDING |
+| U8 | The system MUST satisfy this requirement: All-incomplete suites (every declared task missing or | FR-008 | PENDING |
+| U9 | The system MUST satisfy this requirement: The computation stays pure and deterministic: same inputs → | FR-009 | PENDING |
+| U10 | The system MUST satisfy this requirement: Gates — `dart analyze` reports no new issues relative to the | FR-010 | PENDING |
 
-### Pins (existing behavior, previously unguarded at these edges)
+## Routing provenance
 
-| id  | behavior | traces | kind | state | test |
-| --- | -------- | ------ | ---- | ----- | ---- |
-| U4  | All tasks missing → fail, all ids listed, score 0.0 | FR-004, FR-008 | pin | PLANNED | T4 |
-| U5  | `>=` boundary: score exactly at threshold passes | FR-003 | pin | PLANNED | T5 |
-| U6  | Unbiased per-task value pass-through: `n: 10, c: 4, k: 1` → 0.4 in the breakdown | FR-001 | pin | PLANNED | T6 |
-| U7  | Extra sample ids not declared by the suite are ignored (score over declared tasks only) | FR-002 | pin | PLANNED | T7 |
-| U8  | `c > n` still throws `ArgumentError` (invalid arithmetic ≠ incomplete run) | FR-009 | pin | PLANNED | T8 |
+Per-behavior routing decisions (issue #951): what each decision consulted — a declared marker/contract row, or the labeled legacy fallback to migrate.
 
-> **Pin honesty**: U4–U8 pin behavior that ships on master (006-A4 covers
-> the core veto/boundary; 037 covers the estimator). The genuinely new
-> behavior — fail-closed empty suites, zero-run veto, machine-readable
-> veto — is RED-first (U1–U3).
+route: A1 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A2 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A3 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A4 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A5 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A6 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A7 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A8 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A9 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A10 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: A11 -> acceptance lane [fallback: legacy description classifier matched — add `**Type**: acceptance` to the scenario]
+route: U1 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U2 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U3 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U4 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U5 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U6 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U7 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U8 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U9 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
+route: U10 -> unit lane [fallback: legacy description classifier matched — trace FR to a declared contract row]
 
-## Edge cases & invariants
-
-- Threshold 0.0 with zero tasks — the fail-open case this spec closes.
-- `n == 0` with `c == 0` — zero-run veto; `n == 0, c > 0` impossible
-  (`c > n` → ArgumentError, T8's contract).
-- Veto order equals the suite's declared task order.
-- Existing report lines byte-identical (006-A4 asserts on them).
-- Pure function: same inputs → same decision (no clock/randomness/IO).
-
-## Out of scope
-
-- Sample production (harness/runner — specs 006/061).
-- PassAtK estimator changes (spec 037).
-- Suite configuration schema; report formatting beyond the new reason
-  line.
-- Spec-006's own A4 tests (kept unmodified as the regression guard).
-
-## Verification commands
-
-```bash
-dart analyze
-dart test test/eval/suite_gate_085_test.dart
-dart test test/eval/suite_gate_006_a4_test.dart
-dart test
-```

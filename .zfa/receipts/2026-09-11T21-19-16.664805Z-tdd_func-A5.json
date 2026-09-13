@@ -1,0 +1,23 @@
+{
+  "schema": "proof.v1",
+  "command": "tdd func",
+  "target": "A5",
+  "repro": "zfa tdd func",
+  "at": "2026-09-11T21:19:16.664805Z",
+  "generator_version": "6.2.2",
+  "input": {
+    "feature": "113-eventbus-error-observability"
+  },
+  "files": [
+    {
+      "path": "lib/tdd/113-eventbus-error-observability/a5_subject.dart",
+      "action": "update",
+      "sha256": "59ecbc19f2b8a6adc474e9687a97047d4badc1e345682a1a558c698e84363797",
+      "bytes": 1094,
+      "snapshot": "// GENERATED STUB — `zfa tdd gen A5` (spec 044-test-tdd-generation).\n//\n// behavior_id: A5\n// source_criterion: AC-5\n// description: `publish` still returns normally, later\n//\n// This is a MINIMAL COMPILABLE acceptance-scenario stub. It compiles\n// cleanly (FR-011) but does NOT satisfy the behavior described above —\n// the paired test will fail on first execution with an assertion-level\n// failure (honest red). The acceptance subject intentionally does NOT\n// reference any entity/use case/repository (FR-004): it stands alone.\n// Replace this stub body with real implementation to make the test pass.\n//\n// The subject name is derived from the behavior id (`subject_a1`) and is\n// deliberately snake_cased — the generator KNOWS the name it emits, so\n// the lint its shape provably trips is suppressed here rather than\n// renaming the contract surface (issue #1035).\n// ignore_for_file: non_constant_identifier_names\nlibrary;\n\n/// Scenario runner for behavior A5.\n///\n/// Throws [UnimplementedError] until the real implementation lands.\nString subject_a5() {\n  return 'subject_a5';\n}\n"
+    }
+  ],
+  "receipt_version": 1,
+  "min_core_version": "6.0.0",
+  "generated_against_core": "6.2.2"
+}

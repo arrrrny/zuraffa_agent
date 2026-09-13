@@ -47,6 +47,31 @@ class ModelChangeEntry {
     );
   }
 
+  /// Returns a copy of this entity with [field] set to [value].
+  ///
+  /// Delegates to [copyWith]: the receiver is never mutated and a
+  /// null [value] keeps the current field value.
+  ModelChangeEntry copyWithField<T>(Field<ModelChangeEntry, T> field, T value) {
+    switch (field.name) {
+      case 'id':
+        return copyWith(id: value as String);
+      case 'parentId':
+        return copyWith(parentId: value as String?);
+      case 'timestamp':
+        return copyWith(timestamp: value as DateTime);
+      case 'modelId':
+        return copyWith(modelId: value as String);
+      case 'provider':
+        return copyWith(provider: value as String);
+      default:
+        throw ArgumentError.value(
+          field.name,
+          'field',
+          'ModelChangeEntry has no settable field with this name',
+        );
+    }
+  }
+
   ModelChangeEntry copyWithModelChangeEntry({
     String? id,
     String? parentId,
