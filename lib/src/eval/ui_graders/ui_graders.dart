@@ -133,6 +133,9 @@ class UiSnapshotGrader implements UiGrader {
   /// - Lists: encoded in index order.
   /// - Primitives: encoded per [JsonEncoder] (strings quoted, numbers
   ///   bare, booleans/null bare).
+  /// - Non-`String`-keyed maps: [ArgumentError], matching [JsonEncoder]'s
+  ///   rejection of the same input (a stringified key would collapse `1`
+  ///   and `'1'` and read back the wrong value).
   /// - The encoder uses no padding (`JsonEncoder.withIndent(null)`).
   static String canonicalize(Object? value) {
     final sorted = _sortKeys(value);
@@ -149,12 +152,26 @@ class UiSnapshotGrader implements UiGrader {
       return out;
     }
     if (value is Map) {
-      // Non-String-keyed map: stringify keys, sort, then re-walk.
-      final keys = value.keys.map((Object? k) => '$k').toList()..sort();
+      // String-keyed maps that are not `Map<String, dynamic>` land here.
+      // A non-String key cannot be encoded faithfully, and `jsonEncode`
+      // rejects such maps outright — matching that here (instead of
+      // stringifying keys, which silently collapses `1` and `'1'` and
+      // indexes back with the wrong key) keeps a byte-exact grader from
+      // trusting a valid-looking but wrong canonical form.
+      final keys = <String>[];
+      for (final Object? key in value.keys) {
+        if (key is! String) {
+          throw ArgumentError.value(
+            value,
+            'value',
+            'canonicalize requires String-keyed maps',
+          );
+        }
+        keys.add(key);
+      }
+      keys.sort();
       final out = <String, dynamic>{};
       for (final k in keys) {
-        // The original map's value for the stringified key — best
-        // effort for non-string maps; UI trees are string-keyed.
         out[k] = _sortKeys(value[k]);
       }
       return out;

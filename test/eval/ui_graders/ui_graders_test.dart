@@ -183,6 +183,21 @@ void main() {
       expect(c, '{"outer":{"a":2,"z":1}}');
     });
 
+    test('canonicalize throws on non-String-keyed maps (no silent nulls)', () {
+      // jsonEncode rejects these outright; canonicalize must not be more
+      // permissive than the encoder it wraps by emitting a valid-looking
+      // string whose values were nulled out.
+      expect(
+        () => UiSnapshotGrader.canonicalize(<Object, Object>{1: 'one'}),
+        throwsA(isA<ArgumentError>()),
+      );
+      // String-keyed maps that are not Map<String, dynamic> still encode.
+      expect(
+        UiSnapshotGrader.canonicalize(<Object, Object>{'a': 1}),
+        '{"a":1}',
+      );
+    });
+
     test('fromCanonical constructor: stored string is ground truth', () {
       final canonical = UiSnapshotGrader.canonicalize(_payload().toJson());
       final grader = UiSnapshotGrader.fromCanonical(canonical);
@@ -229,6 +244,19 @@ void main() {
         );
         final result = grader.grade(gm6Fixture.emittedPayload);
         expect(result.passed, isTrue, reason: result.detail);
+      },
+    );
+
+    test(
+      'pinned canonical snapshot is the recorded literal, not recomputed',
+      () {
+        // the fixture stores the recorded bytes; re-canonicalizing the
+        // emitted payload must reproduce them, so a canonicalize regression
+        // fails here instead of the golden silently agreeing with itself.
+        expect(
+          UiSnapshotGrader.canonicalize(gm6Fixture.emittedPayload.toJson()),
+          gm6Fixture.pinnedCanonicalSnapshot,
+        );
       },
     );
 

@@ -83,9 +83,18 @@ final Gm6Fixture gm6Fixture = () {
   );
   return Gm6Fixture._(
     pinnedSpec: pinnedSpec,
-    pinnedCanonicalSnapshot: UiSnapshotGrader.canonicalize(
-      emittedPayload.toJson(),
-    ),
+    // Recorded from the GM-6 run and stored literally — computing it from
+    // the payload it grades would make the snapshot assertion
+    // self-referential (it could only catch non-determinism, never a
+    // canonicalize regression). `gm6Fixture` tests re-canonicalize the
+    // emitted payload and compare against this literal so it cannot rot.
+    pinnedCanonicalSnapshot:
+        '{"mimeType":"ui/tree+json","schemaVersion":"1.0.0",'
+        '"tree":{"children":[{"props":{"value":"Hello"},"type":"Text"},'
+        '{"children":[{"props":{"value":"A"},"type":"Text"},'
+        '{"props":{"value":"B"},"type":"Text"}],"type":"Row"}],'
+        '"props":{"padding":8},"type":"Column"},'
+        '"vocabularyId":"shadcn-ui@1.0.0"}',
     emittedPayload: emittedPayload,
   );
 }();

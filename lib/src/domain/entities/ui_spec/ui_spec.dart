@@ -9,8 +9,11 @@
 // The engine stays UI-framework-agnostic (issue #8 §6 + AC-5): this value
 // object carries the spec-side pin only. The plugin resolves the
 // vocabulary, renders the nodes, and enforces the pin against emitted
-// trees (the engine rejects trees outside the pin with typed errors per
-// AC-2 — see [UiVocabularyPinError] and [UiSpec.validatePayload]).
+// trees by calling [UiSpec.validatePayload] at the tool-result boundary
+// (issue #8 AC-2). AC-2 ships the pin and its typed errors as engine-side
+// pure functions; wiring that call into a concrete tool-result path is the
+// plugin's job (issue #8 §6: "rendering belongs to the plugin/app"), and
+// the engine wires no call site of its own.
 
 import '../ui_tree_payload/ui_tree_payload.dart';
 
@@ -50,9 +53,9 @@ class UiCaps {
 ///
 /// Pins the vocabulary a mission may emit (`vocabulary`), optionally
 /// narrows the allowed components (`allowedComponents`), and optionally
-/// caps tree shape (`caps`). The engine rejects [UiTreePayload]s that
-/// fall outside the pin with typed [UiVocabularyPinError]s (see
-/// [validatePayload]).
+/// caps tree shape (`caps`). Out-of-pin [UiTreePayload]s are rejected with
+/// typed [UiVocabularyPinError]s by calling [validatePayload] at the
+/// tool-result boundary (the call site lives in the plugin, issue #8 §6).
 class UiSpec {
   /// Vocabulary id pinning the mission to a specific component vocabulary,
   /// e.g. `"shadcn-ui@1.0.0"`. Matched against [UiTreePayload.vocabularyId].
@@ -77,8 +80,11 @@ class UiSpec {
   ///
   /// Returns the list of typed errors (empty when the payload is in-pin).
   /// Each error is a [UiVocabularyPinError] carrying the offending field
-  /// and a human-readable reason. The engine calls this at the tool-result
-  /// boundary; the plugin calls it before rendering.
+  /// and a human-readable reason. The caller is the plugin: it validates
+  /// at the tool-result boundary before rendering and aggregates the
+  /// returned errors. The engine wires no call site of its own — AC-2
+  /// ships the pin and its typed errors as pure functions; see the PR
+  /// notes for the remaining gap.
   ///
   /// Checks (in order):
   /// 1. [UiTreePayload.vocabularyId] must equal [vocabulary] — else
@@ -189,7 +195,11 @@ class UiSpec {
   }
 
   @override
-  int get hashCode => Object.hash(vocabulary, allowedComponents, caps);
+  int get hashCode => Object.hash(
+    vocabulary,
+    Object.hashAll(allowedComponents ?? const <String>[]),
+    caps,
+  );
 
   @override
   String toString() =>
@@ -210,9 +220,10 @@ enum UiVocabularyPinErrorKind {
 }
 
 /// Typed error produced by [UiSpec.validatePayload] when a [UiTreePayload]
-/// falls outside the spec pin (issue #8 AC-2). The engine throws a
-/// [StateError] aggregating these at the tool-result boundary; the plugin
-/// surface keeps the typed list for diagnostics.
+/// falls outside the spec pin (issue #8 AC-2). [UiSpec.validatePayload]
+/// returns them as a typed list; the caller at the tool-result boundary
+/// (the plugin, issue #8 §6) decides the disposition — throw, redact, or
+/// surface the list as diagnostics.
 class UiVocabularyPinError {
   final UiVocabularyPinErrorKind kind;
   final String field;
