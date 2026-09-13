@@ -102,6 +102,13 @@ class MissionBudgetEnforcer {
   /// When [budget] has no UI caps ([MissionBudget.hasAnyUiCap] is false),
   /// this is a no-op — the mission has not pinned UI budgets, so the
   /// enforcer has nothing to enforce.
+  ///
+  /// Enforces the shape *recorded* on [payload]: [UiTreePayload.depth] and
+  /// [UiTreePayload.nodeCount] are computed once at construction, while
+  /// [UiTreePayload.tree] is a plain map handed out by reference. A caller
+  /// that mutates that map after construction (redaction, summarising,
+  /// normalising `children`) leaves these counts stale, and the caps then
+  /// describe the original tree rather than the map's current contents.
   void checkUiTree(UiTreePayload payload, MissionBudget budget) {
     final depthCap = budget.maxUiTreeDepth;
     if (depthCap != null && payload.depth > depthCap) {

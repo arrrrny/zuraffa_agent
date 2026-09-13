@@ -16,6 +16,16 @@ void main() {
       expect(a.hashCode, b.hashCode);
     });
 
+    test('YamlAgentSpec equality holds for non-const equal toolAllowlists', () {
+      // The const form above reuses one list instance, which masks an
+      // identity-based comparison. `toolAllowlist` must compare by value.
+      final a = YamlAgentSpec(id: 'id-a', name: 'research-agent', extendsSpecId: null, toolAllowlist: List<String>.from(['a','b']), systemPrompt: 'You are a helpful assistant.');
+      final b = YamlAgentSpec(id: 'id-a', name: 'research-agent', extendsSpecId: null, toolAllowlist: List<String>.from(['a','b']), systemPrompt: 'You are a helpful assistant.');
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect({a, b}.length, 1);
+    });
+
     test('YamlAgentSpec inequality differs when a field changes', () {
       final a = YamlAgentSpec(id: 'id-a', name: 'research-agent', extendsSpecId: null, toolAllowlist: const ['a','b'], systemPrompt: 'You are a helpful assistant.');
       final b = YamlAgentSpec(id: 'id-b', name: 'code-agent', extendsSpecId: null, toolAllowlist: const ['a','b','c'], systemPrompt: 'You are a helpful assistant.');

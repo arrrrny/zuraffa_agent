@@ -70,6 +70,23 @@ void main() {
       );
     });
 
+    test('UiSpec equality/hashCode hold for non-const equal allowlists', () {
+      // Const canonicalization hands out the same list instance, so the
+      // const form above masks an identity-based hashCode. Two structurally
+      // equal non-const lists must still compare equal and collide.
+      final a = UiSpec(
+        vocabulary: 'shadcn-ui@1.0.0',
+        allowedComponents: List<String>.from(['Column', 'Text']),
+      );
+      final b = UiSpec(
+        vocabulary: 'shadcn-ui@1.0.0',
+        allowedComponents: List<String>.from(['Column', 'Text']),
+      );
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect({a, b}.length, 1);
+    });
+
     test('UiVocabularyPinError is a value object', () {
       const a = UiVocabularyPinError(
         kind: UiVocabularyPinErrorKind.vocabularyMismatch,

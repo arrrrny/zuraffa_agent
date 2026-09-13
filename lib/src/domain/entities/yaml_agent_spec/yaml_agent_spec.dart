@@ -13,8 +13,9 @@ import '../ui_spec/ui_spec.dart';
 /// Declarative YAML agent spec — extends inheritance, validation diagnostics, declarative tool allowlist + steering (epic #5 §R5.3, issue #6 US3).
 ///
 /// Issue #8 §2 ("Vocabulary pinning in specs") adds an optional [ui]
-/// section: when non-null, the engine rejects [UiTreePayload]s that fall
-/// outside the pin with typed [UiVocabularyPinError]s. See [UiSpec].
+/// section: when non-null, out-of-pin [UiTreePayload]s are rejected at the
+/// tool-result boundary by calling [UiSpec.validatePayload], which yields
+/// typed [UiVocabularyPinError]s. See [UiSpec].
 class YamlAgentSpec {
   final String id;
   final String name;
@@ -23,9 +24,10 @@ class YamlAgentSpec {
   final String systemPrompt;
 
   /// Optional UI vocabulary pin (issue #8 §2). When null, the mission may
-  /// emit any `ui/tree+json` payload — no engine-side rejection. When
-  /// non-null, the engine calls [UiSpec.validatePayload] at the
-  /// tool-result boundary and rejects out-of-pin trees.
+  /// emit any `ui/tree+json` payload — no rejection. When non-null, the
+  /// tool-result boundary calls [UiSpec.validatePayload] and rejects
+  /// out-of-pin trees; that call site lives in the plugin, not the engine
+  /// core (issue #8 §6).
   final UiSpec? ui;
 
   const YamlAgentSpec({
@@ -80,13 +82,27 @@ class YamlAgentSpec {
           id == other.id &&
           name == other.name &&
           extendsSpecId == other.extendsSpecId &&
-          toolAllowlist == other.toolAllowlist &&
+          _listEquals(toolAllowlist, other.toolAllowlist) &&
           systemPrompt == other.systemPrompt &&
           ui == other.ui);
 
+  static bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   @override
-  int get hashCode =>
-      Object.hash(id, name, extendsSpecId, toolAllowlist, systemPrompt, ui);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    extendsSpecId,
+    Object.hashAll(toolAllowlist),
+    systemPrompt,
+    ui,
+  );
 
   @override
   String toString() =>
