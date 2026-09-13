@@ -6,9 +6,16 @@
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
+import '../ui_spec/ui_spec.dart';
+
 /// YamlAgentSpec (declarative + extends) value object.
 ///
 /// Declarative YAML agent spec — extends inheritance, validation diagnostics, declarative tool allowlist + steering (epic #5 §R5.3, issue #6 US3).
+///
+/// Issue #8 §2 ("Vocabulary pinning in specs") adds an optional [ui]
+/// section: when non-null, out-of-pin [UiTreePayload]s are rejected at the
+/// tool-result boundary by calling [UiSpec.validatePayload], which yields
+/// typed [UiVocabularyPinError]s. See [UiSpec].
 class YamlAgentSpec {
   final String id;
   final String name;
@@ -16,12 +23,20 @@ class YamlAgentSpec {
   final List<String> toolAllowlist;
   final String systemPrompt;
 
+  /// Optional UI vocabulary pin (issue #8 §2). When null, the mission may
+  /// emit any `ui/tree+json` payload — no rejection. When non-null, the
+  /// tool-result boundary calls [UiSpec.validatePayload] and rejects
+  /// out-of-pin trees; that call site lives in the plugin, not the engine
+  /// core (issue #8 §6).
+  final UiSpec? ui;
+
   const YamlAgentSpec({
     required this.id,
     required this.name,
     this.extendsSpecId,
     required this.toolAllowlist,
     required this.systemPrompt,
+    this.ui,
   });
 
   /// Validation diagnostics for a declarative spec.
@@ -67,14 +82,29 @@ class YamlAgentSpec {
           id == other.id &&
           name == other.name &&
           extendsSpecId == other.extendsSpecId &&
-          toolAllowlist == other.toolAllowlist &&
-          systemPrompt == other.systemPrompt);
+          _listEquals(toolAllowlist, other.toolAllowlist) &&
+          systemPrompt == other.systemPrompt &&
+          ui == other.ui);
+
+  static bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, extendsSpecId, toolAllowlist, systemPrompt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    extendsSpecId,
+    Object.hashAll(toolAllowlist),
+    systemPrompt,
+    ui,
+  );
 
   @override
   String toString() =>
-      'YamlAgentSpec(id: $id, name: $name, extendsSpecId: $extendsSpecId)';
+      'YamlAgentSpec(id: $id, name: $name, extendsSpecId: $extendsSpecId, ui: $ui)';
 }

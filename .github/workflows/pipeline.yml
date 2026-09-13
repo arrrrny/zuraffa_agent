@@ -63,7 +63,14 @@ jobs:
           # target). Missed the allowlist when spec 076 landed (the gate
           # was not run on that merge); added with justification by spec
           # 105 / issue #107, which requires this gate green. (spec 076)
-          lib/src/engine/persistent_agent_memory.dart"
+          lib/src/engine/persistent_agent_memory.dart
+          # SessionLock: spec-114 advisory single-writer sidecar lock for
+          # session stores — takes an exclusive non-blocking OS lock on a
+          # .lock sidecar next to the store path. Missed the allowlist
+          # when spec 114 landed (the gate is not run on pushes to
+          # master); an interface-backed adapter like
+          # jsonl_session_storage.dart. (spec 114)
+          lib/src/session_lock.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then
