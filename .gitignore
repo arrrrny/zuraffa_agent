@@ -6,6 +6,10 @@ pubspec.lock
 .memsearch/
 .kimi-code/
 .specify/*
+# The fleet extension set IS committed: a cloud lane's fresh clone
+# must already carry speckit-bug-assess / -chore-assess / gh-triage.
+!.specify/extensions/
+!.specify/extensions.yml
 !.specify/memory/
 .specify/memory/*
 !.specify/memory/constitution.md
