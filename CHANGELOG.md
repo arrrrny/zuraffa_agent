@@ -1,3 +1,10 @@
+## 0.5.1
+
+- Widen `zuraffa` to `^7.0.0` — zuraffa 7 kept the APIs the engine uses
+  (`UseCase`, `Result`, `NoParams`, `GetIt`); constraint-only change, no code
+  changes. The 0.1.x → 0.5.x engine API rename is unchanged and tracked
+  separately by consumers.
+
 ## 0.5.0
 
 - **Structured logging** (issue #119): `package:logging` facade with named
