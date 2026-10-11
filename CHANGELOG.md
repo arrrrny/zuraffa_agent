@@ -1,3 +1,11 @@
+## 0.5.2
+
+- `LlmRequest.responseFormat`: OpenAI-compatible `response_format` passthrough
+  (e.g. `{'type': 'json_object'}` for JSON mode), emitted verbatim into the
+  request body by `OpenAiCompatibleClient` when set. Consumers migrating from
+  the 0.1.x map-based `generate(messages:, tools:, config:)` API need this to
+  keep JSON-mode calls (invoice extraction, structured output) working.
+
 ## 0.5.1
 
 - Widen `zuraffa` to `^7.0.0` — zuraffa 7 kept the APIs the engine uses

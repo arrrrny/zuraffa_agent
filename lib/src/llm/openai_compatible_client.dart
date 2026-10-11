@@ -194,6 +194,8 @@ class OpenAiCompatibleClient implements LlmClient {
         if (request.toolChoice != null) 'tool_choice': request.toolChoice,
         if (request.parallelToolCalls != null)
           'parallel_tool_calls': request.parallelToolCalls,
+        if (request.responseFormat != null)
+          'response_format': request.responseFormat,
         if (stream) 'stream': true,
         if (stream) 'stream_options': {'include_usage': true},
       };
