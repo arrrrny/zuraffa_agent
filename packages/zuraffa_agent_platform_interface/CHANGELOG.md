@@ -1,3 +1,8 @@
+## 0.1.1
+
+- Widen the `zuraffa_agent` constraint to `^0.6.0` so the package resolves
+  alongside the 0.6.0 core release. No API changes.
+
 ## 0.1.0
 
 - Initial release: the federated method-channel implementation of the

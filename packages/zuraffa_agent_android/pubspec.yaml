@@ -2,7 +2,7 @@ name: zuraffa_agent_android
 description: >-
   Android implementation of the zuraffa_agent AgentPlatform seam:
   filesDir home + Android Keystore (AES/GCM) secure store.
-version: 0.1.0
+version: 0.1.1
 homepage: https://zuraffa.com
 repository: https://github.com/arrrrny/zuraffa_agent
 
@@ -20,6 +20,12 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
+  zuraffa_agent: ^0.6.0
+  zuraffa_agent_platform_interface: ^0.1.1
+
+dependency_overrides:
+  # Local development only — resolve the siblings to this checkout; pub
+  # strips these at publish time.
   zuraffa_agent:
     path: ../..
   zuraffa_agent_platform_interface:
