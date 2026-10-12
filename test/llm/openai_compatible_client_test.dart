@@ -192,6 +192,42 @@ void main() {
     );
 
     test(
+      'U11a: responseFormat is emitted verbatim as response_format, omitted when null',
+      () async {
+        final transport = FakeLlmTransport(
+          provider: 'openai',
+          script: [
+            const ScriptedResponse(
+              statusCode: 200,
+              headers: {'content-type': 'application/json'},
+              body: _generateBody,
+            ),
+            const ScriptedResponse(
+              statusCode: 200,
+              headers: {'content-type': 'application/json'},
+              body: _generateBody,
+            ),
+          ],
+        );
+        final client = makeClient(transport);
+
+        await client.generate(
+          LlmRequest(
+            messages: [UserMessage.text('hi')],
+            responseFormat: {'type': 'json_object'},
+          ),
+        );
+        await client.generate(LlmRequest(messages: [UserMessage.text('hi')]));
+
+        final bodies = transport.requests
+            .map((r) => jsonDecode(r.body) as Map<String, dynamic>)
+            .toList();
+        expect(bodies[0]['response_format'], {'type': 'json_object'});
+        expect(bodies[1].containsKey('response_format'), isFalse);
+      },
+    );
+
+    test(
       'U12: stream() parses SSE data lines to content deltas; the final chunk carries usage; [DONE] yields isComplete',
       () async {
         final transport = FakeLlmTransport(

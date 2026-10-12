@@ -58,6 +58,11 @@ class LlmRequest {
   final String? toolChoice;
   final bool? parallelToolCalls;
 
+  /// OpenAI-compatible `response_format` passthrough (e.g.
+  /// `{'type': 'json_object'}` for JSON mode). Emitted verbatim into the
+  /// request body when set; providers without support ignore it.
+  final Map<String, dynamic>? responseFormat;
+
   const LlmRequest({
     this.systemPrompt,
     required this.messages,
@@ -66,6 +71,7 @@ class LlmRequest {
     this.maxTokens,
     this.toolChoice,
     this.parallelToolCalls,
+    this.responseFormat,
   });
 }
 
