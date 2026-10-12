@@ -1,3 +1,10 @@
+## 0.6.0
+
+- Consolidates the 0.5.1 and 0.5.2 releases onto `master` — both were cut from
+  release branches and are recorded in full below. No further API changes.
+- `LlmRequest.responseFormat` passthrough for OpenAI-compatible JSON mode
+  (0.5.2) and the `zuraffa` `^7.0.0` widening (0.5.1).
+
 ## 0.5.2
 
 - `LlmRequest.responseFormat`: OpenAI-compatible `response_format` passthrough
