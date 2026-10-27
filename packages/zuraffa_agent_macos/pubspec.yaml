@@ -2,7 +2,7 @@ name: zuraffa_agent_macos
 description: >-
   macOS implementation of the zuraffa_agent AgentPlatform seam:
   Application Support home + Keychain secure store.
-version: 0.1.1
+version: 7.2.0
 homepage: https://zuraffa.com
 repository: https://github.com/arrrrny/zuraffa_agent
 
@@ -30,3 +30,5 @@ dependency_overrides:
     path: ../..
   zuraffa_agent_platform_interface:
     path: ../zuraffa_agent_platform_interface
+
+  xml: 7.1.0
