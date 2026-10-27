@@ -17,7 +17,7 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  zuraffa_agent: ^0.6.0
+  zuraffa_agent: ^7.2.0
 
 dependency_overrides:
   # Local development only — resolve the sibling to this checkout; pub
