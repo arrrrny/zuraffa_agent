@@ -2,7 +2,7 @@ name: zuraffa_agent_platform_interface
 description: >-
   Method-channel implementation of the zuraffa_agent AgentPlatform seam
   for Android, iOS and macOS hosts.
-version: 7.2.0
+version: 7.3.0
 homepage: https://zuraffa.com
 repository: https://github.com/arrrrny/zuraffa_agent
 
@@ -17,7 +17,7 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  zuraffa_agent: ^7.2.0
+  zuraffa_agent: ^7.3.0
 
 dependency_overrides:
   # Local development only — resolve the sibling to this checkout; pub
@@ -26,6 +26,8 @@ dependency_overrides:
     path: ../..
 
   xml: 7.1.0
+  zuraffa:
+    path: ../../../zuraffa
 dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_test:
