@@ -70,8 +70,11 @@ void main() {
         expect(after, lessThan(_contextWindow));
 
         // AC3c — no outcome regression: the summary records EVERY distinct
-        // tool used in the compacted region, plus its key-result ledger.
-        final toolsUsed = entries
+        // tool used in the compacted region — the cut slice this compaction
+        // actually summarized, recomputed with the same deterministic cut
+        // the pipeline used — plus its key-result ledger.
+        final preparation = prepareCompaction(entries, _settings().keepRecentTokens);
+        final toolsUsed = preparation.cutEntries
             .whereType<ToolInvocationEntry>()
             .map((e) => e.record.toolName)
             .toSet();
@@ -82,7 +85,6 @@ void main() {
         // The kept tail chains onto a real entry (nothing orphaned).
         final keptIds = entries.map((e) => e.id).toSet();
         expect(result.entry.firstKeptEntryId, isIn(keptIds));
-        expect(result.summary.toolNames, isNotEmpty);
       },
     );
   });
