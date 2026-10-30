@@ -220,6 +220,22 @@ class HeuristicSummarizer implements CompactionSummarizer {
     for (final entry in cutEntries) {
       switch (entry) {
         case MessageEntry():
+          // Epic R2.3 — key results: outcomes live in toolResult
+          // messages (epic #1 AC3). Every toolResult message in the cut
+          // region is retained as a key result; error results carry an
+          // explicit [error] marker so a failed call is never silently
+          // forgotten by compaction.
+          if (entry.message case ToolResultMessage(
+            toolName: final tn,
+            content: final content,
+            isError: final isError,
+          )) {
+            final marker = isError ? '[error] ' : '';
+            final truncated = content.length > maxKeyResultLength
+                ? '${content.substring(0, maxKeyResultLength)}…'
+                : content;
+            keyResults.add('$marker$tn: $truncated');
+          }
           final text = _extractText(entry.message);
           if (text != null) {
             // Extract lines starting with "Decision:" or "Plan:".
