@@ -1,5 +1,6 @@
 // Abstract Session Storage Contract
 
+import 'retention.dart';
 import 'types.dart';
 
 /// The persisted session-tree schema contract (spec 110, issue #122).
@@ -69,6 +70,34 @@ abstract interface class SessionStorage {
 
   /// Deletes specified entries from storage.
   Future<void> deleteEntries(Set<String> entryIds);
+
+  /// Writes a versioned snapshot of the current state to the file at
+  /// [dest] (issue #135).
+  ///
+  /// The envelope is the versioned session-file format (spec 110) with one
+  /// extra `_backup` provenance line: a `_schema` header line carries the
+  /// schema version (PS-1), the provenance line records format + creation
+  /// time + entry count, the `_meta` line carries the active leaf, then one
+  /// entry line per entry — so a backup file is itself a valid session
+  /// store. Written atomically (temp + rename).
+  Future<void> backup(String dest);
+
+  /// Replaces the current state with the snapshot at [src] (issue #135).
+  ///
+  /// Strict: a snapshot newer than [SessionSchema.currentVersion] is
+  /// refused (downgrade is not supported, matching [init]); older
+  /// snapshots migrate through the [SessionMigrator] registry; a malformed
+  /// envelope throws. The replacement is durable when the future
+  /// completes.
+  Future<void> restore(String src);
+
+  /// Enforces [policy] against this store (issue #135): drops entries
+  /// strictly older than `maxAge`, keeps only the newest `maxCount`, and
+  /// drops oldest-first until the serialized state fits `maxBytes`.
+  /// Returns what was removed. An active-leaf pointer whose entry was
+  /// pruned is cleared. A pruned state is durable when the future
+  /// completes.
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now});
 
   /// Closes the storage backend and flushes resources.
   Future<void> close();

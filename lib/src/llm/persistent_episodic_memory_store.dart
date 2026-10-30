@@ -6,6 +6,7 @@
 import 'dart:convert';
 
 import '../domain/entities/episodic_memory/episodic_memory.dart';
+import '../retention.dart';
 import '../session_storage.dart';
 import '../types.dart';
 import 'episodic_memory_store.dart';
@@ -30,19 +31,21 @@ class PersistentEpisodicMemoryStore extends EpisodicMemoryStore {
   PersistentEpisodicMemoryStore({required this.storage});
 
   @override
-  Future<void> add(EpisodicMemory memory) async {
+  Future<void> add(EpisodicMemory memory, {DateTime? at}) async {
     // In-memory first (super semantics: same-id entries replace in place).
-    super.add(memory);
+    // The recording time and the storage timestamp are the SAME stamp so
+    // in-memory retention and storage retention agree (issue #135).
+    final stamp = (at ?? DateTime.now()).toUtc();
+    super.add(memory, at: stamp);
 
     final encoded = jsonEncode(memory.toJson());
-    final now = DateTime.now().toUtc();
     await storage.appendEntry(
       CustomTreeEntry(
         id: memory.id,
-        timestamp: now,
+        timestamp: stamp,
         record: CustomEntry(
           id: memory.id,
-          timestamp: now,
+          timestamp: stamp,
           customType: kEpisodicMemoryCustomType,
           payload: encoded,
         ),
@@ -72,7 +75,31 @@ class PersistentEpisodicMemoryStore extends EpisodicMemoryStore {
       } on TypeError {
         continue;
       }
-      super.add(memory);
+      // The storage entry's timestamp is the recording time (issue #135):
+      // retention policies survive an engine restart.
+      super.add(memory, at: entry.timestamp);
     }
+  }
+
+  @override
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now}) async {
+    final clock = now ?? DateTime.now();
+    final candidates = pruneCandidates();
+    final victims = selectPruneIds(
+      candidates: candidates,
+      policy: policy,
+      now: clock,
+    );
+    if (victims.isEmpty) return PruneResult.empty;
+
+    final bytesById = {for (final c in candidates) c.id: c.bytes};
+    evict(victims);
+    // Mirror the deletion into the storage backend so pruned memories do
+    // not resurrect on the next restore (issue #135).
+    await storage.deleteEntries(Set<String>.of(victims));
+    return PruneResult(
+      removedCount: victims.length,
+      removedBytes: prunedBytes(victims, bytesById),
+    );
   }
 }

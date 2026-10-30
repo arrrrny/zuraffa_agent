@@ -70,6 +70,12 @@ jobs:
           # when spec 114 landed (the gate is not run on pushes to
           # master); an interface-backed adapter like
           # jsonl_session_storage.dart. (spec 114)
+          # SessionBackupFile: issue-135 versioned session backup/restore —
+          # the envelope writer/reader + N-generation rotation shared by all
+          # three SessionStorage backends (JSONL, Hive, in-memory). dart:io
+          # is confined here per Constitution VII; the backends delegate
+          # backup I/O to this adapter instead of importing dart:io.
+          lib/src/session_backup.dart
           lib/src/session_lock.dart"
           BAD=0
           while IFS= read -r f; do

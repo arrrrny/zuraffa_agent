@@ -9,6 +9,7 @@
 // (lib/src/usage_ledger.dart) — no @Zorphy, no dart:io, no new deps
 // (constitution Principles VII/IX).
 
+import '../../retention.dart';
 import 'engine_event.dart';
 
 /// Append-only, in-memory log of [EngineEvent]s with typed and temporal
@@ -98,4 +99,48 @@ class EngineEventLog {
               : e.emittedAt.isBefore(cutoff),
         ),
       );
+
+  /// Enforces [policy] against the log (issue #135): drops events emitted
+  /// strictly earlier than `now - maxAge`, keeps only the newest
+  /// `maxCount`, and drops oldest-first while the rendered size
+  /// (toString) exceeds `maxBytes`. Mutates the log; returns what was
+  /// removed. Insertion order of survivors is preserved.
+  PruneResult prune(RetentionPolicy policy, {DateTime? now}) {
+    if (policy.isUnlimited || _events.isEmpty) return PruneResult.empty;
+
+    final candidates = [
+      for (var i = 0; i < _events.length; i++)
+        (
+          // Events have no ids — positional identity, stable within this
+          // pass.
+          id: '$i',
+          timestamp: _events[i].emittedAt,
+          bytes: _events[i].toString().length,
+        ),
+    ];
+    final victims = selectPruneIds(
+      candidates: candidates,
+      policy: policy,
+      now: now,
+    );
+    if (victims.isEmpty) return PruneResult.empty;
+
+    final victimIdx = {for (final id in victims) int.parse(id)};
+    final kept = <EngineEvent>[];
+    var removedBytes = 0;
+    for (var i = 0; i < _events.length; i++) {
+      if (victimIdx.contains(i)) {
+        removedBytes += candidates[i].bytes;
+        continue;
+      }
+      kept.add(_events[i]);
+    }
+    _events
+      ..clear()
+      ..addAll(kept);
+    return PruneResult(
+      removedCount: victims.length,
+      removedBytes: removedBytes,
+    );
+  }
 }

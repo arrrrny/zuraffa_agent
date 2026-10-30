@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'retention.dart';
 import 'types.dart';
 
 /// UsageLedger — a read projection over [UsageEntry] instances that provides
@@ -76,6 +77,35 @@ class UsageLedger {
     for (final e in (json['entries'] as List? ?? const []))
       UsageEntry.fromJson(Map<String, dynamic>.from(e as Map)),
   ]);
+
+  /// Applies [policy] to this projection and returns the pruned projection
+  /// (issue #135).
+  ///
+  /// The receiver is untouched — spec 083 keeps the ledger an immutable
+  /// value object, so prune is a pure filter: maxAge by the entry's own
+  /// timestamp, maxCount keeping the newest, maxBytes dropping
+  /// oldest-first by serialized size. Order of survivors is preserved.
+  UsageLedger prune(RetentionPolicy policy, {DateTime? now}) {
+    if (policy.isUnlimited || _entries.isEmpty) {
+      return UsageLedger(_entries.toList());
+    }
+    final candidates = [
+      for (final entry in _entries)
+        (
+          id: entry.id,
+          timestamp: entry.timestamp,
+          bytes: bytesOfJson(entry.toJson()),
+        ),
+    ];
+    final victims = Set<String>.of(
+      selectPruneIds(candidates: candidates, policy: policy, now: now),
+    );
+    if (victims.isEmpty) return UsageLedger(_entries.toList());
+    return UsageLedger([
+      for (final entry in _entries)
+        if (!victims.contains(entry.id)) entry,
+    ]);
+  }
 
   /// The serialized entry sequence — the equality substrate (spec 083
   /// FR-004). Lazy + memoized: sub-ledger construction stays cheap and the

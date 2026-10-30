@@ -1,3 +1,16 @@
+## Unreleased
+
+- **Session backup/restore + retention/TTL policy** (issue #135): `SessionStorage.backup(dest)` /
+  `restore(src)` on every backend (JSONL, Hive, in-memory) over a versioned envelope that is itself a
+  valid session file (PS-1: the `_schema` header carries the schema version; newer snapshots are
+  refused, older ones migrate). `RetentionPolicy` (max age / max count / max bytes) + `prune()` on
+  `SessionStorage`, `EpisodicMemoryStore` (+ persistent), `UsageLedger` (new projection — spec 083
+  immutability), and `EngineEventLog`. `RetentionCoordinator` is the stock `RetentionSweep` the
+  `MissionRunner` calls between missions. JSONL close-time N-generation backups (`backupGenerations`,
+  default off) and an atomic close-time rewrite — the pre-135 in-place flush was the exact crash
+  window the issue cites. Retention defaults are "unlimited"; configuration is documented in the
+  README (Session backup, restore & retention).
+
 ## 7.3.0 - 2026-10-28
 
 - Mono-version fleet alignment: the whole zuraffa family ships at 7.3.0 together with the core.
