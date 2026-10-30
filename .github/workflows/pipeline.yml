@@ -10,21 +10,53 @@ on:
         required: false
         default: ""
 
+concurrency:
+  # One run per PR ref: superseded runs are cancelled instead of piling up.
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  verify:
-    # CI gate for every PR: analyze + test the engine
+  format:
+    # Formatter gate — named distinctly from `analyze` so a formatting
+    # failure is immediately identifiable in the PR checks list.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Enforce dart format
+        run: dart format --output=none --set-exit-if-changed lib test example
+
+  verify:
+    # CI gate for every PR: analyze + test the engine on supported SDKs
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [stable, beta]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+      # setup-dart@v1 has no built-in cache input, so cache ~/.pub-cache
+      # explicitly (issue #112).
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ matrix.sdk }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ matrix.sdk }}-
       - name: Pub get
         run: dart pub get
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
-        run: dart test
+        # Fleet guard (AGENTS.md): cap test concurrency at 2 — overrides
+        # dart_test.yaml's concurrency: 4.
+        run: dart test -j 2
       - name: Runtime purity gate (no dart:io in engine runtime paths)
         run: |
           # Engine purity (constitution VII): dart:io is allowed ONLY in the
