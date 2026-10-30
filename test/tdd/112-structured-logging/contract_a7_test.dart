@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A7:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a7_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a7_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A7 (AgentLog.logger)', () {
-    test('contract:A7 \u2014 AgentLog.logger(subsystem) -> Logger (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentLog.logger(dynamic subsystem) -> Logger` is
-      // exposed by the implementation subject.
-      final impl = subject.logger;
-      expect(impl, isNotNull,
-          reason: 'AgentLog.logger must be exposed with the declared '
-              'signature `(dynamic subsystem) -> Logger`');
+    test(
+      'contract:A7 \u2014 AgentLog.logger(subsystem) -> Logger (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentLog.logger(dynamic subsystem) -> Logger` is
+        // exposed by the implementation subject.
+        final impl = subject.logger;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentLog.logger must be exposed with the declared '
+              'signature `(dynamic subsystem) -> Logger`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentLog.logger is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentLog.logger is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

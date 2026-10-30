@@ -22,38 +22,53 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/logging/memory_log_sink.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a10_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a10_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A10 (AgentLog.retryWarning)', () {
-    test('contract:A10 \u2014 AgentLog.retryWarning(attempt, delay, error) -> void (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentLog.retryWarning(dynamic attempt, dynamic delay, dynamic error) -> void` is
-      // exposed by the implementation subject.
-      final impl = subject.retryWarning;
-      expect(impl, isNotNull,
-          reason: 'AgentLog.retryWarning must be exposed with the declared '
-              'signature `(dynamic attempt, dynamic delay, dynamic error) -> void`');
+    test(
+      'contract:A10 \u2014 AgentLog.retryWarning(attempt, delay, error) -> void (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentLog.retryWarning(dynamic attempt, dynamic delay, dynamic error) -> void` is
+        // exposed by the implementation subject.
+        final impl = subject.retryWarning;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentLog.retryWarning must be exposed with the declared '
+              'signature `(dynamic attempt, dynamic delay, dynamic error) -> void`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null, null, null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentLog.retryWarning is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null, null, null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentLog.retryWarning is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-      // Call-through proof: the shim reaches the real resilience helper.
-      ZuraffaLogging.reset();
-      addTearDown(ZuraffaLogging.reset);
-      final sink = MemoryLogSink();
-      ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);
-      subject.retryWarning(2, const Duration(milliseconds: 300),
-          StateError('deadline'));
-      final record = sink.firstWhereMessage('retry scheduled');
-      expect(record, isNotNull);
-      expect(record!.message, contains('attempt=2'));
-      expect(record.message, contains('delay=300ms'));
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+        // Call-through proof: the shim reaches the real resilience helper.
+        ZuraffaLogging.reset();
+        addTearDown(ZuraffaLogging.reset);
+        final sink = MemoryLogSink();
+        ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);
+        subject.retryWarning(
+          2,
+          const Duration(milliseconds: 300),
+          StateError('deadline'),
+        );
+        final record = sink.firstWhereMessage('retry scheduled');
+        expect(record, isNotNull);
+        expect(record!.message, contains('attempt=2'));
+        expect(record.message, contains('delay=300ms'));
+      },
+    );
   });
 }
 
@@ -68,4 +83,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

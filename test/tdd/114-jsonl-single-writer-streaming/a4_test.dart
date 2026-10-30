@@ -19,7 +19,10 @@ void main() {
           ),
         );
       }
-      final verdicts = await subject_a4(store.entries(), await store.getEntries());
+      final verdicts = await subject_a4(
+        store.entries(),
+        await store.getEntries(),
+      );
       expect(verdicts['sameSet'], isTrue);
       expect(verdicts['sameCount'], isTrue);
     });

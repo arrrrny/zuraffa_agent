@@ -22,10 +22,9 @@ import 'dart:io';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/a6_subject.dart';
 
-
 void main() {
   group('A6 (AC-6)', () {
-    test('A6 — the channel method names and argument maps match the', ()  {
+    test('A6 — the channel method names and argument maps match the', () {
       expect(subject_a6('getAgentHome', {}), 'ok');
       expect(subject_a6('secureRead', {'key': 'k'}), 'ok');
       expect(subject_a6('secureWrite', {'key': 'k', 'value': 'v'}), 'ok');
@@ -33,7 +32,9 @@ void main() {
       expect(subject_a6('nope', {}), 'bad-method');
       expect(subject_a6('secureRead', {}), 'bad-args');
       // The interface package source pins the same contract.
-      final src = File('packages/zuraffa_agent_platform_interface/lib/src/method_channel_platform.dart').readAsStringSync();
+      final src = File(
+        'packages/zuraffa_agent_platform_interface/lib/src/method_channel_platform.dart',
+      ).readAsStringSync();
       for (final m in a6MethodNames) {
         expect(src, contains("'$m'"), reason: 'channel method $m unpinned');
       }

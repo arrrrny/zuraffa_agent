@@ -18,7 +18,7 @@ class ZuraffaAgentMethodChannelPlatform implements AgentPlatform {
   final MethodChannel channel;
 
   ZuraffaAgentMethodChannelPlatform()
-      : channel = const MethodChannel(channelName);
+    : channel = const MethodChannel(channelName);
 
   /// Test-only constructor with a custom channel.
   ZuraffaAgentMethodChannelPlatform.forChannel(this.channel);
@@ -28,11 +28,7 @@ class ZuraffaAgentMethodChannelPlatform implements AgentPlatform {
     try {
       return await channel.invokeMethod<String>('getAgentHome');
     } on PlatformException catch (e) {
-      throw SecureStore.map(
-        'agentHome',
-        operation: 'getAgentHome',
-        cause: e,
-      );
+      throw SecureStore.map('agentHome', operation: 'getAgentHome', cause: e);
     }
   }
 
@@ -40,8 +36,9 @@ class ZuraffaAgentMethodChannelPlatform implements AgentPlatform {
   Future<String?> secureRead(String key) async {
     SecureStore.validate(key);
     try {
-      return await channel
-          .invokeMethod<String>('secureRead', <String, Object>{'key': key});
+      return await channel.invokeMethod<String>('secureRead', <String, Object>{
+        'key': key,
+      });
     } on PlatformException catch (e) {
       throw SecureStore.map(key, operation: 'read', cause: e);
     }
@@ -64,8 +61,9 @@ class ZuraffaAgentMethodChannelPlatform implements AgentPlatform {
   Future<void> secureDelete(String key) async {
     SecureStore.validate(key);
     try {
-      await channel.invokeMethod<void>(
-          'secureDelete', <String, Object>{'key': key});
+      await channel.invokeMethod<void>('secureDelete', <String, Object>{
+        'key': key,
+      });
     } on PlatformException catch (e) {
       throw SecureStore.map(key, operation: 'delete', cause: e);
     }

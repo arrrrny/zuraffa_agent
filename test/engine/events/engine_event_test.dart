@@ -207,7 +207,7 @@ void main() {
           MissionStarted(:final missionId) => 'mission_started($missionId)',
           MissionCompleted(:final missionId) => 'mission_completed($missionId)',
           PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-        EngineEventSubscriberError() => 'subscriber_error',
+          EngineEventSubscriberError() => 'subscriber_error',
         };
 
         final event = ProviderError(
@@ -260,7 +260,7 @@ void main() {
           MissionStarted(:final missionId) => 'mission_started($missionId)',
           MissionCompleted(:final missionId) => 'mission_completed($missionId)',
           PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-        EngineEventSubscriberError() => 'subscriber_error',
+          EngineEventSubscriberError() => 'subscriber_error',
         };
 
         final event = MissionStarted(
@@ -324,7 +324,7 @@ void main() {
           MissionStarted(:final missionId) => 'mission_started($missionId)',
           MissionCompleted(:final missionId) => 'mission_completed($missionId)',
           PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-        EngineEventSubscriberError() => 'subscriber_error',
+          EngineEventSubscriberError() => 'subscriber_error',
         };
 
         final event = MissionCompleted(
@@ -822,7 +822,7 @@ void main() {
           MissionStarted(:final missionId) => 'mission_started($missionId)',
           MissionCompleted(:final missionId) => 'mission_completed($missionId)',
           PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-        EngineEventSubscriberError() => 'subscriber_error',
+          EngineEventSubscriberError() => 'subscriber_error',
         };
 
         final event = PlanChanged(emittedAt: emitted, change: change());

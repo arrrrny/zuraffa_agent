@@ -41,13 +41,17 @@ void main() {
       expect(errorEvents.single.error, same(error));
       // Recursion guard: a failing ERROR-event subscriber does not
       // cascade into another error event.
-      bus.subscribe<EngineEventSubscriberError>((_) => throw StateError('error observer broke'));
+      bus.subscribe<EngineEventSubscriberError>(
+        (_) => throw StateError('error observer broke'),
+      );
       final before = seen.length;
       bus.publish(errorEvents.single);
       // Exactly ONE new error event (the published one via the wildcard)
       // — the guard prevented any cascade beyond it.
-      final added =
-          seen.skip(before).whereType<EngineEventSubscriberError>().length;
+      final added = seen
+          .skip(before)
+          .whereType<EngineEventSubscriberError>()
+          .length;
       expect(added, 1, reason: 'no self-republication on error events');
     });
   });

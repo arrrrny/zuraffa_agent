@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A9:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a9_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a9_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A9 (AgentLog.levelPolicy)', () {
-    test('contract:A9 \u2014 AgentLog.levelPolicy() -> LevelTable (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentLog.levelPolicy(no parameters) -> LevelTable` is
-      // exposed by the implementation subject.
-      final impl = subject.levelPolicy;
-      expect(impl, isNotNull,
-          reason: 'AgentLog.levelPolicy must be exposed with the declared '
-              'signature `(no parameters) -> LevelTable`');
+    test(
+      'contract:A9 \u2014 AgentLog.levelPolicy() -> LevelTable (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentLog.levelPolicy(no parameters) -> LevelTable` is
+        // exposed by the implementation subject.
+        final impl = subject.levelPolicy;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentLog.levelPolicy must be exposed with the declared '
+              'signature `(no parameters) -> LevelTable`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl());
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentLog.levelPolicy is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl());
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentLog.levelPolicy is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

@@ -1,6 +1,5 @@
 library;
 
-
 import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/114-jsonl-single-writer-streaming/a3_subject.dart';
@@ -16,8 +15,10 @@ void main() {
       }
       expect(outcome, isNot(isA<UnimplementedError>()));
       final pulled = outcome as List<String>;
-      expect(pulled, ['a3-0', 'a3-1'],
-          reason: 'early exit stops the pull at two entries');
+      expect(pulled, [
+        'a3-0',
+        'a3-1',
+      ], reason: 'early exit stops the pull at two entries');
     });
   });
 }

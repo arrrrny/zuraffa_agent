@@ -16,27 +16,39 @@
 library;
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/115-agent-platform-packages/contract_a3_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/115-agent-platform-packages/contract_a3_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A3 (AgentPlatform.secureWrite)', () {
-    test('contract:A3 \u2014 AgentPlatform.secureWrite(key, value) -> Future<void> (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentPlatform.secureWrite(dynamic key, dynamic value) -> Future<void>` is
-      // exposed by the implementation subject.
-      final impl = subject.secureWrite;
-      expect(impl, isNotNull,
-          reason: 'AgentPlatform.secureWrite must be exposed with the declared '
-              'signature `(dynamic key, dynamic value) -> Future<void>`');
+    test(
+      'contract:A3 \u2014 AgentPlatform.secureWrite(key, value) -> Future<void> (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentPlatform.secureWrite(dynamic key, dynamic value) -> Future<void>` is
+        // exposed by the implementation subject.
+        final impl = subject.secureWrite;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentPlatform.secureWrite must be exposed with the declared '
+              'signature `(dynamic key, dynamic value) -> Future<void>`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null, null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentPlatform.secureWrite is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null, null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentPlatform.secureWrite is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -51,4 +63,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

@@ -21,8 +21,10 @@ void main() {
   group('U1 (FR-001, JsonlSessionStorage.guard)', () {
     test('U1 — Every `JsonlSessionStorage` mutation (`appendEntry`,', () async {
       final ids = await subject_u1(null);
-      expect(ids, ['u1-a', 'u1-b'],
-          reason: 'interleaved mutations all survive the mutex');
+      expect(ids, [
+        'u1-a',
+        'u1-b',
+      ], reason: 'interleaved mutations all survive the mutex');
     });
   });
 }

@@ -6,21 +6,22 @@ import 'dart:io';
 import 'package:test/test.dart';
 
 void main() {
-  test('A1: dart run example/minimal_agent.dart exits 0 with lifecycle lines',
-      () async {
-    final result = await Process.run(
-      Platform.resolvedExecutable,
-      ['run', 'example/minimal_agent.dart'],
-      workingDirectory: Directory.current.path,
-    );
-    expect(result.exitCode, 0, reason: 'stderr: ${result.stderr}');
-    expect(result.stdout, contains('[event] MissionStarted'));
-    expect(result.stdout, contains('[event] MissionCompleted'));
-    expect(result.stdout, contains('status    : completed'));
-  }, timeout: const Timeout(Duration(minutes: 3)));
+  test(
+    'A1: dart run example/minimal_agent.dart exits 0 with lifecycle lines',
+    () async {
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'example/minimal_agent.dart',
+      ], workingDirectory: Directory.current.path);
+      expect(result.exitCode, 0, reason: 'stderr: ${result.stderr}');
+      expect(result.stdout, contains('[event] MissionStarted'));
+      expect(result.stdout, contains('[event] MissionCompleted'));
+      expect(result.stdout, contains('status    : completed'));
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
 
-  test('A2: the example source has no API-key literals or endpoints',
-      () async {
+  test('A2: the example source has no API-key literals or endpoints', () async {
     final source = File('example/minimal_agent.dart').readAsStringSync();
     final echo = File('example/engine/echo_llm_client.dart').readAsStringSync();
     final combined = source + echo;

@@ -20,7 +20,8 @@ class InMemorySessionStorage implements SessionStorage {
       const StoreOpenResult(loadedEntriesCount: 0);
 
   @override
-  Future<void> appendEntry(SessionTreeEntry entry) async => storedEntries.add(entry);
+  Future<void> appendEntry(SessionTreeEntry entry) async =>
+      storedEntries.add(entry);
 
   @override
   Future<SessionTreeEntry?> getEntry(String id) async {
@@ -161,7 +162,9 @@ void main() {
           EpisodicMemory(id: 'snap-5', summary: 's5', messages: const []),
         );
         expect(
-          storage.storedEntries.whereType<CustomTreeEntry>().map((e) => e.record.id),
+          storage.storedEntries.whereType<CustomTreeEntry>().map(
+            (e) => e.record.id,
+          ),
           contains('snap-5'),
         );
       },

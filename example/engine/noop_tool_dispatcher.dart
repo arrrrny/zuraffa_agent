@@ -11,27 +11,23 @@ class NoopToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      throw UnimplementedError('the example hosts no tools');
+  }) async => throw UnimplementedError('the example hosts no tools');
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
     required List<ToolCall> calls,
     required bool isInternalMission,
-  }) async =>
-      const <ToolDispatchResult>[];
+  }) async => const <ToolDispatchResult>[];
 
   @override
   List<String> validateSchema({
     required Map<String, dynamic> schema,
     required Map<String, dynamic> arguments,
-  }) =>
-      const <String>[];
+  }) => const <String>[];
 
   @override
   bool checkRiskTier({
     required String riskTier,
     required bool isInternalMission,
-  }) =>
-      true;
+  }) => true;
 }

@@ -29,9 +29,6 @@ void main() {
 
     // The stamp is observable in the meta box.
     final meta = await Hive.openBox<String>('_zuraffa_meta');
-    expect(
-      int.parse(meta.get('schemaVersion')!),
-      SessionSchema.currentVersion,
-    );
+    expect(int.parse(meta.get('schemaVersion')!), SessionSchema.currentVersion);
   });
 }

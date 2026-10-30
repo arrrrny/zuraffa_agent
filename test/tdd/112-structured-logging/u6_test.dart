@@ -18,7 +18,8 @@ import 'dart:io';
 import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/112-structured-logging/u6_subject.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/u6_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/u6_subject.dart'
+    as subject;
 
 String _section(String heading, String nextHeading) {
   final doc = File('ARCHITECTURE.md').readAsStringSync();
@@ -40,24 +41,42 @@ void main() {
           // The sink recipe runs to end-of-doc — bound by the parent
           // heading would match the parent itself earlier in the file.
           File('ARCHITECTURE.md').readAsStringSync().substring(
-              File('ARCHITECTURE.md').readAsStringSync().indexOf('### Recommended consumer sink')),
+            File(
+              'ARCHITECTURE.md',
+            ).readAsStringSync().indexOf('### Recommended consumer sink'),
+          ),
         ),
         returnsNormally,
       );
       // The pinned six-subsystem names all appear in the hierarchy table.
       final hierarchy = _section('### Logger hierarchy', '### Level policy');
-      for (final subsystem in ['llm', 'mcp', 'engine', 'eval', 'session', 'eventBus']) {
-        expect(hierarchy, contains('`zuraffa.agent.$subsystem`'),
-            reason: 'hierarchy missing $subsystem');
+      for (final subsystem in [
+        'llm',
+        'mcp',
+        'engine',
+        'eval',
+        'session',
+        'eventBus',
+      ]) {
+        expect(
+          hierarchy,
+          contains('`zuraffa.agent.$subsystem`'),
+          reason: 'hierarchy missing $subsystem',
+        );
       }
       // The level policy table pins all four classes.
-      final policy = _section('### Level policy', '### Recommended consumer sink');
+      final policy = _section(
+        '### Level policy',
+        '### Recommended consumer sink',
+      );
       for (final level in ['FINE', 'INFO', 'WARNING', 'SEVERE']) {
         expect(policy, contains(level), reason: 'policy missing $level');
       }
       // The sink recipe names the install point.
       final doc = File('ARCHITECTURE.md').readAsStringSync();
-      final recipe = doc.substring(doc.indexOf('### Recommended consumer sink'));
+      final recipe = doc.substring(
+        doc.indexOf('### Recommended consumer sink'),
+      );
       expect(recipe, contains('ZuraffaLogging.install'));
     });
   });

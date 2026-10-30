@@ -10,22 +10,23 @@ import 'package:zuraffa_agent_platform_interface/zuraffa_agent_platform_interfac
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('channel contract: method names + argument shapes (FR-005)',
-      () async {
+  test('channel contract: method names + argument shapes (FR-005)', () async {
     final recorded = <MethodCall>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('dev.zuraffa/agent_platform'),
-            (call) async {
-      recorded.add(call);
-      switch (call.method) {
-        case 'getAgentHome':
-          return '/support';
-        case 'secureRead':
-          return 'sk-test-value';
-        default:
-          return null;
-      }
-    });
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.zuraffa/agent_platform'),
+          (call) async {
+            recorded.add(call);
+            switch (call.method) {
+              case 'getAgentHome':
+                return '/support';
+              case 'secureRead':
+                return 'sk-test-value';
+              default:
+                return null;
+            }
+          },
+        );
 
     final platform = ZuraffaAgentMethodChannelPlatform();
     expect(await platform.getAgentHome(), '/support');
@@ -33,10 +34,12 @@ void main() {
     await platform.secureWrite('openai', 'sk-new');
     await platform.secureDelete('openai');
 
-    expect(
-      recorded.map((c) => c.method),
-      ['getAgentHome', 'secureRead', 'secureWrite', 'secureDelete'],
-    );
+    expect(recorded.map((c) => c.method), [
+      'getAgentHome',
+      'secureRead',
+      'secureWrite',
+      'secureDelete',
+    ]);
     expect(recorded[1].arguments, {'key': 'openai'});
     expect(recorded[2].arguments, {'key': 'openai', 'value': 'sk-new'});
     expect(recorded[3].arguments, {'key': 'openai'});
@@ -62,10 +65,12 @@ void main() {
     var channelCalls = 0;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('dev.zuraffa/agent_platform'), (call) async {
-      channelCalls++;
-      return null;
-    });
+          const MethodChannel('dev.zuraffa/agent_platform'),
+          (call) async {
+            channelCalls++;
+            return null;
+          },
+        );
     final platform = ZuraffaAgentMethodChannelPlatform();
     expect(() => platform.secureRead(' '), throwsArgumentError);
     expect(() => platform.secureWrite('', 'v'), throwsArgumentError);

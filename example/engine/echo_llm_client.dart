@@ -7,16 +7,16 @@ import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 
 class EchoLlmClient extends LlmClientProvider {
   EchoLlmClient()
-      : super(
-          config: const ProviderConfig(
-            id: 'echo',
-            providerKind: 'openai',
-            baseUrl: 'https://example.invalid/v1',
-            models: ['echo-1'],
-            timeoutMs: 1,
-          ),
-          apiKey: 'not-a-real-key',
-        );
+    : super(
+        config: const ProviderConfig(
+          id: 'echo',
+          providerKind: 'openai',
+          baseUrl: 'https://example.invalid/v1',
+          models: ['echo-1'],
+          timeoutMs: 1,
+        ),
+        apiKey: 'not-a-real-key',
+      );
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async {
@@ -25,7 +25,8 @@ class EchoLlmClient extends LlmClientProvider {
       orElse: () => const ChatMessage(role: 'user', content: '(empty)'),
     );
     return ChatCompletion(
-      content: 'You asked: ${lastUser.content}. '
+      content:
+          'You asked: ${lastUser.content}. '
           'This mission ran fully in-process.',
       finishReason: 'stop',
       usage: const TokenUsage(

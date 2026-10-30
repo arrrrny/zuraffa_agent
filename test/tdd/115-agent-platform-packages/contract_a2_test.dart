@@ -16,27 +16,39 @@
 library;
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/115-agent-platform-packages/contract_a2_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/115-agent-platform-packages/contract_a2_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A2 (AgentPlatform.secureRead)', () {
-    test('contract:A2 \u2014 AgentPlatform.secureRead(key) -> Future<String?> (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentPlatform.secureRead(dynamic key) -> Future<String?>` is
-      // exposed by the implementation subject.
-      final impl = subject.secureRead;
-      expect(impl, isNotNull,
-          reason: 'AgentPlatform.secureRead must be exposed with the declared '
-              'signature `(dynamic key) -> Future<String?>`');
+    test(
+      'contract:A2 \u2014 AgentPlatform.secureRead(key) -> Future<String?> (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentPlatform.secureRead(dynamic key) -> Future<String?>` is
+        // exposed by the implementation subject.
+        final impl = subject.secureRead;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentPlatform.secureRead must be exposed with the declared '
+              'signature `(dynamic key) -> Future<String?>`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentPlatform.secureRead is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentPlatform.secureRead is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -51,4 +63,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

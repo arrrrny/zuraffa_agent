@@ -19,7 +19,7 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/a8_subject.dart';
 
 void main() {
   group('A8 (AC-8)', () {
-    test('A8 — there are zero matches (the engine', ()  {
+    test('A8 — there are zero matches (the engine', () {
       final sources = <String, String>{};
       for (final entity in Directory('lib').listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
@@ -45,14 +45,17 @@ void main() {
         'p11.dart': 'void f() { stderr.add("d"); }',
         'p12.dart': 'void f() { stderr.addStream(s); }',
       });
-      expect(
-        probes,
-        [
-          'p1.dart', 'p2.dart', 'p3.dart', 'p7.dart', 'p8.dart',
-          'p9.dart', 'p10.dart', 'p11.dart', 'p12.dart',
-        ],
-        reason: 'pipe fields and comments are not console output',
-      );
+      expect(probes, [
+        'p1.dart',
+        'p2.dart',
+        'p3.dart',
+        'p7.dart',
+        'p8.dart',
+        'p9.dart',
+        'p10.dart',
+        'p11.dart',
+        'p12.dart',
+      ], reason: 'pipe fields and comments are not console output');
     });
   });
 }

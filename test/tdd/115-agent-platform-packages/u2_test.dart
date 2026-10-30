@@ -12,18 +12,15 @@
 // placeholder). Replace the subject's
 // stub body with real implementation to make this test pass.
 
-
 library;
 
 import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/u2_subject.dart';
 
-
-
 void main() {
   group('U2 (FR-002, AgentHomeResolver.compose)', () {
-    test('U2 — `AgentHomeResolver` MUST compose', ()  {
+    test('U2 — `AgentHomeResolver` MUST compose', () {
       // Assertion-shaped guard: an empty home fails HERE.
       expect(() => subject_u2(''), throwsStateError);
       expect(() => subject_u2('  '), throwsStateError);

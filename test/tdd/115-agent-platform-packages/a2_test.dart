@@ -20,10 +20,9 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/a2_subject.dart';
 
-
 void main() {
   group('A2 (AC-2)', () {
-    test('A2 — it throws `StateError` naming the failure — never a', ()  {
+    test('A2 — it throws `StateError` naming the failure — never a', () {
       // Assertion-shaped guard.
       expect(() => subject_a2(), throwsStateError);
     });
