@@ -25,6 +25,11 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      # dart format reads the package config to learn the package's
+      # language version (tall style); without `pub get` it falls back to
+      # a lower default and disagrees with the committed formatting.
+      - name: Pub get
+        run: dart pub get
       - name: Enforce dart format
         run: dart format --output=none --set-exit-if-changed lib test example
 
