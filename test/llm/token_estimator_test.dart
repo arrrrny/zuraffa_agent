@@ -131,28 +131,28 @@ void main() {
       expect(estimator.estimateText(''), 0);
     });
 
-    test('load() parses the tiktoken line format (base64 token + rank)', () async {
-      final dir = Directory.systemTemp.createTempSync('zfa_tiktoken');
-      addTearDown(() => dir.delete(recursive: true));
-      final file = File('${dir.path}/tiny.tiktoken');
-      file.writeAsStringSync(
-        [
-          for (final entry in tinyRanks().entries)
-            '${base64Encode(utf8.encode(entry.key))} ${entry.value}',
-        ].join('\n'),
-      );
+    test(
+      'load() parses the tiktoken line format (base64 token + rank)',
+      () async {
+        final dir = Directory.systemTemp.createTempSync('zfa_tiktoken');
+        addTearDown(() => dir.delete(recursive: true));
+        final file = File('${dir.path}/tiny.tiktoken');
+        file.writeAsStringSync(
+          [
+            for (final entry in tinyRanks().entries)
+              '${base64Encode(utf8.encode(entry.key))} ${entry.value}',
+          ].join('\n'),
+        );
 
-      final estimator = await TiktokenEstimator.load(file.path);
-      expect(estimator.estimateText('hello'), 1);
-      expect(estimator.estimateText('hello world'), 2);
-    });
+        final estimator = await TiktokenEstimator.load(file.path);
+        expect(estimator.estimateText('hello'), 1);
+        expect(estimator.estimateText('hello world'), 2);
+      },
+    );
 
     test('satisfies the TokenEstimator interface for messages and images', () {
       final TokenEstimator estimator = TiktokenEstimator(ranks: tinyRanks());
-      expect(
-        estimator.estimateMessages([UserMessage.text('hello world')]),
-        2,
-      );
+      expect(estimator.estimateMessages([UserMessage.text('hello world')]), 2);
       expect(
         estimator.estimateMessages([
           UserMessage(

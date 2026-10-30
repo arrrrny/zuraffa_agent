@@ -39,6 +39,60 @@ dart test
 dart analyze
 ```
 
+## Supported LLM providers
+
+The `llm` slice speaks three wire protocols out of the box. Every client
+takes a swappable `LlmTransport` (retry, circuit breaking, and the fallback
+chain are layered on top), streams over SSE, and serializes multimodal
+`ImageBlock` content in the provider's native shape.
+
+| Provider | Client | Endpoint | Image payload |
+|----------|--------|----------|---------------|
+| OpenAI-compatible | `OpenAiCompatibleClient` | `POST {baseUrl}/chat/completions` | `image_url` part with a `data:` URI |
+| Anthropic | `AnthropicClient` | `POST {baseUrl}/messages` | `image` block with a base64 `source` |
+| Gemini | `GeminiClient` | `POST {baseUrl}/models/{model}:generateContent` | `inlineData` part (`mimeType` + base64 `data`) |
+
+"OpenAI-compatible" covers OpenAI itself plus Kimi, Groq, vLLM, and any
+gateway exposing `/chat/completions` — set `providerName` accordingly.
+The three clients are contract-tested from one shared suite over recorded
+wire fixtures (`test/fixtures/llm/<provider>/`), including multimodal
+request construction (`generate_multimodal.json`).
+
+### Not supported (wontfix, issue #138)
+
+- **OpenAI Responses API** — every model the Responses API serves is
+  reachable through the OpenAI-compatible Chat Completions client, and the
+  Responses-only stateful features (`previous_response_id`, server-side
+  conversation state) are orthogonal to zuraffa_agent's own session and
+  episodic-memory model. Revisit only when a deployment requires those
+  features specifically.
+- **AWS Bedrock** — requires SigV4 request signing and the AWS credential
+  chain: a materially different transport/auth surface with real
+  maintenance cost, and no current demand. Revisit on demand.
+
+### Token counting and pre-flight compaction
+
+Requests are estimated client-side before each turn — context overflow is
+caught before it is sent, not when the provider returns a 400. The default
+`HeuristicTokenEstimator` counts ~4 characters per token; a
+`TiktokenEstimator` consuming a tiktoken rank table is available when you
+need higher fidelity:
+
+```dart
+final estimator = await TiktokenEstimator.load('cl100k_base.tiktoken');
+final runner = MissionRunner(
+  // ...executor, dispatcher, stop policy, events...
+  model: Model(provider: 'openai', modelId: 'gpt-4o', contextWindow: 128000),
+  tokenEstimator: estimator,
+  contextCompressor: compressor,
+);
+```
+
+When the pre-flight estimate reaches `model.contextWindow * 0.8`,
+`MissionRunner` triggers the `ContextCompressor` proactively and replaces
+the compacted head of the transcript with the snapshot it produced. Omit
+`model`/`contextCompressor` to keep the pre-flight inert.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

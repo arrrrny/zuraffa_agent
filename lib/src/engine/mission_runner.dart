@@ -34,6 +34,7 @@
 // Not exported from lib/zuraffa_agent.dart — consistent with the sibling
 // engine runtimes (tool_dispatcher.dart, agent_hooks.dart).
 
+import 'dart:convert';
 import 'dart:math' as math;
 
 import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
@@ -43,7 +44,10 @@ import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../llm/context_compressor.dart';
+import '../llm/token_estimator.dart';
 import '../logging/agent_log.dart';
+import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
@@ -173,6 +177,10 @@ class MissionRunner {
     DateTime Function()? clock,
     ZuraffaConfig? config,
     ToolResultSanitizer? toolResultSanitizer,
+    Model? model,
+    TokenEstimator tokenEstimator = const HeuristicTokenEstimator(),
+    ContextCompressor? contextCompressor,
+    this.preflightThreshold = 0.8,
   }) : _executor = executor,
        _toolDispatcher = toolDispatcher,
        _stopPolicy = stopPolicy,
@@ -181,7 +189,10 @@ class MissionRunner {
        _onEvent = onEvent,
        _clock = clock ?? DateTime.now,
        _config = config,
-       _toolResultSanitizer = toolResultSanitizer;
+       _toolResultSanitizer = toolResultSanitizer,
+       _model = model,
+       _tokenEstimator = tokenEstimator,
+       _contextCompressor = contextCompressor;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -200,6 +211,26 @@ class MissionRunner {
   /// every dispatched tool's output (success content and error text) is
   /// redacted BEFORE it joins the transcript — the LLM egress boundary.
   final ToolResultSanitizer? _toolResultSanitizer;
+
+  /// The mission's model (issue #138). When supplied together with
+  /// [contextCompressor], every turn is pre-flighted against
+  /// `model.contextWindow * preflightThreshold` and compaction triggers
+  /// proactively instead of when the provider returns a 400.
+  final Model? _model;
+
+  /// Token estimator backing the pre-flight check (issue #138). Defaults
+  /// to the ~4-chars-per-token heuristic; inject a TiktokenEstimator for
+  /// rank-table fidelity.
+  final TokenEstimator _tokenEstimator;
+
+  /// Compactor consulted by the pre-flight check (issue #138). Null keeps
+  /// the pre-flight inert: the mission behaves exactly as before issue
+  /// #138 (overflow is then still detected by the provider 400 path).
+  final ContextCompressor? _contextCompressor;
+
+  /// Fraction of `model.contextWindow` at which the pre-flight triggers
+  /// compaction (issue #138). Default 0.8 — "approaching" the window.
+  final double preflightThreshold;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -307,6 +338,41 @@ class MissionRunner {
       _onEvent(
         TurnStarted(emittedAt: _clock(), turnId: '$missionId-turn-$turnsUsed'),
       );
+
+      // Token-counting pre-flight (issue #138): before spending the turn,
+      // estimate the transcript against the model window. Approaching 80%
+      // triggers the ContextCompressor proactively instead of waiting for
+      // the provider's 400 to discover the overflow. Inert unless both a
+      // model and a compressor are wired in.
+      final compressor = _contextCompressor;
+      final model = _model;
+      if (compressor != null && model != null) {
+        final agentTranscript = [
+          for (final message in transcript) _toAgentMessage(message),
+        ];
+        final estimated = _tokenEstimator.estimateMessages(agentTranscript);
+        final threshold = (model.contextWindow * preflightThreshold).floor();
+        if (estimated >= threshold) {
+          final result = await compressor.compress(agentTranscript);
+          // An empty snapshot means the compressor declined (nothing worth
+          // compacting); the transcript is left untouched in that case.
+          if (result.snapshot.isNotEmpty) {
+            transcript
+              ..clear()
+              ..addAll([
+                ChatMessage(role: 'user', content: result.snapshot),
+                for (final message in result.preservedMessages)
+                  _toChatMessage(message),
+              ]);
+            AgentLog.compactionInfo(
+              missionId: missionId,
+              turn: turnsUsed,
+              strategy: result.strategy.name,
+              tokensBefore: estimated,
+            );
+          }
+        }
+      }
 
       final ChatCompletion completion;
       try {
@@ -449,4 +515,69 @@ class MissionRunner {
       goalAchieved: status == MissionStatus.goalAchieved,
     );
   }
+}
+
+/// Bridges the mission transcript currency (ChatMessage) into the
+/// estimator/compressor currency (AgentMessage) for the pre-flight check
+/// (issue #138). Tool results lose their call id — ChatMessage carries no
+/// tool_call_id — so a compacted transcript cannot re-link tool rows to
+/// their calls (spec 051 surface limitation).
+AgentMessage _toAgentMessage(ChatMessage message) {
+  switch (message.role) {
+    case 'assistant':
+      return AssistantMessage(
+        content: [
+          TextBlock(message.content),
+          if (message.thinking != null && message.thinking!.isNotEmpty)
+            ThinkingBlock(thinking: message.thinking!),
+        ],
+      );
+    case 'tool':
+      return ToolResultMessage(
+        toolCallId: '',
+        toolName: 'tool',
+        content: message.content,
+      );
+    default:
+      return UserMessage.text(message.content);
+  }
+}
+
+/// Bridges a compressor result back into the mission transcript (issue
+/// #138). Text blocks join with newlines; a thinking block is preserved on
+/// assistant messages (spec 002 FR-002).
+ChatMessage _toChatMessage(AgentMessage message) {
+  switch (message) {
+    case AssistantMessage():
+      final thinking = message.content
+          .whereType<ThinkingBlock>()
+          .map((block) => block.thinking)
+          .join('\n');
+      return ChatMessage(
+        role: 'assistant',
+        content: _blocksText(message.content),
+        thinking: thinking.isEmpty ? null : thinking,
+      );
+    case ToolResultMessage():
+      return ChatMessage(role: 'tool', content: message.content);
+    case UserMessage():
+      return ChatMessage(role: 'user', content: _blocksText(message.content));
+    case CustomMessage():
+      return ChatMessage(
+        role: 'user',
+        content:
+            '[custom:${message.messageType}] ${jsonEncode(message.payload)}',
+      );
+  }
+}
+
+String _blocksText(List<ContentBlock> blocks) {
+  final buffer = StringBuffer();
+  for (final block in blocks) {
+    if (block is TextBlock) {
+      if (buffer.isNotEmpty) buffer.write('\n');
+      buffer.write(block.text);
+    }
+  }
+  return buffer.toString();
 }

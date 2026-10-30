@@ -12,7 +12,7 @@ dart_agent_core is a mature, production-ready agent library with 19 major featur
 | # | Feature | dart_agent_core | zuraffa_agent | Gap |
 |---|---------|-----------------|---------------|-----|
 | 1 | Core Engine Loop | ✅ StatefulAgent (run/stream/resume) | ✅ EngineLoop | Equivalent |
-| 2 | LLM Clients | ✅ 5 providers (OpenAI, Claude, Gemini, Responses, Bedrock) | ❌ None | **CRITICAL** |
+| 2 | LLM Clients | ✅ 5 providers (OpenAI, Claude, Gemini, Responses, Bedrock) | ✅ 3 providers (OpenAI-compatible, Claude, Gemini) | Responses + Bedrock wontfix (see §1) |
 | 3 | Tool System | ✅ Full (definition, dispatch, inject) | ⚠️ Validation only | Registry/dispatch missing |
 | 4 | Session Persistence | ✅ FileStateStorage | ✅ InMemory/JSONL/Hive | Equivalent |
 | 5 | Sub-agent Delegation | ✅ Full (clone + named) | ⚠️ Entity stubs only | Runtime missing |
@@ -38,6 +38,24 @@ dart_agent_core is a mature, production-ready agent library with 19 major featur
 **zuraffa_agent**: Only data model (ProviderConfig, ResolvedModel)
 **Impact**: Engine cannot make LLM calls without clients
 **Priority**: P0
+
+**Resolution (2026-10-31, issue #138)**: three production clients shipped
+(spec 007) — `OpenAiCompatibleClient`, `AnthropicClient`, `GeminiClient` —
+with streaming, retry, multimodal `ImageBlock` construction, and the
+fallback chain on top (spec 008). The remaining two dart_agent_core
+providers are closed as wontfix:
+
+- **OpenAI Responses API** — every model the Responses API serves is
+  reachable through the OpenAI-compatible Chat Completions client; the
+  Responses-only stateful features (`previous_response_id`, server-side
+  conversation state) are orthogonal to zuraffa_agent's own session and
+  episodic-memory model. Revisit only if a deployment requires those
+  features specifically.
+- **AWS Bedrock** — requires SigV4 request signing plus the AWS credential
+  chain: a materially different transport/auth surface with real
+  maintenance cost, and no current demand from the engine's deployments.
+
+The supported-provider matrix lives in the README.
 
 ### 2. Fallback Chain with Circuit Breaker
 **dart_agent_core**: Implicit via provider selection

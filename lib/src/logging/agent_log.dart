@@ -131,6 +131,23 @@ abstract final class AgentLog {
     engine.log(lifecycleLevel, 'mission $missionId: $outcome');
   }
 
+  /// INFO record for a pre-flight context compaction (issue #138) — turn
+  /// number, strategy, and the estimated token count only, never payload
+  /// content.
+  static void compactionInfo({
+    required String missionId,
+    required int turn,
+    required String strategy,
+    required int tokensBefore,
+  }) {
+    if (!engine.isLoggable(lifecycleLevel)) return;
+    engine.log(
+      lifecycleLevel,
+      'mission $missionId turn $turn: pre-flight compaction '
+      '($strategy) estimated~$tokensBefore tokens',
+    );
+  }
+
   /// Documentation self-check (spec 112 FR-006): throws [ArgumentError]
   /// naming the missing section when the shipped ARCHITECTURE.md logging
   /// section loses any of the three required coverage areas — the

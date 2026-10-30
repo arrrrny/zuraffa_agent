@@ -12,7 +12,6 @@ import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
-import 'package:zuraffa_agent/src/domain/entities/model/model.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
@@ -57,13 +56,12 @@ class FakeToolDispatcher implements ToolDispatcher {
     required String toolName,
     required Map<String, dynamic> arguments,
     required bool isInternalMission,
-  }) async =>
-      ToolDispatchResult(
-        success: true,
-        result: 'ok:$toolName',
-        error: '',
-        artifactRefs: const [],
-      );
+  }) async => ToolDispatchResult(
+    success: true,
+    result: 'ok:$toolName',
+    error: '',
+    artifactRefs: const [],
+  );
 
   @override
   Future<List<ToolDispatchResult>> dispatchBatch({
@@ -102,7 +100,13 @@ class OncePlanner implements ToolCallPlanner {
   ) async {
     if (planned) return const [];
     planned = true;
-    return const [ToolCall(toolName: 'search', arguments: {'q': 'x'})];
+    return const [
+      ToolCall(
+        toolName: 'search',
+        arguments: {'q': 'x'},
+        executionMode: 'sequential',
+      ),
+    ];
   }
 }
 
@@ -165,11 +169,16 @@ const loop10 = EngineLoop(
   repetitionThreshold: 5,
 );
 
-final model1k = Model(provider: 'openai', modelId: 'test-model', contextWindow: 1000);
+final model1k = Model(
+  provider: 'openai',
+  modelId: 'test-model',
+  contextWindow: 1000,
+);
 
 CompressionResult snapshotResult({List<AgentMessage>? preserved}) =>
     CompressionResult(
-      snapshot: '<state_snapshot><overall_goal>go</overall_goal>'
+      snapshot:
+          '<state_snapshot><overall_goal>go</overall_goal>'
           '</state_snapshot>',
       preservedMessages: preserved ?? [UserMessage.text('recent')],
       compressedMessages: const [],
@@ -226,10 +235,7 @@ void main() {
       // the preserved tail.
       expect(llm.requests, hasLength(1));
       expect(llm.requests.single.first.role, 'user');
-      expect(
-        llm.requests.single.first.content,
-        startsWith('<state_snapshot>'),
-      );
+      expect(llm.requests.single.first.content, startsWith('<state_snapshot>'));
       expect(llm.requests.single[1].content, 'recent');
       expect(result.status, MissionStatus.completed);
       expect(result.transcript.first.content, startsWith('<state_snapshot>'));
@@ -274,34 +280,38 @@ void main() {
     expect(compressor.calls, 1);
   });
 
-  test('pre-flight queries the estimator and compresses before every turn',
-      () async {
-    final llm = RecordingLlmClient(completions: [
-      completionOf('using tools', finish: 'tool_calls'),
-      completionOf('done'),
-    ]);
-    final estimator = FakeTokenEstimator([900, 900]);
-    final compressor = RecordingCompressor(snapshotResult());
-    final runner = makeRunner(
-      llm: llm,
-      estimator: estimator,
-      compressor: compressor,
-    );
+  test(
+    'pre-flight queries the estimator and compresses before every turn',
+    () async {
+      final llm = RecordingLlmClient(
+        completions: [
+          completionOf('using tools', finish: 'tool_calls'),
+          completionOf('done'),
+        ],
+      );
+      final estimator = FakeTokenEstimator([900, 900]);
+      final compressor = RecordingCompressor(snapshotResult());
+      final runner = makeRunner(
+        llm: llm,
+        estimator: estimator,
+        compressor: compressor,
+      );
 
-    final result = await runner.run(
-      missionId: 'm1',
-      messages: [const ChatMessage(role: 'user', content: 'go')],
-      planner: OncePlanner(),
-    );
+      final result = await runner.run(
+        missionId: 'm1',
+        messages: [const ChatMessage(role: 'user', content: 'go')],
+        planner: OncePlanner(),
+      );
 
-    expect(result.status, MissionStatus.completed);
-    expect(result.turnsUsed, 2);
-    expect(llm.callCount, 2);
-    expect(estimator.calls, 2);
-    expect(compressor.calls, 2);
-    // Turn 2 was also served a compacted transcript.
-    expect(llm.requests[1].first.content, startsWith('<state_snapshot>'));
-  });
+      expect(result.status, MissionStatus.completed);
+      expect(result.turnsUsed, 2);
+      expect(llm.callCount, 2);
+      expect(estimator.calls, 2);
+      expect(compressor.calls, 2);
+      // Turn 2 was also served a compacted transcript.
+      expect(llm.requests[1].first.content, startsWith('<state_snapshot>'));
+    },
+  );
 
   test('without a compressor the pre-flight stays inert', () async {
     final llm = RecordingLlmClient(completions: [completionOf('done')]);
