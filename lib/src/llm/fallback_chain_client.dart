@@ -9,6 +9,7 @@ import 'circuit_breaker.dart';
 import 'llm_client.dart';
 import 'llm_clock.dart';
 import '../domain/entities/client_health/client_health.dart';
+import '../observability/metrics.dart';
 
 /// One provider slot in the chain.
 typedef FallbackProvider = ({String id, LlmClient client});
@@ -38,6 +39,7 @@ class FallbackChainClient implements LlmClient {
     int maxConsecutiveFailures = 3,
     int cooldownMs = 60000,
     required this.clock,
+    Metrics? metrics,
   }) {
     for (final p in providers) {
       _breakers[p.id] = CircuitBreaker(
@@ -45,6 +47,7 @@ class FallbackChainClient implements LlmClient {
         maxConsecutiveFailures: maxConsecutiveFailures,
         cooldownWindowMs: cooldownMs,
         clock: clock,
+        metrics: metrics,
       );
     }
   }

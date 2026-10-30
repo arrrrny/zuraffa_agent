@@ -34,6 +34,7 @@
 // Not exported from lib/zuraffa_agent.dart — consistent with the sibling
 // engine runtimes (tool_dispatcher.dart, agent_hooks.dart).
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
@@ -44,6 +45,10 @@ import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
 import '../logging/agent_log.dart';
+import '../observability/crash_reporter.dart';
+import '../observability/metrics.dart';
+import '../observability/traced_adapters.dart';
+import '../observability/tracing.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
@@ -173,6 +178,9 @@ class MissionRunner {
     DateTime Function()? clock,
     ZuraffaConfig? config,
     ToolResultSanitizer? toolResultSanitizer,
+    this.tracer,
+    this.metrics,
+    this.crashReporter,
   }) : _executor = executor,
        _toolDispatcher = toolDispatcher,
        _stopPolicy = stopPolicy,
@@ -200,6 +208,24 @@ class MissionRunner {
   /// every dispatched tool's output (success content and error text) is
   /// redacted BEFORE it joins the transcript — the LLM egress boundary.
   final ToolResultSanitizer? _toolResultSanitizer;
+
+  /// Optional tracer (issue #133, O-1). When null, [run] emits spans
+  /// through the no-op tracer — structurally present, cost-free. One
+  /// `mission.run` span per [run]; child `engine.turn` / `tool.dispatch`
+  /// spans per turn and per dispatch; W3C `traceparent` propagation via
+  /// `Spans.propagationHeaders()`.
+  final Tracer? tracer;
+
+  /// Optional metrics seam (issue #133, O-2). When null, nothing is
+  /// recorded. Wired series: `agent_llm_tokens_total{type=...}`,
+  /// `agent_mission_duration_ms{status=...}`,
+  /// `agent_tool_calls_failed_total` (via the wrapped dispatcher).
+  final Metrics? metrics;
+
+  /// Optional default crash reporter for [runGuarded] (issue #133, O-4);
+  /// overridable per call. See `lib/src/observability/crash_reporter.dart`
+  /// for the Sentry / OTLP integration contract.
+  final CrashReporter? crashReporter;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -253,17 +279,118 @@ class MissionRunner {
         'goal mode requires goal and goalEvaluator together (both or neither)',
       );
     }
-    final start = _clock();
+    // Observability (issue #133): one mission.run span around the whole
+    // loop, ambient so every nested startSpan resolves it as parent. The
+    // span ends on every exit path; a rethrown error is recorded first.
+    final tracer = this.tracer ?? const NoopTracer();
+    final metrics = this.metrics ?? const NoopMetrics();
+    final span = tracer.startSpan(
+      'mission.run',
+      attributes: {'mission.id': missionId},
+    );
+    final missionStart = _clock();
+    try {
+      return await Spans.withScope(
+        span,
+        () => _runLoop(
+          missionId: missionId,
+          messages: messages,
+          planner: planner,
+          goal: goal,
+          goalEvaluator: goalEvaluator,
+          tracer: tracer,
+          metrics: metrics,
+          missionSpan: span,
+          missionStart: missionStart,
+        ),
+      );
+    } catch (e, st) {
+      span.recordError(e, st);
+      rethrow;
+    } finally {
+      span.end(timestamp: _clock());
+    }
+  }
+
+  /// Runs [run] inside [runZonedGuarded]: any uncaught zone error — a
+  /// throwing event sink, a misbehaving planner, an error escaping the
+  /// loop — is logged SEVERE on the `engine` subsystem, routed to the
+  /// optional [CrashReporter] (per-call [crashReporter], else the one the
+  /// runner was constructed with), and then rethrown to the caller.
+  /// Observation, not suppression: the awaiting caller still sees the
+  /// original error.
+  ///
+  /// Sentry / OTLP integration: implement [CrashReporter.record] and pass
+  /// the instance here or into the constructor — see
+  /// `lib/src/observability/crash_reporter.dart` for the contract.
+  Future<MissionResult> runGuarded({
+    required String missionId,
+    required List<ChatMessage> messages,
+    ToolCallPlanner? planner,
+    Goal? goal,
+    GoalEvaluator? goalEvaluator,
+    CrashReporter? crashReporter,
+  }) {
+    final reporter = crashReporter ?? this.crashReporter;
+    final done = Completer<MissionResult>();
+    runZonedGuarded(
+      () {
+        run(
+          missionId: missionId,
+          messages: messages,
+          planner: planner,
+          goal: goal,
+          goalEvaluator: goalEvaluator,
+        ).then((result) {
+          if (!done.isCompleted) done.complete(result);
+        });
+        // Errors from that future surface as uncaught zone errors below.
+      },
+      (error, stackTrace) {
+        AgentLog.logger('engine').severe(
+          'uncaught zone error in mission $missionId',
+          error,
+          stackTrace,
+        );
+        reporter?.record(error, stackTrace, context: {'mission.id': missionId});
+        if (!done.isCompleted) done.completeError(error, stackTrace);
+      },
+    );
+    return done.future;
+  }
+
+  Future<MissionResult> _runLoop({
+    required String missionId,
+    required List<ChatMessage> messages,
+    ToolCallPlanner? planner,
+    Goal? goal,
+    GoalEvaluator? goalEvaluator,
+    required Tracer tracer,
+    required Metrics metrics,
+    required Span missionSpan,
+    required DateTime missionStart,
+  }) async {
     final deadline =
         (_stopPolicy.enabled && _stopPolicy.wallClockTimeout != Duration.zero)
-        ? start.add(_stopPolicy.wallClockTimeout)
+        ? missionStart.add(_stopPolicy.wallClockTimeout)
         : null;
     final effectiveMaxTurns = _stopPolicy.enabled
         ? math.min(_executor.loop.maxTurns, _stopPolicy.maxTurns)
         : _executor.loop.maxTurns;
 
+    // One tool.dispatch span per dispatch + the failure counter: wrap the
+    // injected dispatcher when observability is wired (issue #133).
+    final ToolDispatcher dispatcher =
+        (this.tracer != null || this.metrics != null)
+        ? TracedToolDispatcher(_toolDispatcher, tracer, metrics: metrics)
+        : _toolDispatcher;
+
     _onEvent(
-      MissionStarted(emittedAt: start, missionId: missionId, startedAt: start),
+      MissionStarted(
+        emittedAt: missionStart,
+        missionId: missionId,
+        startedAt: missionStart,
+      ),
     );
     // Spec 112 FR-005: mission lifecycle INFO — id + outcome only.
     AgentLog.missionInfo(missionId: missionId, outcome: 'started');
@@ -309,11 +436,20 @@ class MissionRunner {
       );
 
       final ChatCompletion completion;
+      // One engine.turn span per runTurn (issue #133, O-1); token counters
+      // come off the completion's usage (O-2). The span ends on both paths.
+      final turnSpan = tracer.startSpan(
+        'engine.turn',
+        attributes: {'turn.number': turnsUsed},
+      );
       try {
         completion = await _executor.runTurn(transcript, turnNumber: turnsUsed);
       } catch (e) {
         // The turn never finished: no assistant message, no TurnCompleted.
         // The mission still gets its terminal event.
+        turnSpan.recordError(e);
+        missionSpan.recordError(e);
+        turnSpan.end();
         _onEvent(
           ProviderError(
             emittedAt: _clock(),
@@ -324,6 +460,13 @@ class MissionRunner {
         status = MissionStatus.providerFailed;
         break;
       }
+      metrics
+          .counter('agent_llm_tokens_total', labels: {'type': 'input'})
+          .inc(completion.usage.promptTokens);
+      metrics
+          .counter('agent_llm_tokens_total', labels: {'type': 'output'})
+          .inc(completion.usage.completionTokens);
+      turnSpan.end();
 
       // The assistant message carries this turn's thinking block alongside the
       // tool-role results that follow it, so a thinking model's reasoning is
@@ -358,7 +501,7 @@ class MissionRunner {
             callId: callId,
           ),
         );
-        final result = await _toolDispatcher.dispatch(
+        final result = await dispatcher.dispatch(
           toolName: call.toolName,
           arguments: call.arguments,
           isInternalMission: false,
@@ -438,6 +581,13 @@ class MissionRunner {
       ),
     );
     AgentLog.missionInfo(missionId: missionId, outcome: status.name);
+
+    missionSpan.setAttribute('mission.status', status.name);
+    metrics.histogram(
+      'agent_mission_duration_ms',
+      _clock().difference(missionStart).inMilliseconds.toDouble(),
+      labels: {'status': status.name},
+    );
 
     return MissionResult(
       missionId: missionId,

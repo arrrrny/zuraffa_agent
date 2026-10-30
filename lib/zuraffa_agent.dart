@@ -37,6 +37,15 @@ export 'src/mcp/mcp_tool_adapter.dart';
 // Structured logging (spec 112, issue #119).
 export 'src/logging/agent_log.dart';
 export 'src/logging/memory_log_sink.dart';
+
+// Observability (issue #133): tracing, metrics, health, crash boundary.
+// Interfaces + no-op defaults; consumers inject vendor adapters
+// (package:opentelemetry / Prometheus / Sentry / OTLP).
+export 'src/observability/tracing.dart';
+export 'src/observability/metrics.dart';
+export 'src/observability/health_check.dart';
+export 'src/observability/crash_reporter.dart';
+export 'src/observability/traced_adapters.dart';
 export 'src/session_lock.dart';
 
 // Host platform seam (spec 115).
