@@ -36,11 +36,20 @@
 //   allowlist to grant them); a blocklist gate is REJECTED — a refusal list
 //   has no allowlist semantics without the tool universe, and silently
 //   complementing it would widen access. Restate the gate as an allowlist.
+//   Deliberate asymmetry with PlaybookRuntime: an `off` gate there refuses
+//   NOTHING (all tools pass); here it yields NO tools — a spec has no
+//   allow-all representation, so this side fails closed.
 // - `riskTier`    <- [RiskTier.safe] (the playbook schema carries no risk
 //   tier; the safe default, spec 036).
 // - budgets       <- none (null — inherit from the parent spec per spec
 //   036's null-means-inherit contract; the playbook schema has no budgets).
 // - `extendsSpec` <- null (root instance); `subAgents` <- [] (leaf).
+// - dropped       <- [Playbook.name], [Playbook.domain], [Playbook.country]
+//   (metadata the spec shape has no fields for — the spec `name` resolves
+//   from [Playbook.id], not these) and [PlaybookResponse.maxChars] — the
+//   character cap is enforced ONLY by PlaybookRuntime.constrainResponse
+//   (spec 104 FR-005); a spec-driven sub-agent's output is uncapped unless
+//   the applying surface enforces it.
 //
 // Pattern: plain Dart extension (no @Zorphy annotation) so the file
 // compiles without running build_runner — the documented constitution IX
