@@ -47,7 +47,14 @@ export 'src/observability/metrics.dart';
 export 'src/observability/health_check.dart';
 export 'src/observability/crash_reporter.dart';
 export 'src/observability/traced_adapters.dart';
+// Session identity: advisory single-writer lock.
 export 'src/session_lock.dart';
+
+// Security audit trail (issue #132): AuditLog interface, hashing helpers,
+// and the append-only JSONL sink with retention-by-rotation.
+export 'src/security/audit_hashing.dart';
+export 'src/security/audit_log.dart';
+export 'src/security/jsonl_audit_sink.dart';
 
 // Host platform seam (spec 115).
 export 'src/platform/agent_home_resolver.dart';

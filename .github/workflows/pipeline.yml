@@ -125,7 +125,15 @@ jobs:
           # prompt_templates.dart setup-time loads already listed. Missed
           # the allowlist when the PR landed (the gate runs on pull_request
           # only, so no master push ever tripped it). (issue #138 / PR #151)
-          lib/src/llm/token_estimator.dart"
+          lib/src/llm/token_estimator.dart
+          # JsonlAuditSink: issue #132 append-only audit trail's file
+          # adapter — the AuditSink contract (audit_log.dart) stays pure
+          # and owns no dart:io; this file owns the FileMode.append I/O.
+          # Same shape as the allowlisted jsonl_entity_storage.dart /
+          # jsonl_session_storage.dart JSONL adapters. Missed the
+          # allowlist when the PR landed (the gate runs on pull_request
+          # only). (issue #132 / PR #158)
+          lib/src/security/jsonl_audit_sink.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then

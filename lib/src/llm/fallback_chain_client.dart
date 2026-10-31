@@ -11,6 +11,7 @@ import 'llm_clock.dart';
 import '../domain/entities/client_health/client_health.dart';
 import '../observability/health_check.dart';
 import '../observability/metrics.dart';
+import '../security/audit_log.dart';
 
 /// One provider slot in the chain.
 typedef FallbackProvider = ({String id, LlmClient client});
@@ -49,6 +50,7 @@ class FallbackChainClient implements LlmClient {
     required this.clock,
     Metrics? metrics,
     this.llmErrorTracker,
+    AuditLog? auditLog,
   }) {
     for (final p in providers) {
       _breakers[p.id] = CircuitBreaker(
@@ -57,6 +59,7 @@ class FallbackChainClient implements LlmClient {
         cooldownWindowMs: cooldownMs,
         clock: clock,
         metrics: metrics,
+        auditLog: auditLog,
       );
     }
   }
