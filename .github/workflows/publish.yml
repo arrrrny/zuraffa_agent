@@ -89,7 +89,7 @@ jobs:
           cache: true
       - name: Pub get
         working-directory: ${{ matrix.package }}
-        run: ${{ matrix.publisher }} pub get
+        run: ${{ matrix.publisher }} pub get --enforce-lockfile
       - name: Publish dry-run (packaging gate)
         # `build/`, `.dart_tool/` and gitignored paths never reach the archive
         # (verified: the tracked build/test_cache dills are excluded by the
@@ -220,7 +220,7 @@ jobs:
           validate() {
             dir="$1"; cmd="$2"; out=""
             echo "::group::validating $dir"
-            ( cd "$dir" && "$cmd" pub get )
+            ( cd "$dir" && "$cmd" pub get --enforce-lockfile )
             # `|| true`: pub exits non-zero on warnings, and a failed command
             # substitution under `set -e` would abort before the diagnostic is
             # printed — the log is the whole value of this gate.
@@ -241,7 +241,7 @@ jobs:
       - name: "1/5 Publish zuraffa_agent (root, pure Dart)"
         if: fromJSON(steps.resume.outputs.start) <= 1
         run: |
-          dart pub get
+          dart pub get --enforce-lockfile
           dart pub publish --dry-run
           dart pub publish --force
       - name: Wait for pub.dev to serve the new root version
@@ -268,7 +268,7 @@ jobs:
         if: fromJSON(steps.resume.outputs.start) <= 2
         working-directory: packages/zuraffa_agent_platform_interface
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter pub publish --dry-run
           flutter pub publish --force
       - name: Wait for pub.dev to serve zuraffa_agent_platform_interface
@@ -292,20 +292,20 @@ jobs:
         if: fromJSON(steps.resume.outputs.start) <= 3
         working-directory: packages/zuraffa_agent_android
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter pub publish --dry-run
           flutter pub publish --force
       - name: "4/5 Publish zuraffa_agent_ios"
         if: fromJSON(steps.resume.outputs.start) <= 4
         working-directory: packages/zuraffa_agent_ios
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter pub publish --dry-run
           flutter pub publish --force
       - name: "5/5 Publish zuraffa_agent_macos"
         if: fromJSON(steps.resume.outputs.start) <= 5
         working-directory: packages/zuraffa_agent_macos
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter pub publish --dry-run
           flutter pub publish --force
