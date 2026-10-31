@@ -1,11 +1,13 @@
 // Tests for lib/src/llm/openai_compatible_client.dart — Spec 007 US1 (MVP).
 // Behaviors U11..U14 — see specs/007-llm-provider-clients/tdd/test-list.md.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/src/llm/llm_clock.dart';
+import 'package:zuraffa_agent/src/llm/llm_transport.dart';
 import 'package:zuraffa_agent/src/llm/openai_compatible_client.dart';
 import 'package:zuraffa_agent/src/llm/retry.dart';
 import 'package:zuraffa_agent/src/types.dart';
@@ -53,7 +55,7 @@ void main() {
   });
 
   OpenAiCompatibleClient makeClient(
-    FakeLlmTransport transport, {
+    LlmTransport transport, {
     RetryConfig? retryConfig,
   }) => OpenAiCompatibleClient(
     transport: transport,
@@ -389,5 +391,92 @@ void main() {
         expect(transport.requests, hasLength(3));
       },
     );
+
+    test('U163: cancelling stream() mid-stream completes and detaches the '
+        'lines (issue #163)', () async {
+      // Full three-layer chain (client async* -> parser async* ->
+      // await-for): the gateway keeps emitting, so the cancel lands while
+      // the innermost generator waits at `await for`. On the unfixed tree
+      // `sub.cancel()` never completed (issue #163).
+      final controller = StreamController<String>();
+      final transport = _LiveLinesTransport(controller.stream);
+      final client = makeClient(transport);
+
+      final sub = client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .listen((_) {});
+      await transport.opened.future;
+      await pumpEventQueue();
+
+      for (var i = 0; i < 3; i++) {
+        controller.add(
+          jsonEncode({
+            'choices': [
+              {
+                'index': 0,
+                'delta': {'content': 'c$i'},
+              },
+            ],
+          }),
+        );
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      await sub.cancel().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            fail('sub.cancel() did not complete (issue #163 wedge)'),
+      );
+      await controller.close();
+      await pumpEventQueue();
+      expect(transport.linesCancelled, greaterThan(0));
+    }, timeout: const Timeout(Duration(seconds: 20)));
   });
+}
+
+/// Transport double serving one LIVE line stream (issue #163): lets a test
+/// keep the gateway "still emitting" while it cancels `stream()`, and
+/// records whether the cancel reached the lines subscription (the fix's
+/// onCancel must cancel the inner subscription — a direct subscription
+/// cancel completes, an async* one never did).
+class _LiveLinesTransport implements LlmTransport {
+  _LiveLinesTransport(this._lines);
+
+  final Stream<String> _lines;
+  final opened = Completer<void>();
+  int linesCancelled = 0;
+
+  @override
+  Future<LlmHttpResponse> send(LlmHttpRequest request) async =>
+      throw UnimplementedError('stream-only fake');
+
+  @override
+  Future<LlmStreamResponse> openStream(LlmHttpRequest request) async {
+    if (!opened.isCompleted) opened.complete();
+    return LlmStreamResponse(statusCode: 200, lines: _observed(_lines));
+  }
+
+  Stream<String> _observed(Stream<String> source) {
+    late StreamController<String> controller;
+    StreamSubscription<String>? inner;
+    controller = StreamController<String>(
+      onListen: () {
+        inner = source.listen(
+          controller.add,
+          onError: controller.addError,
+          onDone: controller.close,
+        );
+      },
+      onPause: () => inner?.pause(),
+      onResume: () => inner?.resume(),
+      onCancel: () async {
+        linesCancelled++;
+        await inner?.cancel();
+      },
+    );
+    return controller.stream;
+  }
+
+  @override
+  Future<void> close() async {}
 }

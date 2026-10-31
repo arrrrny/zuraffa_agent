@@ -10,6 +10,7 @@
 // tests without any network; the network path is covered by the live
 // integration test (test/integration/llm_client_proxy_test.dart).
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -176,7 +177,7 @@ class LlmHttpTransport {
     }
   }
 
-  /// Streams a chat completion and yields `LlmResponseChunk`s incrementally
+  /// Streams a chat completion and emits `LlmResponseChunk`s incrementally
   /// as the gateway emits SSE deltas (issue #123).
   ///
   /// The request is the same OpenAI-compatible `/chat/completions` call as
@@ -186,8 +187,8 @@ class LlmHttpTransport {
   /// fragments buffered and emitted once `finish_reason` arrives, and the
   /// trailing usage event folded into the final `isComplete: true` chunk.
   ///
-  /// Backpressure: the yielded stream is a plain forwarding stream over the
-  /// response socket — pausing the consumer pauses the socket read. The
+  /// Backpressure: the returned stream forwards `pause`/`resume` to the
+  /// inner subscriptions — pausing the consumer pauses the socket read. The
   /// engine loop wraps it in a bounded buffer (see
   /// `engine_loop_executor.dart`), which is where the watermark contract
   /// lives.
@@ -197,6 +198,12 @@ class LlmHttpTransport {
   /// Errors (non-2xx status, connection failure) surface on the stream's
   /// error channel; the HTTP client is closed on completion, error, and
   /// cancellation alike.
+  ///
+  /// Delivery is `StreamController` forwarding, not `async*` (issue #163):
+  /// `onCancel` cancels the inner subscription directly (a cancel that
+  /// always completes — an `async*` frame suspended at `await for` never
+  /// resumed, so `subscription.cancel()` hung) and eagerly force-closes the
+  /// [HttpClient], so mid-stream teardown can no longer be skipped.
   Stream<LlmResponseChunk> streamComplete({
     required String baseUrl,
     required String apiKey,
@@ -204,51 +211,118 @@ class LlmHttpTransport {
     required String model,
     required List<ChatMessage> messages,
     Duration? timeout,
-  }) async* {
-    final client = clientFactory();
-    if (timeout != null) {
-      client.connectionTimeout = timeout;
+  }) {
+    late StreamController<LlmResponseChunk> controller;
+    HttpClient? client;
+    StreamSubscription<LlmResponseChunk>? inner;
+    var tornDown = false;
+    var cancelled = false;
+    var paused = false;
+
+    void teardown() {
+      if (tornDown) return;
+      tornDown = true;
+      client?.close(force: true);
     }
-    if (proxyUrl != null && proxyUrl.isNotEmpty) {
-      final hostPort = _stripScheme(proxyUrl);
-      client.findProxy = (uri) => 'PROXY $hostPort';
-    }
-    HttpClientResponse response;
-    try {
-      final uri = Uri.parse('$baseUrl/chat/completions');
-      final request = await client.postUrl(uri);
-      request.headers.set('Content-Type', 'application/json');
-      request.headers.set('Authorization', 'Bearer $apiKey');
-      request.write(
-        jsonEncode(
-          buildChatCompletionRequest(
-            model: model,
-            messages: messages,
-            stream: true,
+
+    Future<void> start() async {
+      final HttpClient httpClient;
+      try {
+        httpClient = clientFactory();
+        client = httpClient;
+        if (timeout != null) {
+          httpClient.connectionTimeout = timeout;
+        }
+        if (proxyUrl != null && proxyUrl.isNotEmpty) {
+          final hostPort = _stripScheme(proxyUrl);
+          httpClient.findProxy = (uri) => 'PROXY $hostPort';
+        }
+        final Uri uri = Uri.parse('$baseUrl/chat/completions');
+        final request = await httpClient.postUrl(uri);
+        request.headers.set('Content-Type', 'application/json');
+        request.headers.set('Authorization', 'Bearer $apiKey');
+        request.write(
+          jsonEncode(
+            buildChatCompletionRequest(
+              model: model,
+              messages: messages,
+              stream: true,
+            ),
           ),
-        ),
-      );
-      response = await request.close();
-    } catch (_) {
-      client.close(force: true);
-      rethrow;
+        );
+        final response = await request.close();
+        if (cancelled) {
+          teardown();
+          return;
+        }
+        if (response.statusCode != 200) {
+          final body = await response.transform(utf8.decoder).join();
+          teardown();
+          if (!cancelled) {
+            controller.addError(
+              LlmTransportException(
+                statusCode: response.statusCode,
+                body: body,
+                message: 'gateway returned ${response.statusCode}',
+              ),
+              StackTrace.current,
+            );
+            unawaited(controller.close());
+          }
+          return;
+        }
+        if (cancelled) {
+          teardown();
+          return;
+        }
+        // Assigned straight to `inner` so the outer cancel (onCancel)
+        // detaches this exact subscription (issue #163).
+        inner =
+            parseChatCompletionChunkStream(
+              response.transform(utf8.decoder).transform(const LineSplitter()),
+            ).listen(
+              (chunk) {
+                if (!cancelled) controller.add(chunk);
+              },
+              onError: (Object error, StackTrace stackTrace) {
+                if (!cancelled) controller.addError(error, stackTrace);
+              },
+              onDone: () {
+                if (!cancelled) {
+                  teardown();
+                  controller.close();
+                }
+              },
+            );
+        if (paused) inner!.pause();
+      } catch (error, stackTrace) {
+        teardown();
+        if (!cancelled) {
+          controller.addError(error, stackTrace);
+          unawaited(controller.close());
+        }
+      }
     }
-    if (response.statusCode != 200) {
-      final body = await response.transform(utf8.decoder).join();
-      client.close(force: true);
-      throw LlmTransportException(
-        statusCode: response.statusCode,
-        body: body,
-        message: 'gateway returned ${response.statusCode}',
-      );
-    }
-    try {
-      yield* parseChatCompletionChunkStream(
-        response.transform(utf8.decoder).transform(const LineSplitter()),
-      );
-    } finally {
-      client.close(force: true);
-    }
+
+    controller = StreamController<LlmResponseChunk>(
+      onListen: start,
+      onPause: () {
+        paused = true;
+        inner?.pause();
+      },
+      onResume: () {
+        paused = false;
+        inner?.resume();
+      },
+      onCancel: () async {
+        cancelled = true;
+        final cancel = inner?.cancel();
+        teardown(); // Eager — issue #163: teardown must not depend on a
+        // generator `finally` that never runs.
+        await cancel;
+      },
+    );
+    return controller.stream;
   }
 }
 
