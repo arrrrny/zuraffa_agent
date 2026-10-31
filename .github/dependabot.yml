@@ -1,0 +1,10 @@
+# Issue #114 AC-3: Dependabot for the pub ecosystem, weekly.
+#
+# Meaningful advisory/updates require the committed pubspec.lock — the
+# lockfile is the reviewed, scannable resolution Dependabot diffs against.
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
