@@ -169,7 +169,7 @@ jobs:
         run: dart pub get
       - name: Pana — pub.dev scoring parity (advisory, non-blocking)
         run: |
-          dart pub global activate pana:0.23.19 # bump deliberately; advisory only
+          dart pub global activate pana 0.23.19 # bump deliberately; advisory only (misfire #165: activate takes the version as a separate arg — pana:0.23.19 is not a valid package name)
           dart pub global run pana:pana
 
   osv-scanner:
