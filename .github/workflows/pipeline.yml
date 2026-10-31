@@ -149,6 +149,52 @@ jobs:
             echo "::warning::No attribution markers found — verify no unattributed ports landed"
           fi
 
+  pana:
+    # Issue #114 AC-2: pana on pull requests as a NON-BLOCKING advisory —
+    # surfaces the pub.dev score (scoring parity) in the PR checks
+    # without gating merges. `stable` on purpose: pub.dev itself scores
+    # with the current stable toolchain, so this mirrors what a future
+    # publish would see. Flip continue-on-error to false once the score
+    # is worth gating on.
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Pub get
+        run: dart pub get
+      - name: Pana — pub.dev scoring parity (advisory, non-blocking)
+        run: |
+          dart pub global activate pana 0.23.19 # bump deliberately; advisory only (misfire #165: activate takes the version as a separate arg — pana:0.23.19 is not a valid package name)
+          dart pub global run pana:pana
+
+  osv-scanner:
+    # Issue #114 AC-4 (optional): advisory vulnerability scan over the
+    # COMMITTED pubspec.lock — the lockfile is what makes the scan
+    # reproducible (the #3 dependency: no lockfile, no meaningful
+    # advisories). Pinned binary; non-blocking like pana, flip
+    # continue-on-error to false to gate on published advisories.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install osv-scanner (pinned v2.7.0)
+        run: |
+          curl -fsSL -o osv-scanner_linux_amd64 \
+            https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+          curl -fsSL -o osv-scanner_SHA256SUMS \
+            https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_SHA256SUMS
+          grep 'osv-scanner_linux_amd64$' osv-scanner_SHA256SUMS | sha256sum -c -
+          mv osv-scanner_linux_amd64 osv-scanner
+          chmod +x osv-scanner
+      - name: Scan pubspec.lock (advisory)
+        run: ./osv-scanner scan source --lockfile pubspec.lock
+
   pipeline:
     # Manual dispatch: run the full spec chain for one spec
     if: github.event_name == 'workflow_dispatch' && inputs.spec != ''

@@ -1,0 +1,43 @@
+name: dependency-freshness
+
+# Issue #114 AC-1: weekly `dart pub outdated --no-dev-dependencies` that
+# FAILS when a direct dependency is behind its latest major version.
+#
+# The gate lives in tool/check_dependency_freshness.dart so the
+# majors-behind policy is unit-testable
+# (test/dependency_hygiene_test.dart) and runnable locally. Transitive
+# majors and advisory-affected current versions surface as ::warning
+# annotations instead of failures — a weekly alarm that is permanently
+# red gets ignored.
+
+on:
+  schedule:
+    # Weekly, Mondays 03:00 UTC — off-peak like the nightly (02:30 UTC).
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  # One freshness run at a time; a scheduled run supersedes a
+  # still-running one.
+  group: freshness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned like the format gate / nightly: the gate only needs to
+  # resolve the committed lockfile, the freshness data comes from
+  # pub.dev.
+  DART_SDK: '3.13.7'
+
+jobs:
+  pub-outdated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Pub get
+        run: dart pub get
+      - name: Dependency freshness gate (direct majors-behind fails)
+        run: dart run tool/check_dependency_freshness.dart
