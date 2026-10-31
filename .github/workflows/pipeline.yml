@@ -149,6 +149,36 @@ jobs:
             echo "::warning::No attribution markers found — verify no unattributed ports landed"
           fi
 
+  third-party-notices:
+    # Issue #139: THIRD_PARTY_NOTICES.txt is GENERATED from the committed
+    # pubspec.lock by tool/generate_third_party_notices.dart (it downloads
+    # each locked package's archive from pub.dev and extracts the license
+    # file verbatim). This job regenerates it on every pull request and
+    # fails when the committed file has drifted — a dependency change that
+    # forgets the notices cannot merge. The SDK is pinned (same rationale
+    # as the format job): the output must not drift with toolchain bumps.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get
+      - name: Regenerate THIRD_PARTY_NOTICES.txt from pubspec.lock
+        run: dart run tool/generate_third_party_notices.dart
+      - name: Fail when the committed notices file is stale
+        run: |
+          # porcelain covers both a modified file and a missing one (the
+          # generator recreating it as untracked).
+          if [ -n "$(git status --porcelain THIRD_PARTY_NOTICES.txt)" ]; then
+            echo "::error::THIRD_PARTY_NOTICES.txt is stale — regenerate with: dart run tool/generate_third_party_notices.dart and commit the result"
+            git status --porcelain THIRD_PARTY_NOTICES.txt
+            exit 1
+          fi
+          echo "THIRD_PARTY_NOTICES.txt is in sync with pubspec.lock."
+
   pana:
     # Issue #114 AC-2: pana on pull requests as a NON-BLOCKING advisory —
     # surfaces the pub.dev score (scoring parity) in the PR checks
