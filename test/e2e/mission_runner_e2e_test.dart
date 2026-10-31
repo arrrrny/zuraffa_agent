@@ -423,7 +423,7 @@ void main() {
     'mission stops at maxTurns with the typed maxTurnsExceeded outcome',
     () async {
       final events = <EngineEvent>[];
-      final (runner, fake, dispatcher, _) = await makeRunner(
+      final (runner, fake, dispatcher, registry) = await makeRunner(
         // Exactly 3 scripted outcomes: a 4th turn would throw inside
         // FakeLlmClient (no scripted outcome left) and surface as
         // providerFailed — so status maxTurnsExceeded proves the CAP stopped
@@ -460,6 +460,11 @@ void main() {
       final completed = events.last as MissionCompleted;
       expect(completed.status, 'maxTurnsExceeded');
       expect(completed.summary, isNull);
+
+      // Same lifetime discipline as the first test: `dispose()` closes the
+      // `onCollision` StreamController, so leaving it open here would leak a
+      // controller the moment a `tearDown` starts sharing the registry.
+      await registry.dispose();
     },
   );
 }

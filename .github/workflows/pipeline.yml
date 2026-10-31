@@ -174,19 +174,26 @@ jobs:
       - name: Pub get
         run: dart pub get
       - name: Test with coverage (issue #113)
-        run: dart test -j 2 --coverage=coverage
+        # `dart test --coverage=DIR` APPENDS to an existing DIR and
+        # `format_coverage --in=DIR` collects it recursively, so isolate
+        # JSONs left by an earlier run would be merged into the number the
+        # gate checks (and can only ever raise it). Fresh runners hide this;
+        # a self-hosted runner, `act`, or a developer following the same
+        # commands does not.
+        run: |
+          rm -rf coverage
+          dart test -j 2 --coverage=coverage
       - name: Format lcov (issue #113)
         run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
       - name: Coverage gate — min 80% over hand-written lib/ (issue #113)
-        # Baseline measured with the pinned 3.13.7 SDK when the gate landed
-        # (issue #113 "after baseline measurement"):
-        #   hand-written lib/  86.32%  (7400/8573)  <- gated, floor 80
-        #   generated          18.55%  ( 598/3224)  <- reported, not gated
-        #   total lib/         67.80%  (7998/11797)
-        # Generated = committed build_runner output (*.g.dart, *.zorphy.dart);
-        # it is never hand-edited in this repo, so the 80% gate applies to
-        # hand-written lines and the tool prints the other two numbers for
-        # visibility.
+        # The measured-at-landing baseline (hand-written / generated / total)
+        # and the gating policy are documented in the header of
+        # `tool/check_coverage.dart` — the one place they are maintained.
+        # The tool prints the live numbers on every run; the previous run's
+        # numbers are in the `coverage-lcov` artifact of the last green
+        # pipeline. Do not restate the baseline here: a stale copy is worse
+        # than none, because it is what the next reviewer quotes when
+        # deciding whether the floor is still right.
         run: dart run tool/check_coverage.dart coverage/lcov.info 80
       - name: Upload lcov.info artifact (issue #113)
         if: always()
