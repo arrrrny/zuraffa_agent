@@ -437,7 +437,12 @@ Future<String?> _fetchLicenseText(LockedPackage package) async {
       );
       if (response.statusCode == 200) {
         final builder = BytesBuilder(copy: false);
-        await for (final chunk in response) {
+        // Stream.timeout mirrors the 90s close() timeout above: a connection
+        // that stalls mid-body throws instead of holding the worker until the
+        // CI job's timeout-minutes kills the run (review of PR #168).
+        await for (final chunk in response.timeout(
+          const Duration(seconds: 90),
+        )) {
           builder.add(chunk);
         }
         return pickLicenseText(await extractLicenseFiles(builder.takeBytes()));

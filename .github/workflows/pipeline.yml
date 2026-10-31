@@ -168,7 +168,7 @@ jobs:
         with:
           sdk: 3.13.7
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Regenerate THIRD_PARTY_NOTICES.txt from pubspec.lock
         run: dart run tool/generate_third_party_notices.dart
       - name: Fail when the committed notices file is stale
