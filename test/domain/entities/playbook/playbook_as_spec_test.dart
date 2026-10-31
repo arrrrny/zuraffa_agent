@@ -22,7 +22,6 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart'
     show RiskTier;
-import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
 import 'package:zuraffa_agent/src/domain/entities/playbook/playbook_as_spec.dart';
 import 'package:zuraffa_agent/src/domain/entities/playbook/playbook_loader.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_spec/sub_agent_spec.dart';
