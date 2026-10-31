@@ -17,12 +17,20 @@ GoldenMission _mission(String id, String answer) => GoldenMission(
       {
         'content': 'thinking about $id',
         'finishReason': 'stop',
-        'usage': {'prompt_tokens': 1, 'completion_tokens': 1, 'total_tokens': 2},
+        'usage': {
+          'prompt_tokens': 1,
+          'completion_tokens': 1,
+          'total_tokens': 2,
+        },
       },
       {
         'content': answer,
         'finishReason': 'stop',
-        'usage': {'prompt_tokens': 2, 'completion_tokens': 2, 'total_tokens': 4},
+        'usage': {
+          'prompt_tokens': 2,
+          'completion_tokens': 2,
+          'total_tokens': 4,
+        },
       },
     ],
   },
@@ -39,10 +47,14 @@ void main() {
         final mission = _mission('GM-1', 'answer one');
 
         var calls = 0;
-        final result = await runner.runK(mission, 3, grader: (output) async {
-          calls++;
-          return output == 'answer one';
-        });
+        final result = await runner.runK(
+          mission,
+          3,
+          grader: (output) async {
+            calls++;
+            return output == 'answer one';
+          },
+        );
 
         expect(calls, 3, reason: 'the grader sees every replayed summary');
         expect(result.missionId, 'GM-1');
@@ -57,10 +69,14 @@ void main() {
         final mission = _mission('GM-2', 'answer two');
 
         var callCount = 0;
-        final result = await runner.runK(mission, 4, grader: (output) async {
-          callCount++;
-          return callCount.isOdd;
-        });
+        final result = await runner.runK(
+          mission,
+          4,
+          grader: (output) async {
+            callCount++;
+            return callCount.isOdd;
+          },
+        );
 
         expect(result.outcomes, [true, false, true, false]);
         expect(result.correctCount, 2);
@@ -70,7 +86,11 @@ void main() {
       test('all-failing outcomes gate at zero', () async {
         final mission = _mission('GM-3', 'real answer');
 
-        final result = await runner.runK(mission, 2, grader: (_) async => false);
+        final result = await runner.runK(
+          mission,
+          2,
+          grader: (_) async => false,
+        );
 
         expect(result.outcomes, [false, false]);
         expect(result.correctCount, 0);
@@ -106,7 +126,11 @@ void main() {
               (i) => {
                 'content': 'turn $i',
                 'finishReason': 'tool_calls',
-                'usage': {'prompt_tokens': 1, 'completion_tokens': 1, 'total_tokens': 2},
+                'usage': {
+                  'prompt_tokens': 1,
+                  'completion_tokens': 1,
+                  'total_tokens': 2,
+                },
               },
             ),
           },
@@ -120,36 +144,48 @@ void main() {
       });
 
       test('value equality compares outcomes element-wise', () async {
-        final a = await runner.runK(_mission('X', 'ans'), 2, grader: (_) async => true);
-        final b = await runner.runK(_mission('X', 'ans'), 2, grader: (_) async => true);
+        final a = await runner.runK(
+          _mission('X', 'ans'),
+          2,
+          grader: (_) async => true,
+        );
+        final b = await runner.runK(
+          _mission('X', 'ans'),
+          2,
+          grader: (_) async => true,
+        );
         expect(a, equals(b));
         expect(a.hashCode, b.hashCode);
       });
     });
 
     group('runSuite', () {
-      test('runs all tasks and passes the gate when everything replays true', () async {
-        final suite = Suite(
-          id: 'test-suite',
-          name: 'Test Suite',
-          tasks: const ['GM-1', 'GM-2'],
-          k: 2,
-          gateThreshold: 0.8,
-        );
+      test(
+        'runs all tasks and passes the gate when everything replays true',
+        () async {
+          final suite = Suite(
+            id: 'test-suite',
+            name: 'Test Suite',
+            tasks: const ['GM-1', 'GM-2'],
+            k: 2,
+            gateThreshold: 0.8,
+          );
 
-        final result = await runner.runSuite(
-          suite,
-          loadMission: (taskId) => _mission(taskId, 'answer-$taskId'),
-          resolveGrader: (output, mission) async => output == 'answer-${mission.id}',
-        );
+          final result = await runner.runSuite(
+            suite,
+            loadMission: (taskId) => _mission(taskId, 'answer-$taskId'),
+            resolveGrader: (output, mission) async =>
+                output == 'answer-${mission.id}',
+          );
 
-        expect(result.suite.id, 'test-suite');
-        expect(result.missionResults.keys, containsAll(['GM-1', 'GM-2']));
-        expect(result.decision.passed, isTrue);
-        expect(result.decision.exitCode, 0);
-        expect(result.passKByTask['GM-1'], 1.0);
-        expect(result.passKByTask['GM-2'], 1.0);
-      });
+          expect(result.suite.id, 'test-suite');
+          expect(result.missionResults.keys, containsAll(['GM-1', 'GM-2']));
+          expect(result.decision.passed, isTrue);
+          expect(result.decision.exitCode, 0);
+          expect(result.passKByTask['GM-1'], 1.0);
+          expect(result.passKByTask['GM-2'], 1.0);
+        },
+      );
 
       test('fails the gate when a task keeps failing its grader', () async {
         final suite = Suite(

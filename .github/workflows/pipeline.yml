@@ -33,7 +33,7 @@ jobs:
       # language version (tall style); without `pub get` it falls back to
       # a lower default and disagrees with the committed formatting.
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Enforce dart format
         # Scope mirrors the tree-wide reformat wherever it can resolve on
         # this pure-Dart runner. packages/** is deliberately excluded: the
@@ -64,7 +64,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-${{ matrix.sdk }}-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
@@ -172,7 +172,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-3.13.7-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Test with coverage (issue #113)
         # `dart test --coverage=DIR` APPENDS to an existing DIR and
         # `format_coverage --in=DIR` collects it recursively, so isolate
@@ -231,7 +231,7 @@ jobs:
         with:
           sdk: stable
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Pana — pub.dev scoring parity (advisory, non-blocking)
         run: |
           dart pub global activate pana 0.23.19 # bump deliberately; advisory only (misfire #165: activate takes the version as a separate arg — pana:0.23.19 is not a valid package name)
@@ -279,7 +279,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-stable-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Run eval suites (gated on LLM_API_KEY)
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
@@ -300,7 +300,7 @@ jobs:
         with:
           sdk: stable
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Run spec pipeline
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}

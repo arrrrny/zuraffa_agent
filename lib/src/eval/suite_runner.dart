@@ -50,13 +50,8 @@ class MissionRunResult {
           passK == other.passK);
 
   @override
-  int get hashCode => Object.hash(
-    missionId,
-    k,
-    Object.hashAll(outcomes),
-    passAtK,
-    passK,
-  );
+  int get hashCode =>
+      Object.hash(missionId, k, Object.hashAll(outcomes), passAtK, passK);
 
   @override
   String toString() =>
@@ -180,15 +175,16 @@ class SuiteRunner {
 
     for (final taskId in suite.tasks) {
       final mission = loadMission(taskId);
-      final result = await runK(mission, suite.k, grader: (output) async {
-        final verdict = await resolveGrader(output, mission);
-        return verdict;
-      });
-      missionResults[taskId] = result;
-      samples[taskId] = TaskSamples(
-        n: result.k,
-        c: result.correctCount,
+      final result = await runK(
+        mission,
+        suite.k,
+        grader: (output) async {
+          final verdict = await resolveGrader(output, mission);
+          return verdict;
+        },
       );
+      missionResults[taskId] = result;
+      samples[taskId] = TaskSamples(n: result.k, c: result.correctCount);
       passKByTask[taskId] = result.passK;
     }
 
@@ -228,7 +224,9 @@ List<Map<String, dynamic>> _completionsOf(GoldenMission mission) {
   }
   return [
     for (final entry in raw)
-      entry is Map<String, dynamic> ? entry : Map<String, dynamic>.from(entry as Map),
+      entry is Map<String, dynamic>
+          ? entry
+          : Map<String, dynamic>.from(entry as Map),
   ];
 }
 

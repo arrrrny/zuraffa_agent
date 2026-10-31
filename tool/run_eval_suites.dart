@@ -61,8 +61,10 @@ Future<void> main(List<String> args) async {
     }
     if (catalog.failures.isNotEmpty) {
       // A corrupt suite file must fail the gate, not shrink it.
-      stderr.writeln('Failing the gate: ${catalog.failures.length} suite '
-          'file(s) failed to load.');
+      stderr.writeln(
+        'Failing the gate: ${catalog.failures.length} suite '
+        'file(s) failed to load.',
+      );
       exit(_exitFailure);
     }
 
@@ -87,8 +89,8 @@ Future<void> main(List<String> args) async {
       for (final entity in cassetteDir.listSync()) {
         if (entity is! File || !entity.path.endsWith('.json')) continue;
         try {
-          final doc =
-              (jsonDecode(entity.readAsStringSync()) as Map).cast<String, dynamic>();
+          final doc = (jsonDecode(entity.readAsStringSync()) as Map)
+              .cast<String, dynamic>();
           final replay = MissionReplay.fromJson(doc);
           replays[replay.mission.id] = replay;
         } catch (e) {
@@ -101,14 +103,20 @@ Future<void> main(List<String> args) async {
     var overallExitCode = _exitSuccess;
     for (final suiteEntry in suitesToRun.entries) {
       final suite = suiteEntry.value;
-      stdout.writeln('\n=== Suite ${suite.id} (${suite.name}) — '
-          'k=${suite.k}, threshold=${suite.gateThreshold} ===');
+      stdout.writeln(
+        '\n=== Suite ${suite.id} (${suite.name}) — '
+        'k=${suite.k}, threshold=${suite.gateThreshold} ===',
+      );
 
       // Cross-check: every task the suite declares must have a cassette.
-      final missing = suite.tasks.where((t) => !replays.containsKey(t)).toList();
+      final missing = suite.tasks
+          .where((t) => !replays.containsKey(t))
+          .toList();
       if (missing.isNotEmpty) {
-        stderr.writeln('Suite ${suite.id}: missing cassettes for tasks: '
-            '$missing — failing the gate.');
+        stderr.writeln(
+          'Suite ${suite.id}: missing cassettes for tasks: '
+          '$missing — failing the gate.',
+        );
         overallExitCode = _exitFailure;
         continue;
       }
@@ -163,8 +171,9 @@ Future<bool> _replayAndGrade(MissionReplay replay) async {
     final result = await MissionReplayRunner.run(replay);
     if (!result.completed) {
       stderr.writeln(
-          '${mission.id}: replay did not complete '
-          '(status summary: ${result.summary?.trim() ?? '<none>'})');
+        '${mission.id}: replay did not complete '
+        '(status summary: ${result.summary?.trim() ?? '<none>'})',
+      );
       return false;
     }
     for (final grader in graders) {

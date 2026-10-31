@@ -19,7 +19,8 @@ import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/eval/cassette_replay_llm_client.dart';
-import 'package:zuraffa_agent/src/eval/suite_loader.dart' show SuiteLoadException;
+import 'package:zuraffa_agent/src/eval/suite_loader.dart'
+    show SuiteLoadException;
 
 /// A cassette parsed for replay: the golden mission plus the recorded
 /// completion sequence.
@@ -55,7 +56,9 @@ class MissionReplay {
       } else if (entry is Map) {
         completions.add(Map<String, dynamic>.from(entry));
       } else {
-        throw SuiteLoadException('cassette "$id" has a non-object completion entry');
+        throw SuiteLoadException(
+          'cassette "$id" has a non-object completion entry',
+        );
       }
     }
     final bindings = json['graderBindings'];
@@ -122,7 +125,10 @@ class ReplayToolDispatcher implements ToolDispatcher {
   }) => const [];
 
   @override
-  bool checkRiskTier({required String riskTier, required bool isInternalMission}) {
+  bool checkRiskTier({
+    required String riskTier,
+    required bool isInternalMission,
+  }) {
     return true;
   }
 }
@@ -147,17 +153,28 @@ class ReplayToolPlanner implements ToolCallPlanner {
   final int turnsToServe;
 
   @override
-  Future<List<ToolCall>> plan(ChatCompletion completion, List<ChatMessage> transcript) async {
+  Future<List<ToolCall>> plan(
+    ChatCompletion completion,
+    List<ChatMessage> transcript,
+  ) async {
     if (completion.finishReason == 'tool_calls') {
       return const [
-        ToolCall(toolName: 'replay.tool', arguments: {}, executionMode: 'sequential'),
+        ToolCall(
+          toolName: 'replay.tool',
+          arguments: {},
+          executionMode: 'sequential',
+        ),
       ];
     }
     // Assistant messages == recordings served so far (one per turn).
     final served = transcript.where((m) => m.role == 'assistant').length;
     if (served < turnsToServe) {
       return const [
-        ToolCall(toolName: 'replay.continue', arguments: {}, executionMode: 'sequential'),
+        ToolCall(
+          toolName: 'replay.continue',
+          arguments: {},
+          executionMode: 'sequential',
+        ),
       ];
     }
     return const <ToolCall>[];
@@ -174,7 +191,11 @@ class ReplayRunResult {
   /// True when the mission finished `completed` (natural stop within budget).
   final bool completed;
 
-  const ReplayRunResult({required this.missionId, required this.summary, required this.completed});
+  const ReplayRunResult({
+    required this.missionId,
+    required this.summary,
+    required this.completed,
+  });
 }
 
 /// Replays golden missions from their cassettes through the real engine loop.
@@ -185,7 +206,7 @@ class MissionReplayRunner {
 
   /// Runs one replay: the cassette's recorded completions are served to the
   /// engine by [CassetteReplayLlmClient], planned tool calls dispatch
-/// successfully, and the mission's final summary comes back for grading.
+  /// successfully, and the mission's final summary comes back for grading.
   ///
   /// Throws [StateError] when the cassette is exhausted mid-mission (the
   /// replay client never falls through to a live provider).
