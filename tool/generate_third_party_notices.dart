@@ -150,8 +150,9 @@ Future<Map<String, String>> extractLicenseFiles(List<int> tarGzBytes) async {
     var fullName = nameField;
     if (magic.startsWith('ustar')) {
       final prefix = _tarString(header, 345, 155);
-      if (prefix.isNotEmpty && nameField.isNotEmpty)
+      if (prefix.isNotEmpty && nameField.isNotEmpty) {
         fullName = '$prefix/$nameField';
+      }
     }
     final size =
         int.tryParse(_tarString(header, 124, 12).trim(), radix: 8) ?? 0;
@@ -223,8 +224,9 @@ String? pickLicenseText(Map<String, String> files) {
     final exact = _licensePriority.indexOf(upper);
     if (exact >= 0) return exact;
     for (var i = 0; i < _licensePriority.length; i++) {
-      if (upper.startsWith(_licensePriority[i]))
+      if (upper.startsWith(_licensePriority[i])) {
         return _licensePriority.length + i;
+      }
     }
     return 2 * _licensePriority.length;
   }
@@ -246,8 +248,9 @@ String? pickLicenseText(Map<String, String> files) {
 String licenseLabel(String text) {
   final t = text.toLowerCase();
   if (t.contains('gnu lesser general public license')) return 'LGPL';
-  if (t.contains('apache license') || t.contains('apache 2.0'))
+  if (t.contains('apache license') || t.contains('apache 2.0')) {
     return 'Apache-2.0';
+  }
   if (t.contains('boost software license')) return 'BSL-1.0';
   if (t.contains('gnu general public license')) {
     if (t.contains('version 3') || t.contains('gpl-3')) return 'GPL-3.0';
@@ -259,8 +262,9 @@ String licenseLabel(String text) {
   if (t.contains('redistribution and use in source and binary forms')) {
     return t.contains('neither the name') ? 'BSD-3-Clause' : 'BSD-2-Clause';
   }
-  if (t.contains('isc license') || t.contains('isc license (isc)'))
+  if (t.contains('isc license') || t.contains('isc license (isc)')) {
     return 'ISC';
+  }
   return 'Custom (see text below)';
 }
 
