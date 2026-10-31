@@ -92,6 +92,28 @@ int estimateEntriesTokens(List<SessionTreeEntry> entries) {
   return total;
 }
 
+/// Estimates the token cost of [summary] once rendered back into context.
+///
+/// The snapshot renderer joins decisions, tool names, key results and the
+/// plan state into the active context (see `ContextCompressor`), so this
+/// mirrors that shape with the same ~4 chars/token heuristic as
+/// [estimateContextTokens] — replacing the former fixed 200-token
+/// allowance that under-counted content-bearing key results.
+int estimateSummaryTokens(CompactionSummary summary) {
+  var chars = 120; // <state_snapshot> wrapper tags and section headers.
+  for (final d in summary.decisions) {
+    chars += d.length + 2; // '; ' joiner
+  }
+  for (final t in summary.toolNames) {
+    chars += t.length + 2;
+  }
+  for (final r in summary.keyResults) {
+    chars += r.length + 2;
+  }
+  chars += (summary.planState ?? 'continue').length + 2;
+  return (chars / 4).ceil();
+}
+
 /// Evaluates whether context usage has crossed the compaction threshold.
 bool shouldCompact(
   List<AgentMessage> messages,
@@ -184,7 +206,13 @@ Future<CompactionResult> compact(
   );
 
   final tokensBefore = estimateEntriesTokens(rootFirstEntries);
-  final tokensAfter = estimateEntriesTokens(preparation.keptEntries) + 200;
+  // The summary is rendered back into the active context, so account its
+  // real content cost (decisions, tool names, key results) instead of the
+  // former fixed 200-token allowance — content-bearing key results could
+  // under-count that constant by thousands of tokens.
+  final tokensAfter =
+      estimateEntriesTokens(preparation.keptEntries) +
+      estimateSummaryTokens(compactionSummary);
 
   final entry = CompactionEntry(
     id: 'comp_${now.microsecondsSinceEpoch}',
@@ -217,9 +245,31 @@ class HeuristicSummarizer implements CompactionSummarizer {
     final keyResults = <String>[];
     String? planState;
 
+    // Tool-result message entries in the cut region already yield a
+    // content key result below; a matching resultEntryId reference row
+    // would duplicate the same tool call in the merged summary.
+    final resultEntryIdsInCut = <String>{
+      for (final e in cutEntries)
+        if (e is MessageEntry && e.message is ToolResultMessage) e.id,
+    };
+
     for (final entry in cutEntries) {
       switch (entry) {
         case MessageEntry():
+          // Epic R2.3 — key results: outcomes live in toolResult
+          // messages (epic #1 AC3). Every toolResult message in the cut
+          // region is retained as a key result; error results carry an
+          // explicit [error] marker so a failed call is never silently
+          // forgotten by compaction.
+          if (entry.message case ToolResultMessage(
+            toolName: final tn,
+            content: final content,
+            isError: final isError,
+          )) {
+            final marker = isError ? '[error] ' : '';
+            final truncated = _truncateCodePoints(content, maxKeyResultLength);
+            keyResults.add('$marker$tn: $truncated');
+          }
           final text = _extractText(entry.message);
           if (text != null) {
             // Extract lines starting with "Decision:" or "Plan:".
@@ -235,10 +285,14 @@ class HeuristicSummarizer implements CompactionSummarizer {
 
         case ToolInvocationEntry():
           toolNames.add(entry.record.toolName);
-          if (entry.record.resultEntryId != null) {
-            // Key result: tool name + truncated result reference.
+          final resultEntryId = entry.record.resultEntryId;
+          if (resultEntryId != null &&
+              !resultEntryIdsInCut.contains(resultEntryId)) {
+            // Key result: tool name + truncated result reference. Skipped
+            // when the result message itself sits in the cut region — the
+            // content row recorded above supersedes the id-reference.
             keyResults.add(
-              '${entry.record.toolName}: result ${entry.record.resultEntryId}',
+              '${entry.record.toolName}: result $resultEntryId',
             );
           }
 
@@ -255,13 +309,11 @@ class HeuristicSummarizer implements CompactionSummarizer {
       }
     }
 
-    // Truncate key results to maxKeyResultLength.
-    final truncatedResults = keyResults.map((r) {
-      if (r.length > maxKeyResultLength) {
-        return '${r.substring(0, maxKeyResultLength)}…';
-      }
-      return r;
-    }).toList();
+    // Truncate key results to maxKeyResultLength (code-point aware so a
+    // truncation cut never splits a UTF-16 surrogate pair).
+    final truncatedResults = keyResults
+        .map((r) => _truncateCodePoints(r, maxKeyResultLength))
+        .toList();
 
     // Merge with previous summary if present.
     final mergedDecisions = [...?previousSummary?.decisions, ...decisions];
@@ -286,6 +338,21 @@ class HeuristicSummarizer implements CompactionSummarizer {
 // ---------------------------------------------------------------------------
 // Private helpers
 // ---------------------------------------------------------------------------
+
+/// Truncates [s] to at most [max] code points, appending an ellipsis when
+/// truncating. Walks [String.runes] so the cut can never split a UTF-16
+/// surrogate pair (e.g. an emoji in tool output).
+String _truncateCodePoints(String s, int max) {
+  if (s.length <= max) return s;
+  final buf = StringBuffer();
+  var taken = 0;
+  for (final rune in s.runes) {
+    if (taken >= max) break;
+    buf.writeCharCode(rune);
+    taken++;
+  }
+  return '$buf…';
+}
 
 int _messageCharCount(AgentMessage msg) {
   var count = 0;

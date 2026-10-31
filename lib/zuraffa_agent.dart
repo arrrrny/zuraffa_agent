@@ -8,6 +8,7 @@ export 'src/types.dart';
 export 'src/session_storage.dart';
 export 'src/session_storage_impl.dart';
 export 'src/jsonl_session_storage.dart';
+export 'src/retention.dart';
 export 'src/session.dart';
 export 'src/compaction.dart';
 export 'src/usage_ledger.dart';

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memory.dart';
 import 'package:zuraffa_agent/src/llm/persistent_episodic_memory_store.dart';
+import 'package:zuraffa_agent/src/retention_policy.dart';
 import 'package:zuraffa_agent/src/session_storage.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
@@ -20,7 +21,8 @@ class InMemorySessionStorage implements SessionStorage {
       const StoreOpenResult(loadedEntriesCount: 0);
 
   @override
-  Future<void> appendEntry(SessionTreeEntry entry) async => storedEntries.add(entry);
+  Future<void> appendEntry(SessionTreeEntry entry) async =>
+      storedEntries.add(entry);
 
   @override
   Future<SessionTreeEntry?> getEntry(String id) async {
@@ -49,6 +51,16 @@ class InMemorySessionStorage implements SessionStorage {
   @override
   Future<void> deleteEntries(Set<String> entryIds) async =>
       storedEntries.removeWhere((e) => entryIds.contains(e.id));
+
+  @override
+  Future<void> backup(String dest) async => throw UnimplementedError();
+
+  @override
+  Future<void> restore(String src) async => throw UnimplementedError();
+
+  @override
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now}) async =>
+      PruneResult.empty;
 
   @override
   Future<void> close() async {}
@@ -161,7 +173,9 @@ void main() {
           EpisodicMemory(id: 'snap-5', summary: 's5', messages: const []),
         );
         expect(
-          storage.storedEntries.whereType<CustomTreeEntry>().map((e) => e.record.id),
+          storage.storedEntries.whereType<CustomTreeEntry>().map(
+            (e) => e.record.id,
+          ),
           contains('snap-5'),
         );
       },

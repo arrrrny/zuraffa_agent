@@ -23,7 +23,8 @@ import 'tracing.dart';
 /// Wraps a [ToolDispatcher]: one `tool.dispatch` span per dispatch (child
 /// of the ambient span — the mission span under [MissionRunner.run]), one
 /// `tool.dispatchBatch` span per batch, and `agent_tool_calls_failed_total`
-/// incremented for every unsuccessful result.
+/// incremented for every unsuccessful result — including dispatches that
+/// threw and failed results inside a batch.
 class TracedToolDispatcher implements ToolDispatcher {
   TracedToolDispatcher(this._inner, this._tracer, {Metrics? metrics})
     : _metrics = metrics ?? NoopMetrics.instance;
@@ -55,6 +56,9 @@ class TracedToolDispatcher implements ToolDispatcher {
       return result;
     } catch (error, stackTrace) {
       span.recordError(error, stackTrace);
+      // Review F5 (issue #133): a thrown dispatch is a failed tool call by
+      // the series' own name — count it before the rethrow.
+      _metrics.counter('agent_tool_calls_failed_total').inc();
       rethrow;
     } finally {
       span.end();
@@ -71,10 +75,17 @@ class TracedToolDispatcher implements ToolDispatcher {
       attributes: {'tool.batch_size': calls.length},
     );
     try {
-      return await _inner.dispatchBatch(
+      final results = await _inner.dispatchBatch(
         calls: calls,
         isInternalMission: isInternalMission,
       );
+      // Review F5 (issue #133): batched failures count too — the series
+      // is `agent_tool_calls_failed_total`, not `dispatch_threw_total`.
+      final failed = results.where((r) => !r.success).length;
+      if (failed > 0) {
+        _metrics.counter('agent_tool_calls_failed_total').inc(failed);
+      }
+      return results;
     } catch (error, stackTrace) {
       span.recordError(error, stackTrace);
       rethrow;

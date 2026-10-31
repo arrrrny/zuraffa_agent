@@ -70,7 +70,16 @@ jobs:
           # when spec 114 landed (the gate is not run on pushes to
           # master); an interface-backed adapter like
           # jsonl_session_storage.dart. (spec 114)
-          lib/src/session_lock.dart"
+          lib/src/session_backup.dart
+          lib/src/session_lock.dart
+          # TiktokenEstimator.load: one-time setup read of a .tiktoken rank
+          # file (issue #138). The TokenEstimator contract stays pure and
+          # synchronous — rank tables are loaded up front, never on the
+          # pre-flight hot path; same shape as the skills.dart /
+          # prompt_templates.dart setup-time loads already listed. Missed
+          # the allowlist when the PR landed (the gate runs on pull_request
+          # only, so no master push ever tripped it). (issue #138 / PR #151)
+          lib/src/llm/token_estimator.dart"
           BAD=0
           while IFS= read -r f; do
             if ! printf '%s\n' "$ALLOWED" | grep -qxF "$f"; then

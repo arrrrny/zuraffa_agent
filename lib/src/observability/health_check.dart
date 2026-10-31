@@ -23,6 +23,7 @@
 // from its platform layer.
 
 import '../llm/circuit_breaker.dart';
+import '../llm/llm_client.dart';
 import '../mcp/mcp_client.dart';
 
 /// Overall readiness of the aggregate.
@@ -226,6 +227,13 @@ class McpHealthProbe implements HealthProbe {
 /// success) is ok, a recorded error is degraded — the chain may have
 /// recovered since, and the report carries the error text either way.
 class LastLlmErrorTracker {
+  LastLlmErrorTracker({DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+
+  /// Injectable clock — the repo's injectable-time discipline
+  /// ([CircuitBreaker] takes one too); defaults to the wall clock.
+  final DateTime Function() _clock;
+
   Object? _lastError;
   String? _lastErrorProvider;
   DateTime? _lastErrorAt;
@@ -235,14 +243,14 @@ class LastLlmErrorTracker {
   void recordError(Object error, {StackTrace? stackTrace, String? provider}) {
     _lastError = error;
     _lastErrorProvider = provider;
-    _lastErrorAt = DateTime.now();
+    _lastErrorAt = _clock();
   }
 
   /// Records a successful completion; clears the active error state.
   void recordSuccess() {
     _lastError = null;
     _lastErrorProvider = null;
-    _lastSuccessAt = DateTime.now();
+    _lastSuccessAt = _clock();
   }
 
   /// The most recent error, or null when none is active.
@@ -264,6 +272,11 @@ class LastLlmErrorProbe implements HealthProbe {
 
   final LastLlmErrorTracker _tracker;
 
+  /// Upper bound for the rendered error text in the `/health` JSON. A
+  /// recorded [LlmHttpException] embeds the provider response body in its
+  /// `toString` — prompt content must not ride along in a health scrape.
+  static const _maxErrorTextLength = 200;
+
   @override
   String get name => 'last_llm_error';
 
@@ -283,11 +296,25 @@ class LastLlmErrorProbe implements HealthProbe {
       name: name,
       status: HealthStatus.degraded,
       details: {
-        'error': error.toString(),
+        'error': _describeError(error),
         'provider': _tracker.lastErrorProvider,
         'at': _tracker.lastErrorAt?.toUtc().toIso8601String(),
       },
     );
+  }
+
+  /// Bounded, body-free rendering of the recorded error for the health
+  /// JSON: [LlmHttpException] renders as type + provider + status code —
+  /// the response body is dropped; any other error is length-bounded.
+  static String _describeError(Object error) {
+    if (error is LlmHttpException) {
+      return 'LlmHttpException: ${error.provider} returned HTTP '
+          '${error.statusCode}';
+    }
+    final text = error.toString();
+    return text.length <= _maxErrorTextLength
+        ? text
+        : '${text.substring(0, _maxErrorTextLength)}…';
   }
 }
 

@@ -59,6 +59,39 @@ void main() {
     );
 
     test(
+      'issue #138 review: a caller-supplied estimatedTokens drives the gate (no chars/4 re-derivation)',
+      () async {
+        final client = FakeLlmClient(
+          providerName: 'compressor',
+          outcomes: const [
+            ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+          ],
+        );
+        final compressor = makeCompressor(client);
+
+        // Transcript far above the chars/4 threshold, but the pre-flight's
+        // estimate says otherwise: the gate trusts the caller and declines.
+        final declined = await compressor.compress(
+          bigHistory(messages: 100, charsPerMessage: 4000),
+          estimatedTokens: 100,
+        );
+        expect(declined.strategy, CompressionStrategy.none);
+        expect(declined.snapshot, isEmpty);
+        expect(client.generateCalls, 0);
+
+        // And the other way: a small transcript the chars/4 gate would
+        // decline, but the caller's estimate crosses the threshold.
+        final fired = await compressor.compress(
+          bigHistory(messages: 12, charsPerMessage: 100),
+          estimatedTokens: 65000,
+        );
+        expect(fired.strategy, CompressionStrategy.llm);
+        expect(fired.snapshot, fiveSectionSnapshot);
+        expect(client.generateCalls, 1);
+      },
+    );
+
+    test(
       'U4: above threshold the LLM is called once; the last keepRecentMessages stay verbatim; older messages are compressed',
       () async {
         final history = bigHistory(

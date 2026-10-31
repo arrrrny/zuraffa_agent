@@ -35,6 +35,7 @@
 // engine runtimes (tool_dispatcher.dart, agent_hooks.dart).
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
@@ -44,11 +45,16 @@ import '../domain/entities/llm_client/chat_message.dart';
 import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../llm/context_compressor.dart';
+import '../llm/token_estimator.dart';
 import '../logging/agent_log.dart';
 import '../observability/crash_reporter.dart';
+import '../observability/health_check.dart';
 import '../observability/metrics.dart';
 import '../observability/traced_adapters.dart';
 import '../observability/tracing.dart';
+import '../retention.dart';
+import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
@@ -181,7 +187,18 @@ class MissionRunner {
     this.tracer,
     this.metrics,
     this.crashReporter,
-  }) : _executor = executor,
+    this.llmErrorTracker,
+    Model? model,
+    TokenEstimator tokenEstimator = const HeuristicTokenEstimator(),
+    ContextCompressor? contextCompressor,
+    this.preflightThreshold = 0.8,
+    RetentionSweep? retention,
+  }) : assert(
+         preflightThreshold > 0 && preflightThreshold <= 1,
+         'preflightThreshold must be in (0, 1]: a value <= 0 compacts '
+         'every turn, > 1 never fires',
+       ),
+       _executor = executor,
        _toolDispatcher = toolDispatcher,
        _stopPolicy = stopPolicy,
        _queue = steeringQueue,
@@ -189,7 +206,11 @@ class MissionRunner {
        _onEvent = onEvent,
        _clock = clock ?? DateTime.now,
        _config = config,
-       _toolResultSanitizer = toolResultSanitizer;
+       _toolResultSanitizer = toolResultSanitizer,
+       _model = model,
+       _tokenEstimator = tokenEstimator,
+       _contextCompressor = contextCompressor,
+       _retention = retention;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -226,6 +247,47 @@ class MissionRunner {
   /// overridable per call. See `lib/src/observability/crash_reporter.dart`
   /// for the Sentry / OTLP integration contract.
   final CrashReporter? crashReporter;
+
+  /// Optional last-LLM-error tracker (issue #133, O-3 wiring). When
+  /// supplied, the provider-failure catch records into it (with the
+  /// provider id) and every clean turn records a success — so the
+  /// `last_llm_error` health probe reflects real completions instead of
+  /// reporting `ok` forever. [FallbackChainClient] takes the same
+  /// parameter: one tracker shared by both wires per-provider failures
+  /// from the chain and the terminal turn failure here.
+  final LastLlmErrorTracker? llmErrorTracker;
+
+  /// The mission's model (issue #138). When supplied together with
+  /// [contextCompressor], every turn is pre-flighted against
+  /// `model.contextWindow * preflightThreshold` and compaction triggers
+  /// proactively instead of when the provider returns a 400.
+  final Model? _model;
+
+  /// Token estimator backing the pre-flight check (issue #138). Defaults
+  /// to the ~4-chars-per-token heuristic; inject a TiktokenEstimator for
+  /// rank-table fidelity.
+  final TokenEstimator _tokenEstimator;
+
+  /// Compactor consulted by the pre-flight check (issue #138). Null keeps
+  /// the pre-flight inert: the mission behaves exactly as before issue
+  /// #138 (overflow is then still detected by the provider 400 path).
+  final ContextCompressor? _contextCompressor;
+
+  /// Fraction of `model.contextWindow` at which the pre-flight triggers
+  /// compaction (issue #138). Default 0.8 — "approaching" the window.
+  ///
+  /// Must be in (0, 1] — asserted in the constructor: a value <= 0 would
+  /// compact every turn, > 1 would never fire. A deliberate operator knob,
+  /// so unlike the other pre-flight fields ([_model], [_tokenEstimator],
+  /// [_contextCompressor]) it stays public.
+  final double preflightThreshold;
+
+  /// Between-mission retention sweep (issue #135). When supplied, [run]
+  /// awaits [RetentionSweep.prune] BEFORE the mission lifecycle begins —
+  /// i.e., between the previous mission and this one. [RetentionCoordinator]
+  /// is the stock sweep; failures propagate: a sweep that cannot run is a
+  /// startup failure, consistent with config validation.
+  final RetentionSweep? _retention;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -279,6 +341,14 @@ class MissionRunner {
         'goal mode requires goal and goalEvaluator together (both or neither)',
       );
     }
+    // Between-mission retention sweep (issue #135): stale sessions,
+    // episodic memories, ledgers, and event logs are pruned before this
+    // mission starts, so a growing store never reaches the turn loop.
+    final sweep = _retention;
+    if (sweep != null) {
+      await sweep.prune();
+    }
+
     // Observability (issue #133): one mission.run span around the whole
     // loop, ambient so every nested startSpan resolves it as parent. The
     // span ends on every exit path; a rethrown error is recorded first.
@@ -289,8 +359,9 @@ class MissionRunner {
       attributes: {'mission.id': missionId},
     );
     final missionStart = _clock();
+    MissionResult? result;
     try {
-      return await Spans.withScope(
+      final outcome = await Spans.withScope(
         span,
         () => _runLoop(
           missionId: missionId,
@@ -304,10 +375,26 @@ class MissionRunner {
           missionStart: missionStart,
         ),
       );
+      result = outcome;
+      return outcome;
     } catch (e, st) {
       span.recordError(e, st);
       rethrow;
     } finally {
+      // Review F4 (issue #133): the crash path — a throwing event sink, a
+      // misbehaving planner, a repetition-tracker throw — never reaches
+      // _runLoop's tail, so the terminal `mission.status` attribute and the
+      // `agent_mission_duration_ms` histogram are recorded HERE, on every
+      // exit path. A mission that died before _runLoop returned reports
+      // status 'crashed' — exactly the O-4 case the histogram exists to
+      // expose; slow failures are the outliers the SLO needs to see.
+      final statusName = result?.status.name ?? 'crashed';
+      span.setAttribute('mission.status', statusName);
+      metrics.histogram(
+        'agent_mission_duration_ms',
+        _clock().difference(missionStart).inMilliseconds.toDouble(),
+        labels: {'status': statusName},
+      );
       span.end(timestamp: _clock());
     }
   }
@@ -435,6 +522,56 @@ class MissionRunner {
         TurnStarted(emittedAt: _clock(), turnId: '$missionId-turn-$turnsUsed'),
       );
 
+      // Token-counting pre-flight (issue #138): before spending the turn,
+      // estimate the transcript against the model window. Approaching 80%
+      // triggers the ContextCompressor proactively instead of waiting for
+      // the provider's 400 to discover the overflow. Inert unless both a
+      // model and a compressor are wired in.
+      final compressor = _contextCompressor;
+      final model = _model;
+      if (compressor != null && model != null) {
+        final agentTranscript = [
+          for (final message in transcript) _toAgentMessage(message),
+        ];
+        final estimated = _tokenEstimator.estimateMessages(agentTranscript);
+        final threshold = (model.contextWindow * preflightThreshold).floor();
+        if (estimated >= threshold) {
+          // The estimate rides along so the compressor's own gate counts
+          // with the same convention as the estimator (a TiktokenEstimator's
+          // BPE tokens, not a chars/4 re-derivation) — the two gates cannot
+          // disagree about the same transcript (issue #138 review).
+          final result = await compressor.compress(
+            agentTranscript,
+            estimatedTokens: estimated,
+          );
+          // An empty snapshot means the compressor declined (its own gates
+          // still apply — e.g. a transcript of keepRecentMessages or fewer
+          // messages, or one below its tokenThreshold): the transcript is
+          // left untouched, the decline is logged at WARNING, and the
+          // provider's context limit remains the backstop.
+          if (result.snapshot.isNotEmpty) {
+            transcript
+              ..clear()
+              ..addAll([
+                ChatMessage(role: 'user', content: result.snapshot),
+                ..._preservedTail(result.preservedMessages),
+              ]);
+            AgentLog.compactionInfo(
+              missionId: missionId,
+              turn: turnsUsed,
+              strategy: result.strategy.name,
+              tokensBefore: estimated,
+            );
+          } else {
+            AgentLog.compactionDeclined(
+              missionId: missionId,
+              turn: turnsUsed,
+              estimatedTokens: estimated,
+            );
+          }
+        }
+      }
+
       final ChatCompletion completion;
       // One engine.turn span per runTurn (issue #133, O-1); token counters
       // come off the completion's usage (O-2). The span ends on both paths.
@@ -443,7 +580,15 @@ class MissionRunner {
         attributes: {'turn.number': turnsUsed},
       );
       try {
-        completion = await _executor.runTurn(transcript, turnNumber: turnsUsed);
+        // Review F3 (issue #133): scope the turn span for the turn body —
+        // vendor-SDK spans created inside the LLM HTTP call nest under
+        // engine.turn (not mission.run) and the outbound traceparent
+        // carries the turn's span id. Tool dispatch stays parented to
+        // mission.run: it runs after runTurn returns, outside this scope.
+        completion = await Spans.withScope(
+          turnSpan,
+          () => _executor.runTurn(transcript, turnNumber: turnsUsed),
+        );
       } catch (e) {
         // The turn never finished: no assistant message, no TurnCompleted.
         // The mission still gets its terminal event.
@@ -457,6 +602,13 @@ class MissionRunner {
             error: e.toString(),
           ),
         );
+        // Review F1 (issue #133): the engine's recording seam for the
+        // last-LLM-error tracker — without it the health probe reports
+        // `ok` forever, exactly during a provider outage.
+        llmErrorTracker?.recordError(
+          e,
+          provider: _executor.llmClient.config.id,
+        );
         status = MissionStatus.providerFailed;
         break;
       }
@@ -467,6 +619,9 @@ class MissionRunner {
           .counter('agent_llm_tokens_total', labels: {'type': 'output'})
           .inc(completion.usage.completionTokens);
       turnSpan.end();
+      // Review F1 (issue #133): a clean completion clears any recorded
+      // last-LLM-error state — the chain recovered.
+      llmErrorTracker?.recordSuccess();
 
       // The assistant message carries this turn's thinking block alongside the
       // tool-role results that follow it, so a thinking model's reasoning is
@@ -582,13 +737,6 @@ class MissionRunner {
     );
     AgentLog.missionInfo(missionId: missionId, outcome: status.name);
 
-    missionSpan.setAttribute('mission.status', status.name);
-    metrics.histogram(
-      'agent_mission_duration_ms',
-      _clock().difference(missionStart).inMilliseconds.toDouble(),
-      labels: {'status': status.name},
-    );
-
     return MissionResult(
       missionId: missionId,
       status: status,
@@ -599,4 +747,91 @@ class MissionRunner {
       goalAchieved: status == MissionStatus.goalAchieved,
     );
   }
+}
+
+/// Bridges the mission transcript currency (ChatMessage) into the
+/// estimator/compressor currency (AgentMessage) for the pre-flight check
+/// (issue #138). Tool results lose their call id — ChatMessage carries no
+/// tool_call_id — so a compacted transcript cannot re-link tool rows to
+/// their calls (spec 051 surface limitation).
+AgentMessage _toAgentMessage(ChatMessage message) {
+  switch (message.role) {
+    case 'assistant':
+      return AssistantMessage(
+        content: [
+          TextBlock(message.content),
+          if (message.thinking != null && message.thinking!.isNotEmpty)
+            ThinkingBlock(thinking: message.thinking!),
+        ],
+      );
+    case 'tool':
+      return ToolResultMessage(
+        toolCallId: '',
+        toolName: 'tool',
+        content: message.content,
+      );
+    default:
+      return UserMessage.text(message.content);
+  }
+}
+
+/// Bridges the compressor's preserved tail back into the transcript
+/// currency, dropping leading tool rows (issue #138 review).
+///
+/// The preserved window can start mid-exchange: tool rows whose assistant
+/// predecessor was compacted away are orphans — detached from the call they
+/// answer, a shape providers reject (OpenAI `tool_call_id` linkage, Anthropic
+/// `tool_use_id` matching; `ChatMessage` carries no id to re-link them).
+/// Leading tool rows are therefore dropped, and the rebuilt transcript is
+/// `[user(snapshot)] + tail` without orphans. Tool rows INSIDE the preserved
+/// window keep their assistant predecessor beside them, so only the head of
+/// the tail is affected. The [ContextCompressor] contract carries the same
+/// invariant — compressors must not return tails that begin with orphaned
+/// tool results.
+List<ChatMessage> _preservedTail(List<AgentMessage> preservedMessages) {
+  final bridged = [
+    for (final message in preservedMessages) _toChatMessage(message),
+  ];
+  final firstKept = bridged.indexWhere((message) => message.role != 'tool');
+  if (firstKept < 0) return const <ChatMessage>[];
+  return bridged.sublist(firstKept);
+}
+
+/// Bridges a compressor result back into the mission transcript (issue
+/// #138). Text blocks join with newlines; a thinking block is preserved on
+/// assistant messages (spec 002 FR-002).
+ChatMessage _toChatMessage(AgentMessage message) {
+  switch (message) {
+    case AssistantMessage():
+      final thinking = message.content
+          .whereType<ThinkingBlock>()
+          .map((block) => block.thinking)
+          .join('\n');
+      return ChatMessage(
+        role: 'assistant',
+        content: _blocksText(message.content),
+        thinking: thinking.isEmpty ? null : thinking,
+      );
+    case ToolResultMessage():
+      return ChatMessage(role: 'tool', content: message.content);
+    case UserMessage():
+      return ChatMessage(role: 'user', content: _blocksText(message.content));
+    case CustomMessage():
+      return ChatMessage(
+        role: 'user',
+        content:
+            '[custom:${message.messageType}] ${jsonEncode(message.payload)}',
+      );
+  }
+}
+
+String _blocksText(List<ContentBlock> blocks) {
+  final buffer = StringBuffer();
+  for (final block in blocks) {
+    if (block is TextBlock) {
+      if (buffer.isNotEmpty) buffer.write('\n');
+      buffer.write(block.text);
+    }
+  }
+  return buffer.toString();
 }

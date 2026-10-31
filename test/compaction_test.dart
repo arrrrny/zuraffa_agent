@@ -313,6 +313,186 @@ void main() {
       );
       expect(summary.toolNames, contains('prior_tool'));
     });
+
+    test('retains error toolResults with an explicit [error] marker', () async {
+      final cutEntries = [
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: ToolResultMessage(
+            toolCallId: 'tc_1',
+            toolName: 'bash',
+            content: 'exit code 1: command not found',
+            isError: true,
+          ),
+        ),
+      ];
+      final summary = await summarizer.summarize(
+        cutEntries: cutEntries,
+        keptEntries: const [],
+      );
+      expect(summary.keyResults, hasLength(1));
+      expect(summary.keyResults.single, startsWith('[error] '));
+      expect(summary.keyResults.single, contains('bash: exit code 1'));
+    });
+
+    test('truncates toolResult content beyond maxKeyResultLength', () async {
+      const maxLen = 300;
+      final content = 'HEAD${'x' * (maxLen + 50)}TAIL_MARKER';
+      final cutEntries = [
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: ToolResultMessage(
+            toolCallId: 'tc_1',
+            toolName: 'grep',
+            content: content,
+          ),
+        ),
+      ];
+      final summary = await summarizer.summarize(
+        cutEntries: cutEntries,
+        keptEntries: const [],
+      );
+      final row = summary.keyResults.single;
+      expect(row, startsWith('grep: HEAD'));
+      expect(row, endsWith('…'));
+      expect(row, isNot(contains('TAIL_MARKER')));
+      expect(row.length, lessThanOrEqualTo(maxLen + 1));
+    });
+
+    test('truncation never splits a UTF-16 surrogate pair', () async {
+      // The emoji straddles the final re-truncation boundary in UTF-16
+      // units ('grep: ' + 293 a's puts the emoji's high surrogate at row
+      // unit 299): the pre-fix substring cut kept that lone high surrogate
+      // and dropped its low half. The code-point cut keeps the emoji whole.
+      final content = '${'a' * 293}😀TAIL';
+      final cutEntries = [
+        MessageEntry(
+          id: 'e_1',
+          parentId: null,
+          timestamp: fixedTime,
+          message: ToolResultMessage(
+            toolCallId: 'tc_1',
+            toolName: 'grep',
+            content: content,
+          ),
+        ),
+      ];
+      final summary = await summarizer.summarize(
+        cutEntries: cutEntries,
+        keptEntries: const [],
+      );
+      final row = summary.keyResults.single;
+      expect(row, contains('😀'));
+      for (final rune in row.runes) {
+        expect(
+          rune < 0xD800 || rune > 0xDFFF,
+          isTrue,
+          reason: 'lone surrogate U+${rune.toRadixString(16)} in summary',
+        );
+      }
+    });
+
+    test(
+      'does not double-record a call whose result message is in the cut region',
+      () async {
+        final cutEntries = [
+          ToolInvocationEntry(
+            id: 'ti_entry',
+            parentId: null,
+            timestamp: fixedTime,
+            record: ToolInvocationRecord(
+              id: 'ti_1',
+              timestamp: fixedTime,
+              toolCallId: 'tc_1',
+              toolName: 'search',
+              resultEntryId: 'result_entry',
+              isError: false,
+              durationMs: 12,
+            ),
+          ),
+          MessageEntry(
+            id: 'result_entry',
+            parentId: null,
+            timestamp: fixedTime,
+            message: ToolResultMessage(
+              toolCallId: 'tc_1',
+              toolName: 'search',
+              content: 'found 3 files',
+            ),
+          ),
+        ];
+        final summary = await summarizer.summarize(
+          cutEntries: cutEntries,
+          keptEntries: const [],
+        );
+        expect(
+          summary.keyResults,
+          ['search: found 3 files'],
+          reason: 'the id-reference row is superseded by the content row',
+        );
+      },
+    );
+
+    test(
+      'keeps the id-reference row when the result message is outside the cut region',
+      () async {
+        final cutEntries = [
+          ToolInvocationEntry(
+            id: 'ti_entry',
+            parentId: null,
+            timestamp: fixedTime,
+            record: ToolInvocationRecord(
+              id: 'ti_1',
+              timestamp: fixedTime,
+              toolCallId: 'tc_1',
+              toolName: 'search',
+              resultEntryId: 'result_entry',
+              isError: false,
+              durationMs: 12,
+            ),
+          ),
+        ];
+        final summary = await summarizer.summarize(
+          cutEntries: cutEntries,
+          keptEntries: const [],
+        );
+        expect(summary.keyResults, ['search: result result_entry']);
+      },
+    );
+  });
+
+  group('estimateSummaryTokens', () {
+    test('empty summary stays near the wrapper-tag floor', () {
+      final empty = CompactionSummary(
+        decisions: [],
+        toolNames: [],
+        keyResults: [],
+      );
+      final tokens = estimateSummaryTokens(empty);
+      expect(tokens, greaterThanOrEqualTo(30)); // 120 wrapper chars / 4
+      expect(tokens, lessThan(60));
+    });
+
+    test('scales with content-bearing key results, not a fixed allowance', () {
+      final empty = CompactionSummary(
+        decisions: [],
+        toolNames: [],
+        keyResults: [],
+      );
+      final fat = CompactionSummary(
+        decisions: const [],
+        toolNames: const ['bash'],
+        keyResults: List.generate(52, (i) => 'bash: ${'r' * 300}'),
+      );
+      expect(
+        estimateSummaryTokens(fat),
+        greaterThan(estimateSummaryTokens(empty) + 3000),
+      );
+    });
   });
 
   group('compact()', () {

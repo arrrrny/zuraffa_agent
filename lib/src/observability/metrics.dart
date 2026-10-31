@@ -10,7 +10,8 @@
 //     (MissionRunner, from each completion's TokenUsage)
 //   - `agent_mission_duration_ms{status=<terminal>}` — mission latency
 //     histogram (MissionRunner, on every terminal status)
-//   - `agent_tool_calls_failed_total` — failed tool dispatches
+//   - `agent_tool_calls_failed_total` — failed tool dispatches, including
+//     thrown dispatches and failed results inside dispatchBatch
 //     (TracedToolDispatcher)
 //   - `agent_circuit_breaker_state{provider=<id>}` — breaker gauges
 //     (CircuitBreaker: closed=0, half-open=1, open=2)
