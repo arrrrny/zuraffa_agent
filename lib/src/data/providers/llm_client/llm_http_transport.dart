@@ -110,14 +110,16 @@ ChatCompletion parseChatCompletionResponse(Map<String, dynamic> json) {
 }
 
 /// Strips a `scheme://` prefix so the value can be used in an HttpClient
-/// `findProxy` directive (e.g. `http://localhost:8890` -> `localhost:8890`).
+/// `findProxy` directive (e.g. `http://proxy.example.com:8890` ->
+/// `proxy.example.com:8890`).
 String _stripScheme(String url) {
   final idx = url.indexOf('://');
   return idx < 0 ? url : url.substring(idx + 3);
 }
 
 /// HTTP transport that performs chat-completion calls against an
-/// OpenAI-compatible gateway, optionally routing through a local proxy.
+/// OpenAI-compatible gateway, optionally routing through an
+/// operator-supplied proxy (explicit or env-loaded — never defaulted).
 class LlmHttpTransport {
   /// Factory for the underlying [HttpClient]; injectable for tests.
   final HttpClient Function() clientFactory;

@@ -3,7 +3,8 @@
 // package (constitution VIII): re-implemented in-tree per
 // specs/008-fallback-chain-runtime/spec.md with this attribution retained.
 //
-// STUB (TDD red phase for U10) — failover runtime not implemented yet.
+// Failover chain runtime: ordered providers with circuit-breaker-gated
+// automatic failover plus health, metrics, and audit hooks (spec 008 FR-001..FR-005).
 
 import '../domain/entities/client_health/client_health.dart';
 import '../observability/health_check.dart';
