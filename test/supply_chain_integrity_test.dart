@@ -94,6 +94,93 @@ bool _versionSatisfies(String version, String constraint) {
   return exact != null && _compare(v, exact) == 0;
 }
 
+/// Whether a `.gitignore` pattern would ignore the repository's ROOT
+/// `pubspec.lock` — the #109 violation this suite guards against.
+///
+/// Nested-scoped patterns (e.g. `packages/**/pubspec.lock`) cannot
+/// match the root file and are exempt: they express the documented
+/// policy that the federated subpackages' lockfiles stay uncommitted
+/// until they get a CI lane (ARCHITECTURE.md).
+bool _patternIgnoresRootLockfile(String pattern) {
+  // Root-anchored (`/pubspec.lock`) still targets the root file.
+  final p = pattern.startsWith('/') ? pattern.substring(1) : pattern;
+  // A leading `**/` matches in every directory, the repository root
+  // included (`**/pubspec.lock`, `**/*.lock`, …).
+  if (p.startsWith('**/')) return _globMatches(p.substring(3), 'pubspec.lock');
+  // No directory component: matches at every level — root included
+  // (`pubspec.lock`, `*.lock`, …).
+  if (!p.contains('/')) return _globMatches(p, 'pubspec.lock');
+  // Scoped to subdirectories — cannot match the root lockfile.
+  return false;
+}
+
+/// Minimal single-segment glob match (`*` and `?`) against a file name.
+bool _globMatches(String pattern, String name) {
+  final source = RegExp.escape(
+    pattern,
+  ).replaceAll(r'\*', '.*').replaceAll(r'\?', '.');
+  return RegExp('^$source\$').hasMatch(name);
+}
+
+/// Matches a workflow's `run:` key — inline form (`run: dart pub get`)
+/// and list-item form (`- run: …`).
+final RegExp _runLineRe = RegExp(r'^\s*(?:-\s*)?run:\s*(.*)$');
+
+/// Command lines of a workflow file that actually invoke `pub get`,
+/// each returned as `'<line>: <command text>'`.
+///
+/// Only real command lines count: an inline `run:` value, or a line
+/// inside a `run: |` / `run: >` block scalar. A `- name: pub get` step
+/// label or prose mentioning `pub get` (an `if:` expression, a
+/// mid-line comment) is not a command and never becomes a false
+/// offender — but every line that IS a `pub get` invocation still has
+/// to carry `--enforce-lockfile` on that same line.
+List<String> _pubGetRunLines(List<String> lines) {
+  final found = <String>[];
+  var keyIndent = -1; // indent of a `run: |`/`run: >` key awaiting content
+  var contentIndent = -1; // indent of the open block scalar's content
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    final trimmed = line.trim();
+    final indent = line.length - line.trimLeft().length;
+
+    if (trimmed.isEmpty) {
+      // Blank lines never establish or end a block scalar's content.
+      if (keyIndent >= 0 || contentIndent >= 0) continue;
+    }
+
+    if (keyIndent >= 0) {
+      if (indent <= keyIndent) {
+        keyIndent = -1; // block scalar had no content — reprocess below
+      } else {
+        contentIndent = indent; // first content line fixes the block indent
+        keyIndent = -1;
+      }
+    }
+    if (contentIndent >= 0) {
+      if (indent >= contentIndent) {
+        // Command line inside a `run:` block scalar.
+        if (!trimmed.startsWith('#') && trimmed.contains('pub get')) {
+          found.add('${i + 1}: $trimmed');
+        }
+        continue;
+      }
+      contentIndent = -1; // block scalar ended — reprocess below
+    }
+
+    if (trimmed.startsWith('#')) continue;
+    final run = _runLineRe.firstMatch(line);
+    if (run == null) continue; // name:, if:, prose — not a command line
+    final value = run.group(1)!.trim();
+    if (value.startsWith('|') || value.startsWith('>')) {
+      keyIndent = indent; // block scalar: commands follow on deeper lines
+      continue;
+    }
+    if (value.contains('pub get')) found.add('${i + 1}: $value');
+  }
+  return found;
+}
+
 void main() {
   group('supply-chain integrity (issue #109)', () {
     test('zuraffa is resolved through an auditable channel', () {
@@ -151,13 +238,7 @@ void main() {
       final offenders = _readLines('.gitignore')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty && !line.startsWith('#'))
-          .where(
-            (line) =>
-                line == 'pubspec.lock' ||
-                line == '/pubspec.lock' ||
-                line == '**/pubspec.lock' ||
-                line == '*.lock',
-          )
+          .where(_patternIgnoresRootLockfile)
           .toList();
       expect(
         offenders,
@@ -167,6 +248,29 @@ void main() {
             'uncommitted lockfile means non-reproducible builds and no '
             'auditable resolved graph',
       );
+      // The exemption contract: a nested-scoped ignore stays
+      // representable (ARCHITECTURE.md: subpackage lockfiles are
+      // uncommitted until they get a CI lane), while every pattern
+      // that would swallow the ROOT lockfile remains a violation.
+      expect(
+        _patternIgnoresRootLockfile('packages/**/pubspec.lock'),
+        isFalse,
+        reason: 'a nested-scoped lockfile ignore must remain expressible',
+      );
+      for (final rootScoped in [
+        'pubspec.lock',
+        '/pubspec.lock',
+        '**/pubspec.lock',
+        '*.lock',
+      ]) {
+        expect(
+          _patternIgnoresRootLockfile(rootScoped),
+          isTrue,
+          reason:
+              '"$rootScoped" matches the root pubspec.lock and must '
+              'stay forbidden (issue #109)',
+        );
+      }
 
       final lockFile = File('$repoRoot/pubspec.lock');
       expect(
@@ -250,16 +354,10 @@ void main() {
       var pubGetSteps = 0;
       final offenders = <String>[];
       for (final workflow in workflows) {
-        final lines = workflow.readAsLinesSync();
-        for (var i = 0; i < lines.length; i++) {
-          if (!lines[i].contains('pub get')) continue;
-          // Comments that merely mention `pub get` are not steps.
-          if (lines[i].trim().startsWith('#')) continue;
+        for (final command in _pubGetRunLines(workflow.readAsLinesSync())) {
           pubGetSteps++;
-          if (!lines[i].contains('--enforce-lockfile')) {
-            offenders.add(
-              '${workflow.uri.pathSegments.last}:${i + 1}: ${lines[i].trim()}',
-            );
+          if (!command.contains('--enforce-lockfile')) {
+            offenders.add('${workflow.uri.pathSegments.last}:$command');
           }
         }
       }
