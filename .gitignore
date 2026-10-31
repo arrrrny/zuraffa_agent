@@ -26,3 +26,8 @@
 .zfa/runs/
 .zfa/plans/last_run_*
 .workflow/state-archive/
+
+# Coverage artifacts (issue #113): `dart test --coverage=coverage` writes the
+# raw VM coverage JSONs; format_coverage adds lcov.info. Generated per CI
+# run, uploaded as artifacts, never committed.
+coverage/

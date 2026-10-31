@@ -15,6 +15,8 @@ import 'dart:io';
 
 import '../../../domain/entities/llm_client/chat_completion.dart';
 import '../../../domain/entities/llm_client/chat_message.dart';
+import '../../../llm/llm_client.dart';
+import '../../../llm/sse_chat_chunk_parser.dart';
 
 /// Raised when a completion request fails at the transport layer.
 class LlmTransportException implements Exception {
@@ -42,7 +44,11 @@ class LlmTransportException implements Exception {
 
 /// Builds an OpenAI-compatible chat-completion request body.
 ///
-/// Pure function — no I/O, fully unit-testable.
+/// Pure function — no I/O, fully unit-testable. A streamed request opts into
+/// usage reporting (`stream_options.include_usage`), mirroring
+/// `OpenAiCompatibleClient._buildBody`: spec-compliant gateways emit the
+/// trailing usage event only when the client asks for it, and without the
+/// opt-in every streaming turn silently reports zero token usage.
 Map<String, dynamic> buildChatCompletionRequest({
   required String model,
   required List<ChatMessage> messages,
@@ -52,6 +58,7 @@ Map<String, dynamic> buildChatCompletionRequest({
     'model': model,
     'messages': messages.map((m) => m.toJson()).toList(growable: false),
     'stream': stream,
+    if (stream) 'stream_options': {'include_usage': true},
   };
 }
 
@@ -176,4 +183,91 @@ class LlmHttpTransport {
       client.close(force: true);
     }
   }
+
+  /// Streams a chat completion and yields `LlmResponseChunk`s incrementally
+  /// as the gateway emits SSE deltas (issue #123).
+  ///
+  /// The request is the same OpenAI-compatible `/chat/completions` call as
+  /// [complete] with `stream: true`. Chunks follow the provider clients'
+  /// streaming shapes: `delta.content` -> content chunks, `delta.reasoning`
+  /// / `delta.reasoning_content` -> thinking chunks, `delta.tool_calls`
+  /// fragments buffered and emitted once `finish_reason` arrives, and the
+  /// trailing usage event folded into the final `isComplete: true` chunk.
+  ///
+  /// Backpressure: the yielded stream is a plain forwarding stream over the
+  /// response socket — pausing the consumer pauses the socket read. The
+  /// engine loop wraps it in a bounded buffer (see
+  /// `engine_loop_executor.dart`), which is where the watermark contract
+  /// lives.
+  ///
+  /// Unlike [complete], no retry policy is applied: a connection cannot be
+  /// replayed after partial chunks were already delivered downstream.
+  /// Errors (non-2xx status, connection failure) surface on the stream's
+  /// error channel; the HTTP client is closed on completion, error, and
+  /// cancellation alike.
+  Stream<LlmResponseChunk> streamComplete({
+    required String baseUrl,
+    required String apiKey,
+    String? proxyUrl,
+    required String model,
+    required List<ChatMessage> messages,
+    Duration? timeout,
+  }) async* {
+    final client = clientFactory();
+    if (timeout != null) {
+      client.connectionTimeout = timeout;
+    }
+    if (proxyUrl != null && proxyUrl.isNotEmpty) {
+      final hostPort = _stripScheme(proxyUrl);
+      client.findProxy = (uri) => 'PROXY $hostPort';
+    }
+    HttpClientResponse response;
+    try {
+      final uri = Uri.parse('$baseUrl/chat/completions');
+      final request = await client.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Authorization', 'Bearer $apiKey');
+      request.write(
+        jsonEncode(
+          buildChatCompletionRequest(
+            model: model,
+            messages: messages,
+            stream: true,
+          ),
+        ),
+      );
+      response = await request.close();
+    } catch (_) {
+      client.close(force: true);
+      rethrow;
+    }
+    if (response.statusCode != 200) {
+      final body = await response.transform(utf8.decoder).join();
+      client.close(force: true);
+      throw LlmTransportException(
+        statusCode: response.statusCode,
+        body: body,
+        message: 'gateway returned ${response.statusCode}',
+      );
+    }
+    try {
+      yield* parseChatCompletionChunkStream(
+        response.transform(utf8.decoder).transform(const LineSplitter()),
+      );
+    } finally {
+      client.close(force: true);
+    }
+  }
 }
+
+/// Parses an OpenAI-compatible streaming (SSE) response body into
+/// `LlmResponseChunk`s (issue #123).
+///
+/// Pure function — no I/O, fully unit-testable. Delegate to the shared
+/// parser (`parseOpenAiSseChunkStream` in
+/// lib/src/llm/sse_chat_chunk_parser.dart) so both OpenAI-compatible
+/// streaming paths — this transport and `OpenAiCompatibleClient.stream` —
+/// run one wire implementation instead of twin state machines (issue #123
+/// review).
+Stream<LlmResponseChunk> parseChatCompletionChunkStream(Stream<String> lines) =>
+    parseOpenAiSseChunkStream(lines);

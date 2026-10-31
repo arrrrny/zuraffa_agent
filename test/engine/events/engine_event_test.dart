@@ -31,6 +31,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -199,6 +200,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -249,6 +251,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -310,6 +313,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -752,8 +756,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: '
-        'm-7, status: success, summary: all goals met)',
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, '
+        'status: success, summary: all goals met)',
       );
       expect(
         MissionCompleted(
@@ -762,8 +766,8 @@ void main() {
           status: 'cancelled',
           summary: null,
         ).toString(),
-        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: '
-        'm-7, status: cancelled, summary: null)',
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, '
+        'status: cancelled, summary: null)',
       );
     });
 
@@ -813,6 +817,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',

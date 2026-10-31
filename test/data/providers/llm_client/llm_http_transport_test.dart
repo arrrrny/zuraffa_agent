@@ -48,6 +48,21 @@ void main() {
       );
       expect(body['stream'], isTrue);
     });
+
+    test('opts into usage reporting only when streaming (issue #123)', () {
+      final streamed = buildChatCompletionRequest(
+        model: 'm',
+        messages: const [ChatMessage(role: 'user', content: 'x')],
+        stream: true,
+      );
+      expect(streamed['stream_options'], {'include_usage': true});
+
+      final nonStreamed = buildChatCompletionRequest(
+        model: 'm',
+        messages: const [ChatMessage(role: 'user', content: 'x')],
+      );
+      expect(nonStreamed.containsKey('stream_options'), isFalse);
+    });
   });
 
   group('arrarrny/zuraffa_agent#5 - response parse', () {

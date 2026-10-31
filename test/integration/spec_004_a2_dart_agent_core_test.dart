@@ -5,6 +5,12 @@
 // Repo-invariant acceptance test: scans `lib/` for an import of the removed
 // dependency and verifies ported files are attributed. No engine feature is
 // required — this locks in the current (correct) dependency posture.
+//
+// Tagged `integration` (issue #113): the file lives in the integration tier,
+// so `dart test -P integration` (nightly lane) selects it like its siblings.
+
+@Tags(['integration'])
+library;
 
 import 'dart:io';
 

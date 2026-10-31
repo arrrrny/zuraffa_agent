@@ -5,14 +5,15 @@ description: >-
   building type-safe AI agents.
 version: 7.3.2
 homepage: https://zuraffa.com
+documentation: https://github.com/arrrrny/zuraffa_agent#readme
 repository: https://github.com/arrrrny/zuraffa_agent
 issue_tracker: https://github.com/arrrrny/zuraffa_agent/issues
 topics:
-  - agents
-  - zuraffa
+  - agent
   - llm
   - mcp
-  - clean-architecture
+  - ai
+  - zuraffa
 
 environment:
   sdk: ^3.8.0

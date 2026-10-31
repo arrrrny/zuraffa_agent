@@ -43,7 +43,7 @@ jobs:
         with:
           sdk: ${{ env.DART_SDK }}
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: dmuti mutation run (>= 80% kill-rate gate)
         continue-on-error: true
         run: |
@@ -81,7 +81,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-${{ env.DART_SDK }}-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Run load benchmarks
         continue-on-error: true
         run: dart run benchmark/benchmark_runner.dart --json benchmark-results.json
@@ -105,7 +105,7 @@ jobs:
         with:
           sdk: ${{ env.DART_SDK }}
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Check LLM fixture drift against provider docs
         continue-on-error: true
         run: |
@@ -116,4 +116,57 @@ jobs:
         with:
           name: fixture-drift-report
           path: fixture-drift-report.json
+          if-no-files-found: ignore
+
+  integration:
+    # Issue #113: the live-LLM lane. The KIMI_API_KEY-gated tests under
+    # test/integration/ self-skip in every PR run (secrets are not available
+    # to pull_request workflows), so without this job the live provider path
+    # was perpetually unverified. `-P integration` selects the tagged
+    # integration tier (dart_test.yaml presets); with the operator's secrets
+    # unset the tests still self-skip with a stated reason (spec 106: no
+    # default gateway), so this lane is safe to schedule unconditionally.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.DART_SDK }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ env.DART_SDK }}-
+      - name: Pub get
+        run: dart pub get --enforce-lockfile
+      - name: Integration tests (-P integration, live LLM lane)
+        # Advisory by the nightly convention (`continue-on-error: true`, as
+        # on every gate step here), so the job's status carries no signal on
+        # its own. The siblings (`mutation`, `load`, the drift lane) publish
+        # their numbers as artifacts under `if: always()`; this lane does the
+        # same with its log, so "skipped because the secrets are unset",
+        # "ran and passed" and "ran and failed" are distinguishable from the
+        # artifact list instead of only from a red step buried in the log.
+        continue-on-error: true
+        # `shell: bash` is required, not cosmetic: it is what makes the
+        # runner use `-eo pipefail`, so `| tee` cannot mask the test exit
+        # status. Without it the step would pass on a real failure and the
+        # artifact would be the only trace.
+        shell: bash
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: |
+          dart test -j 2 -P integration --reporter=expanded \
+            2>&1 | tee integration-tests.log
+      - name: Upload integration log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-log
+          path: integration-tests.log
           if-no-files-found: ignore

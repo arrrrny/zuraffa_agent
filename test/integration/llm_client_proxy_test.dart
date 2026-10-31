@@ -4,6 +4,11 @@
 // against an operator-configured OpenAI-compatible gateway. This is the
 // end-to-end "agent talks to the model" check the user asked for.
 //
+// Tagged `integration` (issue #113): `dart test -P integration` — the
+// nightly live-LLM lane in .github/workflows/nightly.yml — selects this file
+// through the tag; before the tag existed the preset selected nothing, so
+// the live path was never exercised anywhere.
+//
 // spec 106 (issue #117): there is NO default gateway — every endpoint value
 // must be provided explicitly by the operator. The test self-skips with a
 // stated reason when configuration is absent; it never falls back to a
@@ -19,6 +24,9 @@
 // Run locally with:
 //   KIMI_API_KEY=<jwt> LLM_BASE_URL=<url> LLM_MODEL=<model> \
 //     dart test test/integration/llm_client_proxy_test.dart
+
+@Tags(['integration'])
+library;
 
 import 'dart:io';
 
