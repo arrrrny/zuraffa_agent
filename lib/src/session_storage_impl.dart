@@ -4,7 +4,7 @@
 // to the allowlisted session_backup.dart adapter.
 // Hand-written integration glue against zfa-generated entity types.
 
-import 'retention.dart';
+import 'retention_policy.dart';
 import 'session_backup.dart';
 import 'session_storage.dart';
 import 'types.dart';

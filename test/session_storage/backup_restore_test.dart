@@ -85,6 +85,12 @@ void main() {
       await store.backup(dest);
 
       expect(File('$dest.tmp').existsSync(), isFalse);
+      // The uniquified temp (`dest.tmp.<pid>_<micros>`) is renamed away
+      // too — no leftover temp file of any name.
+      final leftovers = await Directory(
+        tempDir.path,
+      ).list().where((e) => e.path.startsWith('$dest.tmp')).toList();
+      expect(leftovers, isEmpty);
       expect(File(dest).existsSync(), isTrue);
     });
 
@@ -148,6 +154,18 @@ void main() {
       await File(dest).writeAsString(lines.join('\n'));
 
       expect(() => store.restore(dest), throwsA(isA<StateError>()));
+    });
+
+    test('a header without schemaVersion throws FormatException', () async {
+      final store = await seededJsonl('${tempDir.path}/s.jsonl');
+      final dest = '${tempDir.path}/noschema.jsonl';
+      await store.backup(dest);
+
+      final lines = await File(dest).readAsLines();
+      lines[0] = jsonEncode({SessionSchema.headerKey: <String, dynamic>{}});
+      await File(dest).writeAsString(lines.join('\n'));
+
+      expect(() => store.restore(dest), throwsA(isA<FormatException>()));
     });
 
     test('accepts a legacy-versioned backup and migrates it', () async {

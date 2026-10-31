@@ -127,6 +127,7 @@ operations, built on the versioned session-file schema (spec 110):
 final store = JsonlSessionStorage('sessions/s1.jsonl');
 await store.init();
 
+await Directory('backups').create(recursive: true);
 await store.backup('backups/s1.jsonl'); // atomic, versioned snapshot
 await store.restore('backups/s1.jsonl'); // replaces current state, durable on return
 ```
@@ -161,7 +162,7 @@ destroy the durable copy.
 | --- | --- | --- |
 | `maxAge` | drop entries strictly older than `now - maxAge` | unlimited |
 | `maxCount` | keep only the newest `maxCount` entries | unlimited |
-| `maxBytes` | drop oldest-first while serialized size exceeds the budget | unlimited |
+| `maxBytes` | drop oldest-first while serialized size exceeds the budget — UTF-8 JSON bytes for the session stores, episodic memory and the usage ledger; rendered size (`toString().length`) for the engine event log, which has no JSON render | unlimited |
 
 `prune()` exists on every store, with each store's own time source:
 session entries use their `timestamp`, episodic memories their recording

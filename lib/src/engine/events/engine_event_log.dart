@@ -9,7 +9,7 @@
 // (lib/src/usage_ledger.dart) — no @Zorphy, no dart:io, no new deps
 // (constitution Principles VII/IX).
 
-import '../../retention.dart';
+import '../../retention_policy.dart';
 import 'engine_event.dart';
 
 /// Append-only, in-memory log of [EngineEvent]s with typed and temporal

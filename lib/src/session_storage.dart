@@ -1,6 +1,6 @@
 // Abstract Session Storage Contract
 
-import 'retention.dart';
+import 'retention_policy.dart';
 import 'types.dart';
 
 /// The persisted session-tree schema contract (spec 110, issue #122).

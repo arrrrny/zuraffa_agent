@@ -94,7 +94,13 @@ final class SessionBackupCodec {
             'backup envelope has no schema header line',
           );
         }
-        schemaVersion = schema['schemaVersion'] as int;
+        final version = schema['schemaVersion'];
+        if (version is! int) {
+          throw const FormatException(
+            'backup header is missing a valid schemaVersion',
+          );
+        }
+        schemaVersion = version;
         if (schemaVersion > SessionSchema.currentVersion) {
           throw StateError(
             'backup schemaVersion $schemaVersion is newer than the supported '
@@ -160,7 +166,13 @@ final class SessionBackupFile {
     String? activeLeafId,
     DateTime? createdAt,
   }) async {
-    final tmp = File('$dest.tmp');
+    // Uniquified temp name: two backups of the same dest overlapping in
+    // one isolate (or two processes sharing the store) each get their own
+    // temp file instead of clobbering one shared `$dest.tmp` before the
+    // rename. SessionLock guards the store path, not the dest.
+    final tmp = File(
+      '$dest.tmp.${pid}_${DateTime.now().microsecondsSinceEpoch}',
+    );
     final sink = tmp.openWrite();
     for (final line in SessionBackupCodec.encodeLines(
       entries: entries,

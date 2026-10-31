@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **Breaking**: `SessionStorage` implementations must now also implement
+  `backup(dest)`, `restore(src)` and `prune(policy)` (issue #135).
 - **Session backup/restore + retention/TTL policy** (issue #135): `SessionStorage.backup(dest)` /
   `restore(src)` on every backend (JSONL, Hive, in-memory) over a versioned envelope that is itself a
   valid session file (PS-1: the `_schema` header carries the schema version; newer snapshots are

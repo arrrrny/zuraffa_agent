@@ -6,7 +6,7 @@
 import 'dart:convert';
 
 import '../domain/entities/episodic_memory/episodic_memory.dart';
-import '../retention.dart';
+import '../retention_policy.dart';
 import '../session_storage.dart';
 import '../types.dart';
 import 'episodic_memory_store.dart';

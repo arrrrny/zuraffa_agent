@@ -5,7 +5,7 @@
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event_log.dart';
-import 'package:zuraffa_agent/src/retention.dart';
+import 'package:zuraffa_agent/src/retention_policy.dart';
 
 EngineEvent event(DateTime at, String id) =>
     TurnStarted(emittedAt: at, turnId: 'turn-$id');

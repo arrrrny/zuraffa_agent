@@ -12,7 +12,7 @@
 import 'package:hive_ce/hive.dart';
 
 import 'hive_adapters.dart';
-import 'retention.dart';
+import 'retention_policy.dart';
 import 'session_backup.dart';
 import 'session_storage.dart';
 import 'types.dart';
@@ -118,9 +118,19 @@ class HiveSessionStorage implements SessionStorage {
     final backup = await SessionBackupFile.read(src);
     final restored = SessionBackupCodec.decodeEntries(backup);
 
-    await _entryBox.clear();
+    // Put first, delete stale keys after: a crash mid-restore can never
+    // leave the box empty (issue #135's crash-window theme). The keys are
+    // dynamic — filter to the String keys this box is written with.
+    final restoredIds = <String>{for (final entry in restored) entry.id};
     for (final entry in restored) {
       await _entryBox.put(entry.id, entry);
+    }
+    final stale = <String>[
+      for (final key in _entryBox.keys)
+        if (key is String && !restoredIds.contains(key)) key,
+    ];
+    if (stale.isNotEmpty) {
+      await _entryBox.deleteAll(stale);
     }
     await _metaBox.put(_activeLeafKey, backup.activeLeafId ?? '');
   }

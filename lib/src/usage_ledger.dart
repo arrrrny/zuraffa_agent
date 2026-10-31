@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'retention.dart';
+import 'retention_policy.dart';
 import 'types.dart';
 
 /// UsageLedger — a read projection over [UsageEntry] instances that provides

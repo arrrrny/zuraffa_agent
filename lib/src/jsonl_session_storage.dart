@@ -11,7 +11,7 @@ import 'dart:io';
 
 import 'package:synchronized/synchronized.dart';
 
-import 'retention.dart';
+import 'retention_policy.dart';
 import 'session_backup.dart';
 import 'session_lock.dart';
 import 'session_migrator.dart';
