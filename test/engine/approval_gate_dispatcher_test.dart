@@ -21,6 +21,23 @@
 //   - dispatchBatch is all-or-nothing: one gated call the batch cannot
 //     approve refuses the entire batch; the inner batch never runs.
 //   - validateSchema / checkRiskTier delegate to the inner dispatcher.
+//
+// Issue arrrrny/zuraffa_agent#4 (R3 / spec-003 A4 + A5) — the two dispatch
+// decisions the audit found untested anywhere are pinned here:
+//
+//   - A4: the gate AWAITS the approval callback and enforces the declared
+//     approval budget — a callback that never answers times out into a
+//     denied ToolDispatchResult (the tool never runs); a slow-but-in-budget
+//     callback is awaited, not raced away.
+//   - A5: an admin-tier tool on a NON-internal mission is denied before the
+//     approval surface is even consulted and without invoking the tool
+//     implementation — a non-internal mission carries no admin grant (spec
+//     034: "The engine refuses to dispatch admin tools when no admin grant
+//     is present"; the same policy the sub-agent runtime enforces as
+//     `refusedRiskTier`). Admin tools on an INTERNAL mission keep the
+//     normal approval-callback flow.
+
+import 'dart:async';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
@@ -243,10 +260,14 @@ void main() {
         approvalCallback: RecordingApprovalCallback(true).call,
       );
 
+      // A5 (issue #4): admin tools run only on internal missions — the
+      // internal mission is the admin grant. A non-internal mission is
+      // denied outright (pinned below), so the approving-callback flow for
+      // admin is exercised on an internal mission.
       final result = await dispatcher.dispatch(
         toolName: 'fs.write',
         arguments: arguments,
-        isInternalMission: false,
+        isInternalMission: true,
       );
 
       expect(result.success, isTrue);
@@ -273,6 +294,280 @@ void main() {
       expect(result.success, isFalse);
       expect(inner.dispatchCount, 0);
       expect(callback.requests, isEmpty);
+    });
+  });
+
+  group('ApprovalGateToolDispatcher — approval timeout (spec-003 A4)', () {
+    test(
+      'a callback that never answers times out into a denied result',
+      () async {
+        final inner = RecordingDispatcher();
+        // The wired callback is the recorder: a throwaway lambda here would
+        // make "the surface was consulted" unassertable.
+        final requests = <ApprovalRequest>[];
+        // A callback that never completes: the gate must enforce the declared
+        // budget itself instead of hanging the mission loop forever.
+        final gate = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {'fs.write': RiskTier.confirm},
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
+          approvalTimeoutMs: 50,
+        );
+
+        final result = await gate.dispatch(
+          toolName: 'fs.write',
+          arguments: arguments,
+          isInternalMission: false,
+        );
+
+        expect(result.success, isFalse, reason: 'timeout denies the dispatch');
+        expect(result.error, contains('fs.write'));
+        expect(result.error, contains('timed out'));
+        // The tool never ran, and the surface was consulted exactly once —
+        // the timeout is enforced, not used as a shortcut.
+        expect(inner.dispatchCount, 0);
+        expect(requests, hasLength(1));
+        expect(requests.single.toolName, 'fs.write');
+        expect(requests.single.timeoutMs, 50);
+      },
+      timeout: const Timeout(Duration(seconds: 5)),
+    );
+
+    test('a slow-but-in-budget callback is awaited, not raced away', () async {
+      final inner = RecordingDispatcher();
+      final gate = ApprovalGateToolDispatcher(
+        inner: inner,
+        riskTiers: const {'fs.write': RiskTier.confirm},
+        approvalCallback: (_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          return true;
+        },
+        approvalTimeoutMs: 2000,
+      );
+
+      final result = await gate.dispatch(
+        toolName: 'fs.write',
+        arguments: arguments,
+        isInternalMission: false,
+      );
+
+      expect(result.success, isTrue, reason: 'within budget → still approves');
+      expect(result.result, 'ran:fs.write');
+      expect(inner.dispatchCount, 1);
+    }, timeout: const Timeout(Duration(seconds: 5)));
+
+    test(
+      'an approval timeout refuses the whole batch (all-or-nothing)',
+      () async {
+        final inner = RecordingDispatcher();
+        final requests = <ApprovalRequest>[];
+        final gate = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {
+            'fs.read': RiskTier.safe,
+            'fs.write': RiskTier.confirm,
+          },
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
+          approvalTimeoutMs: 50,
+        );
+
+        final results = await gate.dispatchBatch(
+          calls: const [
+            ToolCall(
+              toolName: 'fs.read',
+              arguments: {'path': '/tmp/a.txt'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'fs.write',
+              arguments: arguments,
+              executionMode: 'sequential',
+            ),
+          ],
+          isInternalMission: false,
+        );
+
+        for (final result in results) {
+          expect(result.success, isFalse);
+          expect(result.error, contains('timed out'));
+        }
+        expect(inner.batchCalls, isEmpty, reason: 'nothing was dispatched');
+        // Only the gated call reached the surface — once.
+        expect(requests, hasLength(1));
+        expect(requests.single.toolName, 'fs.write');
+      },
+      timeout: const Timeout(Duration(seconds: 5)),
+    );
+
+    test(
+      'a multi-call batch against a stuck surface costs ONE budget, not N',
+      () async {
+        final inner = RecordingDispatcher();
+        final requests = <ApprovalRequest>[];
+        final gate = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {
+            'fs.write': RiskTier.confirm,
+            'sql.exec': RiskTier.confirm,
+            'shell': RiskTier.confirm,
+            'deploy': RiskTier.confirm,
+          },
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
+          approvalTimeoutMs: 200,
+        );
+
+        final clock = Stopwatch()..start();
+        final results = await gate.dispatchBatch(
+          calls: const [
+            ToolCall(
+              toolName: 'fs.write',
+              arguments: {'path': '/tmp/a.txt'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'sql.exec',
+              arguments: {'q': 'select 1'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'shell',
+              arguments: {'cmd': 'ls'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'deploy',
+              arguments: {'env': 'prod'},
+              executionMode: 'sequential',
+            ),
+          ],
+          isInternalMission: false,
+        );
+        clock.stop();
+
+        expect(results, hasLength(4));
+        for (final result in results) {
+          expect(result.success, isFalse);
+          expect(result.error, contains('timed out'));
+        }
+        expect(inner.batchCalls, isEmpty, reason: 'nothing was dispatched');
+        // Every gated call still reaches the surface (the gate does not skip
+        // asking), but they share one budget: the serial worst case would be
+        // 4 × 200ms. The margin is deliberately wide so a loaded host cannot
+        // turn this into a load assertion.
+        expect(requests, hasLength(4));
+        expect(
+          clock.elapsedMilliseconds,
+          lessThan(500),
+          reason: 'the pre-approval pass must be bounded by ONE budget',
+        );
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
+  });
+
+  group('ApprovalGateToolDispatcher — admin grant (spec-003 A5, issue #4)', () {
+    test('admin tool on a non-internal mission is denied without consulting '
+        'the approval surface or the tool', () async {
+      final inner = RecordingDispatcher();
+      final callback = RecordingApprovalCallback(true);
+      final dispatcher = ApprovalGateToolDispatcher(
+        inner: inner,
+        riskTiers: const {'cluster.delete-namespace': RiskTier.admin},
+        approvalCallback: callback.call,
+      );
+
+      final result = await dispatcher.dispatch(
+        toolName: 'cluster.delete-namespace',
+        arguments: arguments,
+        isInternalMission: false,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('admin'));
+      expect(result.error, contains('grant'));
+      // Denied BEFORE the approval surface is consulted…
+      expect(
+        callback.requests,
+        isEmpty,
+        reason:
+            'a non-internal mission carries no admin grant — the '
+            'callback is never asked',
+      );
+      // …and the tool implementation never ran.
+      expect(inner.dispatchCount, 0);
+    });
+
+    test(
+      'admin tool on an internal mission keeps the approval-callback flow',
+      () async {
+        final inner = RecordingDispatcher();
+        final callback = RecordingApprovalCallback(true);
+        final dispatcher = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {'cluster.delete-namespace': RiskTier.admin},
+          approvalCallback: callback.call,
+        );
+
+        final result = await dispatcher.dispatch(
+          toolName: 'cluster.delete-namespace',
+          arguments: arguments,
+          isInternalMission: true,
+        );
+
+        expect(result.success, isTrue);
+        expect(callback.requests, hasLength(1));
+        expect(inner.dispatchCount, 1);
+      },
+    );
+
+    test('a batch containing an admin call on a non-internal mission refuses '
+        'everything', () async {
+      final inner = RecordingDispatcher();
+      final callback = RecordingApprovalCallback(true);
+      final dispatcher = ApprovalGateToolDispatcher(
+        inner: inner,
+        riskTiers: const {
+          'fs.read': RiskTier.safe,
+          'cluster.delete-namespace': RiskTier.admin,
+        },
+        approvalCallback: callback.call,
+      );
+
+      final results = await dispatcher.dispatchBatch(
+        calls: const [
+          ToolCall(
+            toolName: 'fs.read',
+            arguments: {'path': '/tmp/a.txt'},
+            executionMode: 'sequential',
+          ),
+          ToolCall(
+            toolName: 'cluster.delete-namespace',
+            arguments: arguments,
+            executionMode: 'sequential',
+          ),
+        ],
+        isInternalMission: false,
+      );
+
+      for (final result in results) {
+        expect(result.success, isFalse);
+        expect(result.error, contains('admin'));
+      }
+      expect(
+        inner.batchCalls,
+        isEmpty,
+        reason: 'all-or-nothing: the ungrantable admin call refuses the batch',
+      );
+      expect(inner.dispatchCount, 0);
     });
   });
 
