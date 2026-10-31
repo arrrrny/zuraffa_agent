@@ -57,6 +57,13 @@ class InMemoryToolRegistry implements ToolRegistry {
   final StreamController<NamespaceCollisionEvent> _collisions =
       StreamController<NamespaceCollisionEvent>.broadcast();
 
+  /// Set by [dispose]. Registrations after dispose are refused with a typed
+  /// error instead of landing in a dead event sink (or throwing the
+  /// StreamController's own `Cannot add new events after calling close` in
+  /// place of the namespace-collision message). Matches the
+  /// `McpToolAdapter.sync called after dispose` precedent.
+  bool _disposed = false;
+
   @override
   Stream<NamespaceCollisionEvent> get onCollision => _collisions.stream;
 
@@ -94,8 +101,9 @@ class InMemoryToolRegistry implements ToolRegistry {
   }
 
   @override
-  Future<void> unregister(String qualifiedName) async {
+  Future<void> unregister(String qualifiedName) {
     _tools.remove(qualifiedName);
+    return Future<void>.value();
   }
 
   @override
@@ -145,6 +153,13 @@ class InMemoryToolRegistry implements ToolRegistry {
     required AgentTool tool,
     required String origin,
   }) async {
+    if (_disposed) {
+      throw StateError(
+        'InMemoryToolRegistry.register after dispose (issue #4 / spec-003 A1) '
+        '— the collision stream is closed, so a registration could neither '
+        'resolve nor report a collision',
+      );
+    }
     final existing = _tools[qualifiedName];
     if (existing != null) {
       _emitCollision(
@@ -165,6 +180,11 @@ class InMemoryToolRegistry implements ToolRegistry {
     );
   }
 
-  /// Closes the collision-event stream. The registry is unusable afterwards.
-  Future<void> dispose() => _collisions.close();
+  /// Closes the collision-event stream. The registry is unusable afterwards:
+  /// a later registration throws a typed [StateError] rather than silently
+  /// writing into the closed stream.
+  Future<void> dispose() {
+    _disposed = true;
+    return _collisions.close();
+  }
 }

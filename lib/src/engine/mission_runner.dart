@@ -193,6 +193,7 @@ class MissionRunner {
     ContextCompressor? contextCompressor,
     this.preflightThreshold = 0.8,
     RetentionSweep? retention,
+    bool isInternalMission = false,
   }) : assert(
          preflightThreshold > 0 && preflightThreshold <= 1,
          'preflightThreshold must be in (0, 1]: a value <= 0 compacts '
@@ -210,7 +211,8 @@ class MissionRunner {
        _model = model,
        _tokenEstimator = tokenEstimator,
        _contextCompressor = contextCompressor,
-       _retention = retention;
+       _retention = retention,
+       _isInternalMission = isInternalMission;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -219,6 +221,14 @@ class MissionRunner {
   final RepetitionTrackerDatasource? _repetition;
   final void Function(EngineEvent) _onEvent;
   final DateTime Function() _clock;
+
+  /// Admin grant for this mission (spec 034 / spec-003 A5, issue #4). The
+  /// engine refuses to dispatch `admin`-tier tools when no grant is present,
+  /// and this is the producer of that grant: `true` only for engine-internal
+  /// missions (memory replay, sub-agent self-checks). Every tool dispatched
+  /// by this runner carries it. Default `false` — a user-driven mission
+  /// carries no admin grant.
+  final bool _isInternalMission;
 
   /// Optional runtime configuration (spec 107, issue #121). When supplied,
   /// [run] validates it first and refuses to start on any issue — fail fast
@@ -659,7 +669,7 @@ class MissionRunner {
         final result = await dispatcher.dispatch(
           toolName: call.toolName,
           arguments: call.arguments,
-          isInternalMission: false,
+          isInternalMission: _isInternalMission,
         );
         // Sanitize at the egress boundary (spec 109, issue #118): the
         // transcript is what the next request relays to the model vendor.

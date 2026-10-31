@@ -302,13 +302,18 @@ void main() {
       'a callback that never answers times out into a denied result',
       () async {
         final inner = RecordingDispatcher();
-        final callback = RecordingApprovalCallback(false);
+        // The wired callback is the recorder: a throwaway lambda here would
+        // make "the surface was consulted" unassertable.
+        final requests = <ApprovalRequest>[];
         // A callback that never completes: the gate must enforce the declared
         // budget itself instead of hanging the mission loop forever.
         final gate = ApprovalGateToolDispatcher(
           inner: inner,
           riskTiers: const {'fs.write': RiskTier.confirm},
-          approvalCallback: (_) => Completer<bool>().future,
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
           approvalTimeoutMs: 50,
         );
 
@@ -321,9 +326,12 @@ void main() {
         expect(result.success, isFalse, reason: 'timeout denies the dispatch');
         expect(result.error, contains('fs.write'));
         expect(result.error, contains('timed out'));
-        // The tool never ran, and the surface was consulted exactly once.
+        // The tool never ran, and the surface was consulted exactly once —
+        // the timeout is enforced, not used as a shortcut.
         expect(inner.dispatchCount, 0);
-        expect(callback.requests, isEmpty);
+        expect(requests, hasLength(1));
+        expect(requests.single.toolName, 'fs.write');
+        expect(requests.single.timeoutMs, 50);
       },
       timeout: const Timeout(Duration(seconds: 5)),
     );
@@ -355,13 +363,17 @@ void main() {
       'an approval timeout refuses the whole batch (all-or-nothing)',
       () async {
         final inner = RecordingDispatcher();
+        final requests = <ApprovalRequest>[];
         final gate = ApprovalGateToolDispatcher(
           inner: inner,
           riskTiers: const {
             'fs.read': RiskTier.safe,
             'fs.write': RiskTier.confirm,
           },
-          approvalCallback: (_) => Completer<bool>().future,
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
           approvalTimeoutMs: 50,
         );
 
@@ -386,8 +398,79 @@ void main() {
           expect(result.error, contains('timed out'));
         }
         expect(inner.batchCalls, isEmpty, reason: 'nothing was dispatched');
+        // Only the gated call reached the surface — once.
+        expect(requests, hasLength(1));
+        expect(requests.single.toolName, 'fs.write');
       },
       timeout: const Timeout(Duration(seconds: 5)),
+    );
+
+    test(
+      'a multi-call batch against a stuck surface costs ONE budget, not N',
+      () async {
+        final inner = RecordingDispatcher();
+        final requests = <ApprovalRequest>[];
+        final gate = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {
+            'fs.write': RiskTier.confirm,
+            'sql.exec': RiskTier.confirm,
+            'shell': RiskTier.confirm,
+            'deploy': RiskTier.confirm,
+          },
+          approvalCallback: (request) {
+            requests.add(request);
+            return Completer<bool>().future;
+          },
+          approvalTimeoutMs: 200,
+        );
+
+        final clock = Stopwatch()..start();
+        final results = await gate.dispatchBatch(
+          calls: const [
+            ToolCall(
+              toolName: 'fs.write',
+              arguments: {'path': '/tmp/a.txt'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'sql.exec',
+              arguments: {'q': 'select 1'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'shell',
+              arguments: {'cmd': 'ls'},
+              executionMode: 'sequential',
+            ),
+            ToolCall(
+              toolName: 'deploy',
+              arguments: {'env': 'prod'},
+              executionMode: 'sequential',
+            ),
+          ],
+          isInternalMission: false,
+        );
+        clock.stop();
+
+        expect(results, hasLength(4));
+        for (final result in results) {
+          expect(result.success, isFalse);
+          expect(result.error, contains('timed out'));
+        }
+        expect(inner.batchCalls, isEmpty, reason: 'nothing was dispatched');
+        // Every gated call still reaches the surface (the gate does not skip
+        // asking), but they share one budget: the serial worst case would be
+        // 4 × 200ms. The margin is deliberately wide so a loaded host cannot
+        // turn this into a load assertion.
+        expect(requests, hasLength(4));
+        expect(
+          clock.elapsedMilliseconds,
+          lessThan(500),
+          reason: 'the pre-approval pass must be bounded by ONE budget',
+        );
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
     );
   });
 

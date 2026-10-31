@@ -19,17 +19,51 @@
 //   - results are reassembled POSITIONALLY — results[i] is always the
 //     outcome of calls[i], regardless of completion order;
 //   - dispatch / validateSchema / checkRiskTier delegate untouched, so the
-//     decorator composes with ApprovalGateToolDispatcher and
-//     OversizedResultPolicyDispatcher in either order.
+//     decorator composes with OversizedResultPolicyDispatcher in either
+//     order (that one is a pure per-call transform).
+//
+//   - ORDER MATTERS WITH ApprovalGateToolDispatcher: this decorator must be
+//     the INNER one (`ApprovalGate(inner: ExecutionMode(inner: …))`). Wrapped
+//     the other way round, this dispatchBatch calls `_inner.dispatch` per
+//     call, so the gate's all-or-nothing pre-approval pass never runs — a
+//     batch of [safe-tool, confirm-tool-that-gets-denied] would then execute
+//     the safe tool and refuse only the second, the exact partial-batch
+//     gating the gate exists to prevent. The inverted wiring is rejected at
+//     construction time rather than left to the first host that follows a
+//     stale doc claim (issue #4 review).
+//
+// The unknown-executionMode fallback is sequential ON PURPOSE, and differs
+// from `RiskTier.fromString` (which throws on an unknown tier): an unknown
+// tier would silently downgrade a security classification, while an unknown
+// execution mode only costs concurrency. The safe reading of a mode string
+// this file does not recognize is "run it in order".
 //
 // Not exported from lib/zuraffa_agent.dart — consistent with the sibling
 // engine runtimes (mission_runner.dart, tool_dispatcher.dart).
 
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import 'approval_gate_dispatcher.dart';
 import 'tool_dispatcher.dart';
 
 class ExecutionModeToolDispatcher implements ToolDispatcher {
-  ExecutionModeToolDispatcher({required ToolDispatcher inner}) : _inner = inner;
+  ExecutionModeToolDispatcher({required ToolDispatcher inner})
+    : _inner = inner {
+    // Fail loud instead of mis-gating (see the header): with this decorator
+    // outside the gate, dispatchBatch bypasses the gate's all-or-nothing
+    // pre-approval pass and a mid-batch denial leaves earlier calls already
+    // executed.
+    if (inner is ApprovalGateToolDispatcher) {
+      throw ArgumentError.value(
+        inner,
+        'inner',
+        'ExecutionModeToolDispatcher must not wrap an '
+            'ApprovalGateToolDispatcher — the gate must be OUTERMOST '
+            '(ApprovalGate(inner: ExecutionMode(inner: …))): the inverted '
+            'order silently downgrades batch gating to per-call gating '
+            '(spec 034 / issue #4)',
+      );
+    }
+  }
 
   final ToolDispatcher _inner;
 

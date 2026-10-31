@@ -15,13 +15,19 @@
 //     outcome of calls[i], regardless of completion order (issue #4 R3.1
 //     "sequential/parallel execution modes");
 //   - dispatch / validateSchema / checkRiskTier delegate untouched, so the
-//     decorator composes with the approval gate and oversized-policy chain.
+//     decorator composes with the oversized-policy chain either way round —
+//     but with the approval gate it must be the INNER decorator
+//     (`ApprovalGate(inner: ExecutionMode(inner: …))`); the inverted order
+//     bypasses the gate's all-or-nothing pre-pass, so the constructor
+//     rejects it.
 //
 // Concurrency is asserted by overlapping dispatch intervals recorded by the
 // inner dispatcher — deterministic, no wall-clock margins.
 
 import 'package:test/test.dart';
+import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import 'package:zuraffa_agent/src/engine/approval_gate_dispatcher.dart';
 import 'package:zuraffa_agent/src/engine/execution_mode_dispatcher.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
@@ -36,6 +42,11 @@ class _Interval {
 
 class _RecordingDispatcher implements ToolDispatcher {
   final List<_Interval> intervals = [];
+
+  /// Intervals keyed by tool name. [intervals] is appended when a call
+  /// FINISHES, so `intervals[i]` is the i-th call to complete, not
+  /// `calls[i]` — assertions that mean "this tool's interval" index here.
+  final Map<String, _Interval> byTool = {};
   final List<String> order = [];
 
   ToolDispatchResult _result(String toolName) => ToolDispatchResult(
@@ -54,7 +65,9 @@ class _RecordingDispatcher implements ToolDispatcher {
     order.add('start:$toolName');
     await Future<void>.delayed(Duration(milliseconds: ms));
     order.add('end:$toolName');
-    intervals.add(_Interval(start, DateTime.now()));
+    final interval = _Interval(start, DateTime.now());
+    intervals.add(interval);
+    byTool[toolName] = interval;
     return _result(toolName);
   }
 
@@ -136,20 +149,26 @@ void main() {
       );
 
       expect(results, hasLength(4));
-      // Four 60ms tools cannot all pairwise overlap under a sequential
-      // runner within one wave: assert the wave's wall clock stays well
-      // under the sequential sum (4 x 60ms).
-      final start = inner.intervals
-          .map((i) => i.start)
-          .reduce((a, b) => a.isBefore(b) ? a : b);
-      final end = inner.intervals
-          .map((i) => i.end)
-          .reduce((a, b) => a.isAfter(b) ? a : b);
-      expect(
-        end.difference(start).inMilliseconds,
-        lessThan(220),
-        reason: 'the wave must overlap, not sum',
-      );
+      // Structural, not wall-clock: every member of the wave overlaps every
+      // other member. A sequential runner cannot produce a single overlap,
+      // and this holds on a host at load 200 as well as on an idle one.
+      final wave = inner.intervals;
+      for (var i = 0; i < wave.length; i++) {
+        for (var j = i + 1; j < wave.length; j++) {
+          expect(
+            wave[i].overlaps(wave[j]),
+            isTrue,
+            reason: 'every pair in one parallel run must overlap',
+          );
+        }
+      }
+      // …and the results are positional: a,b,c,d in call order.
+      expect(results.map((r) => r.result).toList(), [
+        'ran:a',
+        'ran:b',
+        'ran:c',
+        'ran:d',
+      ]);
     });
   });
 
@@ -207,15 +226,16 @@ void main() {
           'ran:s2',
         ]);
         // The parallel pair overlapped…
-        expect(inner.intervals[1].overlaps(inner.intervals[2]), isTrue);
+        expect(inner.byTool['p1']!.overlaps(inner.byTool['p2']!), isTrue);
         // …and the sequential bookends never overlap the wave: s1 finished
         // before the wave started, s2 started after the whole wave ended.
+        // Indexed by tool name: completion order is not call order.
         expect(
-          inner.intervals[0].end.isBefore(inner.intervals[1].start),
+          inner.byTool['s1']!.end.isBefore(inner.byTool['p1']!.start),
           isTrue,
         );
         expect(
-          inner.intervals[2].end.isBefore(inner.intervals[3].start),
+          inner.byTool['p2']!.end.isBefore(inner.byTool['s2']!.start),
           isTrue,
         );
       },
@@ -255,6 +275,25 @@ void main() {
         expect(
           dispatcher.checkRiskTier(riskTier: 'admin', isInternalMission: false),
           isFalse,
+        );
+      },
+    );
+
+    test(
+      'wrapping the approval gate is rejected — the gate must be outermost',
+      () {
+        final gate = ApprovalGateToolDispatcher(
+          inner: _RecordingDispatcher(),
+          riskTiers: const {'fs.write': RiskTier.confirm},
+          approvalCallback: (_) async => true,
+        );
+
+        expect(
+          () => ExecutionModeToolDispatcher(inner: gate),
+          throwsArgumentError,
+          reason:
+              'ExecutionMode outside the gate bypasses the gate\'s '
+              'all-or-nothing pre-approval pass',
         );
       },
     );

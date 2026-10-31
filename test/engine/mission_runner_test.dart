@@ -171,6 +171,7 @@ void main() {
       repetitionThreshold: 5,
     ),
     SteeringQueue? queue,
+    bool isInternalMission = false,
   }) => MissionRunner(
     executor: EngineLoopExecutor(loop10, llm),
     toolDispatcher: dispatcher ?? FakeToolDispatcher(),
@@ -178,6 +179,7 @@ void main() {
     steeringQueue: queue,
     onEvent: events.add,
     clock: fakeClock,
+    isInternalMission: isInternalMission,
   );
 
   group('spec 069 — MissionRunner', () {
@@ -601,6 +603,75 @@ void main() {
         ),
         throwsUnsupportedError,
       );
+    });
+  });
+
+  // Issue #4 review: A5 makes an admin-tier tool undispatchable without an
+  // admin grant, and `MissionRunner` is the producer of that grant. Before
+  // this flag existed the dispatch site hardcoded `false`, so no shipped path
+  // could ever express one.
+  group('spec 003 A5 — the mission-level admin grant', () {
+    test('a default runner dispatches as a non-internal mission', () async {
+      final dispatcher = FakeToolDispatcher();
+      final planner = ScriptedPlanner({
+        1: [
+          const ToolCall(
+            toolName: 'fs.read',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
+        ],
+      });
+      final runner = makeRunner(
+        ScriptedLlmClient(
+          completions: [
+            completionOf('need tool', finish: 'tool_calls'),
+            completionOf('done'),
+          ],
+        ),
+        events: <EngineEvent>[],
+        dispatcher: dispatcher,
+      );
+
+      await runner.run(
+        missionId: 'm1',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: planner,
+      );
+
+      expect(dispatcher.calls.single.isInternalMission, isFalse);
+    });
+
+    test('an internal mission carries its grant to every dispatch', () async {
+      final dispatcher = FakeToolDispatcher();
+      final planner = ScriptedPlanner({
+        1: [
+          const ToolCall(
+            toolName: 'cluster.delete-namespace',
+            arguments: {},
+            executionMode: 'sequential',
+          ),
+        ],
+      });
+      final runner = makeRunner(
+        ScriptedLlmClient(
+          completions: [
+            completionOf('need tool', finish: 'tool_calls'),
+            completionOf('done'),
+          ],
+        ),
+        events: <EngineEvent>[],
+        dispatcher: dispatcher,
+        isInternalMission: true,
+      );
+
+      await runner.run(
+        missionId: 'm1',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: planner,
+      );
+
+      expect(dispatcher.calls.single.isInternalMission, isTrue);
     });
   });
 }

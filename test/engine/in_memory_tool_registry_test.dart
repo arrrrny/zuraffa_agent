@@ -174,7 +174,9 @@ void main() {
           await Future<void>.delayed(Duration.zero);
           expect(events, hasLength(1));
           expect(events.single.toolName, 'fetch');
-          expect(events.single.sources, containsAll(['dda']));
+          // Existing origin first, incoming second — an ordered pair, so a
+          // missing incoming origin or a swapped side cannot pass.
+          expect(events.single.sources, ['dda', 'dda']);
           expect(events.single.resolution, 'rejected');
           await sub.cancel();
         },
@@ -201,7 +203,7 @@ void main() {
             'remote raptorr fetch',
           );
           await Future<void>.delayed(Duration.zero);
-          expect(events.single.sources, containsAll(['mcp:raptorr']));
+          expect(events.single.sources, ['mcp:raptorr', 'mcp:raptorr']);
           await sub.cancel();
         },
       );
@@ -300,5 +302,29 @@ void main() {
       final registry = InMemoryToolRegistry();
       expect(await registry.resolve('nope'), isNull);
     });
+
+    test(
+      'a registration after dispose() is refused with a typed error',
+      () async {
+        final registry = InMemoryToolRegistry();
+        await registry.registerDdaTool(_dda());
+        await registry.dispose();
+
+        // Without the guard this either landed silently in a dead event sink
+        // or, on a collision, threw the StreamController's own
+        // "Cannot add new events after calling close" instead of the typed
+        // namespace-collision message.
+        await expectLater(
+          registry.registerDdaTool(_mcpFetch()),
+          throwsStateError,
+        );
+        await expectLater(
+          registry.registerDdaTool(
+            const AgentTool(id: 'fetch', description: 'after dispose'),
+          ),
+          throwsStateError,
+        );
+      },
+    );
   });
 }
