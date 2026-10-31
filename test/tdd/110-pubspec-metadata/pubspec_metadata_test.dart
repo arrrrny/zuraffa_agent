@@ -69,6 +69,21 @@ void main() {
   });
 
   test('pubspec declares homepage and documentation (issue #110)', () {
+    // Same two-predicate URL-shape check the documentation field gets
+    // below — "must be a URL" is hasScheme + hasAuthority, so a future
+    // typo like `homepage: zuraffa` cannot pass silently
+    // (review finding 3 — symmetry).
+    final Uri? homepage = Uri.tryParse(pubspec['homepage'].toString());
+    expect(
+      homepage?.hasScheme ?? false,
+      isTrue,
+      reason: 'homepage must be a URL, got: ${pubspec['homepage']}',
+    );
+    expect(
+      homepage?.hasAuthority ?? false,
+      isTrue,
+      reason: 'homepage must point at a host, got: ${pubspec['homepage']}',
+    );
     expect(
       pubspec['homepage'],
       isNotNull,
@@ -124,19 +139,33 @@ void main() {
     () {
       final YamlMap? executables = pubspec['executables'] as YamlMap?;
       final Directory binDir = Directory('bin');
+      // Test for actual Dart entry points, not the bare directory: an empty
+      // bin/ (or one holding only non-Dart files) declares nothing, so it
+      // must not fail the audit (review finding 1 — false positive).
+      final bool hasDartEntryPoints = binDir.existsSync() &&
+          binDir
+              .listSync()
+              .whereType<File>()
+              .any((final f) => f.path.endsWith('.dart'));
       if (executables == null) {
         // Issue #110 audit outcome: no CLI entry points today, so the
         // executables block is correctly absent — but the moment a bin/
         // script lands, it must be declared, otherwise `pub publish` warns
         // and the CLI stays undiscoverable. This keeps the audit honest.
         expect(
-          binDir.existsSync(),
+          hasDartEntryPoints,
           isFalse,
           reason:
               'bin/ entry points exist but are not declared under '
               'executables: (issue #110 audit)',
         );
         return;
+      }
+      // executables: is declared, so bin/ must exist too — fail cleanly
+      // instead of throwing PathNotFoundException from listSync()
+      // (review finding 2 — unhandled load error).
+      if (!binDir.existsSync()) {
+        fail('executables are declared but bin/ does not exist');
       }
       final Set<String> binScripts = binDir
           .listSync()
