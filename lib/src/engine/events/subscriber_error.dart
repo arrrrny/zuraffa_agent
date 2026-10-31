@@ -1,6 +1,6 @@
 part of 'engine_event.dart';
 
-/// Published by [EngineEventBus] onto itself when a subscriber throws
+/// Published by `EngineEventBus` onto itself when a subscriber throws
 /// (spec 113, issue #134): the bus's self-observation surface. Carries
 /// the thrown error and the source event's runtime type — never the
 /// source event itself, so error events cannot leak payloads or

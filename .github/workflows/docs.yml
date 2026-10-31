@@ -1,0 +1,88 @@
+# docs — issue #127: published dartdoc API reference + `dart doc` CI step.
+#
+# Two gates:
+#   * docs-dry-run (pull_request): the public API must keep rendering. A
+#     dartdoc breakage anywhere in the exported surface (unresolved doc
+#     references, broken [symbol] links, invalid templates) fails the PR.
+#   * publish-docs (v* tags): build the real reference into api/ and
+#     publish it to GitHub Pages. One-time repo prerequisite, already
+#     done: Settings → Pages → Build and deployment → Source:
+#     "GitHub Actions".
+name: docs
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  docs-dry-run:
+    # AC-1: PR gate — `dart doc --output=/tmp/doc --dry-run` renders the
+    # full documentation in memory without writing output and fails on
+    # dartdoc errors, so public-API doc breakage cannot merge silently.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: docs-dry-run-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Pinned to the SDK the tree is documented with (3.13.7): dartdoc
+          # ships inside the SDK, so riding a moving channel could flip this
+          # gate on zero-code changes (same rationale as the format job in
+          # pipeline.yml).
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get
+      - name: dart doc dry-run (public API must render, zero warnings)
+        # `dart doc` only exits non-zero on errors; unresolved doc
+        # references are warnings. Broken public-API doc links are
+        # breakage too, so the gate fails on ANY warning line.
+        run: |
+          set -o pipefail
+          dart doc --output=/tmp/doc --dry-run 2>&1 | tee /tmp/dartdoc.log
+          if grep -qE '^[[:space:]]*(warning|error):' /tmp/dartdoc.log; then
+            echo "::error::dartdoc emitted warnings — unresolved doc references in the public API are documentation breakage. Fix the [bracket] refs (link only in-scope targets, backtick cross-library names)."
+            exit 1
+          fi
+
+  publish-docs:
+    # AC-2: on tag pushes, generate the reference into api/ and publish it
+    # to GitHub Pages (also runnable manually via workflow_dispatch).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: docs-publish-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get
+      - name: Build API reference
+        run: dart doc --output=api/
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: api/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

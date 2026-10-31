@@ -41,8 +41,3 @@ dev_dependencies:
   # ^14.4.0, so ^8.x cannot resolve here — ^9 is the documented deviation.
   dartdoc: ^9.0.11
   mutation_test: ^1.8.0
-
-# Fleet-wide xml policy: pin the override to the latest xml so graphs that
-# still transitively pull the abandoned minio (xml 6.x) resolve cleanly.
-dependency_overrides:
-  xml: 7.1.0

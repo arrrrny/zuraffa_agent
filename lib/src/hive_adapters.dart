@@ -87,7 +87,7 @@ class ContentBlockAdapter extends TypeAdapter<ContentBlock> {
   }
 }
 
-/// Registers all zuraffa entity TypeAdapters with a Hive [box].
+/// Registers all zuraffa entity TypeAdapters with a Hive `box`.
 ///
 /// Call this before opening any entity boxes:
 /// ```dart
