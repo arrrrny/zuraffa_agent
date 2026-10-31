@@ -195,3 +195,102 @@ Environment variables (all optional, prefix `ZFA_`):
 `ZFA_ENGINE_LOOP_SESSION_ID`, `ZFA_ENGINE_LOOP_WALL_CLOCK_TIMEOUT_MS`,
 `ZFA_ENGINE_LOOP_REPETITION_THRESHOLD`, `ZFA_MCP_TRANSPORT_ENDPOINT`,
 `ZFA_MCP_TRANSPORT_TYPE`, `ZFA_STOP_POLICY_MAX_TURNS`.
+
+## Session backup, restore & retention (issue #135)
+
+Durable stores — session trees, episodic memory, the usage ledger, the
+engine event log — grow unbounded unless a policy says otherwise. Every
+`SessionStorage` backend (JSONL, Hive, in-memory) ships the same three
+operations, built on the versioned session-file schema (spec 110):
+
+```dart
+final store = JsonlSessionStorage('sessions/s1.jsonl');
+await store.init();
+
+await Directory('backups').create(recursive: true);
+await store.backup('backups/s1.jsonl'); // atomic, versioned snapshot
+await store.restore('backups/s1.jsonl'); // replaces current state, durable on return
+```
+
+A backup file IS a valid session store (schema header + `_backup`
+provenance + `_meta` active leaf + entry lines), so it can be renamed and
+opened directly, or restored across backends (Hive → JSONL works).
+`restore` refuses snapshots newer than the supported schema version and
+migrates older ones, same as `init`.
+
+JSONL stores can also keep N generations of close-time backups (default
+**0 — off**):
+
+```dart
+final store = JsonlSessionStorage(
+  'sessions/s1.jsonl',
+  backupGenerations: 3, // keeps s1.jsonl.backup.{1,2,3}
+);
+```
+
+Each dirty `close()` rotates the just-persisted file into
+`s1.jsonl.backup.1` and shifts older generations by one. The close-time
+rewrite is atomic (temp + rename), so a crash mid-close can no longer
+destroy the durable copy.
+
+### Retention policies
+
+`RetentionPolicy` states per-store limits — null axes are unlimited,
+`RetentionPolicy.unlimited` (the default everywhere) never prunes:
+
+| Axis | Meaning | Default |
+| --- | --- | --- |
+| `maxAge` | drop entries strictly older than `now - maxAge` | unlimited |
+| `maxCount` | keep only the newest `maxCount` entries | unlimited |
+| `maxBytes` | drop oldest-first while serialized size exceeds the budget — UTF-8 JSON bytes for the session stores, episodic memory and the usage ledger; rendered size (`toString().length`) for the engine event log, which has no JSON render | unlimited |
+
+`prune()` exists on every store, with each store's own time source:
+session entries use their `timestamp`, episodic memories their recording
+time (persisted memories inherit the storage timestamp across engine
+restarts), ledger entries their `timestamp`, and engine events their
+`emittedAt`:
+
+```dart
+await storage.prune(const RetentionPolicy(maxAge: Duration(days: 30)));
+await memories.prune(const RetentionPolicy(maxCount: 500));
+final prunedLedger = ledger.prune(const RetentionPolicy(maxBytes: 1 << 20));
+eventLog.prune(const RetentionPolicy(maxAge: Duration(days: 7)));
+```
+
+An active-leaf pointer whose entry was pruned is cleared. `UsageLedger` is
+an immutable value object (spec 083), so its `prune` returns a new
+projection; the mutable stores return a `PruneResult` (count + serialized
+bytes removed).
+
+### Sweeping between missions
+
+`RetentionCoordinator` bundles the stores with their policies and is the
+stock `RetentionSweep` — the hook `MissionRunner` invokes at the start of
+`run()`, i.e. between missions:
+
+```dart
+final retention = RetentionCoordinator(
+  sessionStorage: storage,
+  sessionPolicy: const RetentionPolicy(maxAge: Duration(days: 30)),
+  episodicMemoryStore: memories,
+  memoryPolicy: const RetentionPolicy(maxCount: 500),
+  usageLedgers: [
+    UsageLedgerBinding(
+      ledger: () => currentLedger,
+      writeback: (pruned) => currentLedger = pruned,
+      policy: const RetentionPolicy(maxBytes: 1 << 20),
+    ),
+  ],
+  eventLog: eventLog,
+  eventPolicy: const RetentionPolicy(maxAge: Duration(days: 7)),
+);
+
+final runner = MissionRunner(
+  /* ...executor, dispatcher, stop policy, events... */
+  retention: retention, // prune() runs before each mission's first turn
+);
+```
+
+Sweep failures propagate (a sweep that cannot run is a startup failure,
+consistent with config validation). No store is wired by default: without
+a `retention` sweep the runner behaves exactly as before.

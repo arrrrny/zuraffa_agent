@@ -47,6 +47,7 @@ import '../domain/entities/steering_queue/steering_queue.dart';
 import '../llm/context_compressor.dart';
 import '../llm/token_estimator.dart';
 import '../logging/agent_log.dart';
+import '../retention.dart';
 import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
@@ -181,6 +182,7 @@ class MissionRunner {
     TokenEstimator tokenEstimator = const HeuristicTokenEstimator(),
     ContextCompressor? contextCompressor,
     this.preflightThreshold = 0.8,
+    RetentionSweep? retention,
   }) : assert(
          preflightThreshold > 0 && preflightThreshold <= 1,
          'preflightThreshold must be in (0, 1]: a value <= 0 compacts '
@@ -197,7 +199,8 @@ class MissionRunner {
        _toolResultSanitizer = toolResultSanitizer,
        _model = model,
        _tokenEstimator = tokenEstimator,
-       _contextCompressor = contextCompressor;
+       _contextCompressor = contextCompressor,
+       _retention = retention;
 
   final EngineLoopExecutor _executor;
   final ToolDispatcher _toolDispatcher;
@@ -241,6 +244,13 @@ class MissionRunner {
   /// so unlike the other pre-flight fields ([_model], [_tokenEstimator],
   /// [_contextCompressor]) it stays public.
   final double preflightThreshold;
+
+  /// Between-mission retention sweep (issue #135). When supplied, [run]
+  /// awaits [RetentionSweep.prune] BEFORE the mission lifecycle begins —
+  /// i.e., between the previous mission and this one. [RetentionCoordinator]
+  /// is the stock sweep; failures propagate: a sweep that cannot run is a
+  /// startup failure, consistent with config validation.
+  final RetentionSweep? _retention;
 
   /// Appends [message] to this mission's steering / follow-up queue.
   ///
@@ -294,6 +304,15 @@ class MissionRunner {
         'goal mode requires goal and goalEvaluator together (both or neither)',
       );
     }
+
+    // Between-mission retention sweep (issue #135): stale sessions,
+    // episodic memories, ledgers, and event logs are pruned before this
+    // mission starts, so a growing store never reaches the turn loop.
+    final sweep = _retention;
+    if (sweep != null) {
+      await sweep.prune();
+    }
+
     final start = _clock();
     final deadline =
         (_stopPolicy.enabled && _stopPolicy.wallClockTimeout != Duration.zero)

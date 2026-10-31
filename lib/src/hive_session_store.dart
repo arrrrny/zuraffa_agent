@@ -12,6 +12,8 @@
 import 'package:hive_ce/hive.dart';
 
 import 'hive_adapters.dart';
+import 'retention_policy.dart';
+import 'session_backup.dart';
 import 'session_storage.dart';
 import 'types.dart';
 
@@ -30,6 +32,7 @@ class HiveSessionStorage implements SessionStorage {
 
   late Box<SessionTreeEntry> _entryBox;
   late Box<String> _metaBox;
+  bool _initialized = false;
 
   @override
   Future<StoreOpenResult> init() async {
@@ -37,6 +40,7 @@ class HiveSessionStorage implements SessionStorage {
 
     _entryBox = await Hive.openBox<SessionTreeEntry>(boxName);
     _metaBox = await Hive.openBox<String>(_metaBoxName);
+    _initialized = true;
 
     // Schema-version stamp (spec 110, issue #122): Hive stores hydrated
     // objects rather than raw maps, so value-level migrations are deferred;
@@ -99,8 +103,66 @@ class HiveSessionStorage implements SessionStorage {
   }
 
   @override
+  Future<void> backup(String dest) async {
+    if (!_initialized) await init();
+    await SessionBackupFile.write(
+      dest,
+      entries: _entryBox.values.toList(),
+      activeLeafId: await getActiveLeafId(),
+    );
+  }
+
+  @override
+  Future<void> restore(String src) async {
+    if (!_initialized) await init();
+    final backup = await SessionBackupFile.read(src);
+    final restored = SessionBackupCodec.decodeEntries(backup);
+
+    // Put first, delete stale keys after: a crash mid-restore can never
+    // leave the box empty (issue #135's crash-window theme). The keys are
+    // dynamic — filter to the String keys this box is written with.
+    final restoredIds = <String>{for (final entry in restored) entry.id};
+    for (final entry in restored) {
+      await _entryBox.put(entry.id, entry);
+    }
+    final stale = <String>[
+      for (final key in _entryBox.keys)
+        if (key is String && !restoredIds.contains(key)) key,
+    ];
+    if (stale.isNotEmpty) {
+      await _entryBox.deleteAll(stale);
+    }
+    await _metaBox.put(_activeLeafKey, backup.activeLeafId ?? '');
+  }
+
+  @override
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now}) async {
+    if (!_initialized) await init();
+    final candidates = sessionEntryCandidates(_entryBox.values);
+    final victims = selectPruneIds(
+      candidates: candidates,
+      policy: policy,
+      now: now,
+    );
+    if (victims.isEmpty) return PruneResult.empty;
+
+    final bytesById = {for (final c in candidates) c.id: c.bytes};
+    final victimSet = Set<String>.of(victims);
+    await _entryBox.deleteAll(victims);
+    final leaf = await getActiveLeafId();
+    if (leaf != null && victimSet.contains(leaf)) {
+      await _metaBox.put(_activeLeafKey, '');
+    }
+    return PruneResult(
+      removedCount: victims.length,
+      removedBytes: prunedBytes(victims, bytesById),
+    );
+  }
+
+  @override
   Future<void> close() async {
     await _entryBox.close();
     await _metaBox.close();
+    _initialized = false;
   }
 }
