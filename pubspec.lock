@@ -725,9 +725,9 @@ packages:
     dependency: "direct main"
     description:
       name: zuraffa
-      sha256: a55ac206b2c1d6f57cdf3345a4cd2aee094781b88faf1149f70e74f50c857254
+      sha256: "0d89eafae62efedfe2dc49e36e624759ed7b2b0f8c6715e9643831281e4f35ab"
       url: "https://pub.dev"
     source: hosted
-    version: "7.3.0"
+    version: "7.3.2"
 sdks:
   dart: ">=3.13.0 <4.0.0"
