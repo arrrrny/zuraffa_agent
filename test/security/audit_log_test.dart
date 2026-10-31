@@ -314,4 +314,65 @@ void main() {
       expect(records.length, 0);
     });
   });
+
+  group(
+    'SinkAuditLog — a failing sink never throws (issue #132 review fix)',
+    () {
+      test('every event class survives a throwing sink', () async {
+        final failing = SinkAuditLog(
+          sink: ThrowingAuditSink(),
+          clock: () => DateTime.utc(2026, 1, 1),
+        );
+
+        // Reaching the end without an uncaught error IS the contract.
+        // Pre-fix, each await rethrew the sink error here; at the consumer
+        // seams (fire-and-forget unawaited) the same error instead reached
+        // the zone uncaught-error handler.
+        await failing.providerConfigChanged(
+          providerId: 'p',
+          providerKind: 'k',
+          baseUrl: 'u',
+          models: const [],
+          timeoutMs: 1,
+        );
+        await failing.toolCallInvoked(
+          toolName: 't',
+          arguments: const {},
+          success: true,
+        );
+        await failing.approvalDecision(
+          requestId: 'r',
+          toolName: 't',
+          arguments: const {},
+          approved: false,
+        );
+        await failing.breakerTransition(providerId: 'p', from: 'a', to: 'b');
+      });
+
+      test(
+        'the lost entry is mirrored at SEVERE on the audit logger',
+        () async {
+          final records = MemoryLogSink();
+          ZuraffaLogging.install(onRecord: records.add);
+          final failing = SinkAuditLog(
+            sink: ThrowingAuditSink(),
+            clock: () => DateTime.utc(2026, 1, 1),
+          );
+
+          await failing.approvalDecision(
+            requestId: 'r',
+            toolName: 't',
+            arguments: const {},
+            approved: true,
+          );
+
+          final severe = records.firstWhereMessage('audit append failed');
+          expect(severe, isNotNull, reason: 'the loss must be logger-visible');
+          expect(severe!.level, Level.SEVERE);
+          expect(severe.loggerName, 'zuraffa.agent.audit');
+          expect(severe.message, contains('approval.granted'));
+        },
+      );
+    },
+  );
 }

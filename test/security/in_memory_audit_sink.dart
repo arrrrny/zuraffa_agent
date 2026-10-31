@@ -18,3 +18,17 @@ class InMemoryAuditSink implements AuditSink {
   @override
   Future<List<AuditEntry>> entries() async => List.of(stored);
 }
+
+/// An [AuditSink] whose append always throws — the realistic backend
+/// failure mode (disk full on the ever-growing append-only log). Pins
+/// that [SinkAuditLog] never propagates sink errors to its fire-and-forget
+/// consumers (issue #132 review fix).
+class ThrowingAuditSink implements AuditSink {
+  @override
+  Future<void> append(AuditEntry entry) async {
+    throw StateError('simulated audit sink failure (disk full)');
+  }
+
+  @override
+  Future<List<AuditEntry>> entries() async => const [];
+}

@@ -259,6 +259,16 @@ class SinkAuditLog implements AuditLog {
 
   /// Builds, appends, and mirrors. The durable append happens first: the
   /// trail never depends on the logger being installed.
+  ///
+  /// NEVER throws (issue #132 review fix). Every consumer fires this
+  /// future without awaiting it (`unawaited` in ApprovalGateToolDispatcher
+  /// and CircuitBreaker — the gate and the breaker must never wait on, or
+  /// be implicated in, an audit-backend failure), so a throwing sink would
+  /// surface as an uncaught zone error misattributed to the dispatch path
+  /// (disk full on the ever-growing append-only log is the realistic
+  /// mode). An append failure is mirrored at SEVERE on the audit logger and
+  /// swallowed: the engine path that triggered the audit continues
+  /// normally, and the lost entry stays a logger-visible fact.
   Future<void> _record(
     AuditCategory category,
     String action,
@@ -272,7 +282,18 @@ class SinkAuditLog implements AuditLog {
       action: action,
       details: details,
     );
-    await _sink.append(entry);
+    try {
+      await _sink.append(entry);
+    } catch (e, s) {
+      if (_logger.isLoggable(Level.SEVERE)) {
+        _logger.severe(
+          'audit append failed — entry lost (action: ${entry.action})',
+          e,
+          s,
+        );
+      }
+      return;
+    }
     if (!_logger.isLoggable(level)) return;
     _logger.log(
       level,

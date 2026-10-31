@@ -136,5 +136,30 @@ void main() {
         ..recordFailure();
       expect(sink.stored.single.details['to'], CircuitState.open.name);
     });
+
+    test(
+      'a throwing audit sink never breaks the breaker (issue #132 review fix)',
+      () async {
+        final breaker = CircuitBreaker(
+          providerId: 'provider-a',
+          clock: clock,
+          auditLog: SinkAuditLog(sink: ThrowingAuditSink()),
+        );
+
+        breaker
+          ..recordFailure()
+          ..recordFailure()
+          ..recordFailure(); // closed→open — the audited transition
+        await clock.sleep(60000);
+        breaker.recordSuccess(); // half-open→closed — another audited one
+
+        expect(breaker.state, CircuitState.closed);
+        // Pump the fire-and-forget audit futures: pre-fix, their sink
+        // errors reached the zone uncaught-error handler here and failed
+        // this run; the breaker must stay ignorant of audit-backend
+        // failures.
+        await Future<void>.delayed(Duration.zero);
+      },
+    );
   });
 }

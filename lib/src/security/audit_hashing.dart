@@ -128,4 +128,12 @@ String canonicalJson(Object? value) {
 /// The audit digest of [value]: SHA-256 of [canonicalJson]. Equal
 /// structures hash equal regardless of key order; the digest never
 /// contains the payload itself.
+///
+/// Deliberately UNSALTED (issue #132 review, design note): a per-install
+/// salt or HMAC key would close the offline dictionary oracle — anyone
+/// holding the audit file can confirm guesses about low-entropy arguments
+/// by hashing candidates and comparing — but a salt changes every stored
+/// digest, which is a v:1 → v:2 storage-format change. Per constitution
+/// IX that needs a spec change, so it is flagged for the pool as the
+/// follow-up, not merged ad hoc here.
 String auditHash(Object? value) => sha256Hex(canonicalJson(value));

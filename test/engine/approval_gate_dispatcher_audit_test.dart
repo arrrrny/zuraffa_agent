@@ -260,5 +260,30 @@ void main() {
         expect(sink.stored, isEmpty);
       },
     );
+
+    test(
+      'a throwing audit sink never fails the dispatch (issue #132 review fix)',
+      () async {
+        final g = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {'shell': RiskTier.confirm},
+          approvalCallback: callback.call,
+          auditLog: SinkAuditLog(sink: ThrowingAuditSink()),
+        );
+
+        final result = await g.dispatch(
+          toolName: 'shell',
+          arguments: {'cmd': 'ls'},
+          isInternalMission: false,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.result, 'ran:shell');
+        // Pump the fire-and-forget audit futures: pre-fix, their sink
+        // errors reached the zone uncaught-error handler here and failed
+        // this run; the gate must stay ignorant of audit-backend failures.
+        await Future<void>.delayed(Duration.zero);
+      },
+    );
   });
 }
