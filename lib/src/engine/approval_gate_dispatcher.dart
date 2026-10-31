@@ -27,11 +27,14 @@
 //     inner batch never runs. Approve-then-execute, never the reverse.
 //   - validateSchema / checkRiskTier delegate to the inner dispatcher.
 
+import 'dart:async';
+
 import 'package:uuid/uuid.dart';
 
 import '../domain/entities/agent_tool/agent_tool.dart';
 import '../domain/entities/approval_request/approval_request.dart';
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import '../security/audit_log.dart';
 import 'approval_callback.dart';
 import 'tool_dispatcher.dart';
 
@@ -46,6 +49,7 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
     ApprovalCallback? approvalCallback,
     DateTime Function()? clock,
     this.approvalTimeoutMs = defaultApprovalTimeoutMs,
+    this.auditLog,
   }) : _inner = inner,
        _riskTiers = Map.unmodifiable(riskTiers),
        _approvalCallback = approvalCallback,
@@ -67,6 +71,14 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
   final DateTime Function() _clock;
   final int approvalTimeoutMs;
 
+  /// Optional audit seam (issue #132): every approval decision that reaches
+  /// the callback and every tool invocation that passes through this
+  /// dispatcher is appended to the security audit trail — decisions as
+  /// `approval.granted` / `approval.denied`, invocations as
+  /// `tool.invoked` (name + args/result hashes, never payloads). No-op
+  /// without an injection.
+  final AuditLog? auditLog;
+
   final Uuid _uuid = const Uuid();
 
   @override
@@ -77,11 +89,13 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
   }) async {
     final tier = _riskTiers[toolName];
     if (tier == null || !tier.requiresConfirmation) {
-      return _inner.dispatch(
+      final result = await _inner.dispatch(
         toolName: toolName,
         arguments: arguments,
         isInternalMission: isInternalMission,
       );
+      _auditInvocation(toolName, arguments, result);
+      return result;
     }
     final callback = _approvalCallback;
     if (callback == null) {
@@ -91,20 +105,22 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
         'refused fail-closed (spec 034 / issue #130)',
       );
     }
-    final approved = await callback(
-      _buildRequest(toolName: toolName, arguments: arguments),
-    );
+    final request = _buildRequest(toolName: toolName, arguments: arguments);
+    final approved = await callback(request);
+    _auditDecision(request: request, approved: approved);
     if (!approved) {
       return _refusal(
         'dispatch of "$toolName" (riskTier=${tier.name}) denied by the '
         'approval callback — tool not executed (spec 034 / issue #130)',
       );
     }
-    return _inner.dispatch(
+    final result = await _inner.dispatch(
       toolName: toolName,
       arguments: arguments,
       isInternalMission: isInternalMission,
     );
+    _auditInvocation(toolName, arguments, result);
+    return result;
   }
 
   @override
@@ -124,9 +140,12 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
         unapproved.add(call.toolName);
         continue;
       }
-      final approved = await callback(
-        _buildRequest(toolName: call.toolName, arguments: call.arguments),
+      final request = _buildRequest(
+        toolName: call.toolName,
+        arguments: call.arguments,
       );
+      final approved = await callback(request);
+      _auditDecision(request: request, approved: approved);
       if (!approved) unapproved.add(call.toolName);
     }
     if (unapproved.isNotEmpty) {
@@ -137,10 +156,14 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
       );
       return List.filled(calls.length, result);
     }
-    return _inner.dispatchBatch(
+    final results = await _inner.dispatchBatch(
       calls: calls,
       isInternalMission: isInternalMission,
     );
+    for (var i = 0; i < calls.length && i < results.length; i++) {
+      _auditInvocation(calls[i].toolName, calls[i].arguments, results[i]);
+    }
+    return results;
   }
 
   @override
@@ -168,6 +191,43 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
     requestedAt: _clock(),
     timeoutMs: approvalTimeoutMs,
   );
+
+  /// Appends one `approval.granted` / `approval.denied` entry (issue #132).
+  /// Fire-and-forget: the gate never waits on the audit sink.
+  void _auditDecision({
+    required ApprovalRequest request,
+    required bool approved,
+  }) {
+    final audit = auditLog;
+    if (audit == null) return;
+    unawaited(
+      audit.approvalDecision(
+        requestId: request.id,
+        toolName: request.toolName,
+        arguments: request.arguments,
+        approved: approved,
+      ),
+    );
+  }
+
+  /// Appends one `tool.invoked` entry (issue #132) — name + args/result
+  /// hashes only. Fire-and-forget.
+  void _auditInvocation(
+    String toolName,
+    Map<String, dynamic> arguments,
+    ToolDispatchResult result,
+  ) {
+    final audit = auditLog;
+    if (audit == null) return;
+    unawaited(
+      audit.toolCallInvoked(
+        toolName: toolName,
+        arguments: arguments,
+        result: result.result,
+        success: result.success,
+      ),
+    );
+  }
 
   /// The typed refusal shape: a failed ToolDispatchResult whose transcript
   ///-safe error names the tool, the tier and the reason. The tool
