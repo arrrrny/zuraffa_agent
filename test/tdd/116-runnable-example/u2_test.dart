@@ -18,10 +18,9 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/116-runnable-example/u2_subject.dart';
 
-
 void main() {
   group('U2 (FR-002, MinimalAgent.transcript)', () {
-    test('U2 — The example MUST print the mission lifecycle (start,', ()  {
+    test('U2 — The example MUST print the mission lifecycle (start,', () {
       // Assertion-shaped guard: the stub fails HERE via assertion.
       Object? guard;
       try {

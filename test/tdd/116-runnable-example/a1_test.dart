@@ -20,7 +20,6 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/116-runnable-example/a1_subject.dart';
 
-
 void main() {
   group('A1 (AC-1)', () {
     test('A1 — it exits 0 and prints', () async {

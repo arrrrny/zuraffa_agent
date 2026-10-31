@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A2:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/116-runnable-example/contract_a2_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/116-runnable-example/contract_a2_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A2 (MinimalAgent.transcript)', () {
-    test('contract:A2 \u2014 MinimalAgent.transcript(events) -> List<String> (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `MinimalAgent.transcript(dynamic events) -> List<String>` is
-      // exposed by the implementation subject.
-      final impl = subject.transcript;
-      expect(impl, isNotNull,
-          reason: 'MinimalAgent.transcript must be exposed with the declared '
-              'signature `(dynamic events) -> List<String>`');
+    test(
+      'contract:A2 \u2014 MinimalAgent.transcript(events) -> List<String> (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `MinimalAgent.transcript(dynamic events) -> List<String>` is
+        // exposed by the implementation subject.
+        final impl = subject.transcript;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'MinimalAgent.transcript must be exposed with the declared '
+              'signature `(dynamic events) -> List<String>`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'MinimalAgent.transcript is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'MinimalAgent.transcript is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

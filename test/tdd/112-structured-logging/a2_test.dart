@@ -18,7 +18,7 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/a2_subject.dart';
 
 void main() {
   group('A2 (AC-2)', () {
-    test('A2 — nothing is printed, nothing throws, and', ()  {
+    test('A2 — nothing is printed, nothing throws, and', () {
       final result = subject_a2();
       expect(result['status'], 'silent-ok');
       // Every pinned subsystem emitted all four policy levels.

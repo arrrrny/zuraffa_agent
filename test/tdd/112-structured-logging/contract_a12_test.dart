@@ -19,35 +19,48 @@ library;
 
 import 'package:test/test.dart';
 
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a12_subject.dart' as direct;
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a12_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a12_subject.dart'
+    as direct;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a12_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A12 (AgentLog.document)', () {
-    test('contract:A12 \u2014 AgentLog.document(hierarchy, policy, sinkRecipe) -> void (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentLog.document(dynamic hierarchy, dynamic policy, dynamic sinkRecipe) -> void` is
-      // exposed by the implementation subject.
-      final impl = subject.document;
-      expect(impl, isNotNull,
-          reason: 'AgentLog.document must be exposed with the declared '
-              'signature `(dynamic hierarchy, dynamic policy, dynamic sinkRecipe) -> void`');
+    test(
+      'contract:A12 \u2014 AgentLog.document(hierarchy, policy, sinkRecipe) -> void (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentLog.document(dynamic hierarchy, dynamic policy, dynamic sinkRecipe) -> void` is
+        // exposed by the implementation subject.
+        final impl = subject.document;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentLog.document must be exposed with the declared '
+              'signature `(dynamic hierarchy, dynamic policy, dynamic sinkRecipe) -> void`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null, null, null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentLog.document is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null, null, null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentLog.document is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-      // Call-through proof: the shim reaches the real self-check — an
-      // empty section is REFUSED, a covered one passes.
-      expect(
-        () => subject.document(' ', 'FINE', 'install'),
-        throwsArgumentError,
-      );
-      direct.document('hierarchy', 'policy', 'recipe');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+        // Call-through proof: the shim reaches the real self-check — an
+        // empty section is REFUSED, a covered one passes.
+        expect(
+          () => subject.document(' ', 'FINE', 'install'),
+          throwsArgumentError,
+        );
+        direct.document('hierarchy', 'policy', 'recipe');
+      },
+    );
   });
 }
 
@@ -62,4 +75,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

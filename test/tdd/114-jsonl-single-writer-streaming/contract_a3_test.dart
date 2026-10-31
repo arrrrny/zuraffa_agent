@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A3:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/114-jsonl-single-writer-streaming/contract_a3_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/114-jsonl-single-writer-streaming/contract_a3_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A3 (JsonlSessionStorage.guard)', () {
-    test('contract:A3 \u2014 JsonlSessionStorage.guard(mutation) -> Future<void> (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `JsonlSessionStorage.guard(dynamic mutation) -> Future<void>` is
-      // exposed by the implementation subject.
-      final impl = subject.guard;
-      expect(impl, isNotNull,
-          reason: 'JsonlSessionStorage.guard must be exposed with the declared '
-              'signature `(dynamic mutation) -> Future<void>`');
+    test(
+      'contract:A3 \u2014 JsonlSessionStorage.guard(mutation) -> Future<void> (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `JsonlSessionStorage.guard(dynamic mutation) -> Future<void>` is
+        // exposed by the implementation subject.
+        final impl = subject.guard;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'JsonlSessionStorage.guard must be exposed with the declared '
+              'signature `(dynamic mutation) -> Future<void>`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'JsonlSessionStorage.guard is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'JsonlSessionStorage.guard is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

@@ -12,20 +12,16 @@
 // placeholder). Replace the subject's
 // stub body with real implementation to make this test pass.
 
-
 library;
 
 import 'package:test/test.dart';
 import 'dart:io';
 
-
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/u5_subject.dart';
-
-
 
 void main() {
   group('U5 (FR-005, FederatedBridge.channel)', () {
-    test('U5 — The channel contract MUST be exactly: channel', ()  {
+    test('U5 — The channel contract MUST be exactly: channel', () {
       // Assertion-shaped guard: the stub fails HERE via assertion.
       Object? guard;
       try {
@@ -43,7 +39,9 @@ void main() {
       expect(subject_u5('secureRead', {}), 'bad-args');
       expect(subject_u5('secureWrite', {'key': 'k'}), 'bad-args');
       // The interface package pins the same names in its source.
-      final src = File('packages/zuraffa_agent_platform_interface/lib/src/method_channel_platform.dart').readAsStringSync();
+      final src = File(
+        'packages/zuraffa_agent_platform_interface/lib/src/method_channel_platform.dart',
+      ).readAsStringSync();
       for (final m in u5MethodNames) {
         expect(src, contains("'$m'"), reason: 'channel method $m unpinned');
       }

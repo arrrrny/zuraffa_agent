@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A3:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/113-eventbus-error-observability/contract_a3_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/113-eventbus-error-observability/contract_a3_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A3 (EngineEventBus.subscriberErrorEvent)', () {
-    test('contract:A3 \u2014 EngineEventBus.subscriberErrorEvent(error, event) -> EngineEventSubscriberError (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `EngineEventBus.subscriberErrorEvent(dynamic error, dynamic event) -> EngineEventSubscriberError` is
-      // exposed by the implementation subject.
-      final impl = subject.subscriberErrorEvent;
-      expect(impl, isNotNull,
-          reason: 'EngineEventBus.subscriberErrorEvent must be exposed with the declared '
-              'signature `(dynamic error, dynamic event) -> EngineEventSubscriberError`');
+    test(
+      'contract:A3 \u2014 EngineEventBus.subscriberErrorEvent(error, event) -> EngineEventSubscriberError (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `EngineEventBus.subscriberErrorEvent(dynamic error, dynamic event) -> EngineEventSubscriberError` is
+        // exposed by the implementation subject.
+        final impl = subject.subscriberErrorEvent;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'EngineEventBus.subscriberErrorEvent must be exposed with the declared '
+              'signature `(dynamic error, dynamic event) -> EngineEventSubscriberError`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null, null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'EngineEventBus.subscriberErrorEvent is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null, null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'EngineEventBus.subscriberErrorEvent is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

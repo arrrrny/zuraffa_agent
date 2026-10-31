@@ -2,7 +2,7 @@
 # Configures the dart/flutter test runner.
 
 color: true
-concurrency: 4
+concurrency: 2
 timeout: 30s
 retry: 0
 pause_after_load: false

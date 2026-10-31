@@ -18,7 +18,7 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/a4_subject.dart';
 
 void main() {
   group('A4 (AC-4)', () {
-    test('A4 — transport is FINE, lifecycle is INFO, resilience (retry,', ()  {
+    test('A4 — transport is FINE, lifecycle is INFO, resilience (retry,', () {
       final policy = subject_a4();
       expect(policy['transport'], Level.FINE);
       expect(policy['lifecycle'], Level.INFO);

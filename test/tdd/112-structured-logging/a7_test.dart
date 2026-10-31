@@ -19,23 +19,39 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/a7_subject.dart';
 
 void main() {
   group('A7 (AC-7)', () {
-    test('A7 — it documents the `zuraffa.agent.` logger hierarchy (Type: acceptance)', ()  {
-      final doc = File('ARCHITECTURE.md').readAsStringSync();
-      expect(
-        () => subject_a7(
-          doc.substring(doc.indexOf('### Logger hierarchy'), doc.indexOf('### Level policy')),
-          doc.substring(doc.indexOf('### Level policy'), doc.indexOf('### Recommended consumer sink')),
-          doc.substring(doc.indexOf('### Recommended consumer sink')),
-        ),
-        returnsNormally,
-      );
-      for (final subsystem in ['llm', 'mcp', 'engine', 'eval', 'session', 'eventBus']) {
-        expect(doc, contains('`zuraffa.agent.$subsystem`'));
-      }
-      for (final level in ['FINE', 'INFO', 'WARNING', 'SEVERE']) {
-        expect(doc, contains(level));
-      }
-      expect(doc, contains('ZuraffaLogging.install'));
-    });
+    test(
+      'A7 — it documents the `zuraffa.agent.` logger hierarchy (Type: acceptance)',
+      () {
+        final doc = File('ARCHITECTURE.md').readAsStringSync();
+        expect(
+          () => subject_a7(
+            doc.substring(
+              doc.indexOf('### Logger hierarchy'),
+              doc.indexOf('### Level policy'),
+            ),
+            doc.substring(
+              doc.indexOf('### Level policy'),
+              doc.indexOf('### Recommended consumer sink'),
+            ),
+            doc.substring(doc.indexOf('### Recommended consumer sink')),
+          ),
+          returnsNormally,
+        );
+        for (final subsystem in [
+          'llm',
+          'mcp',
+          'engine',
+          'eval',
+          'session',
+          'eventBus',
+        ]) {
+          expect(doc, contains('`zuraffa.agent.$subsystem`'));
+        }
+        for (final level in ['FINE', 'INFO', 'WARNING', 'SEVERE']) {
+          expect(doc, contains(level));
+        }
+        expect(doc, contains('ZuraffaLogging.install'));
+      },
+    );
   });
 }

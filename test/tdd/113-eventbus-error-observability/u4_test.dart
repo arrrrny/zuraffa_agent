@@ -31,8 +31,10 @@ void main() {
       final source = TurnStarted(emittedAt: DateTime.now(), turnId: 't-4');
       // Assertion-shaped guard: publish never throws even though BOTH
       // the subscriber and the hook throw.
-      expect(() => subject_u4(StateError('sub broke'), source),
-          returnsNormally);
+      expect(
+        () => subject_u4(StateError('sub broke'), source),
+        returnsNormally,
+      );
       // The hook failure itself is logged, not swallowed.
       expect(sink.firstWhereMessage('hook failed'), isNotNull);
     });

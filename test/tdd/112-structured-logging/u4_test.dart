@@ -22,27 +22,30 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/u4_subject.dart';
 
 void main() {
   group('U4 (FR-004, AgentLog.logger)', () {
-    test('U4 — Emission MUST be safe and cheap before install: no listener', () {
-      // No sink installed: emission must be silent, never throw.
-      ZuraffaLogging.reset();
-      addTearDown(ZuraffaLogging.reset);
-      final logger = subject_u4('session');
-      expect(() {
-        logger.fine('transport bytes pre-install');
-        logger.info('lifecycle pre-install');
-        logger.warning('resilience pre-install');
-        logger.severe('terminal pre-install');
-      }, returnsNormally);
-      // The pinned subsystem set resolves off-hierarchy refusal too.
-      expect(() => subject_u4('unknown'), throwsArgumentError);
-      // Once a sink IS installed, the skipped-level records stay absent
-      // while at-threshold records arrive (the cheap-path contract).
-      final sink = MemoryLogSink();
-      ZuraffaLogging.install(level: Level.SEVERE, onRecord: sink.add);
-      logger.info('filtered');
-      logger.severe('delivered');
-      expect(sink.length, 1);
-      expect(sink.records.single.message, 'delivered');
-    });
+    test(
+      'U4 — Emission MUST be safe and cheap before install: no listener',
+      () {
+        // No sink installed: emission must be silent, never throw.
+        ZuraffaLogging.reset();
+        addTearDown(ZuraffaLogging.reset);
+        final logger = subject_u4('session');
+        expect(() {
+          logger.fine('transport bytes pre-install');
+          logger.info('lifecycle pre-install');
+          logger.warning('resilience pre-install');
+          logger.severe('terminal pre-install');
+        }, returnsNormally);
+        // The pinned subsystem set resolves off-hierarchy refusal too.
+        expect(() => subject_u4('unknown'), throwsArgumentError);
+        // Once a sink IS installed, the skipped-level records stay absent
+        // while at-threshold records arrive (the cheap-path contract).
+        final sink = MemoryLogSink();
+        ZuraffaLogging.install(level: Level.SEVERE, onRecord: sink.add);
+        logger.info('filtered');
+        logger.severe('delivered');
+        expect(sink.length, 1);
+        expect(sink.records.single.message, 'delivered');
+      },
+    );
   });
 }

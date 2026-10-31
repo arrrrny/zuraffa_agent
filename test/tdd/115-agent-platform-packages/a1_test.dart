@@ -20,10 +20,9 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/a1_subject.dart';
 
-
 void main() {
   group('A1 (AC-1)', () {
-    test('A1 — sessions/memory/artifacts', ()  {
+    test('A1 — sessions/memory/artifacts', () {
       final layout = subject_a1();
       // Assertion-shaped guard: a stub throws here (assertion, honest red).
       expect(layout.sessions, '/support/sessions');

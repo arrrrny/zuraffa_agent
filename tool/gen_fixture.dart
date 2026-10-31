@@ -14,14 +14,16 @@ void main() {
   String nextId() => 'e_${seq++}';
 
   // Root entry: user message
-  entries.add(MessageEntry(
-    id: nextId(),
-    parentId: null,
-    timestamp: fixedBase,
-    message: UserMessage.text(
-      'Analyze the codebase for security vulnerabilities and generate a report.',
-    ),
-  ).toJson());
+  entries.add(
+    MessageEntry(
+      id: nextId(),
+      parentId: null,
+      timestamp: fixedBase,
+      message: UserMessage.text(
+        'Analyze the codebase for security vulnerabilities and generate a report.',
+      ),
+    ).toJson(),
+  );
 
   // 52 tool-call rounds (messages + tool invocations + usage)
   final toolNames = [
@@ -44,83 +46,93 @@ void main() {
     final toolCallId = 'tc_${i + 1}';
 
     // Assistant message with tool call
-    entries.add(MessageEntry(
-      id: nextId(),
-      parentId: entryId,
-      timestamp: turnStart.add(const Duration(milliseconds: 100)),
-      message: AssistantMessage(content: [
-        TextBlock('Analyzing step ${i + 1}...'),
-        ToolCallBlock(
-          id: toolCallId,
-          name: toolName,
-          arguments: {'path': 'lib/src/file_${i % 5}.dart'},
+    entries.add(
+      MessageEntry(
+        id: nextId(),
+        parentId: entryId,
+        timestamp: turnStart.add(const Duration(milliseconds: 100)),
+        message: AssistantMessage(
+          content: [
+            TextBlock('Analyzing step ${i + 1}...'),
+            ToolCallBlock(
+              id: toolCallId,
+              name: toolName,
+              arguments: {'path': 'lib/src/file_${i % 5}.dart'},
+            ),
+          ],
         ),
-      ]),
-    ).toJson());
+      ).toJson(),
+    );
 
     // Tool invocation entry
-    entries.add(ToolInvocationEntry(
-      id: nextId(),
-      parentId: entryId,
-      timestamp: turnStart.add(const Duration(milliseconds: 200)),
-      record: ToolInvocationRecord(
-        id: 'ti_${i + 1}',
+    entries.add(
+      ToolInvocationEntry(
+        id: nextId(),
         parentId: entryId,
         timestamp: turnStart.add(const Duration(milliseconds: 200)),
-        toolCallId: toolCallId,
-        toolName: toolName,
-        isError: false,
-        durationMs: 50 + (i % 3) * 25,
-      ),
-      arguments: {'path': 'lib/src/file_${i % 5}.dart'},
-    ).toJson());
+        record: ToolInvocationRecord(
+          id: 'ti_${i + 1}',
+          parentId: entryId,
+          timestamp: turnStart.add(const Duration(milliseconds: 200)),
+          toolCallId: toolCallId,
+          toolName: toolName,
+          isError: false,
+          durationMs: 50 + (i % 3) * 25,
+        ),
+        arguments: {'path': 'lib/src/file_${i % 5}.dart'},
+      ).toJson(),
+    );
 
     // Tool result message
-    entries.add(MessageEntry(
-      id: nextId(),
-      parentId: entryId,
-      timestamp: turnStart.add(const Duration(milliseconds: 500)),
-      message: ToolResultMessage(
-        toolCallId: toolCallId,
-        toolName: toolName,
-        content: 'Result from $toolName on file_${i % 5}.dart: OK',
-      ),
-    ).toJson());
+    entries.add(
+      MessageEntry(
+        id: nextId(),
+        parentId: entryId,
+        timestamp: turnStart.add(const Duration(milliseconds: 500)),
+        message: ToolResultMessage(
+          toolCallId: toolCallId,
+          toolName: toolName,
+          content: 'Result from $toolName on file_${i % 5}.dart: OK',
+        ),
+      ).toJson(),
+    );
 
     // Usage entry
-    entries.add(UsageEntry(
-      id: nextId(),
-      parentId: entryId,
-      timestamp: turnStart.add(const Duration(milliseconds: 600)),
-      record: UsageLedgerEntry(
-        id: 'ul_${i + 1}',
+    entries.add(
+      UsageEntry(
+        id: nextId(),
         parentId: entryId,
         timestamp: turnStart.add(const Duration(milliseconds: 600)),
-        callId: 'c_${i + 1}',
-        turnNumber: i + 1,
-        inputTokens: 200 + (i * 10),
-        outputTokens: 100 + (i * 5),
-        cacheReadTokens: i % 5 == 0 ? 50 : 0,
-        cacheWriteTokens: 0,
-      ),
-      model: Model(
-        provider: 'openai',
-        modelId: 'gpt-4',
-        contextWindow: 8192,
-      ),
-    ).toJson());
+        record: UsageLedgerEntry(
+          id: 'ul_${i + 1}',
+          parentId: entryId,
+          timestamp: turnStart.add(const Duration(milliseconds: 600)),
+          callId: 'c_${i + 1}',
+          turnNumber: i + 1,
+          inputTokens: 200 + (i * 10),
+          outputTokens: 100 + (i * 5),
+          cacheReadTokens: i % 5 == 0 ? 50 : 0,
+          cacheWriteTokens: 0,
+        ),
+        model: Model(provider: 'openai', modelId: 'gpt-4', contextWindow: 8192),
+      ).toJson(),
+    );
   }
 
   // Final assistant message
   final finalId = nextId();
-  entries.add(MessageEntry(
-    id: finalId,
-    parentId: entries.isNotEmpty ? entries[entries.length - 2]['id'] as String? : null,
-    timestamp: fixedBase.add(const Duration(seconds: 160)),
-    message: AssistantMessage.text(
-      'Security analysis complete. Found 3 medium-severity issues.',
-    ),
-  ).toJson());
+  entries.add(
+    MessageEntry(
+      id: finalId,
+      parentId: entries.isNotEmpty
+          ? entries[entries.length - 2]['id'] as String?
+          : null,
+      timestamp: fixedBase.add(const Duration(seconds: 160)),
+      message: AssistantMessage.text(
+        'Security analysis complete. Found 3 medium-severity issues.',
+      ),
+    ).toJson(),
+  );
 
   // Write to JSONL
   final file = File('test/fixtures/mission_50.jsonl');
@@ -130,5 +142,7 @@ void main() {
   }
   sink.close();
 
-  print('Generated ${entries.length} entries to test/fixtures/mission_50.jsonl');
+  print(
+    'Generated ${entries.length} entries to test/fixtures/mission_50.jsonl',
+  );
 }

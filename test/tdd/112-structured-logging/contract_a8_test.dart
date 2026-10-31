@@ -22,36 +22,48 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/logging/memory_log_sink.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a8_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/contract_a8_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A8 (AgentLog.install)', () {
-    test('contract:A8 \u2014 AgentLog.install(level, onRecord) -> void (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `AgentLog.install(dynamic level, dynamic onRecord) -> void` is
-      // exposed by the implementation subject.
-      final impl = subject.install;
-      expect(impl, isNotNull,
-          reason: 'AgentLog.install must be exposed with the declared '
-              'signature `(dynamic level, dynamic onRecord) -> void`');
+    test(
+      'contract:A8 \u2014 AgentLog.install(level, onRecord) -> void (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `AgentLog.install(dynamic level, dynamic onRecord) -> void` is
+        // exposed by the implementation subject.
+        final impl = subject.install;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'AgentLog.install must be exposed with the declared '
+              'signature `(dynamic level, dynamic onRecord) -> void`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl(null, null));
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'AgentLog.install is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl(null, null));
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'AgentLog.install is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-      // Call-through proof: the shim reaches the real facade.
-      ZuraffaLogging.reset();
-      addTearDown(ZuraffaLogging.reset);
-      final sink = MemoryLogSink();
-      subject.install(Level.WARNING, sink.add);
-      AgentLog.llm.info('filtered');
-      AgentLog.session.warning('delivered');
-      expect(sink.length, 1);
-      expect(sink.records.single.message, 'delivered');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+        // Call-through proof: the shim reaches the real facade.
+        ZuraffaLogging.reset();
+        addTearDown(ZuraffaLogging.reset);
+        final sink = MemoryLogSink();
+        subject.install(Level.WARNING, sink.add);
+        AgentLog.llm.info('filtered');
+        AgentLog.session.warning('delivered');
+        expect(sink.length, 1);
+        expect(sink.records.single.message, 'delivered');
+      },
+    );
   });
 }
 
@@ -66,4 +78,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

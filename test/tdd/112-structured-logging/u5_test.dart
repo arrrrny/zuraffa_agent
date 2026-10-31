@@ -23,7 +23,8 @@ import 'package:zuraffa_agent/src/llm/retry.dart';
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/logging/memory_log_sink.dart';
 import 'package:zuraffa_agent/tdd/112-structured-logging/u5_subject.dart';
-import 'package:zuraffa_agent/tdd/112-structured-logging/u5_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/112-structured-logging/u5_subject.dart'
+    as subject;
 
 class _ScriptedTransport implements LlmTransport {
   int calls = 0;
@@ -50,36 +51,42 @@ class _InstantClock implements LlmClock {
 
 void main() {
   group('U5 (FR-005, AgentLog.retryWarning)', () {
-    test('U5 — The first adoption sites MUST ship with this spec: the LLM', () async {
-      ZuraffaLogging.reset();
-      addTearDown(ZuraffaLogging.reset);
-      // Assertion-shaped guard on the contract surface itself.
-      expect(
-        () => subject_u5(1, const Duration(milliseconds: 500),
-            const LlmNetworkException(provider: 'scripted', cause: 'boom')),
-        returnsNormally,
-      );
-      // Real adoption site: a transport that fails once then succeeds
-      // must produce exactly one WARNING record on the llm logger
-      // carrying attempt, delay, and the error.
-      final sink = MemoryLogSink();
-      ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);
-      final transport = _ScriptedTransport();
-      await sendWithRetry(
-        transport: transport,
-        request: LlmHttpRequest(uri: Uri.parse('https://x.test/v1')),
-        config: const RetryConfig(maxAttempts: 3, baseDelayMs: 250),
-        clock: _InstantClock(),
-        provider: 'scripted',
-      );
-      expect(transport.calls, 2);
-      final warning = sink.firstWhereMessage('retry scheduled');
-      expect(warning, isNotNull);
-      expect(warning!.level, Level.WARNING);
-      expect(warning.loggerName, 'zuraffa.agent.llm');
-      expect(warning.message, contains('attempt=1'));
-      expect(warning.message, contains('delay=250ms'));
-      expect(warning.message, contains('boom'));
-    });
+    test(
+      'U5 — The first adoption sites MUST ship with this spec: the LLM',
+      () async {
+        ZuraffaLogging.reset();
+        addTearDown(ZuraffaLogging.reset);
+        // Assertion-shaped guard on the contract surface itself.
+        expect(
+          () => subject_u5(
+            1,
+            const Duration(milliseconds: 500),
+            const LlmNetworkException(provider: 'scripted', cause: 'boom'),
+          ),
+          returnsNormally,
+        );
+        // Real adoption site: a transport that fails once then succeeds
+        // must produce exactly one WARNING record on the llm logger
+        // carrying attempt, delay, and the error.
+        final sink = MemoryLogSink();
+        ZuraffaLogging.install(level: Level.WARNING, onRecord: sink.add);
+        final transport = _ScriptedTransport();
+        await sendWithRetry(
+          transport: transport,
+          request: LlmHttpRequest(uri: Uri.parse('https://x.test/v1')),
+          config: const RetryConfig(maxAttempts: 3, baseDelayMs: 250),
+          clock: _InstantClock(),
+          provider: 'scripted',
+        );
+        expect(transport.calls, 2);
+        final warning = sink.firstWhereMessage('retry scheduled');
+        expect(warning, isNotNull);
+        expect(warning!.level, Level.WARNING);
+        expect(warning.loggerName, 'zuraffa.agent.llm');
+        expect(warning.message, contains('attempt=1'));
+        expect(warning.message, contains('delay=250ms'));
+        expect(warning.message, contains('boom'));
+      },
+    );
   });
 }

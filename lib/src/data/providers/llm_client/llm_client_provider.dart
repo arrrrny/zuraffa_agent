@@ -10,8 +10,7 @@
 // than stored on the serializable ProviderConfig value object (Constitution:
 // config-driven, not hard-coded).
 
-import 'package:zuraffa/zuraffa.dart'
-    hide CompactionStrategy;
+import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
 import '../../../domain/entities/llm_client/chat_completion.dart';
 import '../../../domain/entities/llm_client/chat_message.dart';

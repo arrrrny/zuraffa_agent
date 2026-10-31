@@ -18,19 +18,22 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/116-runnable-example/u1_subject.dart';
 
-
 void main() {
   group('U1 (FR-001, MinimalAgent.run)', () {
-    test('U1 — The example MUST run a full mission through `MissionRunner`', () async {
-      // Assertion-shaped guard: the stub fails HERE via assertion.
-      Object? outcome;
-      try {
-        outcome = await subject_u1();
-      } on UnimplementedError catch (e) {
-        outcome = e;
-      }
-      expect(outcome, isNot(isA<UnimplementedError>()));
-      expect(outcome, '0', reason: 'the example mission must exit 0');
-    }, timeout: const Timeout(Duration(minutes: 3)));
+    test(
+      'U1 — The example MUST run a full mission through `MissionRunner`',
+      () async {
+        // Assertion-shaped guard: the stub fails HERE via assertion.
+        Object? outcome;
+        try {
+          outcome = await subject_u1();
+        } on UnimplementedError catch (e) {
+          outcome = e;
+        }
+        expect(outcome, isNot(isA<UnimplementedError>()));
+        expect(outcome, '0', reason: 'the example mission must exit 0');
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
   });
 }

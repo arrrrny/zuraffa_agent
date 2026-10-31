@@ -32,8 +32,10 @@ void main() {
       final pulled = await subject_u3();
       // Assertion-shaped guard: an empty stream means unimplemented.
       expect(pulled, isNotEmpty);
-      expect(pulled, ['e-0', 'e-1'],
-          reason: 'early exit must stop the pull at two entries');
+      expect(pulled, [
+        'e-0',
+        'e-1',
+      ], reason: 'early exit must stop the pull at two entries');
       expect(pulled.length, 2);
     });
   });

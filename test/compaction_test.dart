@@ -429,11 +429,9 @@ void main() {
           cutEntries: cutEntries,
           keptEntries: const [],
         );
-        expect(
-          summary.keyResults,
-          ['search: found 3 files'],
-          reason: 'the id-reference row is superseded by the content row',
-        );
+        expect(summary.keyResults, [
+          'search: found 3 files',
+        ], reason: 'the id-reference row is superseded by the content row');
       },
     );
 

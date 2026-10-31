@@ -14,7 +14,8 @@
 library;
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/113-eventbus-error-observability/a2_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/113-eventbus-error-observability/a2_subject.dart'
+    as subject;
 
 void main() {
   group('A2 (AC-2)', () {

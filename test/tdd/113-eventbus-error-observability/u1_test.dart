@@ -31,8 +31,10 @@ void main() {
       ZuraffaLogging.install(level: Level.ALL, onRecord: sink.add);
       final source = TurnStarted(emittedAt: DateTime.now(), turnId: 't-1');
       // Assertion-shaped guard: an unimplemented route fails HERE.
-      expect(() => subject_u1(StateError('observer broke'), source),
-          returnsNormally);
+      expect(
+        () => subject_u1(StateError('observer broke'), source),
+        returnsNormally,
+      );
       final record = sink.firstWhereMessage('subscriber error on TurnStarted');
       expect(record, isNotNull);
       expect(record!.level, Level.SEVERE);

@@ -18,27 +18,39 @@ library;
 // zfa:tdd: contract:A1:hand — hand step completed before first red certification (issue #1411)
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/tdd/114-jsonl-single-writer-streaming/contract_a1_subject.dart' as subject;
+import 'package:zuraffa_agent/tdd/114-jsonl-single-writer-streaming/contract_a1_subject.dart'
+    as subject;
 
 void main() {
   group('contract:A1 (SessionLock.acquire)', () {
-    test('contract:A1 \u2014 SessionLock.acquire() -> Future<void> (usecase contract)', () {
-      // Case 1 of 2 — signature: the declared method
-      // `SessionLock.acquire(no parameters) -> Future<void>` is
-      // exposed by the implementation subject.
-      final impl = subject.acquire;
-      expect(impl, isNotNull,
-          reason: 'SessionLock.acquire must be exposed with the declared '
-              'signature `(no parameters) -> Future<void>`');
+    test(
+      'contract:A1 \u2014 SessionLock.acquire() -> Future<void> (usecase contract)',
+      () {
+        // Case 1 of 2 — signature: the declared method
+        // `SessionLock.acquire(no parameters) -> Future<void>` is
+        // exposed by the implementation subject.
+        final impl = subject.acquire;
+        expect(
+          impl,
+          isNotNull,
+          reason:
+              'SessionLock.acquire must be exposed with the declared '
+              'signature `(no parameters) -> Future<void>`',
+        );
 
-      // Case 2 of 2 — implementation: invoking the declared
-      // method does not throw UnimplementedError.
-      final Object? outcome = _captured(() => impl());
-      expect(outcome, isNot(isA<UnimplementedError>()),
-          reason: 'SessionLock.acquire is not implemented — the declared '
+        // Case 2 of 2 — implementation: invoking the declared
+        // method does not throw UnimplementedError.
+        final Object? outcome = _captured(() => impl());
+        expect(
+          outcome,
+          isNot(isA<UnimplementedError>()),
+          reason:
+              'SessionLock.acquire is not implemented — the declared '
               'contract is unsatisfied, so the cycle is BLOCKED and cannot '
-              'proceed to GREEN (issue #1007)');
-    });
+              'proceed to GREEN (issue #1007)',
+        );
+      },
+    );
   });
 }
 
@@ -53,4 +65,3 @@ Object? _captured(Object? Function() invoke) {
     return error;
   }
 }
-

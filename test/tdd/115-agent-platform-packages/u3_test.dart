@@ -12,18 +12,15 @@
 // placeholder). Replace the subject's
 // stub body with real implementation to make this test pass.
 
-
 library;
 
 import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/u3_subject.dart';
 
-
-
 void main() {
   group('U3 (FR-003, SecureStore.validate)', () {
-    test('U3 — Secure-store operations MUST validate keys (non-empty,', ()  {
+    test('U3 — Secure-store operations MUST validate keys (non-empty,', () {
       // Assertion-shaped guard: a bad key fails HERE.
       expect(() => subject_u3(' '), throwsArgumentError);
       expect(() => subject_u3(null), throwsArgumentError);

@@ -20,10 +20,9 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/116-runnable-example/a2_subject.dart';
 
-
 void main() {
   group('A2 (AC-2)', () {
-    test('A2 — it', ()  {
+    test('A2 — it', () {
       // Assertion-shaped guard: the stub fails HERE via assertion.
       Object? outcome;
       try {

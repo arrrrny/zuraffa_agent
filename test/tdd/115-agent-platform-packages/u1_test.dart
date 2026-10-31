@@ -38,8 +38,11 @@ void main() {
         unboundOutcome = e;
         expect(e.message, contains('AgentPlatform is not bound'));
       }
-      expect(unboundOutcome, isA<UnimplementedError>(),
-          reason: 'the unbound seam must fail loudly, not silently');
+      expect(
+        unboundOutcome,
+        isA<UnimplementedError>(),
+        reason: 'the unbound seam must fail loudly, not silently',
+      );
       // A bound implementation serves the home.
       AgentPlatformBinding.instance = _LocalFake();
       addTearDown(AgentPlatformBinding.reset);

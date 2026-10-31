@@ -10,21 +10,67 @@ on:
         required: false
         default: ""
 
+concurrency:
+  # One run per PR ref: superseded runs are cancelled instead of piling up.
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  verify:
-    # CI gate for every PR: analyze + test the engine
+  format:
+    # Formatter gate — named distinctly from `analyze` so a formatting
+    # failure is immediately identifiable in the PR checks list.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: stable
+          # Pinned to the SDK the tree was formatted with (3.13.7): the
+          # moving `stable` channel's formatter could drift and fail this
+          # gate with zero code changes. The `verify` matrix keeps riding
+          # stable/beta — testing both channels is its point.
+          sdk: 3.13.7
+      # dart format reads the package config to learn the package's
+      # language version (tall style); without `pub get` it falls back to
+      # a lower default and disagrees with the committed formatting.
+      - name: Pub get
+        run: dart pub get
+      - name: Enforce dart format
+        # Scope mirrors the tree-wide reformat wherever it can resolve on
+        # this pure-Dart runner. packages/** is deliberately excluded: the
+        # federated subpackage analyzes in its own context
+        # (analysis_options.yaml) and its pubspec needs flutter plus a
+        # path: sibling checkout, so it cannot resolve here.
+        run: dart format --output=none --set-exit-if-changed lib test tool example
+
+  verify:
+    # CI gate for every PR: analyze + test the engine on supported SDKs
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [stable, beta]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+      # setup-dart@v1 has no built-in cache input, so cache ~/.pub-cache
+      # explicitly (issue #112).
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ matrix.sdk }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ matrix.sdk }}-
       - name: Pub get
         run: dart pub get
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
-        run: dart test
+        # Fleet guard (AGENTS.md): cap test concurrency at 2 — matches
+        # dart_test.yaml's concurrency: 2; the flag keeps CI explicit.
+        run: dart test -j 2
       - name: Runtime purity gate (no dart:io in engine runtime paths)
         run: |
           # Engine purity (constitution VII): dart:io is allowed ONLY in the

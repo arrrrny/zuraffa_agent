@@ -6,8 +6,7 @@
 // parameterless methods declare NoParams params so the implementing
 // provider can @override them without ambiguity.
 
-import 'package:zuraffa/zuraffa.dart'
-    hide CompactionStrategy;
+import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 
 import '../entities/llm_client/llm_client.dart';
 

@@ -20,10 +20,9 @@ import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/tdd/115-agent-platform-packages/a4_subject.dart';
 
-
 void main() {
   group('A4 (AC-4)', () {
-    test('A4 — an `ArgumentError` names the key requirement and', ()  {
+    test('A4 — an `ArgumentError` names the key requirement and', () {
       expect(() => subject_a4(''), throwsArgumentError);
       expect(() => subject_a4('  '), throwsArgumentError);
       expect(() => subject_a4('k\x00'), throwsArgumentError);

@@ -73,7 +73,10 @@ void main() {
         // tool used in the compacted region — the cut slice this compaction
         // actually summarized, recomputed with the same deterministic cut
         // the pipeline used — plus its key-result ledger.
-        final preparation = prepareCompaction(entries, _settings().keepRecentTokens);
+        final preparation = prepareCompaction(
+          entries,
+          _settings().keepRecentTokens,
+        );
         final toolsUsed = preparation.cutEntries
             .whereType<ToolInvocationEntry>()
             .map((e) => e.record.toolName)

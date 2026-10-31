@@ -291,9 +291,7 @@ class HeuristicSummarizer implements CompactionSummarizer {
             // Key result: tool name + truncated result reference. Skipped
             // when the result message itself sits in the cut region — the
             // content row recorded above supersedes the id-reference.
-            keyResults.add(
-              '${entry.record.toolName}: result $resultEntryId',
-            );
+            keyResults.add('${entry.record.toolName}: result $resultEntryId');
           }
 
         case CompactionTreeEntry():

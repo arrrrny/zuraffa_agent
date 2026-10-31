@@ -22,26 +22,29 @@ import 'package:zuraffa_agent/tdd/112-structured-logging/u3_subject.dart';
 
 void main() {
   group('U3 (FR-003, AgentLog.install)', () {
-    test('U3 — `ZuraffaLogging.install({level, onRecord})` MUST be the only', () {
-      ZuraffaLogging.reset();
-      addTearDown(ZuraffaLogging.reset);
-      final sink = MemoryLogSink();
-      // Assertion-shaped guard: a stub subject fails HERE (assertion),
-      // keeping the red honest under spec 046's classification grammar.
-      expect(() => subject_u3(Level.WARNING, sink.add), returnsNormally);
-      // Below-threshold records are filtered by the installed level.
-      AgentLog.llm.info('below-threshold');
-      // At-threshold records reach the consumer sink.
-      AgentLog.llm.warning('delivered');
-      expect(sink.length, 1);
-      expect(sink.records.single.message, contains('delivered'));
-      expect(sink.records.single.loggerName, 'zuraffa.agent.llm');
-      // Re-install REPLACES the sink — never stacks listeners.
-      final second = MemoryLogSink();
-      subject_u3(Level.ALL, second.add);
-      AgentLog.eval.info('after-reinstall');
-      expect(second.length, 1);
-      expect(sink.length, 1);
-    });
+    test(
+      'U3 — `ZuraffaLogging.install({level, onRecord})` MUST be the only',
+      () {
+        ZuraffaLogging.reset();
+        addTearDown(ZuraffaLogging.reset);
+        final sink = MemoryLogSink();
+        // Assertion-shaped guard: a stub subject fails HERE (assertion),
+        // keeping the red honest under spec 046's classification grammar.
+        expect(() => subject_u3(Level.WARNING, sink.add), returnsNormally);
+        // Below-threshold records are filtered by the installed level.
+        AgentLog.llm.info('below-threshold');
+        // At-threshold records reach the consumer sink.
+        AgentLog.llm.warning('delivered');
+        expect(sink.length, 1);
+        expect(sink.records.single.message, contains('delivered'));
+        expect(sink.records.single.loggerName, 'zuraffa.agent.llm');
+        // Re-install REPLACES the sink — never stacks listeners.
+        final second = MemoryLogSink();
+        subject_u3(Level.ALL, second.add);
+        AgentLog.eval.info('after-reinstall');
+        expect(second.length, 1);
+        expect(sink.length, 1);
+      },
+    );
   });
 }
