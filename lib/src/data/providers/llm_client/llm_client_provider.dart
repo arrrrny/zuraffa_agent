@@ -178,4 +178,21 @@ class LlmClientProvider
       ),
     );
   }
+
+  /// Streams a real chat completion through the canonical LLM seam
+  /// (issue #123), yielding `LlmResponseChunk`s as the gateway emits SSE
+  /// deltas. Consumed by `EngineLoopExecutor.runTurnStream`; see that
+  /// method and `bounded_stream_buffer.dart` for the pause/backpressure
+  /// contract the engine loop layers on top.
+  ///
+  /// Routed through [llm.LlmClient.stream] exactly like [complete] is
+  /// routed through [llm.LlmClient.generate] (issue #124 seam parity —
+  /// streaming must not reintroduce the retired parallel
+  /// `LlmHttpTransport` path): an injected `client:`/`transport:` applies
+  /// its retry, breaker and fallback stack to this path too. The seam
+  /// retries the stream OPEN on transient failures; a response that has
+  /// already streamed partial chunks cannot be replayed mid-stream.
+  Stream<llm.LlmResponseChunk> streamComplete(List<ChatMessage> messages) {
+    return _client.stream(_toLlmRequest(messages));
+  }
 }

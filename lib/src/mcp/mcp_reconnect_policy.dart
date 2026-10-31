@@ -95,7 +95,7 @@ class McpReconnectPolicy {
   /// reconnect.
   int get attempt => _attempt;
 
-  /// True once [config.maxAttempts] has been exhausted.
+  /// True once `config.maxAttempts` has been exhausted.
   bool get exhausted => _attempt >= config.maxAttempts;
 
   /// Compute and apply the next backoff delay. Returns true if the

@@ -23,6 +23,41 @@ import 'package:zuraffa_agent/src/domain/entities/tool_result/tool_result.dart';
 void main() {
   group('R3#3 - oversized tool result threshold enforcement', () {
     test(
+      // SC-003 verbatim: a literal 2 MB tool result is reduced to a bounded
+      // summary + artifactRef — the full body never appears in the content
+      // that would enter model context, and round-trips through the store.
+      'a 2 MB tool result is reduced to a bounded summary + artifactRef, '
+      'never the body',
+      () async {
+        final store = InMemoryArtifactStore(
+          config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
+        );
+        final policy = const OversizedResultPolicy(
+          id: 'test',
+          thresholdBytes: 1024 * 1024,
+          summaryMaxChars: 64,
+          artifactStore: './artifacts',
+        );
+        final body = 'x' * (2 * 1024 * 1024); // exactly 2 MB
+
+        final converted = await enforceOversizedResultPolicy(
+          result: ToolResult.success(content: body),
+          policy: policy,
+          artifactService: store,
+        );
+
+        expect(converted.isSummarized, isTrue);
+        expect(converted.artifactRef, isNotNull);
+        // The model-facing content is a bounded summary (header + short
+        // preview), never the 2 MB body.
+        expect(converted.content.length, lessThan(1024));
+        // The body stays retrievable, byte-for-byte.
+        final artifact = await store.fetch(converted.artifactRef!);
+        expect(utf8.decode(artifact!.data), equals(body));
+      },
+    );
+
+    test(
       'a tool result exceeding the policy threshold is auto-converted to an ArtifactRef',
       () async {
         final store = InMemoryArtifactStore(
