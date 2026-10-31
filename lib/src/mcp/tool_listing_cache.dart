@@ -56,7 +56,7 @@ class ToolListingCache {
   }
 
   /// Returns the cached tool list if it's still fresh; otherwise
-  /// re-lists from [client]. Throws if [client.listTools] throws.
+  /// re-lists from [client]. Throws if `client.listTools` throws.
   Future<List<McpToolDescriptor>> getOrRefresh() async {
     final now = _now();
     if (_cached != null &&

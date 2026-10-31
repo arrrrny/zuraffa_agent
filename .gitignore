@@ -16,6 +16,11 @@
 # speckit worktrees (never commit)
 .worktrees/
 
+# Generated API reference: `dart doc` writes doc/api/ by default and the
+# docs workflow builds api/ for the Pages artifact. Neither is committed.
+/doc/api/
+/api/
+
 # Agent/pipeline run artifacts — generated at runtime, never committed.
 # Which .zfa/ paths are source vs generated: see CONTRIBUTING.md.
 .zfa/runs/
