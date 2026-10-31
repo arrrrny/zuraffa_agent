@@ -8,14 +8,26 @@
 
 /// SessionBranch (fork/switch/resume) value object.
 ///
-/// Branching primitive — fork a session at entry N, switch between branches, resume either. Shares ancestry 1..N with the original (epic #1 §R2.2, issue #3 AC1+2).
+/// Branching primitive — fork a session at entry N, switch between branches,
+/// resume either. Shares ancestry 1..N with the original (epic #1 §R2.2, issue
+/// #3 AC1+2).
 class SessionBranch {
+  /// The identifier.
   final String id;
+
+  /// The session identifier.
   final String sessionId;
+
+  /// The forked from entry identifier.
   final String forkedFromEntryId;
+
+  /// The forked at.
   final int forkedAt;
+
+  /// Whether active.
   final bool isActive;
 
+  /// Creates a session branch.
   const SessionBranch({
     required this.id,
     required this.sessionId,
@@ -41,5 +53,6 @@ class SessionBranch {
 
   @override
   String toString() =>
-      'SessionBranch(id: $id, sessionId: $sessionId, forkedFromEntryId: $forkedFromEntryId)';
+      'SessionBranch(id: $id, sessionId: $sessionId, forkedFromEntryId: '
+      '$forkedFromEntryId)';
 }

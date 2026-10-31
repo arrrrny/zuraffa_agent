@@ -13,11 +13,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/steering_queue/steering_queue.dart';
 import '../../../domain/services/steering_queue_service.dart';
 
+/// The steering queue provider.
 class SteeringQueueProvider
     with Loggable, FailureHandler
     implements SteeringQueueService {
   final List<SteeringQueue> _queues;
 
+  /// Creates a steering queue provider.
   SteeringQueueProvider([SteeringQueue? active])
     : _queues = [
         active ??

@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/replay_cli_surface/replay_cli_surface.dart';
 import '../../../domain/services/replay_cli_surface_service.dart';
 
+/// The replay cli surface provider.
 class ReplayCliSurfaceProvider
     with Loggable, FailureHandler
     implements ReplayCliSurfaceService {
   final ReplayCliSurface _active;
 
+  /// Creates a replay cli surface provider.
   ReplayCliSurfaceProvider([ReplayCliSurface? active])
     : _active =
           active ??

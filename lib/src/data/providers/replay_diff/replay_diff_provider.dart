@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/replay_diff/replay_diff.dart';
 import '../../../domain/services/replay_diff_service.dart';
 
+/// The replay diff provider.
 class ReplayDiffProvider
     with Loggable, FailureHandler
     implements ReplayDiffService {
   final ReplayDiff _active;
 
+  /// Creates a replay diff provider.
   ReplayDiffProvider([ReplayDiff? active])
     : _active =
           active ??

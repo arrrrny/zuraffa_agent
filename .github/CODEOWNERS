@@ -1,0 +1,3 @@
+# Default owners — every path requires a review from the maintainer
+# (issue #140). Add more granular rules as the package grows.
+*       @arrrrny

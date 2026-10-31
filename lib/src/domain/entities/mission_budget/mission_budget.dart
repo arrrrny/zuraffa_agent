@@ -35,6 +35,7 @@ class MissionBudget {
   /// When null, node count is uncapped.
   final int? maxUiTreeNodeCount;
 
+  /// Creates a mission budget.
   const MissionBudget({this.maxUiTreeDepth, this.maxUiTreeNodeCount});
 
   /// Returns `true` when at least one UI cap is set.
@@ -69,6 +70,7 @@ class UiBudgetExceededError implements Exception {
   /// The cap the budget pinned.
   final int cap;
 
+  /// Creates a UI budget exceeded error.
   UiBudgetExceededError({
     required this.field,
     required this.actual,
@@ -94,6 +96,7 @@ class UiBudgetExceededError implements Exception {
 /// are precomputed at construction (spec 038 FR-005), so the enforcer
 /// is a pair of integer comparisons — no tree walk.
 class MissionBudgetEnforcer {
+  /// Creates a mission budget enforcer.
   const MissionBudgetEnforcer();
 
   /// Throws [UiBudgetExceededError] when [payload] exceeds any UI cap

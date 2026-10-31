@@ -19,6 +19,7 @@ import 'tool_call_signature_datasource.dart';
 class ToolCallSignatureMockDatasource
     with Loggable, FailureHandler
     implements ToolCallSignatureDatasource {
+  /// Creates a tool call signature mock datasource.
   ToolCallSignatureMockDatasource();
 
   /// Captured signatures addressed by their content-derived key.

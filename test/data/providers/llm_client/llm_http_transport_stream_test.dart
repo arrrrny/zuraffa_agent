@@ -257,6 +257,47 @@ void main() {
       expect(chunks, hasLength(1));
       expect(chunks.single.isComplete, isTrue);
     });
+
+    test('cancel completes while the parser waits at await-for for the next '
+        'line (issue #163)', () async {
+      // Both lines below are delivered before the cancel, so the
+      // generator is suspended at `await for` (requesting line 3) — the
+      // suspension from which an async* cancel never resumes on Dart
+      // 3.13.5: `subscription.cancel()` hung instead of completing.
+      final controller = StreamController<String>();
+      final sub = parseChatCompletionChunkStream(
+        controller.stream,
+      ).listen((_) {});
+
+      controller.add(
+        data({
+          'choices': [
+            {
+              'index': 0,
+              'delta': {'content': 'a'},
+            },
+          ],
+        }),
+      );
+      controller.add(
+        data({
+          'choices': [
+            {
+              'index': 0,
+              'delta': {'content': 'b'},
+            },
+          ],
+        }),
+      );
+      await pumpEventQueue();
+
+      await sub.cancel().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            fail('sub.cancel() did not complete (issue #163 wedge)'),
+      );
+      await controller.close();
+    }, timeout: const Timeout(Duration(seconds: 20)));
   });
 
   group('streamComplete wire path (scripted fake HttpClient, issue #123)', () {
@@ -297,7 +338,7 @@ void main() {
     test(
       'forwards SSE chunks, captures usage, and closes the client',
       () async {
-        final sse =
+        const sse =
             'data: {"choices":[{"index":0,"delta":{"content":"ok"}}]}\n'
             'data: {"choices":[],"usage":{"prompt_tokens":5,'
             '"completion_tokens":2}}\n'
@@ -381,6 +422,46 @@ void main() {
       await pumpEventQueue();
       expect(client.closedCount, 1);
     });
+
+    test('cancel completes and closes the client while the gateway keeps '
+        'emitting (issue #163)', () async {
+      // The wedge needs the cancel to land while the chain is suspended
+      // at `await for` — waiting for the NEXT line — which is exactly the
+      // shape of a gateway that is still streaming. The single-delivery
+      // test above cancels at the `yield` suspension and never reproduced
+      // issue #163; this one does: `sub.cancel()` never completed and the
+      // HttpClient teardown in the `finally` never ran.
+      final controller = StreamController<List<int>>();
+      final client = _ScriptedHttpClient.serving(controller.stream);
+      final transport = LlmHttpTransport(clientFactory: () => client);
+
+      final sub = transport
+          .streamComplete(
+            baseUrl: 'http://example.test',
+            apiKey: 'k',
+            model: 'm',
+            messages: const [ChatMessage(role: 'user', content: 'hi')],
+          )
+          .listen((_) {});
+
+      for (var i = 0; i < 3; i++) {
+        controller.add(
+          utf8.encode(
+            'data: {"choices":[{"index":0,"delta":{"content":"c$i"}}]}\n',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      await sub.cancel().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () =>
+            fail('sub.cancel() did not complete (issue #163 wedge)'),
+      );
+      await controller.close();
+      await pumpEventQueue();
+      expect(client.closedCount, 1);
+    }, timeout: const Timeout(Duration(seconds: 20)));
 
     test('installs the proxy resolver when proxyUrl is set', () async {
       final client = _ScriptedHttpClient('data: [DONE]\n\n');

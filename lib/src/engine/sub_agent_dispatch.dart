@@ -31,6 +31,7 @@ import '../domain/entities/sub_agent_spec/sub_agent_spec.dart';
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import '../domain/services/oversized_result_policy_service.dart';
 import 'events/engine_event.dart';
+import 'cancellation_token.dart';
 import 'mission_runner.dart';
 import 'oversized_result_policy_dispatcher.dart';
 import 'tool_dispatcher.dart';
@@ -43,6 +44,7 @@ import 'tool_dispatcher.dart';
 /// the child mission records the refusal as a failed tool call and continues.
 /// Allowlisted calls delegate with arguments and mission context preserved.
 class AllowlistToolDispatcher implements ToolDispatcher {
+  /// Creates an allowlist tool dispatcher.
   AllowlistToolDispatcher({
     required ToolDispatcher inner,
     required Set<String> allowlist,
@@ -123,6 +125,10 @@ enum SubAgentDispatchStatus {
   /// explicit grant (spec 036: "the engine refuses to dispatch admin-risk
   /// sub-agents without an admin grant")
   refusedRiskTier,
+
+  /// The dispatch's CancellationToken was signalled mid-run (issue #140):
+  /// the child mission stopped cooperatively at its next turn boundary.
+  cancelled,
 }
 
 /// Outcome of one sub-agent dispatch: ids, terminal status, the child's
@@ -131,13 +137,25 @@ enum SubAgentDispatchStatus {
 ///
 /// House-pattern value semantics (spec 066).
 class SubAgentDispatchResult {
+  /// The instance identifier.
   final String instanceId;
+
+  /// The spec name.
   final String specName;
+
+  /// The status.
   final SubAgentDispatchStatus status;
+
+  /// The result summary.
   final String? resultSummary;
+
+  /// The instance.
   final SubAgentInstance instance;
+
+  /// The context.
   final SubAgentContext context;
 
+  /// Creates a sub agent dispatch result.
   const SubAgentDispatchResult({
     required this.instanceId,
     required this.specName,
@@ -179,6 +197,7 @@ class SubAgentDispatchResult {
 /// Runs dispatched sub-agents: isolated child missions with allowlisted
 /// tools, spec budgets, and instance bookkeeping (spec 070).
 class SubAgentDispatchService {
+  /// Creates a sub agent dispatch service.
   SubAgentDispatchService({
     required ToolDispatcher toolDispatcher,
     required LlmClientProvider llmClient,
@@ -195,7 +214,10 @@ class SubAgentDispatchService {
   final LlmClientProvider _llmClient;
   final int _fallbackMaxTurns;
 
-  /// Sink for oversized tool results; defaults to an in-memory store. Wired into
+  /// Sink for oversized tool results; defaults to an in-memory store. Wired
+  /// into the child mission's dispatcher so large tool bodies are summarized +
+  /// ref'd before reaching model context (spec-003 §4.3, FR-005 / R3#3 /
+  /// SC-003).
   /// the child mission's dispatcher so large tool bodies are summarized + ref'd
   /// before reaching model context (spec-003 §4.3, FR-005 / R3#3 / SC-003).
   final ArtifactService artifactService;
@@ -215,6 +237,10 @@ class SubAgentDispatchService {
   ///
   /// Admin-tier specs require [adminGranted]; otherwise the dispatch is
   /// refused before any LLM call and the instance is returned unchanged.
+  ///
+  /// Cooperative cancellation (issue #140): a signalled [cancellationToken]
+  /// stops the child mission at its next turn boundary; the dispatch then
+  /// reports [SubAgentDispatchStatus.cancelled].
   Future<SubAgentDispatchResult> dispatch({
     required SubAgentSpec spec,
     required String mission,
@@ -223,6 +249,7 @@ class SubAgentDispatchService {
     void Function(EngineEvent)? onEvent,
     DateTime Function()? clock,
     bool adminGranted = false,
+    CancellationToken? cancellationToken,
   }) async {
     final effectiveMaxTurns = spec.maxTurns ?? _fallbackMaxTurns;
     final context = SubAgentContext(
@@ -245,7 +272,9 @@ class SubAgentDispatchService {
       );
     }
 
-    // Wall-clock limiting is owned by childPolicy (StopPolicy.wallClockTimeout);
+    // Wall-clock limiting is owned by childPolicy
+    // (StopPolicy.wallClockTimeout); EngineLoop.wallClockTimeoutMs is never
+    // enforced, so it stays 0 here.
     // EngineLoop.wallClockTimeoutMs is never enforced, so it stays 0 here.
     final childLoop = EngineLoop(
       id: 'sub-${instance.id}',
@@ -282,6 +311,7 @@ class SubAgentDispatchService {
         ChatMessage(role: 'user', content: mission),
       ],
       planner: planner,
+      cancellationToken: cancellationToken,
     );
 
     final status = switch (child.status) {
@@ -293,6 +323,7 @@ class SubAgentDispatchService {
       MissionStatus.maxTurnsExceeded => SubAgentDispatchStatus.budgetExhausted,
       MissionStatus.loopDetected => SubAgentDispatchStatus.loopDetected,
       MissionStatus.goalAchieved => SubAgentDispatchStatus.goalAchieved,
+      MissionStatus.cancelled => SubAgentDispatchStatus.cancelled,
     };
 
     // Bookkeeping: a run happened — totalRuns + 1, outcome recorded. The

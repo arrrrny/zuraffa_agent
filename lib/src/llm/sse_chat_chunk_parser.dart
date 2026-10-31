@@ -24,66 +24,101 @@
 //   the stream; a stream that ends without `[DONE]` is finalized anyway so
 //   consumers always see exactly one `isComplete: true` chunk.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'llm_client.dart';
 
 /// Parses an OpenAI-compatible streaming (SSE) response body into
 /// `LlmResponseChunk`s.
-Stream<LlmResponseChunk> parseOpenAiSseChunkStream(
-  Stream<String> lines,
-) async* {
+///
+/// Delivery is `StreamController` forwarding, not an `async*` generator
+/// (issue #163): a consumer cancel propagates as a direct
+/// `StreamSubscription.cancel()` down the chain, where every cancel
+/// completes. Cancelling an `async*` frame suspended at `await for` never
+/// resumes it on Dart 3.13.5 — `subscription.cancel()` hung forever and
+/// downstream teardown never ran. Order, completeness, error-in-producer-
+/// order and finalize semantics are unchanged.
+Stream<LlmResponseChunk> parseOpenAiSseChunkStream(Stream<String> lines) {
   final toolBuffers = <int, _SseToolBuffer>{};
   var finishReason = 'stop';
   LlmUsage? usage;
   var toolCallsEmitted = false;
   var finalEmitted = false;
+  var stopped = false;
 
-  Stream<LlmResponseChunk> finalize() async* {
+  late StreamController<LlmResponseChunk> controller;
+  StreamSubscription<String>? source;
+
+  List<LlmResponseChunk> finalize() {
+    final chunks = <LlmResponseChunk>[];
     if (!toolCallsEmitted && toolBuffers.isNotEmpty) {
       toolCallsEmitted = true;
-      yield LlmResponseChunk(
-        toolCalls: [
-          for (final buffer in toolBuffers.values)
-            LlmToolCall(
-              id: buffer.id ?? '',
-              name: buffer.name,
-              arguments: parseStreamingToolArguments(buffer.arguments),
-            ),
-        ],
+      chunks.add(
+        LlmResponseChunk(
+          toolCalls: [
+            for (final buffer in toolBuffers.values)
+              LlmToolCall(
+                id: buffer.id ?? '',
+                name: buffer.name,
+                arguments: parseStreamingToolArguments(buffer.arguments),
+              ),
+          ],
+        ),
       );
     }
     if (!finalEmitted) {
       finalEmitted = true;
-      yield LlmResponseChunk(
-        usage: usage,
-        isComplete: true,
-        finishReason: finishReason,
+      chunks.add(
+        LlmResponseChunk(
+          usage: usage,
+          isComplete: true,
+          finishReason: finishReason,
+        ),
       );
+    }
+    return chunks;
+  }
+
+  void addFinalize() {
+    for (final chunk in finalize()) {
+      controller.add(chunk);
     }
   }
 
-  await for (final line in lines) {
-    if (line.isEmpty || line.startsWith(':')) continue;
-    if (!line.startsWith('data:')) continue;
+  /// Detach from the source — the direct cancel the issue's fix direction
+  /// asks for (an `async*` `return`/throw used to do this implicitly).
+  void stopPulling() {
+    if (stopped) return;
+    stopped = true;
+    source?.cancel();
+    source = null;
+  }
+
+  void onLine(String line) {
+    if (stopped) return;
+    if (line.isEmpty || line.startsWith(':')) return;
+    if (!line.startsWith('data:')) return;
     final payload = line.substring(5).trim();
     if (payload == '[DONE]') {
-      yield* finalize();
+      addFinalize();
+      stopPulling();
+      controller.close();
       return;
     }
     final Map<String, dynamic> event;
     try {
       event = jsonDecode(payload) as Map<String, dynamic>;
     } on FormatException {
-      continue; // Skip malformed events without killing the stream.
+      return; // Skip malformed events without killing the stream.
     }
 
     final choices = (event['choices'] as List?) ?? const [];
     if (choices.isEmpty) {
       final rawUsage = event['usage'];
       if (rawUsage is Map) usage = _parseSseUsage(rawUsage);
-      yield* finalize();
-      continue;
+      addFinalize();
+      return;
     }
     final choice = choices.first as Map;
     final delta = (choice['delta'] as Map?) ?? const {};
@@ -104,33 +139,64 @@ Stream<LlmResponseChunk> parseOpenAiSseChunkStream(
         (delta['reasoning'] as String?) ??
         (delta['reasoning_content'] as String?);
     if (reasoning != null && reasoning.isNotEmpty) {
-      yield LlmResponseChunk(thinking: reasoning);
+      controller.add(LlmResponseChunk(thinking: reasoning));
     }
     final content = delta['content'] as String?;
     if (content != null && content.isNotEmpty) {
-      yield LlmResponseChunk(content: content);
+      controller.add(LlmResponseChunk(content: content));
     }
     final reason = choice['finish_reason'] as String?;
     if (reason != null) {
       finishReason = reason;
       if (reason == 'tool_calls' && toolBuffers.isNotEmpty) {
         toolCallsEmitted = true;
-        yield LlmResponseChunk(
-          toolCalls: [
-            for (final buffer in toolBuffers.values)
-              LlmToolCall(
-                id: buffer.id ?? '',
-                name: buffer.name,
-                arguments: parseStreamingToolArguments(buffer.arguments),
-              ),
-          ],
-          finishReason: reason,
+        controller.add(
+          LlmResponseChunk(
+            toolCalls: [
+              for (final buffer in toolBuffers.values)
+                LlmToolCall(
+                  id: buffer.id ?? '',
+                  name: buffer.name,
+                  arguments: parseStreamingToolArguments(buffer.arguments),
+                ),
+            ],
+            finishReason: reason,
+          ),
         );
       }
     }
   }
-  // Stream ended without an explicit [DONE] sentinel — finalize anyway.
-  yield* finalize();
+
+  controller = StreamController<LlmResponseChunk>(
+    onListen: () {
+      source = lines.listen(
+        onLine,
+        onError: (Object error, StackTrace stackTrace) {
+          if (stopped) return;
+          stopPulling();
+          controller.addError(error, stackTrace);
+          controller.close();
+        },
+        onDone: () {
+          if (stopped) return;
+          stopped = true;
+          source = null;
+          // Stream ended without an explicit [DONE] sentinel — finalize
+          // anyway (unchanged contract).
+          addFinalize();
+          controller.close();
+        },
+      );
+    },
+    onPause: () => source?.pause(),
+    onResume: () => source?.resume(),
+    onCancel: () async {
+      stopped = true;
+      await source?.cancel();
+      source = null;
+    },
+  );
+  return controller.stream;
 }
 
 /// Buffer accumulating one tool-call's streamed fragments for one index

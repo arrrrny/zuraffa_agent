@@ -23,6 +23,7 @@ import 'repetition_tracker_datasource.dart';
 class RepetitionTrackerMockDatasource
     with Loggable, FailureHandler
     implements RepetitionTrackerDatasource {
+  /// Creates a repetition tracker mock datasource.
   RepetitionTrackerMockDatasource({
     RepetitionTracker config = const RepetitionTracker(id: 'default'),
     DateTime Function()? clock,

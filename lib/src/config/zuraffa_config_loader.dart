@@ -24,24 +24,52 @@ import 'zuraffa_config.dart';
 /// [ZuraffaConfigLoader.fromEnv], documented here as the single source of
 /// truth mirrored in the README.
 abstract final class ZuraffaEnvVars {
+  /// The provider base URL.
   static const providerBaseUrl = 'ZFA_PROVIDER_BASE_URL';
+
+  /// The provider kind.
   static const providerKind = 'ZFA_PROVIDER_PROVIDER_KIND';
+
+  /// The provider model.
   static const providerModel = 'ZFA_PROVIDER_MODEL';
+
+  /// The provider timeout ms.
   static const providerTimeoutMs = 'ZFA_PROVIDER_TIMEOUT_MS';
+
+  /// The agent spec identifier.
   static const agentSpecId = 'ZFA_AGENT_SPEC_ID';
+
+  /// The agent spec name.
   static const agentSpecName = 'ZFA_AGENT_SPEC_NAME';
+
+  /// The agent spec system prompt.
   static const agentSpecSystemPrompt = 'ZFA_AGENT_SPEC_SYSTEM_PROMPT';
+
+  /// The engine loop max turns.
   static const engineLoopMaxTurns = 'ZFA_ENGINE_LOOP_MAX_TURNS';
+
+  /// The engine loop session identifier.
   static const engineLoopSessionId = 'ZFA_ENGINE_LOOP_SESSION_ID';
+
+  /// The engine loop wall clock timeout ms.
   static const engineLoopWallClockTimeoutMs =
       'ZFA_ENGINE_LOOP_WALL_CLOCK_TIMEOUT_MS';
+
+  /// The engine loop repetition threshold.
   static const engineLoopRepetitionThreshold =
       'ZFA_ENGINE_LOOP_REPETITION_THRESHOLD';
+
+  /// The MCP transport endpoint.
   static const mcpTransportEndpoint = 'ZFA_MCP_TRANSPORT_ENDPOINT';
+
+  /// The MCP transport type.
   static const mcpTransportType = 'ZFA_MCP_TRANSPORT_TYPE';
+
+  /// The stop policy max turns.
   static const stopPolicyMaxTurns = 'ZFA_STOP_POLICY_MAX_TURNS';
 }
 
+/// The zuraffa config loader.
 class ZuraffaConfigLoader {
   /// Parses a YAML document into a [ZuraffaConfig]. Unknown top-level keys
   /// are ignored; wrong-typed known fields throw `ArgumentError` naming

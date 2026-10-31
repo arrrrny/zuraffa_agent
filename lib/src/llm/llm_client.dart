@@ -28,19 +28,34 @@ bool _mapEquals<K, V>(Map<K, V> a, Map<K, V> b) {
 
 /// Provider-agnostic LLM client contract (spec 007 FR-001).
 abstract interface class LlmClient {
+  /// The provider name.
   String get providerName;
+
+  /// The model.
   String get model;
+
+  /// Generates the request.
   Future<LlmResponse> generate(LlmRequest request);
+
+  /// Streams the request.
   Stream<LlmResponseChunk> stream(LlmRequest request);
+
+  /// Closes the client and releases provider resources.
   Future<void> close();
 }
 
 /// A tool definition advertised to the model.
 class LlmToolSpec {
+  /// The name.
   final String name;
+
+  /// The description.
   final String description;
+
+  /// The parameters.
   final Map<String, dynamic> parameters;
 
+  /// Creates an LLM tool spec.
   const LlmToolSpec({
     required this.name,
     this.description = '',
@@ -50,12 +65,25 @@ class LlmToolSpec {
 
 /// A provider-agnostic completion request.
 class LlmRequest {
+  /// The system prompt.
   final String? systemPrompt;
+
+  /// The messages.
   final List<AgentMessage> messages;
+
+  /// The tools.
   final List<LlmToolSpec>? tools;
+
+  /// The temperature.
   final double? temperature;
+
+  /// The max tokens.
   final int? maxTokens;
+
+  /// The tool choice.
   final String? toolChoice;
+
+  /// The parallel tool calls.
   final bool? parallelToolCalls;
 
   /// OpenAI-compatible `response_format` passthrough (e.g.
@@ -70,6 +98,7 @@ class LlmRequest {
   /// the client's defaults (they can override `authorization`).
   final Map<String, String> headers;
 
+  /// Creates an LLM request.
   const LlmRequest({
     this.systemPrompt,
     required this.messages,
@@ -85,11 +114,19 @@ class LlmRequest {
 
 /// Usage accounting (spec 007 FR-005).
 class LlmUsage {
+  /// The input tokens.
   final int inputTokens;
+
+  /// The output tokens.
   final int outputTokens;
+
+  /// The cached tokens.
   final int cachedTokens;
+
+  /// The thought tokens.
   final int thoughtTokens;
 
+  /// Creates an LLM usage.
   const LlmUsage({
     this.inputTokens = 0,
     this.outputTokens = 0,
@@ -97,6 +134,7 @@ class LlmUsage {
     this.thoughtTokens = 0,
   });
 
+  /// Returns a copy of this LLM usage with the given fields replaced.
   LlmUsage copyWith({
     int? inputTokens,
     int? outputTokens,
@@ -133,10 +171,16 @@ class LlmUsage {
 
 /// An assembled tool invocation.
 class LlmToolCall {
+  /// The identifier.
   final String id;
+
+  /// The name.
   final String name;
+
+  /// The arguments.
   final Map<String, dynamic> arguments;
 
+  /// Creates an LLM tool call.
   const LlmToolCall({
     required this.id,
     required this.name,
@@ -161,12 +205,22 @@ class LlmToolCall {
 
 /// A complete, non-streaming response.
 class LlmResponse {
+  /// The content.
   final String content;
+
+  /// The thinking.
   final String? thinking;
+
+  /// The tool calls.
   final List<LlmToolCall> toolCalls;
+
+  /// The usage.
   final LlmUsage usage;
+
+  /// The finish reason.
   final String finishReason;
 
+  /// Creates an LLM response.
   const LlmResponse({
     this.content = '',
     this.thinking,
@@ -203,13 +257,25 @@ class LlmResponse {
 
 /// One streaming delta.
 class LlmResponseChunk {
+  /// The content.
   final String? content;
+
+  /// The thinking.
   final String? thinking;
+
+  /// The tool calls.
   final List<LlmToolCall> toolCalls;
+
+  /// The usage.
   final LlmUsage? usage;
+
+  /// Whether complete.
   final bool isComplete;
+
+  /// The finish reason.
   final String? finishReason;
 
+  /// Creates an LLM response chunk.
   const LlmResponseChunk({
     this.content,
     this.thinking,
@@ -250,9 +316,16 @@ class LlmResponseChunk {
 /// Typed error for a non-2xx provider response (spec 007 AC-3): carries the
 /// provider label, HTTP status code, response body, and response headers.
 class LlmHttpException implements Exception {
+  /// The provider.
   final String provider;
+
+  /// The status code.
   final int statusCode;
+
+  /// The body.
   final String body;
+
+  /// The headers.
   final Map<String, String> headers;
 
   /// How many attempts were made when this error surfaced (spec 084
@@ -261,6 +334,7 @@ class LlmHttpException implements Exception {
   /// so a blip (1) and an outage (maxAttempts) are distinguishable.
   final int attempts;
 
+  /// Creates an LLM HTTP exception.
   const LlmHttpException({
     required this.provider,
     required this.statusCode,
@@ -278,7 +352,10 @@ class LlmHttpException implements Exception {
 
 /// Connection-level failure (no HTTP status arrived) — retryable class.
 class LlmNetworkException implements Exception {
+  /// The provider.
   final String provider;
+
+  /// The cause.
   final Object cause;
 
   /// How many attempts were made when this error surfaced (spec 084
@@ -287,6 +364,7 @@ class LlmNetworkException implements Exception {
   /// logs.
   final int attempts;
 
+  /// Creates an LLM network exception.
   const LlmNetworkException({
     required this.provider,
     required this.cause,

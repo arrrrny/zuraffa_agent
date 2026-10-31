@@ -45,7 +45,9 @@ import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'approval_gate_dispatcher.dart';
 import 'tool_dispatcher.dart';
 
+/// The execution mode tool dispatcher.
 class ExecutionModeToolDispatcher implements ToolDispatcher {
+  /// Creates an execution mode tool dispatcher.
   ExecutionModeToolDispatcher({required ToolDispatcher inner})
     : _inner = inner {
     // Fail loud instead of mis-gating (see the header): with this decorator

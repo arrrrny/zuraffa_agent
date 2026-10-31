@@ -7,10 +7,19 @@
 
 /// Typed category of a failed sub-agent run.
 enum SubAgentFailureKind {
+  /// The timeout value.
   timeout,
+
+  /// The tool error value.
   toolError,
+
+  /// The provider error value.
   providerError,
+
+  /// The cancelled value.
   cancelled,
+
+  /// The unknown value.
   unknown,
 }
 
@@ -20,12 +29,22 @@ enum SubAgentFailureKind {
 /// [failureKind] and a [failureReason]. The parent continues on either outcome
 /// (epic #5 §R5, issue #6 US1/US5).
 class SubAgentResult {
+  /// The instance identifier.
   final String instanceId;
+
+  /// Whether ok.
   final bool ok;
+
+  /// The summary.
   final String summary;
+
+  /// The failure kind.
   final SubAgentFailureKind? failureKind;
+
+  /// The failure reason.
   final String? failureReason;
 
+  /// Creates a sub agent result (success variant).
   const SubAgentResult.success({
     required this.instanceId,
     required this.summary,
@@ -33,6 +52,7 @@ class SubAgentResult {
        failureKind = null,
        failureReason = null;
 
+  /// Creates a sub agent result (failure variant).
   const SubAgentResult.failure({
     required this.instanceId,
     required this.failureKind,
@@ -57,5 +77,6 @@ class SubAgentResult {
 
   @override
   String toString() =>
-      'SubAgentResult(instanceId: $instanceId, ok: $ok${ok ? ', summary: "$summary"' : ', failureKind: $failureKind'})';
+      'SubAgentResult(instanceId: $instanceId, ok: $ok'
+      '${ok ? ', summary: "$summary"' : ', failureKind: $failureKind'})';
 }

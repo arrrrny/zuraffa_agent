@@ -13,10 +13,10 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
+import 'package:zuraffa_agent/src/mcp/in_proc_mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
-import 'package:zuraffa_agent/src/mcp/in_proc_mcp_client.dart';
 
 void main() {
   group('spec-015 — InProcMcpClient', () {

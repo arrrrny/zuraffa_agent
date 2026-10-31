@@ -21,7 +21,7 @@ until both have happened the URL returns 404. Pull requests gate on
 
 ```yaml
 dependencies:
-  zuraffa_agent: ^0.1.0
+  zuraffa_agent: ^7.3.2
 ```
 
 ```dart
@@ -51,6 +51,31 @@ dart test
 dart analyze
 ```
 
+## Publishing
+
+Packages ship to [pub.dev](https://pub.dev/packages/zuraffa_agent). The fleet
+publishes under one version number: this root package together with the
+federated platform packages (`zuraffa_agent_platform_interface`,
+`zuraffa_agent_android`, `zuraffa_agent_ios`, `zuraffa_agent_macos`) — see
+[PUBLISH.md](PUBLISH.md).
+
+The `.github/workflows/publish.yml` workflow automates the flow (issue #126):
+
+- **Every pull request** runs `pub publish --dry-run` over all five packages
+  (root + the four platform packages) and fails on any packaging warning, so
+  the fleet cannot drift away from publishable packaging.
+- **Pushing a `v<version>` tag** validates the whole fleet first, then
+  publishes the five packages in dependency order — root first, then the
+  platform packages, waiting for each new version to propagate on pub.dev —
+  using the `PUB_CREDENTIALS_JSON` secret. The release is gated by the
+  `pub-dev` GitHub environment, so a tag push alone cannot publish.
+- **A partial release** is resumed with
+  `gh workflow run publish.yml -f resume_from=<package>`.
+
+The manual flow in [PUBLISH.md](PUBLISH.md) stays as the fallback and is how
+the `PUB_CREDENTIALS_JSON` credential (`~/.pub-cache/credentials.json` from one
+local publish) is minted.
+
 ## Security
 
 The engine's threat model — prompt injection via tool output, secret
@@ -61,6 +86,22 @@ mitigations and the vulnerability reporting channel. High-risk tools
 approval callback at dispatch. Please report vulnerabilities through
 [GitHub Security Advisories](https://github.com/arrrrny/zuraffa_agent/security/advisories/new)
 — not the issue tracker.
+
+## Privacy
+
+zuraffa_agent is an engine you embed — your application is the data
+controller, and your UI is where its data flows must be disclosed.
+[PRIVACY.md](PRIVACY.md) documents exactly what leaves the machine (per
+LLM vendor and per MCP server), what the engine persists on local disk
+(sessions, memory, artifacts, audit log) and for how long, and the
+disclosure and consent duties you take on as a consumer.
+[docs/DATA_RESIDENCY.md](docs/DATA_RESIDENCY.md) maps where each class of
+data is processed and how to keep it inside your jurisdiction (vendor
+regions, DPAs, self-hosted gateways). Third-party package licenses for
+this repository are bundled in
+[THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) — generated from
+`pubspec.lock` by `tool/generate_third_party_notices.dart`; do not edit
+it by hand.
 
 ## Supported LLM providers
 

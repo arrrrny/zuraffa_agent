@@ -23,8 +23,10 @@ class SessionMigrator {
   /// migrates FROM.
   final Map<int, SessionMigrationStep> migrations;
 
+  /// The current version.
   final int currentVersion;
 
+  /// Creates a session migrator.
   const SessionMigrator({
     required this.migrations,
     this.currentVersion = SessionSchema.currentVersion,

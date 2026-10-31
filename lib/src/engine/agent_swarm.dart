@@ -10,13 +10,17 @@
 //   firstCompleted — first member to finish successfully wins
 //   quorum(k)     — the k-th success is enough
 //
-// Design stance (documented in specs/072-agent-swarm/spec.md): a swarm is
-// fan-out + aggregation, NOT supervision. It does not cancel losing
-// members (Dart futures are not cancellable; engine-level cancellation is
-// future work — non-winning members run to completion detached), does not
-// retry failures, and invents no new EngineEvent subtypes. Member events
-// flow to the caller's sink keyed by task id, so every event is
-// attributable to its swarm member.
+// Design stance (documented in specs/072-agent-swarm/spec.md, updated by
+// issue #140): a swarm is fan-out + aggregation, NOT supervision. It does
+// not RETRY failures and invents no new EngineEvent subtypes. Since #140 it
+// DOES cancel losing members COOPERATIVELY on early-return strategies: each
+// member runs under its own CancellationToken, and once first/quorum success
+// lands the swarm signals the tokens of members that have not finished. Dart
+// futures are not abortable, so a member stops at its NEXT mission turn
+// boundary (MissionRunner) — the turn in flight always completes — and a
+// member that never observes the token still runs to completion detached.
+// Member events flow to the caller's sink keyed by task id, so every event
+// is attributable to its swarm member.
 //
 // Not exported from lib/zuraffa_agent.dart — consistent with the sibling
 // engine runtimes.
@@ -25,6 +29,7 @@ import 'dart:async';
 
 import '../domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import '../domain/entities/sub_agent_spec/sub_agent_spec.dart';
+import 'cancellation_token.dart';
 import 'events/engine_event.dart';
 import 'sub_agent_dispatch.dart';
 
@@ -63,10 +68,16 @@ enum SwarmStatus {
 /// it. [id] is the member's identity — the synthesized instance id and the
 /// event-attribution key — and must be unique within a swarm.
 class SwarmTask {
+  /// The identifier.
   final String id;
+
+  /// The spec.
   final SubAgentSpec spec;
+
+  /// The mission.
   final String mission;
 
+  /// Creates a swarm task.
   const SwarmTask({
     required this.id,
     required this.spec,
@@ -92,11 +103,19 @@ class SwarmTask {
 
 /// One member's outcome inside a swarm run.
 class SwarmTaskResult {
+  /// The task identifier.
   final String taskId;
+
+  /// The spec name.
   final String specName;
+
+  /// The status.
   final SubAgentDispatchStatus status;
+
+  /// The summary.
   final String? summary;
 
+  /// Creates a swarm task result.
   const SwarmTaskResult({
     required this.taskId,
     required this.specName,
@@ -128,12 +147,22 @@ class SwarmTaskResult {
 //  strategies), the [winner] on firstCompleted, and the [completedCount]
 /// of successful members.
 class SwarmResult {
+  /// The strategy.
   final SwarmStrategy strategy;
+
+  /// The status.
   final SwarmStatus status;
+
+  /// The results.
   final List<SwarmTaskResult> results;
+
+  /// The winner.
   final SwarmTaskResult? winner;
+
+  /// The completed count.
   final int completedCount;
 
+  /// Creates a swarm result.
   SwarmResult({
     required this.strategy,
     required this.status,
@@ -181,6 +210,7 @@ class SwarmResult {
 /// Runs agent swarms: concurrent fan-out over the sub-agent dispatch
 /// service with strategy-based aggregation.
 class AgentSwarm {
+  /// Creates an agent swarm.
   AgentSwarm({required SubAgentDispatchService dispatchService})
     : _dispatchService = dispatchService;
 
@@ -197,9 +227,15 @@ class AgentSwarm {
   /// `quorum` is required for [SwarmStrategy.quorum] and must satisfy
   /// `1 <= quorum <= tasks.length`.
   ///
-  /// Early-return strategies (firstCompleted, quorum) do NOT cancel the
-  /// remaining members — they run to completion detached (documented;
-  /// cancellation is future work).
+  /// Cooperative cancellation (issue #140): every member runs under its own
+  /// [CancellationToken], handed to the dispatch service and observable by
+  /// the member's mission loop. On [SwarmStrategy.firstCompleted] and
+  /// [SwarmStrategy.quorum], once the winner/quorum lands the swarm signals
+  /// every member that has not yet finished; a cooperative member stops at
+  /// its next mission turn boundary. [SwarmStrategy.allCompleted] waits for
+  /// everyone and never signals. Members that ignore the token (or finish
+  /// between checkpoints) still run to completion detached — their late
+  /// results are simply dropped, as before.
   Future<SwarmResult> run({
     required List<SwarmTask> tasks,
     SwarmStrategy strategy = SwarmStrategy.allCompleted,
@@ -240,6 +276,11 @@ class AgentSwarm {
       }
     }
 
+    // One cancellation token per member (issue #140): the swarm owns the
+    // signals and fires them on early-return aggregation; the member's
+    // mission loop observes them at its turn boundaries.
+    final tokens = {for (final task in tasks) task.id: CancellationToken()};
+
     // Eager fan-out: every member dispatch is CALLED here, before any
     // await — this is what makes the overlap in FR-002 provable.
     final futures = [
@@ -249,6 +290,7 @@ class AgentSwarm {
           onEvent: onEvent,
           clock: clock,
           adminGranted: adminGranted,
+          cancellationToken: tokens[task.id],
         ),
     ];
 
@@ -272,6 +314,17 @@ class AgentSwarm {
     final completer = Completer<SwarmResult>();
     final collected = <SwarmTaskResult>[];
     var successes = 0;
+
+    // Cooperative cancellation (issue #140): once the swarm returns early,
+    // signal every member that has not yet delivered a result. Members that
+    // already finished (success or failure) keep their token untouched.
+    void cancelOutstanding() {
+      final finished = collected.map((r) => r.taskId).toSet();
+      for (final entry in tokens.entries) {
+        if (!finished.contains(entry.key)) entry.value.cancel();
+      }
+    }
+
     StreamSubscription<SwarmTaskResult>? subscription;
     subscription = Stream.fromFutures(futures).listen(
       (result) {
@@ -283,6 +336,7 @@ class AgentSwarm {
         if (strategy == SwarmStrategy.firstCompleted &&
             !completer.isCompleted) {
           subscription?.cancel();
+          cancelOutstanding();
           completer.complete(
             SwarmResult(
               strategy: strategy,
@@ -296,6 +350,7 @@ class AgentSwarm {
             successes == quorum &&
             !completer.isCompleted) {
           subscription?.cancel();
+          cancelOutstanding();
           completer.complete(
             SwarmResult(
               strategy: strategy,
@@ -322,6 +377,10 @@ class AgentSwarm {
         );
       },
       onError: (Object e, StackTrace st) {
+        // A member blew up out-of-band: the swarm surface propagates the
+        // error, and the still-running members are signalled so they stop
+        // at their next boundary instead of burning budget detached.
+        cancelOutstanding();
         if (!completer.isCompleted) completer.completeError(e, st);
       },
     );
@@ -333,6 +392,7 @@ class AgentSwarm {
     void Function(EngineEvent)? onEvent,
     DateTime Function()? clock,
     bool adminGranted = false,
+    CancellationToken? cancellationToken,
   }) async {
     final instance = SubAgentInstance(
       id: task.id,
@@ -347,6 +407,7 @@ class AgentSwarm {
       onEvent: onEvent,
       clock: clock,
       adminGranted: adminGranted,
+      cancellationToken: cancellationToken,
     );
     return SwarmTaskResult(
       taskId: task.id,

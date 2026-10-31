@@ -4,6 +4,7 @@
 // in-tree per specs/007-llm-provider-clients/spec.md with this attribution
 // retained.
 
+import 'dart:async';
 import 'dart:convert';
 
 import '../types.dart';
@@ -18,15 +19,28 @@ import 'sse_chat_chunk_parser.dart';
 class OpenAiCompatibleClient implements LlmClient {
   @override
   final String providerName;
+
+  /// The transport.
   final LlmTransport transport;
+
+  /// The base URL.
   final String baseUrl;
   @override
   final String model;
+
+  /// The API key.
   final String? apiKey;
+
+  /// The retry config.
   final RetryConfig retryConfig;
+
+  /// The clock.
   final LlmClock clock;
+
+  /// The jitter callback.
   final int Function(int coreDelayMs)? jitter;
 
+  /// Creates an open ai compatible client.
   OpenAiCompatibleClient({
     this.providerName = 'openai',
     required this.transport,
@@ -55,23 +69,81 @@ class OpenAiCompatibleClient implements LlmClient {
   }
 
   @override
-  Stream<LlmResponseChunk> stream(LlmRequest request) async* {
-    final response = await openStreamWithRetry(
-      transport: transport,
-      request: _httpRequest(
-        jsonEncode(_buildBody(request, stream: true)),
-        request,
-      ),
-      config: retryConfig,
-      clock: clock,
-      provider: providerName,
-      jitter: jitter,
-    );
+  Stream<LlmResponseChunk> stream(LlmRequest request) {
+    // StreamController forwarding instead of `async*` (issue #163): an
+    // `async*` frame suspended at `await for`/`yield*` never resumes on
+    // cancel (Dart 3.13.5), so the consumer's `subscription.cancel()` hung.
+    // Cancel here becomes a direct subscription cancel down to the parser,
+    // which completes; pause/resume forward so the transport's TCP
+    // backpressure contract is kept.
+    late StreamController<LlmResponseChunk> controller;
+    StreamSubscription<LlmResponseChunk>? inner;
+    var cancelled = false;
+    var paused = false;
 
-    // One shared SSE parser for both OpenAI-compatible streaming paths
-    // (issue #123 review): reasoning deltas surface as thinking chunks here
-    // exactly as on the legacy LlmHttpTransport path.
-    yield* parseOpenAiSseChunkStream(response.lines);
+    Future<void> start() async {
+      try {
+        final response = await openStreamWithRetry(
+          transport: transport,
+          request: _httpRequest(
+            jsonEncode(_buildBody(request, stream: true)),
+            request,
+          ),
+          config: retryConfig,
+          clock: clock,
+          provider: providerName,
+          jitter: jitter,
+        );
+        if (cancelled) {
+          // Cancelled while the request was in flight: still detach from
+          // the response we just opened (nothing can be delivered now).
+          await parseOpenAiSseChunkStream(response.lines).listen(null).cancel();
+          return;
+        }
+
+        // One shared SSE parser for both OpenAI-compatible streaming paths
+        // (issue #123 review): reasoning deltas surface as thinking chunks
+        // here exactly as on the legacy LlmHttpTransport path. Assigned
+        // straight to `inner` so the outer cancel (onCancel) detaches this
+        // exact subscription (issue #163).
+        inner = parseOpenAiSseChunkStream(response.lines).listen(
+          (chunk) {
+            if (!cancelled) controller.add(chunk);
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            if (!cancelled) controller.addError(error, stackTrace);
+          },
+          onDone: () {
+            if (!cancelled) controller.close();
+          },
+        );
+        if (paused) inner!.pause();
+      } catch (error, stackTrace) {
+        if (!cancelled) {
+          controller.addError(error, stackTrace);
+          unawaited(controller.close());
+        }
+      }
+    }
+
+    controller = StreamController<LlmResponseChunk>(
+      onListen: start,
+      onPause: () {
+        paused = true;
+        inner?.pause();
+      },
+      onResume: () {
+        paused = false;
+        inner?.resume();
+      },
+      onCancel: () async {
+        cancelled = true;
+        final cancel = inner?.cancel();
+        inner = null;
+        await cancel;
+      },
+    );
+    return controller.stream;
   }
 
   /// Closes the underlying [transport] — the seam's [LlmClient.close]

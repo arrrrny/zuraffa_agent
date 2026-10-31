@@ -10,9 +10,10 @@ import 'package:zuraffa_agent/src/llm/episodic_memory_store.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/src/llm/persistent_episodic_memory_store.dart';
 import 'package:zuraffa_agent/src/llm/retrieve_memory_tool.dart';
+import 'package:zuraffa_agent/src/types.dart';
+
 import 'fake_llm_client.dart';
 import 'persistent_episodic_memory_store_test.dart' show InMemorySessionStorage;
-import 'package:zuraffa_agent/src/types.dart';
 
 const snapshotFor = '''
 <state_snapshot>
@@ -85,34 +86,32 @@ void main() {
       },
     );
 
-    test(
-      'A2: retrieval returns the original messages, not just the summary (SC-002)',
-      () async {
-        final store = EpisodicMemoryStore();
-        store.add(
-          EpisodicMemory(
-            id: 'snap-quote',
-            summary:
-                '<state_snapshot><overall_goal>auth</overall_goal></state_snapshot>',
-            messages: [
-              UserMessage.text('Decide the auth approach.'),
-              AssistantMessage.text('Decision: OAuth 2.1 with PKCE.'),
-            ],
-          ),
-        );
+    test('A2: retrieval returns the original messages, not just the summary '
+        '(SC-002)', () async {
+      final store = EpisodicMemoryStore();
+      store.add(
+        EpisodicMemory(
+          id: 'snap-quote',
+          summary:
+              '<state_snapshot><overall_goal>auth</overall_goal></state_snapshot>',
+          messages: [
+            UserMessage.text('Decide the auth approach.'),
+            AssistantMessage.text('Decision: OAuth 2.1 with PKCE.'),
+          ],
+        ),
+      );
 
-        final retrieved = store.retrieve('snap-quote');
-        expect(retrieved, isNotNull);
-        expect(retrieved!.summary, contains('auth'));
-        expect(retrieved.messages, hasLength(2));
-        expect(
-          ((retrieved.messages[1] as AssistantMessage).content.single
-                  as TextBlock)
-              .text,
-          contains('OAuth 2.1'),
-        );
-      },
-    );
+      final retrieved = store.retrieve('snap-quote');
+      expect(retrieved, isNotNull);
+      expect(retrieved!.summary, contains('auth'));
+      expect(retrieved.messages, hasLength(2));
+      expect(
+        ((retrieved.messages[1] as AssistantMessage).content.single
+                as TextBlock)
+            .text,
+        contains('OAuth 2.1'),
+      );
+    });
 
     test('A3: memories persist across a session reload (SC-003)', () async {
       final storage = InMemorySessionStorage();
@@ -141,7 +140,8 @@ void main() {
     });
 
     test(
-      'A4: retrieve_memory with snapshot_id returns the memory with original messages (AC-4)',
+      'A4: retrieve_memory with snapshot_id returns the memory with original '
+      'messages (AC-4)',
       () async {
         final client = snapshotClient();
         final store = EpisodicMemoryStore();

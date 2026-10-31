@@ -7,14 +7,20 @@ import '../domain/entities/agent_tool/agent_tool.dart';
 
 /// Event emitted when namespace collision is detected.
 class NamespaceCollisionEvent {
+  /// Creates a namespace collision event.
   const NamespaceCollisionEvent({
     required this.toolName,
     required this.sources,
     required this.resolution,
   });
 
+  /// The tool name.
   final String toolName;
+
+  /// The sources.
   final List<String> sources;
+
+  /// The resolution.
   final String resolution;
 }
 

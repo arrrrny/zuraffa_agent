@@ -9,7 +9,8 @@
 //
 // The cassette's `completions` list is the recorded turn sequence, consumed in
 // order. `eventOrder`, when present, is the event-type sequence the recording
-// observed; the harness compares a replayed mission's emitted events against it.
+// observed; the harness compares a replayed mission's emitted events against
+// it.
 
 import '../data/providers/llm_client/llm_client_provider.dart';
 import '../domain/entities/golden_mission/golden_mission.dart';
@@ -19,6 +20,7 @@ import '../domain/entities/provider_config/provider_config.dart';
 
 /// An [LlmClientProvider] that replays recorded completions from a cassette.
 class CassetteReplayLlmClient extends LlmClientProvider {
+  /// Creates a cassette replay LLM client.
   CassetteReplayLlmClient({
     required List<Map<String, dynamic>> completions,
     this.eventOrder = const [],

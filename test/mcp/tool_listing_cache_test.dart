@@ -12,9 +12,9 @@ import 'dart:async';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart' show McpCallOptions;
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
+import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 import 'package:zuraffa_agent/src/mcp/tool_listing_cache.dart';
 

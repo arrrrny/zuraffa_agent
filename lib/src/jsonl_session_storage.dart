@@ -24,12 +24,14 @@ import 'types.dart';
 /// Each line is a JSON-serialized [SessionTreeEntry]. The active leaf ID
 /// is stored as the first line with a special `_meta` wrapper.
 class JsonlSessionStorage implements SessionStorage {
+  /// Creates a jsonl session storage.
   JsonlSessionStorage(
     this.path, {
     SessionLock? lock,
     this.backupGenerations = 0,
   }) : _lock = lock ?? SessionLock(path);
 
+  /// The path.
   final String path;
 
   /// N-generation automatic backup on [close] (issue #135, optional AC).

@@ -44,13 +44,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import '../config/zuraffa_config.dart';
 import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
 import '../data/providers/engine_loop/engine_loop_executor.dart';
 import '../domain/entities/llm_client/chat_completion.dart';
 import '../domain/entities/llm_client/chat_message.dart';
-import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../domain/entities/stop_policy/stop_policy.dart';
 import '../llm/context_compressor.dart';
 import '../llm/llm_client.dart';
 import '../llm/token_estimator.dart';
@@ -61,12 +62,12 @@ import '../observability/metrics.dart';
 import '../observability/traced_adapters.dart';
 import '../observability/tracing.dart';
 import '../retention.dart';
+import '../security/tool_result_sanitizer.dart';
 import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
-import '../config/zuraffa_config.dart';
-import '../security/tool_result_sanitizer.dart';
+import 'cancellation_token.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -90,6 +91,12 @@ enum MissionStatus {
   /// Goal mode (spec 071): the GoalEvaluator judged the goal achieved
   /// from the transcript; the mission stopped early.
   goalAchieved,
+
+  /// A CancellationToken signalled the mission (issue #140): the runner
+  /// stopped COOPERATIVELY at the next turn boundary. The turn in flight
+  /// when cancel() landed still completed — Dart futures cannot be aborted
+  /// — so the transcript keeps that turn's assistant + tool messages.
+  cancelled,
 }
 
 /// Outcome of one mission run: id, terminal [status], turns consumed, the
@@ -101,14 +108,28 @@ enum MissionStatus {
 /// fields with element-wise transcript equality; `toString` renders id,
 /// status, turns, and message count.
 class MissionResult {
+  /// The mission identifier.
   final String missionId;
+
+  /// The status.
   final MissionStatus status;
+
+  /// The turns used.
   final int turnsUsed;
+
+  /// The transcript.
   final List<ChatMessage> transcript;
+
+  /// The summary.
   final String? summary;
+
+  /// The goal.
   final Goal? goal;
+
+  /// Whether goal achieved.
   final bool goalAchieved;
 
+  /// Creates a mission result.
   MissionResult({
     required this.missionId,
     required this.status,
@@ -167,6 +188,7 @@ class MissionResult {
 /// callers inject deterministic planners. The [transcript] handed to
 /// [plan] is an unmodifiable view of the mission transcript so far.
 abstract interface class ToolCallPlanner {
+  /// Returns the tool calls the model wants after the completed turn.
   Future<List<ToolCall>> plan(
     ChatCompletion completion,
     List<ChatMessage> transcript,
@@ -181,6 +203,7 @@ abstract interface class ToolCallPlanner {
 /// mission's queue/policy wired in. Every exit path emits exactly one
 /// terminal [MissionCompleted] — a mission never ends without it.
 class MissionRunner {
+  /// Creates a mission runner.
   MissionRunner({
     required EngineLoopExecutor executor,
     required ToolDispatcher toolDispatcher,
@@ -333,12 +356,18 @@ class MissionRunner {
   /// evaluator after each turn's tool dispatch and before the natural-stop
   /// check, stopping early with [MissionStatus.goalAchieved] on a true
   /// verdict. Goal mode never overrides budgets or the natural stop.
+  ///
+  /// Cooperative cancellation (issue #140): when [cancellationToken] is
+  /// supplied and signalled, the loop stops at the NEXT turn boundary with
+  /// [MissionStatus.cancelled] instead of spending another turn. The turn
+  /// in flight when cancel() landed still completes.
   Future<MissionResult> run({
     required String missionId,
     required List<ChatMessage> messages,
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
   }) {
     return _run(
       missionId: missionId,
@@ -346,6 +375,7 @@ class MissionRunner {
       planner: planner,
       goal: goal,
       goalEvaluator: goalEvaluator,
+      cancellationToken: cancellationToken,
       streamChunks: false,
     );
   }
@@ -389,6 +419,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
   }) {
     return _run(
       missionId: missionId,
@@ -396,6 +427,7 @@ class MissionRunner {
       planner: planner,
       goal: goal,
       goalEvaluator: goalEvaluator,
+      cancellationToken: cancellationToken,
       streamChunks: true,
     );
   }
@@ -406,6 +438,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
     required bool streamChunks,
   }) async {
     final config = _config;
@@ -454,6 +487,7 @@ class MissionRunner {
           planner: planner,
           goal: goal,
           goalEvaluator: goalEvaluator,
+          cancellationToken: cancellationToken,
           tracer: tracer,
           metrics: metrics,
           missionSpan: span,
@@ -538,6 +572,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
     required Tracer tracer,
     required Metrics metrics,
     required Span missionSpan,
@@ -581,6 +616,14 @@ class MissionRunner {
       }
       if (deadline != null && _clock().isAfter(deadline)) {
         status = MissionStatus.budgetExhausted;
+        break;
+      }
+      // Cooperative cancellation (issue #140): a signalled token stops the
+      // mission here, before another turn is spent. Checked AFTER the
+      // budget gates and BEFORE the turn counter increments, so a cancelled
+      // mission reports exactly the turns it actually ran.
+      if (cancellationToken != null && cancellationToken.isCancelled) {
+        status = MissionStatus.cancelled;
         break;
       }
 

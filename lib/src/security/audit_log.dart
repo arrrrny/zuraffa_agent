@@ -23,14 +23,35 @@ import 'package:uuid/uuid.dart';
 import 'audit_hashing.dart';
 
 /// The security event classes of the audit trail (issue #132 AC).
-enum AuditCategory { providerConfig, toolCall, approval, breaker }
+enum AuditCategory {
+  /// Provider configuration changes.
+  providerConfig,
+
+  /// Tool call dispatches.
+  toolCall,
+
+  /// Approval decisions.
+  approval,
+
+  /// Circuit breaker transitions.
+  breaker,
+}
 
 /// The dotted action strings — stable identifiers, safe to route on.
 abstract final class AuditActions {
+  /// The provider configured.
   static const String providerConfigured = 'provider.configured';
+
+  /// The tool invoked.
   static const String toolInvoked = 'tool.invoked';
+
+  /// The approval granted.
   static const String approvalGranted = 'approval.granted';
+
+  /// The approval denied.
   static const String approvalDenied = 'approval.denied';
+
+  /// The breaker transitioned.
   static const String breakerTransitioned = 'breaker.transitioned';
 }
 
@@ -38,6 +59,7 @@ abstract final class AuditActions {
 /// HASHES only — raw argument or result payloads must never enter an
 /// entry; the interface hashes them on the way in.
 class AuditEntry {
+  /// Creates an audit entry.
   AuditEntry({
     required this.id,
     required this.timestamp,
@@ -52,6 +74,7 @@ class AuditEntry {
   /// When the event was recorded (UTC).
   final DateTime timestamp;
 
+  /// The category.
   final AuditCategory category;
 
   /// One of the stable [AuditActions] strings.
@@ -70,6 +93,7 @@ class AuditEntry {
     'details': details,
   };
 
+  /// Creates an audit entry from JSON.
   factory AuditEntry.fromJson(Map<String, dynamic> json) => AuditEntry(
     id: json['id'] as String,
     timestamp: DateTime.parse(json['ts'] as String).toUtc(),
@@ -148,6 +172,7 @@ abstract interface class AuditLog {
 /// contract: appends only, in call order. Implemented by [JsonlAuditSink]
 /// (durable, append-only JSONL).
 abstract interface class AuditSink {
+  /// Appends the entry.
   Future<void> append(AuditEntry entry);
 
   /// The entries visible in the active view, oldest first. Corrupt lines
@@ -161,6 +186,7 @@ abstract interface class AuditSink {
 /// consumer sinks receive it; adding the name to the pinned
 /// [AgentLog.subsystems] set is a spec change left out of this issue).
 class SinkAuditLog implements AuditLog {
+  /// Creates a sink audit log.
   SinkAuditLog({
     required AuditSink sink,
     DateTime Function()? clock,

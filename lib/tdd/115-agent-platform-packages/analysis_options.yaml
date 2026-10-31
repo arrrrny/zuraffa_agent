@@ -1,0 +1,19 @@
+# zfa/Zorphy-generated code (AGENTS.md: never hand-edit generated
+# output). The generator owns these members and their formatting, so
+# the style/doc lints below are descoped in this subtree and remain
+# enforced on all hand-written code via the root config. Compile
+# errors and the strict language modes still gate at full strength.
+include: ../../../analysis_options.yaml
+
+analyzer:
+  errors:
+    # the generator still emits imports some stubs do not use yet
+    unused_import: ignore
+
+linter:
+  rules:
+    public_member_api_docs: false
+    lines_longer_than_80_chars: false
+    prefer_const_constructors: false
+    prefer_const_declarations: false
+    directives_ordering: false

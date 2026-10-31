@@ -36,14 +36,10 @@ class ScriptedLlmClient extends LlmClientProvider {
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
-      ChatCompletion(
+      const ChatCompletion(
         content: 'call a tool',
         finishReason: 'tool_calls',
-        usage: const TokenUsage(
-          promptTokens: 1,
-          completionTokens: 1,
-          totalTokens: 2,
-        ),
+        usage: TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
       );
 }
 
@@ -105,52 +101,50 @@ class LoopPlanner implements ToolCallPlanner {
 }
 
 void main() {
-  test(
-    'A9: maxCalls=3 with a repeating tool call ends in loopDetected after the 3rd',
-    () async {
-      final events = <EngineEvent>[];
-      final repetition = RepetitionTrackerMockDatasource(
-        config: const RepetitionTracker(
-          id: 'default',
-          maxCalls: 3,
-          window: Duration(seconds: 60),
-        ),
-        clock: () => DateTime.utc(2026, 1, 1),
-      );
+  test('A9: maxCalls=3 with a repeating tool call ends in loopDetected after '
+      'the 3rd', () async {
+    final events = <EngineEvent>[];
+    final repetition = RepetitionTrackerMockDatasource(
+      config: const RepetitionTracker(
+        id: 'default',
+        maxCalls: 3,
+        window: Duration(seconds: 60),
+      ),
+      clock: () => DateTime.utc(2026, 1, 1),
+    );
 
-      const loop = EngineLoop(
-        id: 'loop-9',
-        sessionId: 's9',
-        maxTurns: 10,
-        wallClockTimeoutMs: 600000,
-        repetitionThreshold: 3,
-      );
-      const policy = StopPolicy(
-        id: 'cap9',
-        maxTurns: 10,
-        wallClockTimeout: Duration.zero,
-        repetitionThreshold: 3,
-      );
+    const loop = EngineLoop(
+      id: 'loop-9',
+      sessionId: 's9',
+      maxTurns: 10,
+      wallClockTimeoutMs: 600000,
+      repetitionThreshold: 3,
+    );
+    const policy = StopPolicy(
+      id: 'cap9',
+      maxTurns: 10,
+      wallClockTimeout: Duration.zero,
+      repetitionThreshold: 3,
+    );
 
-      final runner = MissionRunner(
-        executor: EngineLoopExecutor(loop, ScriptedLlmClient()),
-        toolDispatcher: FakeToolDispatcher(),
-        stopPolicy: policy,
-        repetitionTracker: repetition,
-        onEvent: events.add,
-      );
+    final runner = MissionRunner(
+      executor: EngineLoopExecutor(loop, ScriptedLlmClient()),
+      toolDispatcher: FakeToolDispatcher(),
+      stopPolicy: policy,
+      repetitionTracker: repetition,
+      onEvent: events.add,
+    );
 
-      final result = await runner.run(
-        missionId: 'm9',
-        messages: const [ChatMessage(role: 'user', content: 'go')],
-        planner: LoopPlanner(),
-      );
+    final result = await runner.run(
+      missionId: 'm9',
+      messages: const [ChatMessage(role: 'user', content: 'go')],
+      planner: LoopPlanner(),
+    );
 
-      expect(result.status.name, 'loopDetected');
-      expect(result.turnsUsed, 3);
-      final completed = events.whereType<MissionCompleted>().single;
-      expect(completed.status, 'loopDetected');
-      expect(events.whereType<ToolCallCompleted>().length, 3);
-    },
-  );
+    expect(result.status.name, 'loopDetected');
+    expect(result.turnsUsed, 3);
+    final completed = events.whereType<MissionCompleted>().single;
+    expect(completed.status, 'loopDetected');
+    expect(events.whereType<ToolCallCompleted>().length, 3);
+  });
 }

@@ -3,9 +3,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/agent_message/agent_message_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_message/agent_message.dart';
 import 'package:zuraffa_agent/src/domain/services/agent_message_service.dart';
-import 'package:zuraffa_agent/src/data/providers/agent_message/agent_message_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#3 - AgentMessage value equality', () {
@@ -46,9 +46,10 @@ void main() {
     });
 
     test(
-      'AgentMessageProvider.current returns an empty default when the log is empty',
+      'AgentMessageProvider.current returns an empty default when the log is '
+      'empty',
       () async {
-        final message = await AgentMessageProvider().current(NoParams());
+        final message = await AgentMessageProvider().current(const NoParams());
         expect(message, isA<AgentMessage>());
         expect(message.parts, isEmpty);
         expect(message.role, isNotEmpty);
@@ -56,7 +57,7 @@ void main() {
     );
 
     test('AgentMessageProvider.count returns 0 for an empty log', () async {
-      expect(await AgentMessageProvider().count(NoParams()), 0);
+      expect(await AgentMessageProvider().count(const NoParams()), 0);
     });
 
     test(
@@ -72,8 +73,8 @@ void main() {
           parts: const ['yo'],
         );
         provider.append(latest);
-        expect(await provider.current(NoParams()), equals(latest));
-        expect(await provider.count(NoParams()), 2);
+        expect(await provider.current(const NoParams()), equals(latest));
+        expect(await provider.count(const NoParams()), 2);
       },
     );
 
@@ -84,8 +85,8 @@ void main() {
         parts: const ['seed'],
       );
       final provider = AgentMessageProvider([seeded]);
-      expect(await provider.current(NoParams()), equals(seeded));
-      expect(await provider.count(NoParams()), 1);
+      expect(await provider.current(const NoParams()), equals(seeded));
+      expect(await provider.count(const NoParams()), 1);
     });
   });
 }

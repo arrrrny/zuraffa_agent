@@ -41,7 +41,16 @@
 /// - [halfOpen] — probing. A limited number of trial requests are
 ///   allowed; success → [closed] (when halfOpenSuccesses ≥
 ///   halfOpenThreshold), failure → [open] (with reset).
-enum CircuitBreakerState { closed, open, halfOpen }
+enum CircuitBreakerState {
+  /// Requests flow normally.
+  closed,
+
+  /// Requests fail fast until the cooldown elapses.
+  open,
+
+  /// A trial request decides whether to close again.
+  halfOpen,
+}
 
 /// CircuitBreaker value object (immutable snapshot).
 ///
@@ -95,6 +104,7 @@ class CircuitBreaker {
   /// the breaker has never observed a failure.
   final DateTime? lastFailureAt;
 
+  /// Creates a circuit breaker.
   const CircuitBreaker({
     required this.id,
     required this.failureThreshold,

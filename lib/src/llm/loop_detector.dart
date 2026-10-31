@@ -24,6 +24,7 @@ class LoopDetectorConfig {
   /// How many recent messages the diagnosis prompt carries.
   final int diagnosisWindowMessages;
 
+  /// Creates a loop detector config.
   const LoopDetectorConfig({
     this.toolLoopThreshold = 5,
     this.llmCheckAfterTurns = 30,
@@ -53,6 +54,7 @@ class LoopDetectorResult {
   /// the failure never itself triggers a detection — spec Assumptions).
   final String? diagnosisError;
 
+  /// Creates a loop detector result.
   const LoopDetectorResult({
     required this.isLoop,
     required this.reason,
@@ -93,6 +95,7 @@ class LoopDetectorResult {
 /// one message at a time as the conversation progresses (spec 002 wires
 /// the engine integration).
 abstract interface class LoopDetector {
+  /// Observes the message.
   Future<LoopDetectorResult> observe(AgentMessage message);
 }
 

@@ -57,19 +57,17 @@ void main() {
       },
     );
 
-    test(
-      'U6: execute with snapshot_id returns that memory with its original messages',
-      () {
-        final result = tool.execute({'snapshot_id': 'snap-001'});
-        expect(result.found, isTrue);
-        expect(result.memory, isNotNull);
-        expect(result.memory!.id, 'snap-001');
-        expect(result.memory!.summary, contains('auth'));
-        expect(result.memory!.messages, hasLength(2));
-        expect(result.memory!.messages.first, isA<UserMessage>());
-        expect(result.error, isNull);
-      },
-    );
+    test('U6: execute with snapshot_id returns that memory with its original '
+        'messages', () {
+      final result = tool.execute({'snapshot_id': 'snap-001'});
+      expect(result.found, isTrue);
+      expect(result.memory, isNotNull);
+      expect(result.memory!.id, 'snap-001');
+      expect(result.memory!.summary, contains('auth'));
+      expect(result.memory!.messages, hasLength(2));
+      expect(result.memory!.messages.first, isA<UserMessage>());
+      expect(result.error, isNull);
+    });
 
     test(
       'U7: execute with limit/offset returns a paginated summary listing (no full originals)',
@@ -81,7 +79,8 @@ void main() {
           'snap-001',
           'snap-002',
         ]);
-        // The listing carries summaries + counts, not the full original messages.
+        // The listing carries summaries + counts, not the full original
+        // messages.
         final counts = page1.listing!.map((m) => m.messageCount).toList();
         expect(counts, [2, 1]);
         expect(page1.memory, isNull);
@@ -95,17 +94,15 @@ void main() {
       },
     );
 
-    test(
-      'U8: execute with an unknown snapshot_id returns a typed not-found error result',
-      () {
-        final result = tool.execute({'snapshot_id': 'missing-snap'});
-        expect(result.found, isFalse);
-        expect(result.memory, isNull);
-        expect(result.listing, isNull);
-        expect(result.error, isNotNull);
-        expect(result.error!.code, RetrieveMemoryErrorCode.notFound);
-        expect(result.error!.message, contains('missing-snap'));
-      },
-    );
+    test('U8: execute with an unknown snapshot_id returns a typed not-found '
+        'error result', () {
+      final result = tool.execute({'snapshot_id': 'missing-snap'});
+      expect(result.found, isFalse);
+      expect(result.memory, isNull);
+      expect(result.listing, isNull);
+      expect(result.error, isNotNull);
+      expect(result.error!.code, RetrieveMemoryErrorCode.notFound);
+      expect(result.error!.message, contains('missing-snap'));
+    });
   });
 }

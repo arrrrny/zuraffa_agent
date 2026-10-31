@@ -21,16 +21,15 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/circuit_breaker/circuit_breaker_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/circuit_breaker/circuit_breaker.dart';
 import 'package:zuraffa_agent/src/domain/services/circuit_breaker_service.dart';
-import 'package:zuraffa_agent/src/data/providers/circuit_breaker/circuit_breaker_provider.dart';
 
 void main() {
-  CircuitBreaker fresh() => CircuitBreaker(
+  CircuitBreaker fresh() => const CircuitBreaker(
     id: 'openai-compat',
     failureThreshold: 3,
-    cooldown: const Duration(seconds: 30),
+    cooldown: Duration(seconds: 30),
     halfOpenThreshold: 2,
   );
 
@@ -91,29 +90,27 @@ void main() {
       expect(b.isOpen, isTrue);
     });
 
-    test(
-      'recordFailure in halfOpen trips back to open and resets halfOpenSuccesses',
-      () {
-        final openTs = DateTime.utc(2026, 8, 24, 9, 0, 0);
-        final failTs = DateTime.utc(2026, 8, 24, 9, 1, 0);
-        // Trip to open.
-        final open = fresh()
-            .recordFailure(at: openTs)
-            .recordFailure(at: openTs)
-            .recordFailure(at: openTs);
-        // Cool down to halfOpen.
-        final halfOpen = open.tryHalfOpen(DateTime.utc(2026, 8, 24, 9, 1, 0));
-        expect(halfOpen.state, CircuitBreakerState.halfOpen);
-        // One success in halfOpen.
-        final halfOpen1 = halfOpen.recordSuccess();
-        expect(halfOpen1.halfOpenSuccesses, 1);
-        // Failure in halfOpen → back to open, halfOpenSuccesses reset.
-        final tripped = halfOpen1.recordFailure(at: failTs);
-        expect(tripped.state, CircuitBreakerState.open);
-        expect(tripped.halfOpenSuccesses, 0);
-        expect(tripped.openedAt, failTs);
-      },
-    );
+    test('recordFailure in halfOpen trips back to open and resets '
+        'halfOpenSuccesses', () {
+      final openTs = DateTime.utc(2026, 8, 24, 9, 0, 0);
+      final failTs = DateTime.utc(2026, 8, 24, 9, 1, 0);
+      // Trip to open.
+      final open = fresh()
+          .recordFailure(at: openTs)
+          .recordFailure(at: openTs)
+          .recordFailure(at: openTs);
+      // Cool down to halfOpen.
+      final halfOpen = open.tryHalfOpen(DateTime.utc(2026, 8, 24, 9, 1, 0));
+      expect(halfOpen.state, CircuitBreakerState.halfOpen);
+      // One success in halfOpen.
+      final halfOpen1 = halfOpen.recordSuccess();
+      expect(halfOpen1.halfOpenSuccesses, 1);
+      // Failure in halfOpen → back to open, halfOpenSuccesses reset.
+      final tripped = halfOpen1.recordFailure(at: failTs);
+      expect(tripped.state, CircuitBreakerState.open);
+      expect(tripped.halfOpenSuccesses, 0);
+      expect(tripped.openedAt, failTs);
+    });
 
     test(
       'recordSuccess in halfOpen closes the breaker when halfOpenThreshold met',
@@ -207,7 +204,9 @@ void main() {
     test(
       'CircuitBreakerProvider.current returns the active breaker snapshot',
       () async {
-        final breaker = await CircuitBreakerProvider().current(NoParams());
+        final breaker = await CircuitBreakerProvider().current(
+          const NoParams(),
+        );
         expect(breaker, isA<CircuitBreaker>());
         expect(breaker.id, 'openai-compat');
         expect(breaker.state, CircuitBreakerState.closed);
@@ -218,7 +217,7 @@ void main() {
     );
 
     test('CircuitBreakerProvider.count returns 1', () async {
-      expect(await CircuitBreakerProvider().count(NoParams()), 1);
+      expect(await CircuitBreakerProvider().count(const NoParams()), 1);
     });
   });
 }

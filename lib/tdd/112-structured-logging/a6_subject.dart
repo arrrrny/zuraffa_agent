@@ -16,7 +16,6 @@ import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
-import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/logging/memory_log_sink.dart';
 

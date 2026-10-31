@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/compaction_strategy/compaction_strategy.dart';
 import '../../../domain/services/compaction_strategy_service.dart';
 
+/// The compaction strategy provider.
 class CompactionStrategyProvider
     with Loggable, FailureHandler
     implements CompactionStrategyService {
   final CompactionStrategy _active;
 
+  /// Creates a compaction strategy provider.
   CompactionStrategyProvider([CompactionStrategy? active])
     : _active =
           active ??

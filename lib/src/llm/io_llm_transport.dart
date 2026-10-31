@@ -19,6 +19,7 @@ import 'llm_transport.dart';
 
 /// dart:io-backed [LlmTransport] (spec 007 plan: `io_llm_transport.dart`).
 class IoLlmTransport implements LlmTransport {
+  /// The provider.
   final String provider;
   final HttpClient _client;
 
@@ -26,10 +27,11 @@ class IoLlmTransport implements LlmTransport {
   /// (LlmClientProvider forwards ProviderConfig.timeoutMs here).
   ///
   /// [proxyUrl] routes egress through an HTTP proxy via `findProxy`
-  /// (HTTP CONNECT) — parity with the legacy LlmHttpTransport behavior so the
-  /// LlmClientProvider reroute (issue #124) keeps its documented proxy egress
-  /// (http://localhost:8890). The `scheme://` prefix is stripped:
-  /// `http://localhost:8890` -> `PROXY localhost:8890`.
+  /// (HTTP CONNECT) — parity with the legacy LlmHttpTransport behavior so
+  /// the LlmClientProvider reroute (issue #124) keeps its documented proxy
+  /// egress. The proxy URL is operator-supplied (explicit or env-loaded, no
+  /// default — issue #140). The `scheme://` prefix is stripped:
+  /// `http://proxy.example.com:8890` -> `PROXY proxy.example.com:8890`.
   IoLlmTransport({
     this.provider = 'io',
     HttpClient? client,

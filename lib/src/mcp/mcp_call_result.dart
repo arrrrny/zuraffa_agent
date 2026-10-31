@@ -28,6 +28,7 @@ final class McpCallOk extends McpCallResult {
   /// JSON-serializable (string, number, bool, list, map).
   final Map<String, dynamic> result;
 
+  /// Creates an MCP call ok.
   const McpCallOk(this.result);
 
   @override
@@ -61,9 +62,13 @@ final class McpCallOk extends McpCallResult {
 /// - `transport-error` — the underlying wire failed mid-call.
 /// - `timeout` — the call exceeded the configured deadline.
 final class McpCallError extends McpCallResult {
+  /// The code.
   final String code;
+
+  /// The message.
   final String message;
 
+  /// Creates an MCP call error.
   const McpCallError({required this.code, required this.message});
 
   @override

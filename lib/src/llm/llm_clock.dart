@@ -7,12 +7,16 @@
 /// Injectable clock + sleep seam so retry/backoff schedules are deterministic
 /// under test (spec 007 FR-006; constitution VII: pure Dart, no dart:io).
 abstract interface class LlmClock {
+  /// Returns the current wall-clock time.
   DateTime now();
+
+  /// Sleeps the milliseconds.
   Future<void> sleep(int milliseconds);
 }
 
 /// Real-time clock backed by `Future.delayed` (pure Dart core, no dart:io).
 class SystemLlmClock implements LlmClock {
+  /// Creates a system LLM clock.
   const SystemLlmClock();
 
   @override

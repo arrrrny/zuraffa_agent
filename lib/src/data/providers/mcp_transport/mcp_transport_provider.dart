@@ -14,11 +14,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/mcp_transport/mcp_transport.dart';
 import '../../../domain/services/mcp_transport_service.dart';
 
+/// The MCP transport provider.
 class McpTransportProvider
     with Loggable, FailureHandler
     implements McpTransportService {
   final McpTransport _active;
 
+  /// Creates an MCP transport provider.
   McpTransportProvider([McpTransport? active])
     : _active =
           active ??

@@ -8,14 +8,26 @@
 
 /// ProviderConfig (typed openai/anthropic/gemini) value object.
 ///
-/// Typed provider configuration — base URL, API key reference, model list, timeouts (epic #4 §R4.1, issue #5 US1). Provider-specific subclasses carry vendor-only fields.
+/// Typed provider configuration — base URL, API key reference, model list,
+/// timeouts (epic #4 §R4.1, issue #5 US1). Provider-specific subclasses carry
+/// vendor-only fields.
 class ProviderConfig {
+  /// The identifier.
   final String id;
+
+  /// The provider kind.
   final String providerKind;
+
+  /// The base URL.
   final String baseUrl;
+
+  /// The models.
   final List<String> models;
+
+  /// The timeout ms.
   final int timeoutMs;
 
+  /// Creates a provider config.
   const ProviderConfig({
     required this.id,
     required this.providerKind,

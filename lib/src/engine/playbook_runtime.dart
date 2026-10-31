@@ -38,6 +38,7 @@ import 'tool_dispatcher.dart';
 /// - [constrainResponse] — applies the mechanical response constraints to
 ///   the final response text.
 class PlaybookRuntime {
+  /// Creates a playbook runtime.
   PlaybookRuntime({required Playbook playbook, DateTime Function()? clock})
     : _playbook = playbook,
       _clock = clock ?? DateTime.now;
@@ -46,8 +47,9 @@ class PlaybookRuntime {
   final DateTime Function() _clock;
 
   /// The playbook's steering entries as [SteeringMessage]s, in document
-  /// order, plus — when the playbook declares a response [PlaybookResponse.language]
-  /// — one pinned directive message appended after them:
+  /// order, plus — when the playbook declares a response
+  /// [PlaybookResponse.language] — one pinned directive message appended
+  /// after them:
   /// `[playbook:<id>] Respond in language '<language>'.`
   ///
   /// Message ids are deterministic and playbook-attributable: an entry's
@@ -127,6 +129,7 @@ class PlaybookRuntime {
 /// (an empty list locks down every tool); `blocklist` refuses exactly
 /// `blocked`; `off` refuses nothing.
 class PlaybookToolGateDispatcher implements ToolDispatcher {
+  /// Creates a playbook tool gate dispatcher.
   PlaybookToolGateDispatcher({
     required ToolDispatcher inner,
     required PlaybookToolGate gate,

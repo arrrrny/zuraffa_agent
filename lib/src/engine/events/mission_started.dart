@@ -1,12 +1,18 @@
 part of 'engine_event.dart';
 
-/// Emitted when a mission begins. Pairs with MissionCompleted (issue #16). Carries the mission spec id + startedAt.
+/// Emitted when a mission begins. Pairs with MissionCompleted (issue #16).
+/// Carries the mission spec id + startedAt.
 final class MissionStarted extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The mission identifier.
   final String missionId;
+
+  /// The started at.
   final DateTime startedAt;
 
+  /// Creates a mission started.
   const MissionStarted({
     required this.emittedAt,
     required this.missionId,
@@ -27,5 +33,6 @@ final class MissionStarted extends EngineEvent {
 
   @override
   String toString() =>
-      'MissionStarted(emittedAt: $emittedAt, missionId: $missionId, startedAt: $startedAt)';
+      'MissionStarted(emittedAt: $emittedAt, missionId: $missionId, '
+      'startedAt: $startedAt)';
 }

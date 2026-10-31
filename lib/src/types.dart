@@ -47,9 +47,11 @@ String generateEntryId() {
 }
 
 // Sealed ContentBlock Hierarchy
+/// The content block.
 sealed class ContentBlock {
   const ContentBlock();
 
+  /// Converts this content block to JSON.
   Map<String, dynamic> toJson();
 
   factory ContentBlock.fromJson(Map<String, dynamic> json) {
@@ -74,14 +76,18 @@ sealed class ContentBlock {
   }
 }
 
+/// The text block.
 class TextBlock extends ContentBlock {
+  /// The text.
   final String text;
 
+  /// Creates a text block.
   const TextBlock(this.text);
 
   @override
   Map<String, dynamic> toJson() => {'_type': 'text', 'text': text};
 
+  /// Creates a text block from JSON.
   factory TextBlock.fromJson(Map<String, dynamic> json) =>
       TextBlock(json['text'] as String);
 
@@ -96,10 +102,15 @@ class TextBlock extends ContentBlock {
   int get hashCode => text.hashCode;
 }
 
+/// The image block.
 class ImageBlock extends ContentBlock {
+  /// The data.
   final String data;
+
+  /// The MIME type.
   final String mimeType;
 
+  /// Creates an image block.
   const ImageBlock({required this.data, required this.mimeType});
 
   @override
@@ -109,6 +120,7 @@ class ImageBlock extends ContentBlock {
     'mimeType': mimeType,
   };
 
+  /// Creates an image block from JSON.
   factory ImageBlock.fromJson(Map<String, dynamic> json) => ImageBlock(
     data: json['data'] as String,
     mimeType: json['mimeType'] as String,
@@ -126,11 +138,18 @@ class ImageBlock extends ContentBlock {
   int get hashCode => Object.hash(data, mimeType);
 }
 
+/// The audio block.
 class AudioBlock extends ContentBlock {
+  /// The data.
   final String data;
+
+  /// The MIME type.
   final String mimeType;
+
+  /// The duration ms.
   final int? durationMs;
 
+  /// Creates an audio block.
   const AudioBlock({
     required this.data,
     required this.mimeType,
@@ -145,6 +164,7 @@ class AudioBlock extends ContentBlock {
     if (durationMs != null) 'durationMs': durationMs,
   };
 
+  /// Creates an audio block from JSON.
   factory AudioBlock.fromJson(Map<String, dynamic> json) => AudioBlock(
     data: json['data'] as String,
     mimeType: json['mimeType'] as String,
@@ -164,11 +184,18 @@ class AudioBlock extends ContentBlock {
   int get hashCode => Object.hash(data, mimeType, durationMs);
 }
 
+/// The document block.
 class DocumentBlock extends ContentBlock {
+  /// The data.
   final String data;
+
+  /// The MIME type.
   final String mimeType;
+
+  /// The title.
   final String? title;
 
+  /// Creates a document block.
   const DocumentBlock({required this.data, required this.mimeType, this.title});
 
   @override
@@ -179,6 +206,7 @@ class DocumentBlock extends ContentBlock {
     if (title != null) 'title': title,
   };
 
+  /// Creates a document block from JSON.
   factory DocumentBlock.fromJson(Map<String, dynamic> json) => DocumentBlock(
     data: json['data'] as String,
     mimeType: json['mimeType'] as String,
@@ -198,11 +226,18 @@ class DocumentBlock extends ContentBlock {
   int get hashCode => Object.hash(data, mimeType, title);
 }
 
+/// The tool call block.
 class ToolCallBlock extends ContentBlock {
+  /// The identifier.
   final String id;
+
+  /// The name.
   final String name;
+
+  /// The arguments.
   final Map<String, dynamic> arguments;
 
+  /// Creates a tool call block.
   const ToolCallBlock({
     required this.id,
     required this.name,
@@ -217,6 +252,7 @@ class ToolCallBlock extends ContentBlock {
     'arguments': arguments,
   };
 
+  /// Creates a tool call block from JSON.
   factory ToolCallBlock.fromJson(Map<String, dynamic> json) => ToolCallBlock(
     id: json['id'] as String,
     name: json['name'] as String,
@@ -236,10 +272,15 @@ class ToolCallBlock extends ContentBlock {
   int get hashCode => Object.hash(id, name);
 }
 
+/// The thinking block.
 class ThinkingBlock extends ContentBlock {
+  /// The thinking.
   final String thinking;
+
+  /// The signature.
   final String? signature;
 
+  /// Creates a thinking block.
   const ThinkingBlock({required this.thinking, this.signature});
 
   @override
@@ -249,6 +290,7 @@ class ThinkingBlock extends ContentBlock {
     if (signature != null) 'signature': signature,
   };
 
+  /// Creates a thinking block from JSON.
   factory ThinkingBlock.fromJson(Map<String, dynamic> json) => ThinkingBlock(
     thinking: json['thinking'] as String,
     signature: json['signature'] as String?,
@@ -267,12 +309,15 @@ class ThinkingBlock extends ContentBlock {
 }
 
 // Sealed AgentMessage Hierarchy
+/// The agent message.
 sealed class AgentMessage {
+  /// The timestamp.
   final DateTime timestamp;
 
   const AgentMessage({DateTime? timestamp})
     : timestamp = timestamp ?? const _DefaultDateTime();
 
+  /// Converts this agent message to JSON.
   Map<String, dynamic> toJson();
 
   factory AgentMessage.fromJson(Map<String, dynamic> json) {
@@ -301,11 +346,15 @@ class _DefaultDateTime implements DateTime {
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
+/// The user message.
 class UserMessage extends AgentMessage {
+  /// The content.
   final List<ContentBlock> content;
 
+  /// Creates an user message.
   UserMessage({required this.content, super.timestamp});
 
+  /// Creates an user message (text variant).
   factory UserMessage.text(String text) =>
       UserMessage(content: [TextBlock(text)]);
 
@@ -318,6 +367,7 @@ class UserMessage extends AgentMessage {
             .toIso8601String(),
   };
 
+  /// Creates an user message from JSON.
   factory UserMessage.fromJson(Map<String, dynamic> json) {
     final rawContent = json['content'];
     final List<ContentBlock> blocks;
@@ -343,11 +393,15 @@ class UserMessage extends AgentMessage {
   }
 }
 
+/// The assistant message.
 class AssistantMessage extends AgentMessage {
+  /// The content.
   final List<ContentBlock> content;
 
+  /// Creates an assistant message.
   AssistantMessage({required this.content, super.timestamp});
 
+  /// Creates an assistant message (text variant).
   factory AssistantMessage.text(String text) =>
       AssistantMessage(content: [TextBlock(text)]);
 
@@ -360,6 +414,7 @@ class AssistantMessage extends AgentMessage {
             .toIso8601String(),
   };
 
+  /// Creates an assistant message from JSON.
   factory AssistantMessage.fromJson(Map<String, dynamic> json) {
     final rawContent = json['content'];
     final List<ContentBlock> blocks;
@@ -385,13 +440,24 @@ class AssistantMessage extends AgentMessage {
   }
 }
 
+/// The tool result message.
 class ToolResultMessage extends AgentMessage {
+  /// The tool call identifier.
   final String toolCallId;
+
+  /// The tool name.
   final String toolName;
+
+  /// The content.
   final String content;
+
+  /// Whether error.
   final bool isError;
+
+  /// The artifact refs.
   final List<ArtifactRef> artifactRefs;
 
+  /// Creates a tool result message.
   ToolResultMessage({
     required this.toolCallId,
     required this.toolName,
@@ -414,6 +480,7 @@ class ToolResultMessage extends AgentMessage {
             .toIso8601String(),
   };
 
+  /// Creates a tool result message from JSON.
   factory ToolResultMessage.fromJson(Map<String, dynamic> json) =>
       ToolResultMessage(
         toolCallId: json['toolCallId'] as String,
@@ -435,10 +502,15 @@ class ToolResultMessage extends AgentMessage {
       );
 }
 
+/// The custom message.
 class CustomMessage extends AgentMessage {
+  /// The message type.
   final String messageType;
+
+  /// The payload.
   final Map<String, dynamic> payload;
 
+  /// Creates a custom message.
   CustomMessage({
     required this.messageType,
     required this.payload,
@@ -455,6 +527,7 @@ class CustomMessage extends AgentMessage {
             .toIso8601String(),
   };
 
+  /// Creates a custom message from JSON.
   factory CustomMessage.fromJson(Map<String, dynamic> json) => CustomMessage(
     messageType: json['messageType'] as String,
     payload: Map<String, dynamic>.from(json['payload'] as Map),
@@ -465,9 +538,15 @@ class CustomMessage extends AgentMessage {
 }
 
 // Sealed SessionTreeEntry Hierarchy
+/// The session tree entry.
 sealed class SessionTreeEntry {
+  /// The identifier.
   final String id;
+
+  /// The parent identifier.
   final String? parentId;
+
+  /// The timestamp.
   final DateTime timestamp;
 
   const SessionTreeEntry({
@@ -476,6 +555,7 @@ sealed class SessionTreeEntry {
     required this.timestamp,
   });
 
+  /// Converts this session tree entry to JSON.
   Map<String, dynamic> toJson();
 
   factory SessionTreeEntry.fromJson(Map<String, dynamic> json) {
@@ -513,9 +593,12 @@ sealed class SessionTreeEntry {
   }
 }
 
+/// The message entry.
 class MessageEntry extends SessionTreeEntry {
+  /// The message.
   final AgentMessage message;
 
+  /// Creates a message entry.
   const MessageEntry({
     required super.id,
     super.parentId,
@@ -532,6 +615,7 @@ class MessageEntry extends SessionTreeEntry {
     'message': message.toJson(),
   };
 
+  /// Creates a message entry from JSON.
   factory MessageEntry.fromJson(Map<String, dynamic> json) => MessageEntry(
     id: json['id'] as String,
     parentId: json['parentId'] as String?,
@@ -542,9 +626,12 @@ class MessageEntry extends SessionTreeEntry {
   );
 }
 
+/// The turn record entry.
 class TurnRecordEntry extends SessionTreeEntry {
+  /// The record.
   final TurnRecord record;
 
+  /// Creates a turn record entry.
   const TurnRecordEntry({
     required super.id,
     super.parentId,
@@ -561,6 +648,7 @@ class TurnRecordEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a turn record entry from JSON.
   factory TurnRecordEntry.fromJson(Map<String, dynamic> json) =>
       TurnRecordEntry(
         id: json['id'] as String,
@@ -572,11 +660,18 @@ class TurnRecordEntry extends SessionTreeEntry {
       );
 }
 
+/// The tool invocation entry.
 class ToolInvocationEntry extends SessionTreeEntry {
+  /// The record.
   final ToolInvocationRecord record;
+
+  /// The arguments.
   final Map<String, dynamic> arguments;
+
+  /// The artifact refs.
   final List<ArtifactRef> artifactRefs;
 
+  /// Creates a tool invocation entry.
   const ToolInvocationEntry({
     required super.id,
     super.parentId,
@@ -597,6 +692,7 @@ class ToolInvocationEntry extends SessionTreeEntry {
     'artifactRefs': artifactRefs.map((a) => a.toJson()).toList(),
   };
 
+  /// Creates a tool invocation entry from JSON.
   factory ToolInvocationEntry.fromJson(Map<String, dynamic> json) =>
       ToolInvocationEntry(
         id: json['id'] as String,
@@ -620,10 +716,15 @@ class ToolInvocationEntry extends SessionTreeEntry {
       );
 }
 
+/// The usage entry.
 class UsageEntry extends SessionTreeEntry {
+  /// The record.
   final UsageLedgerEntry record;
+
+  /// The model.
   final Model? model;
 
+  /// Creates an usage entry.
   const UsageEntry({
     required super.id,
     super.parentId,
@@ -642,6 +743,7 @@ class UsageEntry extends SessionTreeEntry {
     if (model != null) 'model': model!.toJson(),
   };
 
+  /// Creates an usage entry from JSON.
   factory UsageEntry.fromJson(Map<String, dynamic> json) => UsageEntry(
     id: json['id'] as String,
     parentId: json['parentId'] as String?,
@@ -655,10 +757,15 @@ class UsageEntry extends SessionTreeEntry {
   );
 }
 
+/// The compaction tree entry.
 class CompactionTreeEntry extends SessionTreeEntry {
+  /// The record.
   final CompactionEntry record;
+
+  /// The summary.
   final CompactionSummary summary;
 
+  /// Creates a compaction tree entry.
   const CompactionTreeEntry({
     required super.id,
     super.parentId,
@@ -677,6 +784,7 @@ class CompactionTreeEntry extends SessionTreeEntry {
     'summary': summary.toJson(),
   };
 
+  /// Creates a compaction tree entry from JSON.
   factory CompactionTreeEntry.fromJson(Map<String, dynamic> json) =>
       CompactionTreeEntry(
         id: json['id'] as String,
@@ -691,9 +799,12 @@ class CompactionTreeEntry extends SessionTreeEntry {
       );
 }
 
+/// The thinking level entry.
 class ThinkingLevelEntry extends SessionTreeEntry {
+  /// The record.
   final ThinkingLevelChangeEntry record;
 
+  /// Creates a thinking level entry.
   const ThinkingLevelEntry({
     required super.id,
     super.parentId,
@@ -710,6 +821,7 @@ class ThinkingLevelEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a thinking level entry from JSON.
   factory ThinkingLevelEntry.fromJson(Map<String, dynamic> json) =>
       ThinkingLevelEntry(
         id: json['id'] as String,
@@ -721,9 +833,12 @@ class ThinkingLevelEntry extends SessionTreeEntry {
       );
 }
 
+/// The model change tree entry.
 class ModelChangeTreeEntry extends SessionTreeEntry {
+  /// The record.
   final ModelChangeEntry record;
 
+  /// Creates a model change tree entry.
   const ModelChangeTreeEntry({
     required super.id,
     super.parentId,
@@ -740,6 +855,7 @@ class ModelChangeTreeEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a model change tree entry from JSON.
   factory ModelChangeTreeEntry.fromJson(Map<String, dynamic> json) =>
       ModelChangeTreeEntry(
         id: json['id'] as String,
@@ -751,9 +867,12 @@ class ModelChangeTreeEntry extends SessionTreeEntry {
       );
 }
 
+/// The branch summary tree entry.
 class BranchSummaryTreeEntry extends SessionTreeEntry {
+  /// The record.
   final BranchSummaryEntry record;
 
+  /// Creates a branch summary tree entry.
   const BranchSummaryTreeEntry({
     required super.id,
     super.parentId,
@@ -770,6 +889,7 @@ class BranchSummaryTreeEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a branch summary tree entry from JSON.
   factory BranchSummaryTreeEntry.fromJson(Map<String, dynamic> json) =>
       BranchSummaryTreeEntry(
         id: json['id'] as String,
@@ -781,9 +901,12 @@ class BranchSummaryTreeEntry extends SessionTreeEntry {
       );
 }
 
+/// The label tree entry.
 class LabelTreeEntry extends SessionTreeEntry {
+  /// The record.
   final LabelEntry record;
 
+  /// Creates a label tree entry.
   const LabelTreeEntry({
     required super.id,
     super.parentId,
@@ -800,6 +923,7 @@ class LabelTreeEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a label tree entry from JSON.
   factory LabelTreeEntry.fromJson(Map<String, dynamic> json) => LabelTreeEntry(
     id: json['id'] as String,
     parentId: json['parentId'] as String?,
@@ -810,9 +934,12 @@ class LabelTreeEntry extends SessionTreeEntry {
   );
 }
 
+/// The custom tree entry.
 class CustomTreeEntry extends SessionTreeEntry {
+  /// The record.
   final CustomEntry record;
 
+  /// Creates a custom tree entry.
   const CustomTreeEntry({
     required super.id,
     super.parentId,
@@ -829,6 +956,7 @@ class CustomTreeEntry extends SessionTreeEntry {
     'record': record.toJson(),
   };
 
+  /// Creates a custom tree entry from JSON.
   factory CustomTreeEntry.fromJson(Map<String, dynamic> json) =>
       CustomTreeEntry(
         id: json['id'] as String,

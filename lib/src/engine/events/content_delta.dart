@@ -7,8 +7,11 @@ part of 'engine_event.dart';
 final class ContentDelta extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The content-text delta chunk carried by this event.
   final String delta;
 
+  /// Creates a content-delta event.
   const ContentDelta({required this.emittedAt, required this.delta});
 
   @override

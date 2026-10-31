@@ -1,8 +1,9 @@
 // ACTUAL INTEGRATION TEST for the LlmClient (spec 065).
 //
-// Drives a real chat completion through the local proxy (http://localhost:8890)
-// against an operator-configured OpenAI-compatible gateway. This is the
-// end-to-end "agent talks to the model" check the user asked for.
+// Drives a real chat completion through the operator-supplied proxy (set
+// LLM_PROXY_URL) or direct when none is set, against an operator-configured
+// OpenAI-compatible gateway. This is the end-to-end "agent talks to the
+// model" check the user asked for.
 //
 // Tagged `integration` (issue #113): `dart test -P integration` — the
 // nightly live-LLM lane in .github/workflows/nightly.yml — selects this file
@@ -19,7 +20,8 @@
 //   - LLM_BASE_URL  : the gateway base URL (required — no default).
 //   - LLM_MODEL     : the model id (required — no default).
 // Optional environment:
-//   - LLM_PROXY_URL : local proxy (default http://localhost:8890; empty = direct).
+//   - LLM_PROXY_URL : proxy endpoint, e.g. http://proxy.example.com:8890
+//                     (unset/empty = direct egress, no default — issue #140).
 //
 // Run locally with:
 //   KIMI_API_KEY=<jwt> LLM_BASE_URL=<url> LLM_MODEL=<model> \
@@ -32,9 +34,9 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
-import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 
 /// Returns true if the proxy host:port accepts a TCP connection quickly.
 Future<bool> _proxyReachable(String proxyUrl) async {
@@ -57,8 +59,7 @@ Future<bool> _proxyReachable(String proxyUrl) async {
 void main() {
   final apiKey = Platform.environment['KIMI_API_KEY'] ?? '';
   final baseUrl = Platform.environment['LLM_BASE_URL'] ?? '';
-  final proxyUrl =
-      Platform.environment['LLM_PROXY_URL'] ?? 'http://localhost:8890';
+  final proxyUrl = Platform.environment['LLM_PROXY_URL'] ?? '';
   final model = Platform.environment['LLM_MODEL'] ?? '';
 
   final configured =
@@ -82,12 +83,15 @@ void main() {
         apiKey: apiKey,
         proxyUrl: proxyUrl,
       );
-      final client = await provider.current(NoParams());
+      final client = await provider.current(const NoParams());
       expect(client.model, model);
     }, skip: skipReason);
 
     test('performs a real completion through the proxy', () async {
-      if (!await _proxyReachable(proxyUrl)) {
+      // No LLM_PROXY_URL means DIRECT egress (issue #140): no default proxy
+      // host is probed or assumed. With one set, it must accept a TCP
+      // connection before the completion is attempted.
+      if (proxyUrl.isNotEmpty && !await _proxyReachable(proxyUrl)) {
         markTestSkipped('proxy $proxyUrl not reachable');
       }
       final provider = LlmClientProvider(
@@ -108,7 +112,8 @@ void main() {
       expect(completion.finishReason, isNotEmpty);
       expect(completion.usage.totalTokens, greaterThan(0));
       print(
-        '[integration] model=${completion.usage} content="${completion.content}"',
+        '[integration] model=${completion.usage} content="'
+        '${completion.content}"',
       );
     }, skip: skipReason);
   });

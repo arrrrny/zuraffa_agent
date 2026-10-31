@@ -32,6 +32,7 @@ import 'audit_log.dart';
 
 /// Append-only JSONL audit sink with retention by whole-segment rotation.
 class JsonlAuditSink implements AuditSink {
+  /// Creates a jsonl audit sink.
   JsonlAuditSink(
     this.path, {
     this.retention = const RetentionPolicy.unlimited(),

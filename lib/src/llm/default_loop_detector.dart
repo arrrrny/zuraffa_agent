@@ -19,7 +19,10 @@ import 'loop_detector.dart';
 /// [LoopDetectorConfig.llmCheckAfterTurns] and then every
 /// [LoopDetectorConfig.llmCheckInterval] turns.
 class DefaultLoopDetector implements LoopDetector {
+  /// The config.
   final LoopDetectorConfig config;
+
+  /// The client.
   final LlmClient? client;
 
   /// Sliding window of the conversation fed to the detector (bounded by
@@ -35,6 +38,7 @@ class DefaultLoopDetector implements LoopDetector {
   /// Number of stagnation diagnoses issued (observable for tests/ops).
   int diagnosisCalls = 0;
 
+  /// Creates a default loop detector.
   DefaultLoopDetector({this.config = const LoopDetectorConfig(), this.client});
 
   @override
@@ -133,14 +137,14 @@ class DefaultLoopDetector implements LoopDetector {
       );
       final decoded = jsonDecode(response.content);
       if (decoded is! Map) {
-        return _StagnationVerdict.error(
+        return const _StagnationVerdict.error(
           'diagnosis response is not a JSON object',
         );
       }
       final isStagnant = decoded['isStagnant'];
       final confidence = decoded['confidence'];
       if (isStagnant is! bool || confidence is! num) {
-        return _StagnationVerdict.error(
+        return const _StagnationVerdict.error(
           'diagnosis verdict missing isStagnant(bool)/confidence(number)',
         );
       }

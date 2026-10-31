@@ -16,6 +16,7 @@ import 'package:zuraffa/zuraffa.dart';
 import '../../../domain/entities/tool_result/tool_result.dart';
 import '../../../domain/services/tool_result_service.dart';
 
+/// The tool result provider.
 class ToolResultProvider
     with Loggable, FailureHandler
     implements ToolResultService {
@@ -24,6 +25,7 @@ class ToolResultProvider
 
   final List<ToolResult> _results;
 
+  /// Creates a tool result provider.
   ToolResultProvider([List<ToolResult>? results])
     : _results = List<ToolResult>.of(results ?? const <ToolResult>[]);
 

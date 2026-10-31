@@ -6,9 +6,8 @@ import 'dart:io';
 
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
-import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_http_transport.dart';
+import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 
 // Inert HttpClient double: postUrl throws (no real network) and close is a
 // no-op, while the findProxy setter is observed so we can prove the
@@ -36,8 +35,9 @@ void main() {
       expect(body['model'], 'tencent/hy3:free');
       expect(body['stream'], isFalse);
       expect(body['messages'], hasLength(2));
-      expect(body['messages'][0], {'role': 'system', 'content': 'be terse'});
-      expect(body['messages'][1], {'role': 'user', 'content': 'hi'});
+      final sentMessages = body['messages'] as List<Object?>;
+      expect(sentMessages[0], {'role': 'system', 'content': 'be terse'});
+      expect(sentMessages[1], {'role': 'user', 'content': 'hi'});
     });
 
     test('honors the stream flag', () {
@@ -102,7 +102,8 @@ void main() {
       'reassembles reasoning from reasoning_details when reasoning is absent',
       () {
         final json = Map<String, dynamic>.from(validJson);
-        (json['choices'][0] as Map)['message'] = {
+        final choices = json['choices'] as List<Object?>;
+        (choices[0] as Map<String, dynamic>)['message'] = {
           'role': 'assistant',
           'content': 'PONG',
           'reasoning_details': [
@@ -126,7 +127,8 @@ void main() {
 
     test('throws when content is empty', () {
       final json = Map<String, dynamic>.from(validJson);
-      (json['choices'][0] as Map)['message'] = {
+      final choices = json['choices'] as List<Object?>;
+      (choices[0] as Map<String, dynamic>)['message'] = {
         'role': 'assistant',
         'content': '',
       };

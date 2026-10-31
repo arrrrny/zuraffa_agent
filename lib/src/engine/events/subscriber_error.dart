@@ -8,11 +8,14 @@ part of 'engine_event.dart';
 final class EngineEventSubscriberError extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The error.
   final Object error;
 
   /// The runtime type of the event whose delivery failed.
   final Type eventType;
 
+  /// Creates an engine event subscriber error.
   const EngineEventSubscriberError({
     required this.emittedAt,
     required this.error,

@@ -18,6 +18,7 @@ import 'package:zuraffa/zuraffa.dart' hide AgentTool;
 import '../../../domain/entities/agent_tool/agent_tool.dart';
 import '../../../domain/services/agent_tool_service.dart';
 
+/// The agent tool provider.
 class AgentToolProvider
     with Loggable, FailureHandler
     implements AgentToolService {
@@ -31,6 +32,7 @@ class AgentToolProvider
 
   final List<AgentTool> _tools;
 
+  /// Creates an agent tool provider.
   AgentToolProvider([List<AgentTool>? tools])
     : _tools = List<AgentTool>.of(tools ?? const <AgentTool>[]);
 

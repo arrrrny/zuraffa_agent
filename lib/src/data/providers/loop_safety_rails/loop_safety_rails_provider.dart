@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/loop_safety_rails/loop_safety_rails.dart';
 import '../../../domain/services/loop_safety_rails_service.dart';
 
+/// The loop safety rails provider.
 class LoopSafetyRailsProvider
     with Loggable, FailureHandler
     implements LoopSafetyRailsService {
   final LoopSafetyRails _active;
 
+  /// Creates a loop safety rails provider.
   LoopSafetyRailsProvider([LoopSafetyRails? active])
     : _active =
           active ??

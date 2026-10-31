@@ -3,17 +3,16 @@
 // aggregation strategies.
 
 import 'package:test/test.dart';
-
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
+import 'package:zuraffa_agent/src/domain/entities/sub_agent_context/sub_agent_context.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_spec/sub_agent_spec.dart';
-import 'package:zuraffa_agent/src/domain/entities/sub_agent_context/sub_agent_context.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/agent_swarm.dart';
+import 'package:zuraffa_agent/src/engine/cancellation_token.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/sub_agent_dispatch.dart';
@@ -38,6 +37,43 @@ class ScriptedDispatchService extends SubAgentDispatchService {
   final List<SubAgentInstance> seenInstances = [];
   final List<bool> seenAdminGranted = [];
 
+  /// Cancellation (issue #140): the token the swarm handed each member,
+  /// keyed by task id; the terminal outcome each member actually returned;
+  /// members scripted to COOPERATE (hold at their turn boundary until the
+  /// token fires, then return cancelled); and a per-member completion flag
+  /// so tests can await a detached member's actual end without sleeps.
+  final Map<String, CancellationToken?> seenTokens = {};
+  final Map<String, SubAgentDispatchStatus> outcomes = {};
+  final Set<String> cooperative = {};
+  final Set<String> finishedIds = {};
+
+  /// The token the swarm handed [id]'s dispatch (null when none did).
+  CancellationToken? tokenOf(String id) => seenTokens[id];
+
+  /// Resolves once member [id]'s dispatch has actually returned — including
+  /// detached members the swarm already stopped awaiting. Bounded: a member
+  /// that never finishes fails the test after [timeout] instead of hanging
+  /// the whole suite (same fallback pattern the cooperative branch uses
+  /// with its 5s `.timeout(...)`). Test-only helper — the 5ms poll delay
+  /// exists for this suite, never for production loops.
+  Future<void> memberDone(
+    String id, {
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    Future<void> poll() async {
+      while (!finishedIds.contains(id)) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    }
+
+    return poll().timeout(
+      timeout,
+      onTimeout: () {
+        fail('member $id never finished within ${timeout.inMilliseconds}ms');
+      },
+    );
+  }
+
   @override
   Future<SubAgentDispatchResult> dispatch({
     required SubAgentSpec spec,
@@ -47,30 +83,51 @@ class ScriptedDispatchService extends SubAgentDispatchService {
     void Function(EngineEvent)? onEvent,
     DateTime Function()? clock,
     bool adminGranted = false,
+    CancellationToken? cancellationToken,
   }) async {
     seenInstances.add(instance);
     seenAdminGranted.add(adminGranted);
+    seenTokens[instance.id] = cancellationToken;
     active++;
     if (active > maxActive) maxActive = active;
-    final script = behavior[instance.id]!;
-    if (script.delay > Duration.zero) {
-      await Future<void>.delayed(script.delay);
+    try {
+      final script = behavior[instance.id]!;
+      SubAgentDispatchStatus status;
+      if (cooperative.contains(instance.id)) {
+        // A cooperative loser: parked at its "turn boundary" until the
+        // swarm signals the token, then returns the cancelled outcome. A
+        // regression (never signalled) falls back to the script's status
+        // after the timeout and the caller's assertions go red.
+        await (cancellationToken?.whenCancelled ?? Future<void>.value())
+            .timeout(const Duration(seconds: 5), onTimeout: () {});
+        status = (cancellationToken?.isCancelled ?? false)
+            ? SubAgentDispatchStatus.cancelled
+            : script.status;
+      } else {
+        if (script.delay > Duration.zero) {
+          await Future<void>.delayed(script.delay);
+        }
+        status = script.status;
+      }
+      outcomes[instance.id] = status;
+      return SubAgentDispatchResult(
+        instanceId: instance.id,
+        specName: spec.name,
+        status: status,
+        resultSummary: script.summary,
+        instance: instance,
+        context: SubAgentContext(
+          id: 'ctx-${instance.id}',
+          subAgentSpecId: spec.name,
+          sessionId: instance.id,
+          toolAllowlist: spec.tools,
+          budgetTurns: 1,
+        ),
+      );
+    } finally {
+      active--;
+      finishedIds.add(instance.id);
     }
-    active--;
-    return SubAgentDispatchResult(
-      instanceId: instance.id,
-      specName: spec.name,
-      status: script.status,
-      resultSummary: script.summary,
-      instance: instance,
-      context: SubAgentContext(
-        id: 'ctx-${instance.id}',
-        subAgentSpecId: spec.name,
-        sessionId: instance.id,
-        toolAllowlist: spec.tools,
-        budgetTurns: 1,
-      ),
-    );
   }
 }
 
@@ -135,14 +192,10 @@ class SingleAnswerLlmClient extends LlmClientProvider {
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
-      ChatCompletion(
+      const ChatCompletion(
         content: 'swarm answer',
         finishReason: 'stop',
-        usage: const TokenUsage(
-          promptTokens: 1,
-          completionTokens: 1,
-          totalTokens: 2,
-        ),
+        usage: TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
       );
 }
 
@@ -473,19 +526,19 @@ void main() {
       expect(t1 == t3, isFalse);
       expect(t1.toString(), contains('x'));
 
-      final r1 = const SwarmTaskResult(
+      const r1 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: ok,
         summary: 's',
       );
-      final r2 = const SwarmTaskResult(
+      const r2 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: ok,
         summary: 's',
       );
-      final r3 = const SwarmTaskResult(
+      const r3 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: failed,
@@ -523,5 +576,86 @@ void main() {
       expect(s1.toString(), contains('allCompleted'));
       expect(s1.toString(), contains('completed'));
     });
+  });
+
+  group('cooperative cancellation (issue #140)', () {
+    test('firstCompleted signals the members that have not finished', () async {
+      final service = ScriptedDispatchService({
+        'a': (delay: Duration.zero, status: ok, summary: 'winner'),
+        'b': (delay: Duration(seconds: 30), status: ok, summary: 'loser'),
+      })..cooperative.add('b');
+      final swarm = AgentSwarm(dispatchService: service);
+
+      final result = await swarm.run(
+        tasks: [taskOf('a'), taskOf('b')],
+        strategy: SwarmStrategy.firstCompleted,
+      );
+
+      expect(result.status, SwarmStatus.firstCompleted);
+      expect(result.winner!.taskId, 'a');
+      // The loser was handed a token, the swarm signalled it once the
+      // winner landed, and the cooperative member came back cancelled —
+      // detached, after the swarm had already returned.
+      expect(service.tokenOf('b'), isNotNull);
+      expect(service.tokenOf('b')!.isCancelled, isTrue);
+      expect(
+        service.tokenOf('a')!.isCancelled,
+        isFalse,
+        reason:
+            'the winner already delivered its result — its token '
+            'is untouched',
+      );
+      await service.memberDone('b');
+      expect(service.outcomes['b'], SubAgentDispatchStatus.cancelled);
+    });
+
+    test('quorum signals only the members past the quorum', () async {
+      final service = ScriptedDispatchService({
+        'a': (delay: Duration.zero, status: ok, summary: 'q1'),
+        'b': (delay: Duration.zero, status: ok, summary: 'q2'),
+        'c': (delay: Duration(seconds: 30), status: ok, summary: 'extra'),
+      })..cooperative.add('c');
+      final swarm = AgentSwarm(dispatchService: service);
+
+      final result = await swarm.run(
+        tasks: [taskOf('a'), taskOf('b'), taskOf('c')],
+        strategy: SwarmStrategy.quorum,
+        quorum: 2,
+      );
+
+      expect(result.status, SwarmStatus.quorumReached);
+      expect(result.completedCount, 2);
+      expect(service.tokenOf('c')!.isCancelled, isTrue);
+      expect(service.tokenOf('a')!.isCancelled, isFalse);
+      expect(service.tokenOf('b')!.isCancelled, isFalse);
+      await service.memberDone('c');
+      expect(service.outcomes['c'], SubAgentDispatchStatus.cancelled);
+    });
+
+    test(
+      'allCompleted never signals — the barrier waits for everyone',
+      () async {
+        final service = ScriptedDispatchService({
+          'a': (delay: Duration.zero, status: ok, summary: 'x'),
+          'b': (
+            delay: Duration(milliseconds: 10),
+            status: failed,
+            summary: null,
+          ),
+        });
+        final swarm = AgentSwarm(dispatchService: service);
+
+        final result = await swarm.run(
+          tasks: [taskOf('a'), taskOf('b')],
+          strategy: SwarmStrategy.allCompleted,
+        );
+
+        expect(result.status, SwarmStatus.partialFailure);
+        expect(service.tokenOf('a'), isNotNull);
+        expect(service.tokenOf('a')!.isCancelled, isFalse);
+        expect(service.tokenOf('b')!.isCancelled, isFalse);
+        expect(service.outcomes['b'], failed);
+      },
+    );
   });
 }

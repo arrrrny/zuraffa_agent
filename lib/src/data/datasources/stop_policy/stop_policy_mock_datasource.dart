@@ -20,6 +20,7 @@ import 'stop_policy_datasource.dart';
 class StopPolicyMockDatasource
     with Loggable, FailureHandler
     implements StopPolicyDatasource {
+  /// Creates a stop policy mock datasource.
   StopPolicyMockDatasource({StopPolicy? initial})
     : _policy = initial ?? StopPolicy.defaultPolicy;
 

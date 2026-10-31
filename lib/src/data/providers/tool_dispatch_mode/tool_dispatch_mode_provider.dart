@@ -9,11 +9,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/tool_dispatch_mode/tool_dispatch_mode.dart';
 import '../../../domain/services/tool_dispatch_mode_service.dart';
 
+/// The tool dispatch mode provider.
 class ToolDispatchModeProvider
     with Loggable, FailureHandler
     implements ToolDispatchModeService {
   final ToolDispatchMode _active;
 
+  /// Creates a tool dispatch mode provider.
   ToolDispatchModeProvider([ToolDispatchMode? active])
     : _active =
           active ??

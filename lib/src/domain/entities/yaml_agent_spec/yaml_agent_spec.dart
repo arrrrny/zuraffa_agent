@@ -1,7 +1,10 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// YamlAgentSpec (declarative + extends) value object - spec-exact from epic #1 §R5 (issue #6).
+// YamlAgentSpec (declarative + extends) value object - spec-exact from epic #1
+// §R5 (issue #6). Pattern mirrors the SteeringMessage / SteeringQueue value
+// objects (PR for spec 033): plain Dart, value equality across all fields, no
+// @Zorphy codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
@@ -10,17 +13,27 @@ import '../ui_spec/ui_spec.dart';
 
 /// YamlAgentSpec (declarative + extends) value object.
 ///
-/// Declarative YAML agent spec — extends inheritance, validation diagnostics, declarative tool allowlist + steering (epic #5 §R5.3, issue #6 US3).
+/// Declarative YAML agent spec — extends inheritance, validation diagnostics,
+/// declarative tool allowlist + steering (epic #5 §R5.3, issue #6 US3).
 ///
 /// Issue #8 §2 ("Vocabulary pinning in specs") adds an optional [ui]
 /// section: when non-null, out-of-pin [UiTreePayload]s are rejected at the
 /// tool-result boundary by calling [UiSpec.validatePayload], which yields
 /// typed [UiVocabularyPinError]s. See [UiSpec].
 class YamlAgentSpec {
+  /// The identifier.
   final String id;
+
+  /// The name.
   final String name;
+
+  /// The extends spec identifier.
   final String? extendsSpecId;
+
+  /// The tool allowlist.
   final List<String> toolAllowlist;
+
+  /// The system prompt.
   final String systemPrompt;
 
   /// Optional UI vocabulary pin (issue #8 §2). When null, the mission may
@@ -30,6 +43,7 @@ class YamlAgentSpec {
   /// core (issue #8 §6).
   final UiSpec? ui;
 
+  /// Creates a yaml agent spec.
   const YamlAgentSpec({
     required this.id,
     required this.name,
@@ -63,9 +77,8 @@ class YamlAgentSpec {
     var current = extendsSpecId;
     while (current != null) {
       if (chain.contains(current)) {
-        errors.add(
-          "cyclic inheritance in spec '$id': ${[...chain, current].join(' -> ')}",
-        );
+        final cycle = [...chain, current].join(' -> ');
+        errors.add("cyclic inheritance in spec '$id': $cycle");
         break;
       }
       chain.add(current);
@@ -106,5 +119,6 @@ class YamlAgentSpec {
 
   @override
   String toString() =>
-      'YamlAgentSpec(id: $id, name: $name, extendsSpecId: $extendsSpecId, ui: $ui)';
+      'YamlAgentSpec(id: $id, name: $name, extendsSpecId: $extendsSpecId, '
+      'ui: $ui)';
 }

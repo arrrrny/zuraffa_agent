@@ -5,11 +5,11 @@ import 'dart:convert';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/llm_client.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/services/llm_client_service.dart';
-import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 
 import '../../../llm/fake_llm_transport.dart';
 
@@ -26,14 +26,14 @@ String _completionBody(String content) => jsonEncode({
 void main() {
   group('arrarrny/zuraffa_agent#5 - LlmClient value equality', () {
     test('LlmClient equality is value-based across all fields', () {
-      final a = LlmClient(
+      const a = LlmClient(
         id: 'id-a',
         providerName: 'openai',
         model: 'gpt-4o',
         supportsStreaming: true,
         supportsThinking: true,
       );
-      final b = LlmClient(
+      const b = LlmClient(
         id: 'id-a',
         providerName: 'openai',
         model: 'gpt-4o',
@@ -45,14 +45,14 @@ void main() {
     });
 
     test('LlmClient inequality differs when a field changes', () {
-      final a = LlmClient(
+      const a = LlmClient(
         id: 'id-a',
         providerName: 'openai',
         model: 'gpt-4o',
         supportsStreaming: true,
         supportsThinking: true,
       );
-      final b = LlmClient(
+      const b = LlmClient(
         id: 'id-b',
         providerName: 'anthropic',
         model: 'claude-3',
@@ -79,22 +79,20 @@ void main() {
       expect(provider, isA<LlmClientService>());
     });
 
-    test(
-      'LlmClientProvider.current returns the active LlmClient (no longer stubbed)',
-      () async {
-        final client = await provider.current(NoParams());
-        expect(client, isA<LlmClient>());
-        expect(client.providerName, 'kilo');
-        expect(client.model, 'tencent/hy3:free');
-        expect(client.supportsStreaming, isTrue);
-        expect(client.supportsThinking, isTrue);
-      },
-    );
+    test('LlmClientProvider.current returns the active LlmClient (no longer '
+        'stubbed)', () async {
+      final client = await provider.current(const NoParams());
+      expect(client, isA<LlmClient>());
+      expect(client.providerName, 'kilo');
+      expect(client.model, 'tencent/hy3:free');
+      expect(client.supportsStreaming, isTrue);
+      expect(client.supportsThinking, isTrue);
+    });
 
     test(
       'LlmClientProvider.count returns the number of usable clients',
       () async {
-        expect(await provider.count(NoParams()), 1);
+        expect(await provider.count(const NoParams()), 1);
       },
     );
   });
