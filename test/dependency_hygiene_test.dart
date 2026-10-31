@@ -81,7 +81,9 @@ List<String> cronsOf(String content) {
 /// (`*` in the last field means "every day", i.e. daily at most).
 bool isWeeklyCron(String expr) {
   final fields = expr.split(RegExp(r'\s+'));
-  return fields.length == 5 && fields[4] != '*';
+  if (fields.length != 5) return false;
+  // exactly one day-of-week token: a single 0-7 digit (no list/range/step)
+  return RegExp(r'^[0-7]$').hasMatch(fields[4]);
 }
 
 void main() {

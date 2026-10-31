@@ -106,7 +106,17 @@ Future<void> main() async {
     stderr.write(proc.stderr);
     exit(2);
   }
-  final report = jsonDecode(proc.stdout as String) as Map<String, dynamic>;
+  final Map<String, dynamic> report;
+  try {
+    report = jsonDecode(proc.stdout as String) as Map<String, dynamic>;
+  } on FormatException {
+    stderr.writeln(
+      'dependency freshness: `dart pub outdated --json` emitted '
+      'unparseable output',
+    );
+    stderr.write(proc.stdout);
+    exit(2);
+  }
 
   final direct = majorsBehind(report, kinds: ['direct']);
   final transitive = majorsBehind(report, kinds: ['transitive']);
