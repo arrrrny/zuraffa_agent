@@ -24,6 +24,7 @@ part 'turn_completed.dart';
 part 'tool_call_started.dart';
 part 'tool_call_completed.dart';
 part 'thinking_delta.dart';
+part 'content_delta.dart';
 part 'steering_injected.dart';
 part 'provider_error.dart';
 part 'mission_started.dart';

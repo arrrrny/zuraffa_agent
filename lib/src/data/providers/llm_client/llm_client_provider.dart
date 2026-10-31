@@ -17,6 +17,7 @@ import '../../../domain/entities/llm_client/chat_message.dart';
 import '../../../domain/entities/llm_client/llm_client.dart';
 import '../../../domain/entities/provider_config/provider_config.dart';
 import '../../../domain/services/llm_client_service.dart';
+import '../../../llm/llm_client.dart' show LlmResponseChunk;
 import 'llm_http_transport.dart';
 
 class LlmClientProvider
@@ -58,6 +59,25 @@ class LlmClientProvider
   /// runtime and the integration test to drive the model end-to-end.
   Future<ChatCompletion> complete(List<ChatMessage> messages) {
     return _transport.complete(
+      baseUrl: config.baseUrl,
+      apiKey: apiKey,
+      proxyUrl: proxyUrl,
+      model: _model,
+      messages: messages,
+      timeout: Duration(milliseconds: config.timeoutMs),
+    );
+  }
+
+  /// Streams a real chat completion through the configured transport,
+  /// yielding `LlmResponseChunk`s as the gateway emits SSE deltas
+  /// (issue #123). Consumed by `EngineLoopExecutor.runTurnStream`; see that
+  /// method and `bounded_stream_buffer.dart` for the pause/backpressure
+  /// contract the engine loop layers on top.
+  ///
+  /// Unlike [complete], no retry policy is applied — a response that has
+  /// already streamed partial chunks cannot be replayed.
+  Stream<LlmResponseChunk> streamComplete(List<ChatMessage> messages) {
+    return _transport.streamComplete(
       baseUrl: config.baseUrl,
       apiKey: apiKey,
       proxyUrl: proxyUrl,

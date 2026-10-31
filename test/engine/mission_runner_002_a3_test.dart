@@ -151,6 +151,8 @@ String eventKey(EngineEvent e) => switch (e) {
     'ToolCallCompleted|$emittedAt|$toolName|$callId|$ok',
   ThinkingDelta(:final emittedAt, :final delta) =>
     'ThinkingDelta|$emittedAt|$delta',
+  ContentDelta(:final emittedAt, :final delta) =>
+    'ContentDelta|$emittedAt|$delta',
   SteeringInjected(:final emittedAt, :final content, :final injectedAt) =>
     'SteeringInjected|$emittedAt|$content|$injectedAt',
   ProviderError(:final emittedAt, :final providerName, :final error) =>
