@@ -1,18 +1,19 @@
 // SuiteLoader for the eval harness (issue #115).
 //
-// Reads suite definitions from YAML files in the eval/suites/ directory.
-// Each suite file defines a collection of golden mission tasks, the pass@k
-// parameter k, and the gate threshold. The loader resolves the suite and
-// its constituent task definitions.
+// Parses suite definitions from YAML text. A suite file defines a collection
+// of golden-mission task ids, the pass@k parameter k, and the gate threshold.
+//
+// The loader is pure (FR-005: the eval runtime is dart:io-free): it accepts
+// file *contents*, never paths. Discovery and reading belong to the caller
+// (the `tool/run_eval_suites.dart` CLI owns the dart:io boundary and feeds
+// parsed-or-raw text in), which keeps this class outside the pipeline's
+// dart:io purity allowlist.
 
-import 'dart:io';
-
-import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 import '../domain/entities/suite/suite.dart';
 
-/// Exception thrown when a suite file cannot be loaded or parsed.
+/// Exception thrown when a suite definition cannot be parsed or validated.
 class SuiteLoadException implements Exception {
   final String message;
 
@@ -22,10 +23,36 @@ class SuiteLoadException implements Exception {
   String toString() => 'SuiteLoadException: $message';
 }
 
-/// Loads [Suite] definitions from YAML files.
+/// One suite file that failed to load, with the error that caused it.
 ///
-/// Suite files are discovered in a directory (default: `eval/suites/`).
-/// Each file must be valid YAML with the following structure:
+/// Load failures are returned to the caller instead of swallowed: a corrupt
+/// suite file must fail the release gate, not silently shrink it (the gate
+/// would otherwise go green while a whole suite stops being gated).
+class SuiteLoadError {
+  /// The source label the caller keyed the content by (usually the path).
+  final String source;
+
+  final Object error;
+
+  const SuiteLoadError(this.source, this.error);
+
+  @override
+  String toString() => '$source: $error';
+}
+
+/// The result of loading a catalog of suite files: every suite that parsed
+/// and validated, plus every file that failed.
+class SuiteCatalog {
+  final Map<String, Suite> suites;
+
+  final List<SuiteLoadError> failures;
+
+  const SuiteCatalog(this.suites, this.failures);
+}
+
+/// Parses suite definitions from YAML text.
+///
+/// Suite YAML follows this structure:
 ///
 /// ```yaml
 /// id: suite-id
@@ -37,55 +64,27 @@ class SuiteLoadException implements Exception {
 /// gate_threshold: 0.8
 /// ```
 class SuiteLoader {
-  /// The directory containing suite YAML files.
-  final String suiteDirectory;
+  const SuiteLoader();
 
-  /// The file extension to look for (default: .yaml).
-  final String fileExtension;
-
-  const SuiteLoader({
-    this.suiteDirectory = 'eval/suites',
-    this.fileExtension = '.yaml',
-  });
-
-  /// Loads all suites from the configured directory.
-  ///
-  /// Returns a map of suite ID to [Suite] for all valid YAML files found.
-  /// Files that cannot be parsed or validated are skipped and a warning
-  /// is printed to stderr.
-  Future<Map<String, Suite>> loadAll() async {
+  /// Parses every entry of [yamlBySource] (source label → YAML text) and
+  /// returns the catalog: suites that parsed, keyed by id, plus one
+  /// [SuiteLoadError] per file that failed. Callers decide how failures gate
+  /// the run — the release gate fails loudly on any of them.
+  SuiteCatalog loadAll(Map<String, String> yamlBySource) {
     final suites = <String, Suite>{};
-
-    if (!await Directory(suiteDirectory).exists()) {
-      return suites;
-    }
-
-    await for (final entity in Directory(suiteDirectory).list()) {
-      if (entity is File && entity.path.endsWith(fileExtension)) {
-        try {
-          final suite = await loadFromFile(entity.path);
-          suites[suite.id] = suite;
-        } catch (e) {
-          stderr.writeln('Warning: Could not load suite from ${entity.path}: $e');
-        }
+    final failures = <SuiteLoadError>[];
+    for (final entry in yamlBySource.entries) {
+      try {
+        final suite = loadFromString(entry.value, entry.key);
+        suites[suite.id] = suite;
+      } catch (e) {
+        failures.add(SuiteLoadError(entry.key, e));
       }
     }
-
-    return suites;
+    return SuiteCatalog(Map.unmodifiable(suites), List.unmodifiable(failures));
   }
 
-  /// Loads a single suite from a YAML file path.
-  Future<Suite> loadFromFile(String filePath) async {
-    final file = File(filePath);
-    if (!await file.exists()) {
-      throw SuiteLoadException('File not found: $filePath');
-    }
-
-    final content = await file.readAsString();
-    return loadFromString(content, filePath);
-  }
-
-  /// Loads a suite from a YAML string.
+  /// Parses a single suite from YAML text.
   ///
   /// [source] is used only for error reporting.
   Suite loadFromString(String yamlContent, [String source = 'string']) {

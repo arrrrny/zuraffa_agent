@@ -1,15 +1,13 @@
 // SuiteRunner for the eval harness (issue #115).
 //
 // Runs golden mission suites and collects pass@k and pass^k metrics.
-// Integrates with CassetteReplayLlmClient to replay recorded missions
-// deterministically, and with GraderRegistry to evaluate mission outputs.
+// Each run replays the mission's cassette through the real engine loop
+// (MissionReplayRunner) and grades the replayed summary.
 
 import '../domain/entities/golden_mission/golden_mission.dart';
 import '../domain/entities/pass_at_k/pass_at_k.dart';
 import '../domain/entities/suite/suite.dart';
-import '../engine/mission_runner.dart';
-import '../engine/tool_dispatcher.dart';
-import 'cassette_replay_llm_client.dart';
+import 'mission_replay.dart';
 import 'suite_gate.dart';
 
 /// Result of running a single mission k times.
@@ -47,12 +45,18 @@ class MissionRunResult {
           runtimeType == other.runtimeType &&
           missionId == other.missionId &&
           k == other.k &&
-          outcomes == other.outcomes &&
+          _listsEqual(outcomes, other.outcomes) &&
           passAtK == other.passAtK &&
           passK == other.passK);
 
   @override
-  int get hashCode => Object.hash(missionId, k, outcomes, passAtK, passK);
+  int get hashCode => Object.hash(
+    missionId,
+    k,
+    Object.hashAll(outcomes),
+    passAtK,
+    passK,
+  );
 
   @override
   String toString() =>
@@ -86,13 +90,17 @@ class SuiteRunResult {
       (other is SuiteRunResult &&
           runtimeType == other.runtimeType &&
           suite == other.suite &&
-          missionResults == other.missionResults &&
+          _mapsEqual(missionResults, other.missionResults) &&
           decision == other.decision &&
-          passKByTask == other.passKByTask);
+          _mapsEqual(passKByTask, other.passKByTask));
 
   @override
-  int get hashCode =>
-      Object.hash(suite, missionResults, decision, passKByTask);
+  int get hashCode => Object.hash(
+    suite,
+    Object.hashAllUnordered(missionResults.keys),
+    decision,
+    Object.hashAllUnordered(passKByTask.keys),
+  );
 }
 
 /// Configuration for running a suite.
@@ -119,53 +127,34 @@ class SuiteRunnerConfig {
 
 /// Runner for eval suites.
 ///
-/// Runs golden missions using cassette replay and evaluates them with
-/// registered graders. Collects both pass@k (unbiased estimator) and
-/// pass^k (empirical) metrics.
+/// Runs golden missions from their cassettes through the real engine loop
+/// ([MissionReplayRunner]) and grades each replayed summary with a
+/// caller-supplied grader — every k sample is an independent replay of the
+/// recorded corpus, so pass@k / pass^k see k real (deterministic) samples.
 class SuiteRunner {
-  final MissionRunner _missionRunner;
-  final ToolDispatcher _toolDispatcher;
-  final SuiteRunnerConfig _config;
+  const SuiteRunner();
 
-  SuiteRunner({
-    required MissionRunner missionRunner,
-    required ToolDispatcher toolDispatcher,
-    SuiteRunnerConfig config = const SuiteRunnerConfig(),
-  })  : _missionRunner = missionRunner,
-        _toolDispatcher = toolDispatcher,
-        _config = config;
-
-  /// Runs [mission] k times and returns the result.
+  /// Runs [mission] k times, each run a fresh cassette replay, and returns
+  /// the collected outcomes with pass@k / pass^k.
   ///
-  /// Each run uses the cassette from [mission] to replay deterministically.
-  /// The mission output is graded using the graders specified in
-  /// [mission.graderBindings].
-  ///
-  /// [grader] is a function that takes the mission output and returns whether
-  /// it passed. This is typically resolved from the mission's grader bindings.
+  /// [grader] receives the replayed summary and returns whether it passes.
   Future<MissionRunResult> runK(
     GoldenMission mission,
     int k, {
-      required Future<bool> Function(String output) grader,
-    }) async {
+    required Future<bool> Function(String output) grader,
+  }) async {
     final outcomes = <bool>[];
-
     for (var i = 0; i < k; i++) {
-      final client = CassetteReplayLlmClient.fromGoldenMission(mission);
-
-      final result = await _missionRunner.run(
-        missionId: mission.id,
-        messages: const [],
+      final replay = MissionReplay(
+        mission: mission,
+        completions: _completionsOf(mission),
       );
-
-      final output = result.summary ?? '';
-      final passed = await grader(output);
+      final result = await MissionReplayRunner.run(replay);
+      final passed = result.completed && await grader(result.summary ?? '');
       outcomes.add(passed);
     }
-
     final passAtKValue = PassAtK.fromResults(outcomes, k: k).value;
     final passKValue = outcomes.where((p) => p).length / k;
-
     return MissionRunResult(
       missionId: mission.id,
       k: k,
@@ -175,32 +164,26 @@ class SuiteRunner {
     );
   }
 
-  /// Runs an entire suite and returns the result.
-  ///
-  /// For each task in the suite, loads the corresponding golden mission,
-  /// runs it k times, and collects the results. Then evaluates the suite
-  /// gate and returns the complete result.
-  ///
-  /// [loadMission] is a function that loads a GoldenMission by its task ID.
-  /// [resolveGrader] is a function that resolves a grader for a mission's
-  /// grader bindings.
+  /// Runs an entire suite: every task's mission replayed k times, graded,
+  /// and fed through [SuiteGate.evaluate]. Throws [StateError] when a suite
+  /// task has no cassette — a missing mission must fail loudly, never
+  /// silently shrink the gate.
   Future<SuiteRunResult> runSuite(
     Suite suite, {
-      required GoldenMission Function(String taskId) loadMission,
-      required Future<bool> Function(String output, GoldenMission mission) resolveGrader,
-    }) async {
+    required GoldenMission Function(String taskId) loadMission,
+    required Future<bool> Function(String output, GoldenMission mission)
+    resolveGrader,
+  }) async {
     final missionResults = <String, MissionRunResult>{};
     final samples = <String, TaskSamples>{};
     final passKByTask = <String, double>{};
 
     for (final taskId in suite.tasks) {
       final mission = loadMission(taskId);
-      final result = await runK(
-        mission,
-        suite.k,
-        grader: (output) => resolveGrader(output, mission),
-      );
-
+      final result = await runK(mission, suite.k, grader: (output) async {
+        final verdict = await resolveGrader(output, mission);
+        return verdict;
+      });
       missionResults[taskId] = result;
       samples[taskId] = TaskSamples(
         n: result.k,
@@ -219,15 +202,13 @@ class SuiteRunner {
     );
   }
 
-  /// Runs a suite and returns the exit code from the gate decision.
-  ///
-  /// This is the entry point for CI integration. Returns the exit code
-  /// that should be used to exit the CI job (0 for pass, 1 for fail).
+  /// Runs a suite and returns the gate's exit code — the CI entry point.
   Future<int> runSuiteAndExit(
     Suite suite, {
-      required GoldenMission Function(String taskId) loadMission,
-      required Future<bool> Function(String output, GoldenMission mission) resolveGrader,
-    }) async {
+    required GoldenMission Function(String taskId) loadMission,
+    required Future<bool> Function(String output, GoldenMission mission)
+    resolveGrader,
+  }) async {
     final result = await runSuite(
       suite,
       loadMission: loadMission,
@@ -235,4 +216,36 @@ class SuiteRunner {
     );
     return result.decision.exitCode;
   }
+}
+
+List<Map<String, dynamic>> _completionsOf(GoldenMission mission) {
+  final raw = mission.cassette['completions'];
+  if (raw is! List || raw.isEmpty) {
+    throw StateError(
+      'SuiteRunner: mission ${mission.id} carries no recorded completions; '
+      're-record the cassette before gating on it',
+    );
+  }
+  return [
+    for (final entry in raw)
+      entry is Map<String, dynamic> ? entry : Map<String, dynamic>.from(entry as Map),
+  ];
+}
+
+bool _listsEqual<T>(List<T> a, List<T> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+bool _mapsEqual<K, V>(Map<K, V> a, Map<K, V> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (final key in a.keys) {
+    if (!b.containsKey(key) || a[key] != b[key]) return false;
+  }
+  return true;
 }

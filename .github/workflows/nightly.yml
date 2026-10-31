@@ -198,10 +198,11 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: |
           if [ -z "$LLM_API_KEY" ]; then
-            echo "LLM_API_KEY not set - skipping eval suite run"
-            exit 0
+            echo "LLM_API_KEY not in the environment - skipping eval suite run"
+          else
+            set -o pipefail
+            dart run tool/run_eval_suites.dart 2>&1 | tee eval-suite-results.log
           fi
-          dart run tool/run_eval_suites.dart 2>&1 | tee eval-suite-results.log
       - name: Upload eval results log
         if: always()
         uses: actions/upload-artifact@v4
