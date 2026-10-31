@@ -105,49 +105,51 @@ void main() {
     });
   });
 
-  group('issue #8 AC-1 — ui/tree+json round-trip through session persistence', () {
-    test(
-      'payload embedded as ToolInvocationEntry.arguments survives round-trip',
-      () {
-        final original = _originalPayload();
+  group(
+    'issue #8 AC-1 — ui/tree+json round-trip through session persistence',
+    () {
+      test(
+        'payload embedded as ToolInvocationEntry.arguments survives round-trip',
+        () {
+          final original = _originalPayload();
 
-        // Build a ToolInvocationEntry whose arguments carry the payload
-        // under the `uiTree` key (the shape a `ui.render` tool would
-        // record). This is the layer the engine persists to disk and
-        // replays from cassette.
-        final entry = ToolInvocationEntry(
-          id: 'e_1',
-          parentId: null,
-          timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
-          record: ToolInvocationRecord(
-            id: 'ti_1',
+          // Build a ToolInvocationEntry whose arguments carry the payload
+          // under the `uiTree` key (the shape a `ui.render` tool would
+          // record). This is the layer the engine persists to disk and
+          // replays from cassette.
+          final entry = ToolInvocationEntry(
+            id: 'e_1',
             parentId: null,
             timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
-            toolCallId: 'tc_1',
-            toolName: 'ui.render',
-            isError: false,
-            durationMs: 500,
-          ),
-          arguments: {'uiTree': original.toJson()},
-        );
+            record: ToolInvocationRecord(
+              id: 'ti_1',
+              parentId: null,
+              timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
+              toolCallId: 'tc_1',
+              toolName: 'ui.render',
+              isError: false,
+              durationMs: 500,
+            ),
+            arguments: {'uiTree': original.toJson()},
+          );
 
-        // Serialize → deserialize the session tree entry.
-        final json = entry.toJson();
-        final restored = SessionTreeEntry.fromJson(json) as ToolInvocationEntry;
+          // Serialize → deserialize the session tree entry.
+          final json = entry.toJson();
+          final restored =
+              SessionTreeEntry.fromJson(json) as ToolInvocationEntry;
 
-        // The arguments map survived.
-        expect(restored.arguments, contains('uiTree'));
-        // Reconstruct the payload and verify deep equality with the original.
-        final restoredPayload = UiTreePayload.fromJson(
-          restored.arguments['uiTree'] as Map<String, dynamic>,
-        );
-        expect(restoredPayload, original);
-      },
-    );
+          // The arguments map survived.
+          expect(restored.arguments, contains('uiTree'));
+          // Reconstruct the payload and verify deep equality with the original.
+          final restoredPayload = UiTreePayload.fromJson(
+            restored.arguments['uiTree'] as Map<String, dynamic>,
+          );
+          expect(restoredPayload, original);
+        },
+      );
 
-    test(
-      'payload survives a double round-trip (persist → load → persist → load)',
-      () {
+      test('payload survives a double round-trip '
+          '(persist → load → persist → load)', () {
         final original = _originalPayload();
         final entry = ToolInvocationEntry(
           id: 'e_1',
@@ -178,51 +180,53 @@ void main() {
           (restored1.arguments['uiTree'] as Map<String, dynamic>),
         );
         expect(restoredPayload, original);
-      },
-    );
+      });
 
-    test(
-      'payload survives round-trip inside a ToolInvocationEntry with extra args',
-      () {
-        // A real `ui.render` tool call records the payload alongside other
-        // arguments (render-hint, request-id, etc.). This test confirms
-        // the payload survives even when the surrounding arguments map
-        // carries unrelated keys.
-        final original = _originalPayload();
-        final entry = ToolInvocationEntry(
-          id: 'e_1',
-          parentId: null,
-          timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
-          record: ToolInvocationRecord(
-            id: 'ti_1',
+      test(
+        'payload survives round-trip inside a ToolInvocationEntry with extra '
+        'args',
+        () {
+          // A real `ui.render` tool call records the payload alongside other
+          // arguments (render-hint, request-id, etc.). This test confirms
+          // the payload survives even when the surrounding arguments map
+          // carries unrelated keys.
+          final original = _originalPayload();
+          final entry = ToolInvocationEntry(
+            id: 'e_1',
             parentId: null,
             timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
-            toolCallId: 'tc_1',
-            toolName: 'ui.render',
-            isError: false,
-            durationMs: 500,
-          ),
-          arguments: {
-            'uiTree': original.toJson(),
-            'renderHint': 'prefer-light',
-            'requestId': 'req-abc-123',
-          },
-        );
+            record: ToolInvocationRecord(
+              id: 'ti_1',
+              parentId: null,
+              timestamp: DateTime.utc(2026, 9, 2, 12, 0, 0),
+              toolCallId: 'tc_1',
+              toolName: 'ui.render',
+              isError: false,
+              durationMs: 500,
+            ),
+            arguments: {
+              'uiTree': original.toJson(),
+              'renderHint': 'prefer-light',
+              'requestId': 'req-abc-123',
+            },
+          );
 
-        final json = entry.toJson();
-        final restored = SessionTreeEntry.fromJson(json) as ToolInvocationEntry;
+          final json = entry.toJson();
+          final restored =
+              SessionTreeEntry.fromJson(json) as ToolInvocationEntry;
 
-        // Unrelated args survive.
-        expect(restored.arguments['renderHint'], 'prefer-light');
-        expect(restored.arguments['requestId'], 'req-abc-123');
-        // Payload survives and is deep-equal to the original.
-        final restoredPayload = UiTreePayload.fromJson(
-          restored.arguments['uiTree'] as Map<String, dynamic>,
-        );
-        expect(restoredPayload, original);
-      },
-    );
-  });
+          // Unrelated args survive.
+          expect(restored.arguments['renderHint'], 'prefer-light');
+          expect(restored.arguments['requestId'], 'req-abc-123');
+          // Payload survives and is deep-equal to the original.
+          final restoredPayload = UiTreePayload.fromJson(
+            restored.arguments['uiTree'] as Map<String, dynamic>,
+          );
+          expect(restoredPayload, original);
+        },
+      );
+    },
+  );
 
   group('issue #8 AC-1 — replay identity (no drift after persistence)', () {
     test('reconstructed payload has identical toJson() to the original', () {

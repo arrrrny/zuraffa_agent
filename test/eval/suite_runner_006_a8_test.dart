@@ -1,23 +1,25 @@
-// Spec 006 — acceptance behavior A8: GM-1..GM-5 defined as harness suites run in
+// Spec 006 — acceptance behavior A8: GM-1..GM-5 defined as harness suites run
+// in CI and report/gate correctly (FR-004).
 // CI and report/gate correctly (FR-004).
 //
 // The behavior the outer-only plan left BLOCKED was the end-to-end composition:
 // a `Suite` of golden-mission tasks is actually *run* through the harness
 // (cassette replay + mission runner), each run is *graded*, the per-task sample
-// counts feed `SuiteGate`, and the CI exit code comes out right. This test drives
+// counts feed `SuiteGate`, and the CI exit code comes out right. This
+// test drives
 // that whole path for two cohorts:
 //   1. a passing cohort — every task clears the threshold → exitCode 0;
 //   2. a failing cohort — tasks fall below threshold → exitCode 1, with the
 //      per-task breakdown naming which tasks regressed.
 
 import 'package:test/test.dart';
+import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/golden_mission/golden_mission.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/domain/entities/suite/suite.dart';
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
@@ -160,7 +162,8 @@ Future<String> _runOnce(GoldenMission mission) async {
 bool _gradeExact(String actual, String expected) => actual == expected;
 
 /// Runs [mission] [n] times, the first [correctCount] of them replaying the
-/// correct cassette and the rest replaying a deliberately wrong one, and returns
+/// correct cassette and the rest replaying a deliberately wrong one, and
+/// returns the observed [TaskSamples] (correct runs out of [n]).
 /// the observed [TaskSamples] (correct runs out of [n]).
 Future<TaskSamples> _sampleTask(
   GoldenMission correctMission,

@@ -17,10 +17,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/ui_tree_payload/ui_tree_payload_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/ui_tree_payload/ui_tree_payload.dart';
 import 'package:zuraffa_agent/src/domain/services/ui_tree_payload_service.dart';
-import 'package:zuraffa_agent/src/data/providers/ui_tree_payload/ui_tree_payload_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#8 — UiTreePayload value object', () {
@@ -154,7 +153,7 @@ void main() {
 
     test('UiTreePayloadProvider.current returns the active payload', () async {
       final provider = UiTreePayloadProvider();
-      final payload = await provider.current(NoParams());
+      final payload = await provider.current(const NoParams());
       expect(payload, isA<UiTreePayload>());
       expect(payload.vocabularyId, 'shadcn-ui@1.0.0');
       expect(payload.schemaVersion, '1.0.0');
@@ -165,7 +164,7 @@ void main() {
 
     test('UiTreePayloadProvider.count returns 1', () async {
       final provider = UiTreePayloadProvider();
-      expect(await provider.count(NoParams()), 1);
+      expect(await provider.count(const NoParams()), 1);
     });
 
     test('UiTreePayloadProvider honours an injected value object', () async {
@@ -175,7 +174,7 @@ void main() {
         tree: {'type': 'Text'},
       );
       final provider = UiTreePayloadProvider(custom);
-      final payload = await provider.current(NoParams());
+      final payload = await provider.current(const NoParams());
       expect(payload.vocabularyId, 'shadcn-ui@2.0.0');
       expect(payload.depth, 1);
       expect(payload.nodeCount, 1);

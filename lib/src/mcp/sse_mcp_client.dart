@@ -15,11 +15,11 @@
 import 'dart:async';
 
 import '../domain/entities/mcp_transport/mcp_transport.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_reconnect_policy.dart';
 import 'mcp_tool_descriptor.dart';
-import 'mcp_call_guard.dart';
 import 'mcp_wire.dart';
 
 /// Function that returns a fresh bearer token. Called before each
@@ -38,7 +38,8 @@ typedef McpWireFactory = McpWire Function(String? bearerToken);
 ///   ```dart
 ///   final client = SseMcpClient(
 ///     transport: myTransport,
-///     wireFactory: (token) => IoSseMcpTransport(endpoint: ..., bearerToken: token),
+///     wireFactory: (token) =>
+///         IoSseMcpTransport(endpoint: ..., bearerToken: token),
 ///     authTokenCallback: () async => await myVault.fetch('mcp-bearer'),
 ///   );
 ///   await client.connect();
@@ -72,6 +73,7 @@ class SseMcpClient implements McpClient {
     _lastStateChangeAt = _clock();
   }
 
+  /// Creates an SSE MCP client.
   SseMcpClient({
     required this.transport,
     required McpWireFactory wireFactory,

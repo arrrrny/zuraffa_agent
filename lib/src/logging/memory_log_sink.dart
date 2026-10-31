@@ -12,8 +12,10 @@ final class MemoryLogSink {
   /// The collected records, oldest first.
   List<LogRecord> get records => List.unmodifiable(_records);
 
+  /// The length.
   int get length => _records.length;
 
+  /// Returns the record at [index] (oldest is 0).
   LogRecord operator [](int index) => _records[index];
 
   /// The first record whose message contains [fragment], or null.
@@ -24,7 +26,9 @@ final class MemoryLogSink {
     return null;
   }
 
+  /// Adds the record.
   void add(LogRecord record) => _records.add(record);
 
+  /// Removes all buffered records.
   void clear() => _records.clear();
 }

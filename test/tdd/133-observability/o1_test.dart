@@ -151,69 +151,65 @@ void main() {
   });
 
   group('133 O-1 — tracing spans', () {
-    test(
-      'one mission.run span with child engine.turn spans and tool.dispatch spans',
-      () async {
-        final tracer = RecordingTracer();
-        final events = <EngineEvent>[];
-        final runner = MissionRunner(
-          executor: EngineLoopExecutor(
-            loop10,
-            ScriptedLlmClient(
-              completions: [
-                completionOf('step1', finish: 'tool_calls'),
-                completionOf('all done'),
-              ],
-            ),
-          ),
-          toolDispatcher: FakeToolDispatcher(),
-          stopPolicy: policy,
-          onEvent: events.add,
-          clock: fakeClock,
-          tracer: tracer,
-        );
-
-        final result = await runner.run(
-          missionId: 'm-trace',
-          messages: const [ChatMessage(role: 'user', content: 'go')],
-          planner: ScriptedPlanner({
-            1: [
-              ToolCall(
-                toolName: 'search',
-                arguments: {'q': 'x'},
-                executionMode: 'sequential',
-              ),
+    test('one mission.run span with child engine.turn spans and tool.dispatch '
+        'spans', () async {
+      final tracer = RecordingTracer();
+      final events = <EngineEvent>[];
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(
+          loop10,
+          ScriptedLlmClient(
+            completions: [
+              completionOf('step1', finish: 'tool_calls'),
+              completionOf('all done'),
             ],
-          }),
-        );
+          ),
+        ),
+        toolDispatcher: FakeToolDispatcher(),
+        stopPolicy: policy,
+        onEvent: events.add,
+        clock: fakeClock,
+        tracer: tracer,
+      );
 
-        expect(result.status, MissionStatus.completed);
-        final missions = tracer.spans
-            .where((s) => s.name == 'mission.run')
-            .toList();
-        expect(missions, hasLength(1));
-        final mission = missions.single;
-        expect(mission.attributes['mission.id'], 'm-trace');
-        expect(mission.attributes['mission.status'], 'completed');
-        expect(mission.isEnded, isTrue);
+      final result = await runner.run(
+        missionId: 'm-trace',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: ScriptedPlanner({
+          1: [
+            const ToolCall(
+              toolName: 'search',
+              arguments: {'q': 'x'},
+              executionMode: 'sequential',
+            ),
+          ],
+        }),
+      );
 
-        final turns = tracer.spans
-            .where((s) => s.name == 'engine.turn')
-            .toList();
-        expect(turns, hasLength(2));
-        for (final turn in turns) {
-          expect(turn.parentTraceparent, mission.traceparent);
-          expect(turn.isEnded, isTrue);
-        }
+      expect(result.status, MissionStatus.completed);
+      final missions = tracer.spans
+          .where((s) => s.name == 'mission.run')
+          .toList();
+      expect(missions, hasLength(1));
+      final mission = missions.single;
+      expect(mission.attributes['mission.id'], 'm-trace');
+      expect(mission.attributes['mission.status'], 'completed');
+      expect(mission.isEnded, isTrue);
 
-        final dispatches = tracer.spans
-            .where((s) => s.name == 'tool.dispatch')
-            .toList();
-        expect(dispatches, hasLength(1));
-        expect(dispatches.single.parentTraceparent, mission.traceparent);
-        expect(dispatches.single.attributes['tool.name'], 'search');
-      },
-    );
+      final turns = tracer.spans.where((s) => s.name == 'engine.turn').toList();
+      expect(turns, hasLength(2));
+      for (final turn in turns) {
+        expect(turn.parentTraceparent, mission.traceparent);
+        expect(turn.isEnded, isTrue);
+      }
+
+      final dispatches = tracer.spans
+          .where((s) => s.name == 'tool.dispatch')
+          .toList();
+      expect(dispatches, hasLength(1));
+      expect(dispatches.single.parentTraceparent, mission.traceparent);
+      expect(dispatches.single.attributes['tool.name'], 'search');
+    });
 
     test('provider failure records the error on the mission span', () async {
       final tracer = RecordingTracer();

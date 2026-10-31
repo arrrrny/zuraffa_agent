@@ -1,0 +1,10 @@
+# zfa/Zorphy-generated code (AGENTS.md: never hand-edit generated
+# output). Doc comments for these members belong in the generator
+# templates, so `public_member_api_docs` is descoped in this subtree.
+# Everything else — compile errors, strict language modes and the rest
+# of the lint set — still applies at full strength.
+include: ../../../../analysis_options.yaml
+
+linter:
+  rules:
+    public_member_api_docs: false

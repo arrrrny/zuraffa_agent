@@ -3,21 +3,21 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/services/engine_loop_service.dart';
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#2 - EngineLoop value equality', () {
     test('EngineLoop equality is value-based across all fields', () {
-      final a = EngineLoop(
+      const a = EngineLoop(
         id: 'id-a',
         sessionId: 'sess-1',
         maxTurns: 10,
         wallClockTimeoutMs: 10,
         repetitionThreshold: 10,
       );
-      final b = EngineLoop(
+      const b = EngineLoop(
         id: 'id-a',
         sessionId: 'sess-1',
         maxTurns: 10,
@@ -29,14 +29,14 @@ void main() {
     });
 
     test('EngineLoop inequality differs when a field changes', () {
-      final a = EngineLoop(
+      const a = EngineLoop(
         id: 'id-a',
         sessionId: 'sess-1',
         maxTurns: 10,
         wallClockTimeoutMs: 10,
         repetitionThreshold: 10,
       );
-      final b = EngineLoop(
+      const b = EngineLoop(
         id: 'id-b',
         sessionId: 'sess-2',
         maxTurns: 20,
@@ -53,14 +53,14 @@ void main() {
     });
 
     test('EngineLoopProvider.current returns the active loop config', () async {
-      final loop = await EngineLoopProvider().current(NoParams());
+      final loop = await EngineLoopProvider().current(const NoParams());
       expect(loop, isA<EngineLoop>());
       expect(loop.maxTurns, greaterThan(0));
       expect(loop.wallClockTimeoutMs, greaterThan(0));
     });
 
     test('EngineLoopProvider.count returns 1', () async {
-      expect(await EngineLoopProvider().count(NoParams()), 1);
+      expect(await EngineLoopProvider().count(const NoParams()), 1);
     });
   });
 }

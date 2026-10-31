@@ -297,7 +297,7 @@ void main() {
     test(
       'forwards SSE chunks, captures usage, and closes the client',
       () async {
-        final sse =
+        const sse =
             'data: {"choices":[{"index":0,"delta":{"content":"ok"}}]}\n'
             'data: {"choices":[],"usage":{"prompt_tokens":5,'
             '"completion_tokens":2}}\n'

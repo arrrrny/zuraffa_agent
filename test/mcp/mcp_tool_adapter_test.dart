@@ -3,7 +3,9 @@
 // Covers:
 //   - sync() lists tools via the cache and registers each into the registry.
 //   - Names use the `mcp:<serverId>:<toolName>` convention.
-//   - A subsequent sync() with new tools registers new ones and unregisters gone ones.
+// - A subsequent sync() with new tools registers new ones and unregisters gone
+// ones. - startAutoSync() reacts to onToolsChanged: invalidates cache and
+// re-syncs. - dispose() stops the auto-sync.
 //   - startAutoSync() reacts to onToolsChanged: invalidates cache and re-syncs.
 //   - dispose() stops the auto-sync.
 
@@ -16,8 +18,8 @@ import 'package:zuraffa_agent/src/engine/tool_registry.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart' show McpCallOptions;
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_adapter.dart';
+import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 
 class _FakeMcpClient implements McpClient {
   @override
@@ -186,37 +188,33 @@ void main() {
       },
     );
 
-    test(
-      'startAutoSync() reacts to onToolsChanged: invalidates cache and re-syncs',
-      () async {
-        final client = _FakeMcpClient(transport);
-        client.nextTools = const [
-          McpToolDescriptor(name: 'a', description: 'A'),
-        ];
-        final registry = _FakeToolRegistry();
-        final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
-        final adapter = McpToolAdapter(
-          client: client,
-          registry: registry,
-          serverId: 'srv',
-          now: () => now,
-        );
-        await adapter.sync();
-        await adapter.startAutoSync();
-        // Within TTL — but onToolsChanged invalidates the cache, so the
-        // next sync should re-list even without time advance.
-        client.nextTools = const [
-          McpToolDescriptor(name: 'a', description: 'A'),
-          McpToolDescriptor(name: 'b', description: 'B'),
-        ];
-        client.fireToolsChanged();
-        // Give the auto-sync a couple of event-loop ticks.
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        final tools = (await registry.list()).map((t) => t.id).toList();
-        expect(tools, containsAll(['mcp:srv:a', 'mcp:srv:b']));
-        await adapter.dispose();
-      },
-    );
+    test('startAutoSync() reacts to onToolsChanged: invalidates cache and '
+        're-syncs', () async {
+      final client = _FakeMcpClient(transport);
+      client.nextTools = const [McpToolDescriptor(name: 'a', description: 'A')];
+      final registry = _FakeToolRegistry();
+      final now = DateTime.utc(2026, 8, 27, 10, 0, 0);
+      final adapter = McpToolAdapter(
+        client: client,
+        registry: registry,
+        serverId: 'srv',
+        now: () => now,
+      );
+      await adapter.sync();
+      await adapter.startAutoSync();
+      // Within TTL — but onToolsChanged invalidates the cache, so the
+      // next sync should re-list even without time advance.
+      client.nextTools = const [
+        McpToolDescriptor(name: 'a', description: 'A'),
+        McpToolDescriptor(name: 'b', description: 'B'),
+      ];
+      client.fireToolsChanged();
+      // Give the auto-sync a couple of event-loop ticks.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final tools = (await registry.list()).map((t) => t.id).toList();
+      expect(tools, containsAll(['mcp:srv:a', 'mcp:srv:b']));
+      await adapter.dispose();
+    });
 
     test('dispose() stops the auto-sync', () async {
       final client = _FakeMcpClient(transport);

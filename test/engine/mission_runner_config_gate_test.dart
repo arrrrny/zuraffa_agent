@@ -4,7 +4,6 @@
 // so the gate is proven through a real mission composition.
 
 import 'package:test/test.dart';
-import 'package:zuraffa/zuraffa.dart' show NoParams;
 import 'package:zuraffa_agent/src/config/zuraffa_config.dart';
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
@@ -87,11 +86,11 @@ const loop10 = EngineLoop(
   repetitionThreshold: 5,
 );
 
-final provider = ProviderConfig(
+const provider = ProviderConfig(
   id: 'p1',
   providerKind: 'openai',
   baseUrl: 'https://llm.example.internal/api',
-  models: const ['internal/model'],
+  models: ['internal/model'],
   timeoutMs: 30000,
 );
 
@@ -119,8 +118,8 @@ void main() {
           clock: fakeClock,
           // Invalid: engine loop configured but no provider section, and the
           // loop's maxTurns is non-positive — two distinct typed issues.
-          config: ZuraffaConfig(
-            engineLoop: const EngineLoop(
+          config: const ZuraffaConfig(
+            engineLoop: EngineLoop(
               id: 'loop-bad',
               sessionId: 's1',
               maxTurns: 0,
@@ -164,7 +163,10 @@ void main() {
         ),
         onEvent: events.add,
         clock: fakeClock,
-        config: ZuraffaConfig(providerConfig: provider, engineLoop: loop10),
+        config: const ZuraffaConfig(
+          providerConfig: provider,
+          engineLoop: loop10,
+        ),
       );
 
       final result = await runner.run(

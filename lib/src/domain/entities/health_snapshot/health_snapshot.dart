@@ -1,7 +1,10 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#5 (R4 - providers & fallback).
 //
-// HealthSnapshot (chain state) value object - spec-exact from epic #1 §R4 (issue #5).
+// HealthSnapshot (chain state) value object - spec-exact from epic #1 §R4
+// (issue #5). Pattern mirrors the SteeringMessage / SteeringQueue value objects
+// (PR for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
@@ -10,12 +13,22 @@
 ///
 /// Health snapshot API — exposes chain state per provider (open/closed/half-open) and last-success timestamp (epic #4 §R4.5, issue #5 US4). Used by ops dashboards and the engine's preflight check.
 class HealthSnapshot {
+  /// The identifier.
   final String id;
+
+  /// The chain identifier.
   final String chainId;
+
+  /// The captured at.
   final int capturedAt;
+
+  /// The healthy providers.
   final int healthyProviders;
+
+  /// The tripped providers.
   final int trippedProviders;
 
+  /// Creates a health snapshot.
   const HealthSnapshot({
     required this.id,
     required this.chainId,

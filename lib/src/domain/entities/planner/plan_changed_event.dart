@@ -31,6 +31,7 @@ class PlanChangedEvent {
   /// The plan snapshot after the change.
   final PlanState next;
 
+  /// Creates a plan changed event.
   const PlanChangedEvent({
     required this.emittedAt,
     required this.previous,
@@ -56,6 +57,7 @@ class PlanChangedEvent {
 
   @override
   String toString() =>
-      'PlanChangedEvent(emittedAt: $emittedAt, completedGained: $completedGained, '
+      'PlanChangedEvent(emittedAt: $emittedAt, completedGained: '
+      '$completedGained, '
       'previous: $previous, next: $next)';
 }

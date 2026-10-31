@@ -5,6 +5,7 @@ library;
 
 /// A stored artifact with its reference ID and raw data.
 class Artifact {
+  /// Creates an artifact.
   const Artifact({required this.refId, required this.data});
 
   /// The reference ID linking to the ArtifactRef.

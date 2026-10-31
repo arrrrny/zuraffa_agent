@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/recorded_traffic/recorded_traffic.dart';
 import '../../../domain/services/recorded_traffic_service.dart';
 
+/// The recorded traffic provider.
 class RecordedTrafficProvider
     with Loggable, FailureHandler
     implements RecordedTrafficService {
   final RecordedTraffic _active;
 
+  /// Creates a recorded traffic provider.
   RecordedTrafficProvider([RecordedTraffic? active])
     : _active =
           active ??

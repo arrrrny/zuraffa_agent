@@ -89,7 +89,8 @@ void main() {
       // Create messages that exceed 85% of usable window.
       // ~50 chars per message => ~12.5 tokens per message.
       // 200 messages => ~2500 tokens.
-      // With reserveTokens=100, contextWindow=2500, usable=2400, threshold=2040.
+      // With reserveTokens=100, contextWindow=2500, usable=2400,
+      // threshold=2040.
       final messages = List.generate(
         200,
         (i) => UserMessage.text('Message $i with enough text to use tokens'),
@@ -106,7 +107,8 @@ void main() {
 
     test('returns false when below threshold', () {
       // 10 messages => ~38 tokens.
-      // With reserveTokens=100, contextWindow=8192, usable=8092, threshold=6878.
+      // With reserveTokens=100, contextWindow=8192, usable=8092,
+      // threshold=6878.
       final messages = List.generate(
         10,
         (i) => UserMessage.text('Short message $i'),
@@ -236,8 +238,8 @@ void main() {
           timestamp: fixedTime,
           message: AssistantMessage(
             content: [
-              TextBlock('Decision: use Hive for storage'),
-              TextBlock('Decision: implement JSONL fallback'),
+              const TextBlock('Decision: use Hive for storage'),
+              const TextBlock('Decision: implement JSONL fallback'),
             ],
           ),
         ),
@@ -300,7 +302,7 @@ void main() {
             parentId: null,
             timestamp: fixedTime,
             message: AssistantMessage(
-              content: [TextBlock('Decision: new decision')],
+              content: [const TextBlock('Decision: new decision')],
             ),
           ),
         ],
@@ -436,7 +438,8 @@ void main() {
     );
 
     test(
-      'keeps the id-reference row when the result message is outside the cut region',
+      'keeps the id-reference row when the result message is outside the cut '
+      'region',
       () async {
         final cutEntries = [
           ToolInvocationEntry(

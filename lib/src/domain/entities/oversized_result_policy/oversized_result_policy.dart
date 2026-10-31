@@ -1,20 +1,33 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#4 (R3 - tools & mcp).
 //
-// OversizedResultPolicy (summarize+artifactRef) value object - spec-exact from epic #1 §R3 (issue #4).
+// OversizedResultPolicy (summarize+artifactRef) value object - spec-exact from
+// epic #1 §R3 (issue #4). Pattern mirrors the SteeringMessage / SteeringQueue
+// value objects (PR for spec 033): plain Dart, value equality across all
+// fields, no @Zorphy codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
 /// OversizedResultPolicy (summarize+artifactRef) value object.
 ///
-/// Policy for oversized tool results — summarize + artifactRef before entering model context (epic #3 §R3.4, issue #4 US4). Keeps the context budget under control without losing the data.
+/// Policy for oversized tool results — summarize + artifactRef before entering
+/// model context (epic #3 §R3.4, issue #4 US4). Keeps the context budget under
+/// control without losing the data.
 class OversizedResultPolicy {
+  /// The identifier.
   final String id;
+
+  /// The threshold bytes.
   final int thresholdBytes;
+
+  /// The summary max chars.
   final int summaryMaxChars;
+
+  /// The artifact store.
   final String artifactStore;
 
+  /// Creates an oversized result policy.
   const OversizedResultPolicy({
     required this.id,
     required this.thresholdBytes,
@@ -38,5 +51,6 @@ class OversizedResultPolicy {
 
   @override
   String toString() =>
-      'OversizedResultPolicy(id: $id, thresholdBytes: $thresholdBytes, summaryMaxChars: $summaryMaxChars)';
+      'OversizedResultPolicy(id: $id, thresholdBytes: $thresholdBytes, '
+      'summaryMaxChars: $summaryMaxChars)';
 }

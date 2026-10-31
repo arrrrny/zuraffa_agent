@@ -27,46 +27,44 @@ void main() {
   };
 
   group('spec 034 — AgentTool hash contract (cycle 1)', () {
-    test(
-      'A1: equal tools with distinct-but-equal paramsSchema instances share hashCode',
-      () {
-        final a = AgentTool(
-          id: 'web.fetch',
-          description: 'Fetch a URL.',
-          riskTier: RiskTier.confirm,
-          executionMode: ExecutionMode.parallel,
-          paramsSchema: {
-            'type': 'object',
-            'properties': {
-              'path': {'type': 'string'},
-              'content': {'type': 'string'},
-            },
-            'required': ['path', 'content'],
+    test('A1: equal tools with distinct-but-equal paramsSchema instances share '
+        'hashCode', () {
+      const a = AgentTool(
+        id: 'web.fetch',
+        description: 'Fetch a URL.',
+        riskTier: RiskTier.confirm,
+        executionMode: ExecutionMode.parallel,
+        paramsSchema: {
+          'type': 'object',
+          'properties': {
+            'path': {'type': 'string'},
+            'content': {'type': 'string'},
           },
-        );
-        final b = AgentTool(
-          id: 'web.fetch',
-          description: 'Fetch a URL.',
-          riskTier: RiskTier.confirm,
-          executionMode: ExecutionMode.parallel,
-          paramsSchema: {
-            'type': 'object',
-            'properties': {
-              'path': {'type': 'string'},
-              'content': {'type': 'string'},
-            },
-            'required': ['path', 'content'],
+          'required': ['path', 'content'],
+        },
+      );
+      const b = AgentTool(
+        id: 'web.fetch',
+        description: 'Fetch a URL.',
+        riskTier: RiskTier.confirm,
+        executionMode: ExecutionMode.parallel,
+        paramsSchema: {
+          'type': 'object',
+          'properties': {
+            'path': {'type': 'string'},
+            'content': {'type': 'string'},
           },
-        );
-        expect(a, equals(b));
-        expect(
-          a.hashCode,
-          equals(b.hashCode),
-          reason:
-              'the scaffold hashes the Map by identity — a live ==/hashCode contract violation',
-        );
-      },
-    );
+          'required': ['path', 'content'],
+        },
+      );
+      expect(a, equals(b));
+      expect(
+        a.hashCode,
+        equals(b.hashCode),
+        reason:
+            'the scaffold hashes the Map by identity — a live ==/hashCode contract violation',
+      );
+    });
 
     test(
       'A2: equal schemas built in different insertion orders hash equally',
@@ -98,20 +96,22 @@ void main() {
     );
 
     test('A3: tools differing on any of the five fields are unequal', () {
-      final base = AgentTool(id: 't', description: 'd', paramsSchema: schema);
+      const base = AgentTool(id: 't', description: 'd', paramsSchema: schema);
       expect(
-        base == AgentTool(id: 'u', description: 'd', paramsSchema: schema),
+        base ==
+            const AgentTool(id: 'u', description: 'd', paramsSchema: schema),
         isFalse,
         reason: 'id',
       );
       expect(
-        base == AgentTool(id: 't', description: 'e', paramsSchema: schema),
+        base ==
+            const AgentTool(id: 't', description: 'e', paramsSchema: schema),
         isFalse,
         reason: 'description',
       );
       expect(
         base ==
-            AgentTool(
+            const AgentTool(
               id: 't',
               description: 'd',
               riskTier: RiskTier.confirm,
@@ -122,7 +122,7 @@ void main() {
       );
       expect(
         base ==
-            AgentTool(
+            const AgentTool(
               id: 't',
               description: 'd',
               executionMode: ExecutionMode.parallel,
@@ -132,67 +132,64 @@ void main() {
         reason: 'executionMode',
       );
       expect(
-        base == AgentTool(id: 't', description: 'd'),
+        base == const AgentTool(id: 't', description: 'd'),
         isFalse,
         reason: 'paramsSchema presence',
       );
     });
 
-    test(
-      'U3: the hash fold recurses into nested maps (a one-level fold would re-violate)',
-      () {
-        final a = AgentTool(
-          id: 't',
-          description: 'd',
-          paramsSchema: {
-            'properties': {
-              'path': {'type': 'string'},
-            },
+    test('U3: the hash fold recurses into nested maps (a one-level fold would '
+        're-violate)', () {
+      const a = AgentTool(
+        id: 't',
+        description: 'd',
+        paramsSchema: {
+          'properties': {
+            'path': {'type': 'string'},
           },
-        );
-        final b = AgentTool(
-          id: 't',
-          description: 'd',
-          paramsSchema: {
-            'properties': {
-              'path': {'type': 'string'},
-            },
+        },
+      );
+      const b = AgentTool(
+        id: 't',
+        description: 'd',
+        paramsSchema: {
+          'properties': {
+            'path': {'type': 'string'},
           },
-        );
-        expect(a, equals(b));
-        expect(
-          a.hashCode,
-          equals(b.hashCode),
-          reason: 'nested map instances are distinct — the fold must recurse',
-        );
-      },
-    );
+        },
+      );
+      expect(a, equals(b));
+      expect(
+        a.hashCode,
+        equals(b.hashCode),
+        reason: 'nested map instances are distinct — the fold must recurse',
+      );
+    });
 
-    test(
-      'U4: schema array order matters for equality and hashing (required lists are ordered)',
-      () {
-        final a = AgentTool(
-          id: 't',
-          description: 'd',
-          paramsSchema: {
-            'required': ['path', 'content'],
-          },
-        );
-        final b = AgentTool(
-          id: 't',
-          description: 'd',
-          paramsSchema: {
-            'required': ['content', 'path'],
-          },
-        );
-        expect(
-          a == b,
-          isFalse,
-          reason:
-              'JSON-Schema arrays are ordered — a reordered required list is a different schema',
-        );
-      },
-    );
+    test('U4: schema array order matters for equality and hashing (required '
+        'lists are ordered)', () {
+      const a = AgentTool(
+        id: 't',
+        description: 'd',
+        paramsSchema: {
+          'required': ['path', 'content'],
+        },
+      );
+      const b = AgentTool(
+        id: 't',
+        description: 'd',
+        paramsSchema: {
+          'required': ['content', 'path'],
+        },
+      );
+      expect(
+        a == b,
+        isFalse,
+        reason:
+            'JSON-Schema arrays are ordered — a reordered required list is '
+            'a different schema',
+      );
+    });
   });
 
   group('spec 034 — RiskTier / ExecutionMode classification (cycle 2)', () {
@@ -208,37 +205,33 @@ void main() {
       },
     );
 
-    test(
-      'A5: RiskTier.fromString rejects unknown strings (incl. case mismatches) typed',
-      () {
-        expect(() => RiskTier.fromString('delete'), throwsArgumentError);
-        expect(() => RiskTier.fromString(''), throwsArgumentError);
-        expect(
-          () => RiskTier.fromString('SAFE'),
-          throwsArgumentError,
-          reason: 'declaration strings are exact — case is significant',
-        );
-        expect(
-          () => RiskTier.fromString('low'),
-          throwsArgumentError,
-          reason: 'never silently under-classify an unknown tier',
-        );
-      },
-    );
+    test('A5: RiskTier.fromString rejects unknown strings (incl. case '
+        'mismatches) typed', () {
+      expect(() => RiskTier.fromString('delete'), throwsArgumentError);
+      expect(() => RiskTier.fromString(''), throwsArgumentError);
+      expect(
+        () => RiskTier.fromString('SAFE'),
+        throwsArgumentError,
+        reason: 'declaration strings are exact — case is significant',
+      );
+      expect(
+        () => RiskTier.fromString('low'),
+        throwsArgumentError,
+        reason: 'never silently under-classify an unknown tier',
+      );
+    });
 
-    test(
-      'A6: each tier dispatch policy reads correctly (confirm pauses, admin gates)',
-      () {
-        expect(RiskTier.safe.requiresConfirmation, isFalse);
-        expect(RiskTier.safe.isAdmin, isFalse);
-        expect(RiskTier.confirm.requiresConfirmation, isTrue);
-        expect(RiskTier.confirm.isAdmin, isFalse);
-        expect(RiskTier.admin.requiresConfirmation, isTrue);
-        expect(RiskTier.admin.isAdmin, isTrue);
-        expect(RiskTier.safe.severity < RiskTier.confirm.severity, isTrue);
-        expect(RiskTier.confirm.severity < RiskTier.admin.severity, isTrue);
-      },
-    );
+    test('A6: each tier dispatch policy reads correctly (confirm pauses, admin '
+        'gates)', () {
+      expect(RiskTier.safe.requiresConfirmation, isFalse);
+      expect(RiskTier.safe.isAdmin, isFalse);
+      expect(RiskTier.confirm.requiresConfirmation, isTrue);
+      expect(RiskTier.confirm.isAdmin, isFalse);
+      expect(RiskTier.admin.requiresConfirmation, isTrue);
+      expect(RiskTier.admin.isAdmin, isTrue);
+      expect(RiskTier.safe.severity < RiskTier.confirm.severity, isTrue);
+      expect(RiskTier.confirm.severity < RiskTier.admin.severity, isTrue);
+    });
 
     test(
       'U1: ExecutionMode.fromString parses sequential/parallel; unknown rejects typed',
@@ -270,32 +263,30 @@ void main() {
   });
 
   group('spec 034 — AgentTool registry persistence (cycle 3)', () {
-    test(
-      'A7: a fully-declared tool round-trips JSON with tier, mode and deep schema',
-      () {
-        final tool = AgentTool(
-          id: 'web.fetch',
-          description: 'Fetch a URL.',
-          riskTier: RiskTier.confirm,
-          executionMode: ExecutionMode.parallel,
-          paramsSchema: schema,
-        );
-        final json = tool.toJson();
-        expect(json['riskTier'], 'confirm');
-        expect(json['executionMode'], 'parallel');
-        final parsed = AgentTool.fromJson(json);
-        expect(parsed, equals(tool));
-        expect(parsed.hashCode, tool.hashCode);
-        expect(
-          parsed.requiresConfirmation,
-          isTrue,
-          reason: 'dispatch policy survives the round-trip',
-        );
-      },
-    );
+    test('A7: a fully-declared tool round-trips JSON with tier, mode and deep '
+        'schema', () {
+      const tool = AgentTool(
+        id: 'web.fetch',
+        description: 'Fetch a URL.',
+        riskTier: RiskTier.confirm,
+        executionMode: ExecutionMode.parallel,
+        paramsSchema: schema,
+      );
+      final json = tool.toJson();
+      expect(json['riskTier'], 'confirm');
+      expect(json['executionMode'], 'parallel');
+      final parsed = AgentTool.fromJson(json);
+      expect(parsed, equals(tool));
+      expect(parsed.hashCode, tool.hashCode);
+      expect(
+        parsed.requiresConfirmation,
+        isTrue,
+        reason: 'dispatch policy survives the round-trip',
+      );
+    });
 
     test('A8: a schema-less tool serializes paramsSchema absent', () {
-      final tool = AgentTool(id: 'clock.now', description: 'Current time.');
+      const tool = AgentTool(id: 'clock.now', description: 'Current time.');
       final json = tool.toJson();
       expect(json.containsKey('paramsSchema'), isFalse);
       expect(json['riskTier'], 'safe');

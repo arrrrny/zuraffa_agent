@@ -11,11 +11,19 @@
 /// `IoLlmTransport` (the single CI-allowlisted `dart:io` file); tests replay
 /// recorded fixtures through a fake implementation.
 class LlmHttpRequest {
+  /// The URI.
   final Uri uri;
+
+  /// The method.
   final String method;
+
+  /// The headers.
   final Map<String, String> headers;
+
+  /// The body.
   final String body;
 
+  /// Creates an LLM HTTP request.
   const LlmHttpRequest({
     required this.uri,
     this.method = 'POST',
@@ -26,36 +34,51 @@ class LlmHttpRequest {
 
 /// A complete (non-streaming) HTTP response.
 class LlmHttpResponse {
+  /// The status code.
   final int statusCode;
+
+  /// The headers.
   final Map<String, String> headers;
+
+  /// The body.
   final String body;
 
+  /// Creates an LLM HTTP response.
   const LlmHttpResponse({
     required this.statusCode,
     this.headers = const {},
     this.body = '',
   });
 
+  /// Whether the LLM HTTP response is ok.
   bool get isOk => statusCode >= 200 && statusCode < 300;
 }
 
 /// A streaming HTTP response exposing a decoded line stream (SSE lines for
 /// OpenAI/Anthropic, JSON lines for Gemini).
 class LlmStreamResponse {
+  /// The status code.
   final int statusCode;
+
+  /// The headers.
   final Map<String, String> headers;
+
+  /// The lines.
   final Stream<String> lines;
 
+  /// Creates an LLM stream response.
   const LlmStreamResponse({
     required this.statusCode,
     this.headers = const {},
     required this.lines,
   });
 
+  /// Whether the LLM stream response is ok.
   bool get isOk => statusCode >= 200 && statusCode < 300;
 }
 
-/// Transport seam for all provider clients (spec 007 plan: `llm_transport.dart`).
+/// Transport seam for all provider clients
+/// (spec 007 plan: `llm_transport.dart`).
 abstract interface class LlmTransport {
   /// Sends a request and awaits the complete response.
   ///

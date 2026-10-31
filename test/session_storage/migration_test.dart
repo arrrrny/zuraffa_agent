@@ -3,9 +3,9 @@
 import 'dart:io';
 
 import 'package:test/test.dart';
+import 'package:zuraffa_agent/src/jsonl_session_storage.dart';
 import 'package:zuraffa_agent/src/session_migrator.dart';
 import 'package:zuraffa_agent/src/session_storage.dart';
-import 'package:zuraffa_agent/src/jsonl_session_storage.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
 /// A v1 legacy entry map: no schemaVersion stamp anywhere.

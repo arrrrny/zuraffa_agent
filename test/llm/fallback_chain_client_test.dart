@@ -29,7 +29,8 @@ void main() {
 
   group('FallbackChainClient (U10..U18)', () {
     test(
-      'U10: generate() advances to provider B when A fails with a connection error and B serves',
+      'U10: generate() advances to provider B when A fails with a connection '
+      'error and B serves',
       () async {
         final a = FakeLlmClient(
           providerName: 'a',
@@ -57,189 +58,178 @@ void main() {
       },
     );
 
-    test(
-      'U11: generate() advances on 5xx and on a 429 that exhausted retries; fails fast on other 4xx',
-      () async {
-        final chainFiveHundred = makeChain([
-          FakeLlmClient(
-            providerName: 'a',
-            outcomes: [
-              const ScriptedOutcome(
-                error: LlmHttpException(
-                  provider: 'a',
-                  statusCode: 500,
-                  body: 'boom',
-                ),
-              ),
-            ],
-          ),
-          FakeLlmClient(
-            providerName: 'b',
-            outcomes: [
-              const ScriptedOutcome(
-                response: LlmResponse(content: 'after-5xx'),
-              ),
-            ],
-          ),
-        ]);
-        expect(
-          (await chainFiveHundred.generate(
-            LlmRequest(messages: [UserMessage.text('x')]),
-          )).content,
-          'after-5xx',
-        );
-
-        final chainRateLimited = makeChain([
-          FakeLlmClient(
-            providerName: 'a',
-            outcomes: [
-              const ScriptedOutcome(
-                error: LlmHttpException(
-                  provider: 'a',
-                  statusCode: 429,
-                  body: 'slow down',
-                ),
-              ),
-            ],
-          ),
-          FakeLlmClient(
-            providerName: 'b',
-            outcomes: [
-              const ScriptedOutcome(
-                response: LlmResponse(content: 'after-429'),
-              ),
-            ],
-          ),
-        ]);
-        expect(
-          (await chainRateLimited.generate(
-            LlmRequest(messages: [UserMessage.text('x')]),
-          )).content,
-          'after-429',
-        );
-
-        final forbiddenA = FakeLlmClient(
+    test('U11: generate() advances on 5xx and on a 429 that exhausted retries; '
+        'fails fast on other 4xx', () async {
+      final chainFiveHundred = makeChain([
+        FakeLlmClient(
           providerName: 'a',
           outcomes: [
             const ScriptedOutcome(
               error: LlmHttpException(
                 provider: 'a',
-                statusCode: 403,
-                body: 'forbidden',
+                statusCode: 500,
+                body: 'boom',
               ),
             ),
           ],
-        );
-        final forbiddenB = FakeLlmClient(
+        ),
+        FakeLlmClient(
           providerName: 'b',
           outcomes: [
-            const ScriptedOutcome(response: LlmResponse(content: 'never')),
+            const ScriptedOutcome(response: LlmResponse(content: 'after-5xx')),
           ],
-        );
-        final chainForbidden = makeChain([forbiddenA, forbiddenB]);
-        await expectLater(
-          chainForbidden.generate(
-            LlmRequest(messages: [UserMessage.text('x')]),
-          ),
-          throwsA(
-            isA<LlmHttpException>().having(
-              (e) => e.statusCode,
-              'statusCode',
-              403,
-            ),
-          ),
-        );
-        // Failed fast: provider B was never called.
-        expect(forbiddenB.generateCalls, 0);
-      },
-    );
+        ),
+      ]);
+      expect(
+        (await chainFiveHundred.generate(
+          LlmRequest(messages: [UserMessage.text('x')]),
+        )).content,
+        'after-5xx',
+      );
 
-    test(
-      'U12: generate() advances on context-overflow errors (400 + context-length body)',
-      () async {
-        final chain = makeChain([
-          FakeLlmClient(
-            providerName: 'a',
-            outcomes: [
-              const ScriptedOutcome(
-                error: LlmHttpException(
-                  provider: 'a',
-                  statusCode: 400,
-                  body:
-                      '{"error":{"message":"This model maximum context length is 8192 tokens"}}',
-                ),
-              ),
-            ],
-          ),
-          FakeLlmClient(
-            providerName: 'b',
-            outcomes: [
-              const ScriptedOutcome(
-                response: LlmResponse(content: 'big-context-b'),
-              ),
-            ],
-          ),
-        ]);
-
-        final response = await chain.generate(
-          LlmRequest(messages: [UserMessage.text('huge')]),
-        );
-        expect(response.content, 'big-context-b');
-      },
-    );
-
-    test(
-      'U13: all providers failing throws a chain-exhausted error carrying every provider error',
-      () async {
-        final a = FakeLlmClient(
+      final chainRateLimited = makeChain([
+        FakeLlmClient(
           providerName: 'a',
           outcomes: [
             const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused again'),
-            ),
-          ],
-        );
-        final b = FakeLlmClient(
-          providerName: 'b',
-          outcomes: [
-            const ScriptedOutcome(
               error: LlmHttpException(
-                provider: 'b',
-                statusCode: 503,
-                body: 'down',
+                provider: 'a',
+                statusCode: 429,
+                body: 'slow down',
               ),
             ),
           ],
-        );
-        final chain = makeChain([a, b]);
+        ),
+        FakeLlmClient(
+          providerName: 'b',
+          outcomes: [
+            const ScriptedOutcome(response: LlmResponse(content: 'after-429')),
+          ],
+        ),
+      ]);
+      expect(
+        (await chainRateLimited.generate(
+          LlmRequest(messages: [UserMessage.text('x')]),
+        )).content,
+        'after-429',
+      );
 
-        await expectLater(
-          chain.generate(LlmRequest(messages: [UserMessage.text('hi')])),
-          throwsA(
-            isA<LlmFallbackExhaustedException>()
-                .having((e) => e.errorsByProvider.keys.toList(), 'providers', [
-                  'a',
-                  'b',
-                ])
-                .having(
-                  (e) => e.errorsByProvider['a'],
-                  'error-a',
-                  isA<LlmNetworkException>(),
-                )
-                .having(
-                  (e) => e.errorsByProvider['b'],
-                  'error-b',
-                  isA<LlmHttpException>(),
-                ),
+      final forbiddenA = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            error: LlmHttpException(
+              provider: 'a',
+              statusCode: 403,
+              body: 'forbidden',
+            ),
           ),
-        );
-        expect(a.generateCalls, 1);
-        expect(b.generateCalls, 1);
-      },
-    );
+        ],
+      );
+      final forbiddenB = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'never')),
+        ],
+      );
+      final chainForbidden = makeChain([forbiddenA, forbiddenB]);
+      await expectLater(
+        chainForbidden.generate(LlmRequest(messages: [UserMessage.text('x')])),
+        throwsA(
+          isA<LlmHttpException>().having(
+            (e) => e.statusCode,
+            'statusCode',
+            403,
+          ),
+        ),
+      );
+      // Failed fast: provider B was never called.
+      expect(forbiddenB.generateCalls, 0);
+    });
+
+    test('U12: generate() advances on context-overflow errors (400 + '
+        'context-length body)', () async {
+      final chain = makeChain([
+        FakeLlmClient(
+          providerName: 'a',
+          outcomes: [
+            const ScriptedOutcome(
+              error: LlmHttpException(
+                provider: 'a',
+                statusCode: 400,
+                body:
+                    '{"error":{"message":"This model maximum context '
+                    'length is 8192 tokens"}}',
+              ),
+            ),
+          ],
+        ),
+        FakeLlmClient(
+          providerName: 'b',
+          outcomes: [
+            const ScriptedOutcome(
+              response: LlmResponse(content: 'big-context-b'),
+            ),
+          ],
+        ),
+      ]);
+
+      final response = await chain.generate(
+        LlmRequest(messages: [UserMessage.text('huge')]),
+      );
+      expect(response.content, 'big-context-b');
+    });
+
+    test('U13: all providers failing throws a chain-exhausted error carrying '
+        'every provider error', () async {
+      final a = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused again'),
+          ),
+        ],
+      );
+      final b = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(
+            error: LlmHttpException(
+              provider: 'b',
+              statusCode: 503,
+              body: 'down',
+            ),
+          ),
+        ],
+      );
+      final chain = makeChain([a, b]);
+
+      await expectLater(
+        chain.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(
+          isA<LlmFallbackExhaustedException>()
+              .having((e) => e.errorsByProvider.keys.toList(), 'providers', [
+                'a',
+                'b',
+              ])
+              .having(
+                (e) => e.errorsByProvider['a'],
+                'error-a',
+                isA<LlmNetworkException>(),
+              )
+              .having(
+                (e) => e.errorsByProvider['b'],
+                'error-b',
+                isA<LlmHttpException>(),
+              ),
+        ),
+      );
+      expect(a.generateCalls, 1);
+      expect(b.generateCalls, 1);
+    });
 
     test(
       'U14: an open breaker skips its provider entirely (no call reaches it)',
@@ -289,207 +279,191 @@ void main() {
       },
     );
 
-    test(
-      'U15: after cooldown, a half-open probe routes real traffic back to A on success and CLOSES the breaker',
-      () async {
-        // maxConsecutiveFailures=3: after the probe closes the breaker, A must
-        // fail three more times before tripping again — which pins the
-        // closed-vs-stuck-half-open distinction.
-        final a = FakeLlmClient(
-          providerName: 'a',
-          outcomes: [
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
+    test('U15: after cooldown, a half-open probe routes real traffic back to A '
+        'on success and CLOSES the breaker', () async {
+      // maxConsecutiveFailures=3: after the probe closes the breaker, A must
+      // fail three more times before tripping again — which pins the
+      // closed-vs-stuck-half-open distinction.
+      final a = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(response: LlmResponse(content: 'a-probe-ok')),
+          const ScriptedOutcome(
+            error: LlmHttpException(
+              provider: 'a',
+              statusCode: 503,
+              body: 'blip',
             ),
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-            const ScriptedOutcome(response: LlmResponse(content: 'a-probe-ok')),
-            const ScriptedOutcome(
-              error: LlmHttpException(
-                provider: 'a',
-                statusCode: 503,
-                body: 'blip',
-              ),
-            ),
-            const ScriptedOutcome(response: LlmResponse(content: 'a-steady')),
-          ],
-        );
-        final b = FakeLlmClient(
-          providerName: 'b',
-          outcomes: [
-            const ScriptedOutcome(response: LlmResponse(content: 'b-1')),
-            const ScriptedOutcome(response: LlmResponse(content: 'b-2')),
-            const ScriptedOutcome(response: LlmResponse(content: 'b-3')),
-            const ScriptedOutcome(response: LlmResponse(content: 'b-4')),
-            const ScriptedOutcome(response: LlmResponse(content: 'b-5')),
-          ],
-        );
-        final chain = makeChain([a, b], maxConsecutiveFailures: 3);
-        Future<LlmResponse> ask() =>
-            chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+          ),
+          const ScriptedOutcome(response: LlmResponse(content: 'a-steady')),
+        ],
+      );
+      final b = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'b-1')),
+          const ScriptedOutcome(response: LlmResponse(content: 'b-2')),
+          const ScriptedOutcome(response: LlmResponse(content: 'b-3')),
+          const ScriptedOutcome(response: LlmResponse(content: 'b-4')),
+          const ScriptedOutcome(response: LlmResponse(content: 'b-5')),
+        ],
+      );
+      final chain = makeChain([a, b], maxConsecutiveFailures: 3);
+      Future<LlmResponse> ask() =>
+          chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
 
-        // Three failures trip A's breaker; B serves all three.
-        expect((await ask()).content, 'b-1');
-        expect((await ask()).content, 'b-2');
-        expect((await ask()).content, 'b-3');
-        expect(a.generateCalls, 3);
+      // Three failures trip A's breaker; B serves all three.
+      expect((await ask()).content, 'b-1');
+      expect((await ask()).content, 'b-2');
+      expect((await ask()).content, 'b-3');
+      expect(a.generateCalls, 3);
 
-        // Cooldown elapses -> half-open -> the probe routes back to A.
-        await clock.sleep(60000);
-        expect((await ask()).content, 'a-probe-ok');
+      // Cooldown elapses -> half-open -> the probe routes back to A.
+      await clock.sleep(60000);
+      expect((await ask()).content, 'a-probe-ok');
 
-        // One more failure (503) is NOT enough to re-trip a CLOSED breaker:
-        // B serves, and the NEXT call must go back to A (not skip it).
-        expect((await ask()).content, 'b-4');
-        expect((await ask()).content, 'a-steady');
-        expect(a.generateCalls, 6);
-      },
-    );
+      // One more failure (503) is NOT enough to re-trip a CLOSED breaker:
+      // B serves, and the NEXT call must go back to A (not skip it).
+      expect((await ask()).content, 'b-4');
+      expect((await ask()).content, 'a-steady');
+      expect(a.generateCalls, 6);
+    });
 
-    test(
-      'U16: stream() mid-stream failure on A restarts on B — partial chunks then a complete stream, never silent truncation',
-      () async {
-        final a = FakeLlmClient(
-          providerName: 'a',
-          outcomes: [
-            ScriptedOutcome(
-              chunks: [const LlmResponseChunk(content: 'partial-')],
-              streamError: const LlmNetworkException(
-                provider: 'a',
-                cause: 'reset',
-              ),
-            ),
-          ],
-        );
-        final b = FakeLlmClient(
-          providerName: 'b',
-          outcomes: [
-            ScriptedOutcome(
-              chunks: [
-                const LlmResponseChunk(content: 'full-'),
-                const LlmResponseChunk(content: 'answer', isComplete: true),
-              ],
-            ),
-          ],
-        );
-        final chain = makeChain([a, b]);
+    test('U16: stream() mid-stream failure on A restarts on B — partial chunks '
+        'then a complete stream, never silent truncation', () async {
+      final a = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            chunks: [LlmResponseChunk(content: 'partial-')],
+            streamError: LlmNetworkException(provider: 'a', cause: 'reset'),
+          ),
+        ],
+      );
+      final b = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(
+            chunks: [
+              LlmResponseChunk(content: 'full-'),
+              LlmResponseChunk(content: 'answer', isComplete: true),
+            ],
+          ),
+        ],
+      );
+      final chain = makeChain([a, b]);
 
-        final chunks = await chain
+      final chunks = await chain
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
+
+      // A's partial chunk is preserved, then B's complete stream follows.
+      expect(chunks.map((c) => c.content).toList(), [
+        'partial-',
+        'full-',
+        'answer',
+      ]);
+      expect(chunks.last.isComplete, isTrue);
+      expect(a.streamCalls, 1);
+      expect(b.streamCalls, 1);
+    });
+
+    test('U17: stream() mid-stream policy skip propagates the error to the '
+        'consumer (configurable)', () async {
+      final a = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            chunks: [LlmResponseChunk(content: 'partial-')],
+            streamError: LlmNetworkException(provider: 'a', cause: 'reset'),
+          ),
+        ],
+      );
+      final b = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(
+            chunks: [LlmResponseChunk(content: 'never', isComplete: true)],
+          ),
+        ],
+      );
+      final chain = makeChain([a, b], policyMode: 'skip');
+
+      final collected = <LlmResponseChunk>[];
+      await expectLater(
+        chain
             .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-            .toList();
+            .listen(collected.add)
+            .asFuture<void>(),
+        throwsA(isA<LlmNetworkException>()),
+      );
+      // The consumer saw the partial chunks, then the error — no silent
+      // retry, no phantom completion.
+      expect(collected.map((c) => c.content).toList(), ['partial-']);
+      expect(collected.last.isComplete, isFalse);
+      expect(b.streamCalls, 0);
+    });
 
-        // A's partial chunk is preserved, then B's complete stream follows.
-        expect(chunks.map((c) => c.content).toList(), [
-          'partial-',
-          'full-',
-          'answer',
-        ]);
-        expect(chunks.last.isComplete, isTrue);
-        expect(a.streamCalls, 1);
-        expect(b.streamCalls, 1);
-      },
-    );
+    test('U18: healthSnapshot() returns Map<provider, ClientHealth> matching '
+        'live breaker states', () async {
+      final a = FakeLlmClient(
+        providerName: 'a',
+        outcomes: [
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+          const ScriptedOutcome(
+            error: LlmNetworkException(provider: 'a', cause: 'refused'),
+          ),
+        ],
+      );
+      final b = FakeLlmClient(
+        providerName: 'b',
+        outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'ok')),
+          const ScriptedOutcome(response: LlmResponse(content: 'ok')),
+          const ScriptedOutcome(response: LlmResponse(content: 'ok')),
+        ],
+      );
+      final chain = makeChain([a, b], maxConsecutiveFailures: 3);
 
-    test(
-      'U17: stream() mid-stream policy skip propagates the error to the consumer (configurable)',
-      () async {
-        final a = FakeLlmClient(
-          providerName: 'a',
-          outcomes: [
-            ScriptedOutcome(
-              chunks: [const LlmResponseChunk(content: 'partial-')],
-              streamError: const LlmNetworkException(
-                provider: 'a',
-                cause: 'reset',
-              ),
-            ),
-          ],
-        );
-        final b = FakeLlmClient(
-          providerName: 'b',
-          outcomes: [
-            ScriptedOutcome(
-              chunks: [
-                const LlmResponseChunk(content: 'never', isComplete: true),
-              ],
-            ),
-          ],
-        );
-        final chain = makeChain([a, b], policyMode: 'skip');
+      // Initial snapshot: both closed and healthy.
+      var snapshot = chain.healthSnapshot();
+      expect(snapshot.keys.toList(), ['a', 'b']);
+      expect(snapshot['a']!.state, 'closed');
+      expect(snapshot['b']!.state, 'closed');
 
-        final collected = <LlmResponseChunk>[];
-        await expectLater(
-          chain
-              .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-              .listen(collected.add)
-              .asFuture<void>(),
-          throwsA(isA<LlmNetworkException>()),
-        );
-        // The consumer saw the partial chunks, then the error — no silent
-        // retry, no phantom completion.
-        expect(collected.map((c) => c.content).toList(), ['partial-']);
-        expect(collected.last.isComplete, isFalse);
-        expect(b.streamCalls, 0);
-      },
-    );
+      // Failures flip the snapshot immediately, in real time.
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.state, 'closed');
+      expect(snapshot['a']!.consecutiveFailures, 1);
+      expect(snapshot['b']!.state, 'closed'); // success kept B closed
 
-    test(
-      'U18: healthSnapshot() returns Map<provider, ClientHealth> matching live breaker states',
-      () async {
-        final a = FakeLlmClient(
-          providerName: 'a',
-          outcomes: [
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-            const ScriptedOutcome(
-              error: LlmNetworkException(provider: 'a', cause: 'refused'),
-            ),
-          ],
-        );
-        final b = FakeLlmClient(
-          providerName: 'b',
-          outcomes: [
-            const ScriptedOutcome(response: LlmResponse(content: 'ok')),
-            const ScriptedOutcome(response: LlmResponse(content: 'ok')),
-            const ScriptedOutcome(response: LlmResponse(content: 'ok')),
-          ],
-        );
-        final chain = makeChain([a, b], maxConsecutiveFailures: 3);
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.consecutiveFailures, 2);
 
-        // Initial snapshot: both closed and healthy.
-        var snapshot = chain.healthSnapshot();
-        expect(snapshot.keys.toList(), ['a', 'b']);
-        expect(snapshot['a']!.state, 'closed');
-        expect(snapshot['b']!.state, 'closed');
-
-        // Failures flip the snapshot immediately, in real time.
-        await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
-        snapshot = chain.healthSnapshot();
-        expect(snapshot['a']!.state, 'closed');
-        expect(snapshot['a']!.consecutiveFailures, 1);
-        expect(snapshot['b']!.state, 'closed'); // success kept B closed
-
-        await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
-        snapshot = chain.healthSnapshot();
-        expect(snapshot['a']!.consecutiveFailures, 2);
-
-        await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
-        snapshot = chain.healthSnapshot();
-        expect(snapshot['a']!.state, 'open');
-        expect(snapshot['a']!.isHealthy, isFalse);
-        expect(snapshot['a']!.cooldownWindowMs, 60000);
-        expect(snapshot['a']!.lastFailureAt, isNotNull);
-        expect(snapshot['b']!.state, 'closed');
-        expect(snapshot['b']!.isHealthy, isTrue);
-      },
-    );
+      await chain.generate(LlmRequest(messages: [UserMessage.text('x')]));
+      snapshot = chain.healthSnapshot();
+      expect(snapshot['a']!.state, 'open');
+      expect(snapshot['a']!.isHealthy, isFalse);
+      expect(snapshot['a']!.cooldownWindowMs, 60000);
+      expect(snapshot['a']!.lastFailureAt, isNotNull);
+      expect(snapshot['b']!.state, 'closed');
+      expect(snapshot['b']!.isHealthy, isTrue);
+    });
   });
 }

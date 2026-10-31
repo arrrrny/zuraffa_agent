@@ -5,16 +5,24 @@
 // (TurnRecord, ToolInvocationRecord, UsageLedgerEntry, CompactionEntry,
 // CompactionSummary, Model, etc.) and the abstract SessionStorage interface.
 
-import 'types.dart';
 import 'session_storage.dart';
+import 'types.dart';
 
 /// Context representation reconstructed from the active branch.
 class SessionContext {
+  /// The messages.
   final List<AgentMessage> messages;
+
+  /// The active model.
   final Model? activeModel;
+
+  /// The active thinking level.
   final String? activeThinkingLevel;
+
+  /// The active compaction.
   final CompactionSummary? activeCompaction;
 
+  /// Creates a session context.
   const SessionContext({
     required this.messages,
     this.activeModel,
@@ -30,8 +38,10 @@ class SessionContext {
 /// via [SessionStorage]. A single active leaf pointer tracks which branch
 /// is currently selected.
 class AgentSession {
+  /// The storage.
   final SessionStorage storage;
 
+  /// Creates an agent session.
   AgentSession(this.storage);
 
   /// Initializes the underlying storage.

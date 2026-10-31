@@ -6,7 +6,6 @@
 //
 //   dart run example/minimal_agent.dart
 
-import 'package:zuraffa_agent/zuraffa_agent.dart';
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
@@ -14,14 +13,13 @@ import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/engine/engine_event_bus.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
-import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
-import 'package:zuraffa_agent/src/llm/llm_client.dart';
+import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 import 'engine/echo_llm_client.dart';
 import 'engine/noop_tool_dispatcher.dart';
 
 Future<void> main() async {
-  final loop = const EngineLoop(
+  const loop = EngineLoop(
     id: 'loop-example',
     sessionId: 'session-example',
     maxTurns: 10,

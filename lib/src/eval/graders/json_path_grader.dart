@@ -10,12 +10,15 @@ import 'dart:convert';
 
 import 'grader.dart';
 
+/// The JSON path grader.
 class JsonPathGrader implements Grader {
+  /// The path.
   final String path;
 
   /// The expected value at [path] (compared with `==`).
   final Object? expected;
 
+  /// Creates a JSON path grader.
   const JsonPathGrader({required this.path, required this.expected});
 
   @override

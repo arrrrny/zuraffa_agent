@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/session_branch/session_branch.dart';
 import '../../../domain/services/session_branch_service.dart';
 
+/// The session branch provider.
 class SessionBranchProvider
     with Loggable, FailureHandler
     implements SessionBranchService {
   final SessionBranch _active;
 
+  /// Creates a session branch provider.
   SessionBranchProvider([SessionBranch? active])
     : _active =
           active ??

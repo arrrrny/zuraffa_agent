@@ -245,7 +245,8 @@ Future<void> main(List<String> args) async {
     }
 
     providerReport['drifted'] = providerDrifted;
-    report['providers'][provider.id] = providerReport;
+    final providers = report['providers'] as Map<String, dynamic>;
+    providers[provider.id] = providerReport;
   }
 
   report['drifted'] = drifted;

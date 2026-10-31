@@ -39,6 +39,7 @@ class PlanState {
   /// returns null in that case.
   final String? currentStepId;
 
+  /// Creates a plan state.
   const PlanState({required this.id, required this.steps, this.currentStepId});
 
   /// Total number of steps in the plan.

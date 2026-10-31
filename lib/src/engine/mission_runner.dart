@@ -44,13 +44,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import '../config/zuraffa_config.dart';
 import '../data/datasources/repetition_tracker/repetition_tracker_datasource.dart';
 import '../data/providers/engine_loop/engine_loop_executor.dart';
 import '../domain/entities/llm_client/chat_completion.dart';
 import '../domain/entities/llm_client/chat_message.dart';
-import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
+import '../domain/entities/stop_policy/stop_policy.dart';
 import '../llm/context_compressor.dart';
 import '../llm/llm_client.dart';
 import '../llm/token_estimator.dart';
@@ -61,13 +62,12 @@ import '../observability/metrics.dart';
 import '../observability/traced_adapters.dart';
 import '../observability/tracing.dart';
 import '../retention.dart';
+import '../security/tool_result_sanitizer.dart';
 import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
-import '../config/zuraffa_config.dart';
-import '../security/tool_result_sanitizer.dart';
-import 'cancellation_token.dart';
+import 'cancellation_token';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -108,14 +108,28 @@ enum MissionStatus {
 /// fields with element-wise transcript equality; `toString` renders id,
 /// status, turns, and message count.
 class MissionResult {
+  /// The mission identifier.
   final String missionId;
+
+  /// The status.
   final MissionStatus status;
+
+  /// The turns used.
   final int turnsUsed;
+
+  /// The transcript.
   final List<ChatMessage> transcript;
+
+  /// The summary.
   final String? summary;
+
+  /// The goal.
   final Goal? goal;
+
+  /// Whether goal achieved.
   final bool goalAchieved;
 
+  /// Creates a mission result.
   MissionResult({
     required this.missionId,
     required this.status,
@@ -174,6 +188,7 @@ class MissionResult {
 /// callers inject deterministic planners. The [transcript] handed to
 /// [plan] is an unmodifiable view of the mission transcript so far.
 abstract interface class ToolCallPlanner {
+  /// Returns the tool calls the model wants after the completed turn.
   Future<List<ToolCall>> plan(
     ChatCompletion completion,
     List<ChatMessage> transcript,
@@ -188,6 +203,7 @@ abstract interface class ToolCallPlanner {
 /// mission's queue/policy wired in. Every exit path emits exactly one
 /// terminal [MissionCompleted] — a mission never ends without it.
 class MissionRunner {
+  /// Creates a mission runner.
   MissionRunner({
     required EngineLoopExecutor executor,
     required ToolDispatcher toolDispatcher,

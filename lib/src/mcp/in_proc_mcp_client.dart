@@ -47,6 +47,7 @@ class InProcMcpClient implements McpClient {
 
   McpClientState _state = McpClientState.disconnected;
 
+  /// Creates an in proc MCP client.
   InProcMcpClient({required this.transport});
 
   /// Register a local tool under its descriptor's [McpToolDescriptor.name].

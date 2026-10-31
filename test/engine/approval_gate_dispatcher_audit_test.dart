@@ -21,7 +21,6 @@ import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/entities/approval_request/approval_request.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
-import 'package:zuraffa_agent/src/engine/approval_callback.dart';
 import 'package:zuraffa_agent/src/engine/approval_gate_dispatcher.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/security/audit_hashing.dart';

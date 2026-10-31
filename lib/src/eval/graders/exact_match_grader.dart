@@ -4,9 +4,13 @@ import 'grader.dart';
 
 /// String-equality grader against a pinned expected value.
 class ExactMatchGrader implements Grader {
+  /// The expected.
   final String expected;
+
+  /// Whether trim.
   final bool trim;
 
+  /// Creates an exact match grader.
   const ExactMatchGrader({required this.expected, this.trim = true});
 
   @override
@@ -17,7 +21,7 @@ class ExactMatchGrader implements Grader {
     final actual = trim ? output.trim() : output;
     final target = trim ? expected.trim() : expected;
     if (actual == target) {
-      return GraderResult.pass('exact match');
+      return const GraderResult.pass('exact match');
     }
     return GraderResult.fail(
       'exact match failed — expected: "$target", actual: "$actual"',

@@ -51,13 +51,19 @@ sealed class McpWireRequest {
 
 /// List the server's advertised tools.
 final class McpWireRequestListTools extends McpWireRequest {
+  /// Creates an MCP wire request list tools.
   const McpWireRequestListTools();
 }
 
 /// Invoke a tool by name with the given arguments.
 final class McpWireRequestCallTool extends McpWireRequest {
+  /// The name.
   final String name;
+
+  /// The arguments.
   final Map<String, dynamic> arguments;
+
+  /// Creates an MCP wire request call tool.
   const McpWireRequestCallTool({required this.name, required this.arguments});
 }
 
@@ -69,14 +75,22 @@ sealed class McpWireResponse {
 
 /// Successful response — payload is a JSON-serializable map.
 final class McpWireResponseOk extends McpWireResponse {
+  /// The payload.
   final Map<String, dynamic> payload;
+
+  /// Creates an MCP wire response ok.
   const McpWireResponseOk(this.payload);
 }
 
 /// Error response — short machine code + human-readable message.
 final class McpWireResponseError extends McpWireResponse {
+  /// The code.
   final String code;
+
+  /// The message.
   final String message;
+
+  /// Creates an MCP wire response error.
   const McpWireResponseError({required this.code, required this.message});
 }
 
@@ -87,5 +101,6 @@ sealed class McpWireNotification {
 
 /// The server reports the tool list changed; consumers should re-list.
 final class McpWireNotificationToolsChanged extends McpWireNotification {
+  /// Creates an MCP wire notification tools changed.
   const McpWireNotificationToolsChanged();
 }

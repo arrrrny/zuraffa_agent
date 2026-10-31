@@ -92,12 +92,9 @@ void main() {
             .where((line) => line.isNotEmpty)
             .toList();
         expect(preCloseLines, hasLength(4));
-        expect(
-          jsonDecode(
-            preCloseLines.first,
-          )[SessionSchema.headerKey]['schemaVersion'],
-          SessionSchema.currentVersion,
-        );
+        final header = jsonDecode(preCloseLines.first) as Map<String, dynamic>;
+        final schema = header[SessionSchema.headerKey] as Map<String, dynamic>;
+        expect(schema['schemaVersion'], SessionSchema.currentVersion);
 
         await store.close();
 
@@ -107,8 +104,10 @@ void main() {
             .map((line) => line.trim())
             .where((line) => line.isNotEmpty)
             .toList();
-        expect(jsonDecode(postCloseLines[1])['_meta'], isTrue);
-        expect(jsonDecode(postCloseLines[1])['activeLeafId'], 'e_3');
+        final postHeader =
+            jsonDecode(postCloseLines[1]) as Map<String, dynamic>;
+        expect(postHeader['_meta'], isTrue);
+        expect(postHeader['activeLeafId'], 'e_3');
 
         // --- Session 2: a FRESH instance against the SAME path — the
         // simulated process restart. Every field must come back.

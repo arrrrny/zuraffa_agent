@@ -29,6 +29,7 @@ class UiCaps {
   /// Maximum total node count (root inclusive).
   final int? nodes;
 
+  /// Creates a UI caps.
   const UiCaps({this.depth, this.nodes});
 
   /// Returns `true` when at least one dimension is capped.
@@ -70,6 +71,7 @@ class UiSpec {
   /// Optional tree shape caps. See [UiCaps].
   final UiCaps? caps;
 
+  /// Creates a UI spec.
   UiSpec({required this.vocabulary, this.allowedComponents, this.caps}) {
     if (vocabulary.isEmpty) {
       throw ArgumentError.value(vocabulary, 'vocabulary', 'must not be empty');
@@ -225,10 +227,16 @@ enum UiVocabularyPinErrorKind {
 /// (the plugin, issue #8 §6) decides the disposition — throw, redact, or
 /// surface the list as diagnostics.
 class UiVocabularyPinError {
+  /// The kind.
   final UiVocabularyPinErrorKind kind;
+
+  /// The field.
   final String field;
+
+  /// The reason.
   final String reason;
 
+  /// Creates a UI vocabulary pin error.
   const UiVocabularyPinError({
     required this.kind,
     required this.field,

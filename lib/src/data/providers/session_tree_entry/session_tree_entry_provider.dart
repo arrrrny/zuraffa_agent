@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/session_tree_entry/session_tree_entry.dart';
 import '../../../domain/services/session_tree_entry_service.dart';
 
+/// The session tree entry provider.
 class SessionTreeEntryProvider
     with Loggable, FailureHandler
     implements SessionTreeEntryService {
   final SessionTreeEntry _active;
 
+  /// Creates a session tree entry provider.
   SessionTreeEntryProvider([SessionTreeEntry? active])
     : _active =
           active ??

@@ -294,7 +294,7 @@ void main() {
         final tracker = LastLlmErrorTracker(
           clock: () => DateTime.utc(2026, 1, 1),
         );
-        final outage = LlmNetworkException(provider: 'p1', cause: 'reset');
+        const outage = LlmNetworkException(provider: 'p1', cause: 'reset');
         final chain = FallbackChainClient(
           providers: [
             (id: 'p1', client: ScriptedLlmClient('p1', error: outage)),
@@ -328,7 +328,7 @@ void main() {
               id: 'p1',
               client: ScriptedLlmClient(
                 'p1',
-                error: LlmNetworkException(provider: 'p1', cause: 'down'),
+                error: const LlmNetworkException(provider: 'p1', cause: 'down'),
               ),
             ),
             (id: 'p2', client: ScriptedLlmClient('p2')),
@@ -350,7 +350,7 @@ void main() {
     test('the /health rendering is bounded and drops the HTTP body', () async {
       final tracker = LastLlmErrorTracker();
       tracker.recordError(
-        LlmHttpException(
+        const LlmHttpException(
           provider: 'kilo',
           statusCode: 500,
           body: 'SECRET-PROMPT-CONTENT-EMBEDDED-IN-BODY',

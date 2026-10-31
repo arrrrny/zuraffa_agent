@@ -18,8 +18,6 @@
 // All randomness is seeded (see property_harness.dart) — CI-stable.
 library;
 
-import 'dart:math';
-
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/pass_at_k/pass_at_k.dart';
 

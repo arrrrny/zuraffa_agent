@@ -17,7 +17,6 @@ import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
-import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/llm/circuit_breaker.dart';
@@ -176,9 +175,9 @@ void main() {
         messages: const [ChatMessage(role: 'user', content: 'go')],
         planner: ScriptedPlanner({
           1: [
-            ToolCall(
+            const ToolCall(
               toolName: 'search',
-              arguments: const {},
+              arguments: {},
               executionMode: 'sequential',
             ),
           ],
@@ -254,9 +253,9 @@ void main() {
           messages: const [ChatMessage(role: 'user', content: 'go')],
           planner: ScriptedPlanner({
             1: [
-              ToolCall(
+              const ToolCall(
                 toolName: 'bad',
-                arguments: const {},
+                arguments: {},
                 executionMode: 'sequential',
               ),
             ],

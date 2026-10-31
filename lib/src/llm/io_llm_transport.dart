@@ -19,6 +19,7 @@ import 'llm_transport.dart';
 
 /// dart:io-backed [LlmTransport] (spec 007 plan: `io_llm_transport.dart`).
 class IoLlmTransport implements LlmTransport {
+  /// The provider.
   final String provider;
   final HttpClient _client;
 

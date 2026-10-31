@@ -25,6 +25,7 @@ abstract class SecretResolver {
 
 /// The shipped no-op resolver: every source reports absence.
 class NullSecretResolver implements SecretResolver {
+  /// Creates a null secret resolver.
   const NullSecretResolver();
 
   @override

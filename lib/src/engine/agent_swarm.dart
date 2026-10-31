@@ -68,10 +68,16 @@ enum SwarmStatus {
 /// it. [id] is the member's identity — the synthesized instance id and the
 /// event-attribution key — and must be unique within a swarm.
 class SwarmTask {
+  /// The identifier.
   final String id;
+
+  /// The spec.
   final SubAgentSpec spec;
+
+  /// The mission.
   final String mission;
 
+  /// Creates a swarm task.
   const SwarmTask({
     required this.id,
     required this.spec,
@@ -97,11 +103,19 @@ class SwarmTask {
 
 /// One member's outcome inside a swarm run.
 class SwarmTaskResult {
+  /// The task identifier.
   final String taskId;
+
+  /// The spec name.
   final String specName;
+
+  /// The status.
   final SubAgentDispatchStatus status;
+
+  /// The summary.
   final String? summary;
 
+  /// Creates a swarm task result.
   const SwarmTaskResult({
     required this.taskId,
     required this.specName,
@@ -133,12 +147,22 @@ class SwarmTaskResult {
 //  strategies), the [winner] on firstCompleted, and the [completedCount]
 /// of successful members.
 class SwarmResult {
+  /// The strategy.
   final SwarmStrategy strategy;
+
+  /// The status.
   final SwarmStatus status;
+
+  /// The results.
   final List<SwarmTaskResult> results;
+
+  /// The winner.
   final SwarmTaskResult? winner;
+
+  /// The completed count.
   final int completedCount;
 
+  /// Creates a swarm result.
   SwarmResult({
     required this.strategy,
     required this.status,
@@ -186,6 +210,7 @@ class SwarmResult {
 /// Runs agent swarms: concurrent fan-out over the sub-agent dispatch
 /// service with strategy-based aggregation.
 class AgentSwarm {
+  /// Creates an agent swarm.
   AgentSwarm({required SubAgentDispatchService dispatchService})
     : _dispatchService = dispatchService;
 

@@ -9,7 +9,6 @@ import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.da
 import 'package:zuraffa_agent/src/mcp/in_proc_mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
 import 'package:zuraffa_agent/src/mcp/sse_mcp_client.dart';
@@ -56,7 +55,7 @@ class FlakyMcpWire implements McpWire {
     if (sends <= failTimes) {
       return McpWireResponseError(code: code, message: 'transient trouble');
     }
-    return McpWireResponseOk(const {'tools': <Map<String, dynamic>>[]});
+    return const McpWireResponseOk({'tools': <Map<String, dynamic>>[]});
   }
 
   @override
@@ -164,10 +163,10 @@ void main() {
       final result = await client.callTool(
         'ro.hang',
         const {},
-        options: McpCallOptions(
-          timeout: const Duration(milliseconds: 50),
+        options: const McpCallOptions(
+          timeout: Duration(milliseconds: 50),
           readOnly: true,
-          retry: const McpRetryConfig(maxAttempts: 3, backoff: Duration.zero),
+          retry: McpRetryConfig(maxAttempts: 3, backoff: Duration.zero),
         ),
       );
       expect((result as McpCallError).code, 'timeout');
@@ -265,8 +264,8 @@ void main() {
       const ro = McpToolDescriptor(name: 'a', description: 'b', readOnly: true);
       expect(ro.readOnly, isTrue);
       expect(
-        McpToolDescriptor(name: 'a', description: 'b', readOnly: true),
-        McpToolDescriptor(name: 'a', description: 'b', readOnly: true),
+        const McpToolDescriptor(name: 'a', description: 'b', readOnly: true),
+        const McpToolDescriptor(name: 'a', description: 'b', readOnly: true),
       );
     });
   });

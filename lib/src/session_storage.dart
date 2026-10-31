@@ -7,13 +7,19 @@ import 'types.dart';
 /// Bump [currentVersion] and register a migration step on every schema
 /// change — see ARCHITECTURE.md for the migration policy.
 abstract final class SessionSchema {
+  /// The current version.
   static const int currentVersion = 3;
+
+  /// The header key.
   static const String headerKey = '_schema';
 }
 
 /// Result metadata returned when opening a storage datasource.
 class StoreOpenResult {
+  /// The loaded entries count.
   final int loadedEntriesCount;
+
+  /// The tear report.
   final JsonlTear? tearReport;
 
   /// The schema version the store is at after `init()` completed (spec 110).
@@ -23,6 +29,7 @@ class StoreOpenResult {
   /// Null when the store was already current (or brand new).
   final int? migratedFromVersion;
 
+  /// Creates a store open result.
   const StoreOpenResult({
     required this.loadedEntriesCount,
     this.tearReport,
@@ -33,10 +40,16 @@ class StoreOpenResult {
 
 /// Diagnostic information when a corrupt JSONL tail is salvaged.
 class JsonlTear {
+  /// The line number.
   final int lineNumber;
+
+  /// The reason.
   final String reason;
+
+  /// The salvaged entry count.
   final int salvagedEntryCount;
 
+  /// Creates a jsonl tear.
   const JsonlTear({
     required this.lineNumber,
     required this.reason,

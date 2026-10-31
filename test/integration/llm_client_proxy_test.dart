@@ -34,9 +34,9 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
-import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 
 /// Returns true if the proxy host:port accepts a TCP connection quickly.
 Future<bool> _proxyReachable(String proxyUrl) async {
@@ -83,7 +83,7 @@ void main() {
         apiKey: apiKey,
         proxyUrl: proxyUrl,
       );
-      final client = await provider.current(NoParams());
+      final client = await provider.current(const NoParams());
       expect(client.model, model);
     }, skip: skipReason);
 
@@ -112,7 +112,8 @@ void main() {
       expect(completion.finishReason, isNotEmpty);
       expect(completion.usage.totalTokens, greaterThan(0));
       print(
-        '[integration] model=${completion.usage} content="${completion.content}"',
+        '[integration] model=${completion.usage} content="'
+        '${completion.content}"',
       );
     }, skip: skipReason);
   });

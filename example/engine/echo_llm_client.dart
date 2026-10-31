@@ -1,9 +1,9 @@
 // A scripted LLM client: no network, no API key. It echoes the last
 // user message back as the completion content and finishes the mission.
 
-import 'package:zuraffa_agent/zuraffa_agent.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
+import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 class EchoLlmClient extends LlmClientProvider {
   EchoLlmClient()

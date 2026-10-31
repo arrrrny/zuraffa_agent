@@ -1,21 +1,36 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// SubAgentInstance (resumable) value object - spec-exact from epic #1 §R5 (issue #6).
+// SubAgentInstance (resumable) value object - spec-exact from epic #1 §R5
+// (issue #6). Pattern mirrors the SteeringMessage / SteeringQueue value objects
+// (PR for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
 /// SubAgentInstance (resumable) value object.
 ///
-/// Resumable sub-agent instance — persists across engine restarts, can be resumed by id (epic #5 §R5.2, issue #6 US2). Tracks last-run outcome, total runs, parent reference.
+/// Resumable sub-agent instance — persists across engine restarts, can be
+/// resumed by id (epic #5 §R5.2, issue #6 US2). Tracks last-run outcome, total
+/// runs, parent reference.
 class SubAgentInstance {
+  /// The identifier.
   final String id;
+
+  /// The sub agent spec identifier.
   final String subAgentSpecId;
+
+  /// The parent session identifier.
   final String parentSessionId;
+
+  /// The total runs.
   final int totalRuns;
+
+  /// The last run outcome.
   final String? lastRunOutcome;
 
+  /// Creates a sub agent instance.
   const SubAgentInstance({
     required this.id,
     required this.subAgentSpecId,
@@ -69,5 +84,6 @@ class SubAgentInstance {
 
   @override
   String toString() =>
-      'SubAgentInstance(id: $id, subAgentSpecId: $subAgentSpecId, parentSessionId: $parentSessionId)';
+      'SubAgentInstance(id: $id, subAgentSpecId: $subAgentSpecId, '
+      'parentSessionId: $parentSessionId)';
 }

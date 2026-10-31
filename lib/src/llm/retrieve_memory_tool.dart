@@ -9,12 +9,19 @@ import 'llm_client.dart';
 
 /// A single row of a paginated memory listing: identity + summary + message
 /// count, deliberately WITHOUT the original messages (the model follows up
-/// with a snapshot_id lookup when it needs the full originals — spec 010 FR-004).
+/// with a snapshot_id lookup when it needs the full originals — spec 010
+/// FR-004).
 class RetrieveMemoryListingItem {
+  /// The identifier.
   final String id;
+
+  /// The summary.
   final String summary;
+
+  /// The message count.
   final int messageCount;
 
+  /// Creates a retrieve memory listing item.
   const RetrieveMemoryListingItem({
     required this.id,
     required this.summary,
@@ -23,14 +30,24 @@ class RetrieveMemoryListingItem {
 }
 
 /// Typed error codes for retrieve_memory results (spec 010 FR-002).
-enum RetrieveMemoryErrorCode { notFound, invalidParameters }
+enum RetrieveMemoryErrorCode {
+  /// The requested memory was not found.
+  notFound,
+
+  /// The query parameters were invalid.
+  invalidParameters,
+}
 
 /// A typed retrieve_memory failure — never thrown; the engine renders it as
 /// the tool result so a misbehaving model call degrades gracefully.
 class RetrieveMemoryError {
+  /// The code.
   final RetrieveMemoryErrorCode code;
+
+  /// The message.
   final String message;
 
+  /// Creates a retrieve memory error.
   const RetrieveMemoryError({required this.code, required this.message});
 }
 
@@ -51,6 +68,7 @@ class RetrieveMemoryResult {
   /// The typed error, if any.
   final RetrieveMemoryError? error;
 
+  /// Creates a retrieve memory result.
   const RetrieveMemoryResult({
     required this.found,
     this.memory,
@@ -70,8 +88,10 @@ class RetrieveMemoryResult {
 /// The [spec] surface is an [LlmToolSpec] (spec 007 tool shape) the engine
 /// advertises to the model; [execute] is the engine-side invocation.
 class RetrieveMemoryTool {
+  /// The store.
   final EpisodicMemoryStore store;
 
+  /// Creates a retrieve memory tool.
   RetrieveMemoryTool({required this.store});
 
   /// The tool definition advertised to the model.

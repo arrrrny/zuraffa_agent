@@ -10,6 +10,7 @@ import 'package:zuraffa/zuraffa.dart';
 
 import '../entities/stop_policy/stop_policy.dart';
 
+/// The stop policy service.
 abstract class StopPolicyService with Loggable, FailureHandler {
   /// Returns the currently active [StopPolicy].
   Future<StopPolicy> current(NoParams params);

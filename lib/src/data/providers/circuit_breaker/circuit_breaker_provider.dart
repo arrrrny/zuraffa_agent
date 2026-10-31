@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/circuit_breaker/circuit_breaker.dart';
 import '../../../domain/services/circuit_breaker_service.dart';
 
+/// The circuit breaker provider.
 class CircuitBreakerProvider
     with Loggable, FailureHandler
     implements CircuitBreakerService {
   final CircuitBreaker _active;
 
+  /// Creates a circuit breaker provider.
   CircuitBreakerProvider([CircuitBreaker? active])
     : _active =
           active ??

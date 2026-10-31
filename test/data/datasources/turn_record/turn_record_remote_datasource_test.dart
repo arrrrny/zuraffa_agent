@@ -11,10 +11,9 @@ import 'dart:io';
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart'
     show DeleteParams, ListQueryParams, QueryParams, UpdateParams;
-
-import 'package:zuraffa_agent/src/domain/entities/turn_record/turn_record.dart';
 import 'package:zuraffa_agent/src/data/datasources/turn_record/turn_record_datasource.dart';
 import 'package:zuraffa_agent/src/data/datasources/turn_record/turn_record_remote_datasource.dart';
+import 'package:zuraffa_agent/src/domain/entities/turn_record/turn_record.dart';
 
 TurnRecord make(String id, {int turnNumber = 1}) => TurnRecord(
   id: id,
@@ -38,14 +37,14 @@ void main() {
       final ds = TurnRecordRemoteDataSource();
       final created = await ds.create(make('a'));
       expect(created.id, 'a');
-      final fetched = await ds.get(QueryParams(params: {'id': 'a'}));
+      final fetched = await ds.get(const QueryParams(params: {'id': 'a'}));
       expect(fetched, same(created));
     });
 
     test('get throws StateError for a missing id', () async {
       final ds = TurnRecordRemoteDataSource();
       expect(
-        () => ds.get(QueryParams(params: {'id': 'nope'})),
+        () => ds.get(const QueryParams(params: {'id': 'nope'})),
         throwsA(isA<StateError>()),
       );
     });
@@ -73,7 +72,7 @@ void main() {
       );
       expect(updated.turnNumber, 9);
 
-      final fetched = await ds.get(QueryParams(params: {'id': 'a'}));
+      final fetched = await ds.get(const QueryParams(params: {'id': 'a'}));
       expect(fetched.turnNumber, 9);
     });
 
@@ -90,9 +89,9 @@ void main() {
     test('delete removes the entity from the store', () async {
       final ds = TurnRecordRemoteDataSource();
       await ds.create(make('a'));
-      await ds.delete(DeleteParams(id: 'a'));
+      await ds.delete(const DeleteParams(id: 'a'));
       expect(
-        () => ds.get(QueryParams(params: {'id': 'a'})),
+        () => ds.get(const QueryParams(params: {'id': 'a'})),
         throwsA(isA<StateError>()),
       );
     });
@@ -118,7 +117,7 @@ void main() {
       await a.create(make('p1', turnNumber: 1));
 
       final b = TurnRecordRemoteDataSource(path: path);
-      final fetched = await b.get(QueryParams(params: {'id': 'p1'}));
+      final fetched = await b.get(const QueryParams(params: {'id': 'p1'}));
       expect(fetched.id, 'p1');
       expect(fetched.turnNumber, 1);
     });
@@ -131,13 +130,13 @@ void main() {
       );
 
       final b = TurnRecordRemoteDataSource(path: path);
-      final updated = await b.get(QueryParams(params: {'id': 'p2'}));
+      final updated = await b.get(const QueryParams(params: {'id': 'p2'}));
       expect(updated.turnNumber, 7);
 
-      await b.delete(DeleteParams(id: 'p2'));
+      await b.delete(const DeleteParams(id: 'p2'));
       final c = TurnRecordRemoteDataSource(path: path);
       expect(
-        () => c.get(QueryParams(params: {'id': 'p2'})),
+        () => c.get(const QueryParams(params: {'id': 'p2'})),
         throwsA(isA<StateError>()),
       );
     });

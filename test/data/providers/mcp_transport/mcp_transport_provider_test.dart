@@ -1,27 +1,24 @@
 // HAND-CURATED regression tests for the McpTransport value object +
 // McpTransportProvider stub + SSE/stdio transport stubs. Pattern mirrors spec 033.
 
-import 'dart:async';
-
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/mcp_transport/mcp_transport_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
 import 'package:zuraffa_agent/src/domain/services/mcp_transport_service.dart';
-import 'package:zuraffa_agent/src/data/providers/mcp_transport/mcp_transport_provider.dart';
 import 'package:zuraffa_agent/src/mcp/io_sse_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#4 - McpTransport value equality', () {
     test('McpTransport equality is value-based across all fields', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: 'id-a',
         transportType: 'sse',
         endpoint: 'http://localhost:8080/sse',
         authRequired: true,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: 'id-a',
         transportType: 'sse',
         endpoint: 'http://localhost:8080/sse',
@@ -32,13 +29,13 @@ void main() {
     });
 
     test('McpTransport inequality differs when a field changes', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: 'id-a',
         transportType: 'sse',
         endpoint: 'http://localhost:8080/sse',
         authRequired: true,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: 'id-b',
         transportType: 'stdio',
         endpoint: 'http://localhost:8080/sse',
@@ -48,13 +45,13 @@ void main() {
     });
 
     test('McpTransport inequality detected per-field: id', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://x',
         authRequired: false,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: '2',
         transportType: 'sse',
         endpoint: 'http://x',
@@ -64,13 +61,13 @@ void main() {
     });
 
     test('McpTransport inequality detected per-field: transportType', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://x',
         authRequired: false,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: '1',
         transportType: 'stdio',
         endpoint: 'http://x',
@@ -80,13 +77,13 @@ void main() {
     });
 
     test('McpTransport inequality detected per-field: endpoint', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://a',
         authRequired: false,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://b',
@@ -96,13 +93,13 @@ void main() {
     });
 
     test('McpTransport inequality detected per-field: authRequired', () {
-      final a = McpTransport(
+      const a = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://x',
         authRequired: true,
       );
-      final b = McpTransport(
+      const b = McpTransport(
         id: '1',
         transportType: 'sse',
         endpoint: 'http://x',
@@ -114,7 +111,7 @@ void main() {
 
   group('arrarrny/zuraffa_agent#4 - McpTransport toString', () {
     test('toString includes id, transportType, and endpoint', () {
-      final t = McpTransport(
+      const t = McpTransport(
         id: 'sse-1',
         transportType: 'sse',
         endpoint: 'http://localhost:9000/mcp',
@@ -134,7 +131,7 @@ void main() {
     });
 
     test('McpTransportProvider.current returns the active transport', () async {
-      final transport = await McpTransportProvider().current(NoParams());
+      final transport = await McpTransportProvider().current(const NoParams());
       expect(transport, isA<McpTransport>());
       expect(transport.id, 'inproc');
       expect(transport.transportType, 'in-proc');
@@ -143,7 +140,7 @@ void main() {
     });
 
     test('McpTransportProvider honors an injected active transport', () async {
-      final injected = const McpTransport(
+      const injected = McpTransport(
         id: 'remote',
         transportType: 'sse',
         endpoint: 'http://localhost:8080/sse',
@@ -151,12 +148,12 @@ void main() {
       );
       final transport = await McpTransportProvider(
         injected,
-      ).current(NoParams());
+      ).current(const NoParams());
       expect(transport, same(injected));
     });
 
     test('McpTransportProvider.count returns 1', () async {
-      expect(await McpTransportProvider().count(NoParams()), 1);
+      expect(await McpTransportProvider().count(const NoParams()), 1);
     });
   });
 

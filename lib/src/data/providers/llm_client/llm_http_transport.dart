@@ -20,10 +20,16 @@ import '../../../llm/sse_chat_chunk_parser.dart';
 
 /// Raised when a completion request fails at the transport layer.
 class LlmTransportException implements Exception {
+  /// The status code.
   final int? statusCode;
+
+  /// The body.
   final String body;
+
+  /// The message.
   final String message;
 
+  /// Creates an LLM transport exception.
   LlmTransportException({
     this.statusCode,
     required this.body,
@@ -32,7 +38,8 @@ class LlmTransportException implements Exception {
 
   @override
   String toString() =>
-      'LlmTransportException(${statusCode ?? 'network'}: $message)${body.isNotEmpty ? '\n$body' : ''}';
+      'LlmTransportException(${statusCode ?? 'network'}: $message)'
+      '${body.isNotEmpty ? '\n$body' : ''}';
 }
 
 /// Builds an OpenAI-compatible chat-completion request body.
@@ -117,6 +124,7 @@ class LlmHttpTransport {
   /// Factory for the underlying [HttpClient]; injectable for tests.
   final HttpClient Function() clientFactory;
 
+  /// Creates an LLM HTTP transport.
   LlmHttpTransport({HttpClient Function()? clientFactory})
     : clientFactory = clientFactory ?? (() => HttpClient());
 

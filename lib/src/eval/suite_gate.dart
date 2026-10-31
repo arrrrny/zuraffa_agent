@@ -14,6 +14,7 @@ import '../domain/entities/suite/suite.dart';
 
 /// Sample counts observed for one task: [n] runs of which [c] were correct.
 class TaskSamples {
+  /// Creates a task samples.
   const TaskSamples({required this.n, required this.c});
 
   /// Total samples drawn for the task.
@@ -39,6 +40,7 @@ class TaskSamples {
 
 /// One row of a gate decision's breakdown.
 class TaskGateResult {
+  /// Creates a task gate result.
   const TaskGateResult({
     required this.taskId,
     required this.passAtK,
@@ -65,6 +67,7 @@ class TaskGateResult {
 
 /// The verdict for one suite run.
 class GateDecision {
+  /// Creates a gate decision.
   const GateDecision({
     required this.suiteId,
     required this.score,

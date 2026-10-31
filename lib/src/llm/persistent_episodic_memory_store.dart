@@ -26,8 +26,10 @@ const kEpisodicMemoryCustomType = 'episodic_memory';
 /// hierarchy stays untouched. Older sessions without such entries restore to
 /// an empty memory store.
 class PersistentEpisodicMemoryStore extends EpisodicMemoryStore {
+  /// The storage.
   final SessionStorage storage;
 
+  /// Creates a persistent episodic memory store.
   PersistentEpisodicMemoryStore({required this.storage});
 
   @override

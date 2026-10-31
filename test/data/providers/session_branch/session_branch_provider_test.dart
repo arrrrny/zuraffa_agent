@@ -3,21 +3,21 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/session_branch/session_branch_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/session_branch/session_branch.dart';
 import 'package:zuraffa_agent/src/domain/services/session_branch_service.dart';
-import 'package:zuraffa_agent/src/data/providers/session_branch/session_branch_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#3 - SessionBranch value equality', () {
     test('SessionBranch equality is value-based across all fields', () {
-      final a = SessionBranch(
+      const a = SessionBranch(
         id: 'id-a',
         sessionId: 'sess-1',
         forkedFromEntryId: 'ref-1',
         forkedAt: 10,
         isActive: true,
       );
-      final b = SessionBranch(
+      const b = SessionBranch(
         id: 'id-a',
         sessionId: 'sess-1',
         forkedFromEntryId: 'ref-1',
@@ -29,14 +29,14 @@ void main() {
     });
 
     test('SessionBranch inequality differs when a field changes', () {
-      final a = SessionBranch(
+      const a = SessionBranch(
         id: 'id-a',
         sessionId: 'sess-1',
         forkedFromEntryId: 'ref-1',
         forkedAt: 10,
         isActive: true,
       );
-      final b = SessionBranch(
+      const b = SessionBranch(
         id: 'id-b',
         sessionId: 'sess-2',
         forkedFromEntryId: 'ref-2',
@@ -54,7 +54,7 @@ void main() {
     });
 
     test('SessionBranchProvider.current returns the active branch', () async {
-      final branch = await SessionBranchProvider().current(NoParams());
+      final branch = await SessionBranchProvider().current(const NoParams());
       expect(branch, isA<SessionBranch>());
       expect(branch.id, 'branch-default');
       expect(branch.sessionId, 'session-default');
@@ -64,19 +64,22 @@ void main() {
     test(
       'SessionBranchProvider.current returns a supplied active branch',
       () async {
-        final active = SessionBranch(
+        const active = SessionBranch(
           id: 'branch-x',
           sessionId: 'sess-x',
           forkedFromEntryId: 'entry-x',
           forkedAt: 42,
           isActive: false,
         );
-        expect(await SessionBranchProvider(active).current(NoParams()), active);
+        expect(
+          await SessionBranchProvider(active).current(const NoParams()),
+          active,
+        );
       },
     );
 
     test('SessionBranchProvider.count returns 1', () async {
-      expect(await SessionBranchProvider().count(NoParams()), 1);
+      expect(await SessionBranchProvider().count(const NoParams()), 1);
     });
   });
 }

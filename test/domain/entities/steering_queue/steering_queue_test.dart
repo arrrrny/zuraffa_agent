@@ -25,23 +25,22 @@ void main() {
   SteeringMessage msg(String id, String content, DateTime at) =>
       SteeringMessage(id: id, content: content, injectedAt: at);
 
-  group('spec 033 — SteeringQueue defensive immutability + enqueue (cycle 1)', () {
-    test(
-      'A1: enqueue on an empty queue yields head==message, isEmpty false, lastInjectedAt stamped',
-      () {
-        final queue = SteeringQueue(
-          id: 'q-1',
-          pending: const [],
-          processedCount: 0,
-        );
-        final m = msg('m-1', 'also summarise', t1);
-        final enqueued = queue.enqueue(m);
-        expect(enqueued.pendingCount, 1);
-        expect(enqueued.head, m);
-        expect(enqueued.isEmpty, isFalse);
-        expect(enqueued.lastInjectedAt, t1);
-      },
-    );
+  group('spec 033 — SteeringQueue defensive immutability + enqueue '
+      '(cycle 1)', () {
+    test('A1: enqueue on an empty queue yields head==message, isEmpty false, '
+        'lastInjectedAt stamped', () {
+      final queue = SteeringQueue(
+        id: 'q-1',
+        pending: const [],
+        processedCount: 0,
+      );
+      final m = msg('m-1', 'also summarise', t1);
+      final enqueued = queue.enqueue(m);
+      expect(enqueued.pendingCount, 1);
+      expect(enqueued.head, m);
+      expect(enqueued.isEmpty, isFalse);
+      expect(enqueued.lastInjectedAt, t1);
+    });
 
     test(
       'A2: enqueue on a loaded queue appends FIFO (head stays the first)',
@@ -66,7 +65,8 @@ void main() {
     );
 
     test(
-      'A3: enqueue leaves the source snapshot fully unchanged (no state lost mid-turn)',
+      'A3: enqueue leaves the source snapshot fully unchanged (no state lost '
+      'mid-turn)',
       () {
         final m1 = msg('m-1', 'first', t1);
         final queue = SteeringQueue(
@@ -82,23 +82,21 @@ void main() {
       },
     );
 
-    test(
-      'U1: mutating the constructor source list after construction does not affect the queue',
-      () {
-        final source = <SteeringMessage>[msg('m-1', 'first', t1)];
-        final queue = SteeringQueue(
-          id: 'q-1',
-          pending: source,
-          processedCount: 0,
-        );
-        source.add(msg('m-2', 'smuggled', t2));
-        expect(
-          queue.pendingCount,
-          1,
-          reason: 'the queue defensively copied its pending list',
-        );
-      },
-    );
+    test('U1: mutating the constructor source list after construction does not '
+        'affect the queue', () {
+      final source = <SteeringMessage>[msg('m-1', 'first', t1)];
+      final queue = SteeringQueue(
+        id: 'q-1',
+        pending: source,
+        processedCount: 0,
+      );
+      source.add(msg('m-2', 'smuggled', t2));
+      expect(
+        queue.pendingCount,
+        1,
+        reason: 'the queue defensively copied its pending list',
+      );
+    });
 
     test('U2: direct writes to queue.pending throw (unmodifiable view)', () {
       final queue = SteeringQueue(
@@ -200,27 +198,25 @@ void main() {
   group(
     'spec 033 — SteeringQueue + SteeringMessage persistence contract (cycle 3)',
     () {
-      test(
-        'A7: a populated queue round-trips JSON incl. FIFO order and processedCount',
-        () {
-          final m1 = msg('m-1', 'first', t1);
-          final m2 = msg('m-2', 'second', t2);
-          final queue = SteeringQueue(
-            id: 'q-1',
-            pending: [m1, m2],
-            processedCount: 3,
-            lastInjectedAt: t2,
-          );
-          final parsed = SteeringQueue.fromJson(queue.toJson());
-          expect(parsed, equals(queue));
-          expect(
-            parsed.pending.first.content,
-            'first',
-            reason: 'FIFO order survives the round-trip',
-          );
-          expect(parsed.processedCount, 3);
-        },
-      );
+      test('A7: a populated queue round-trips JSON incl. FIFO order and '
+          'processedCount', () {
+        final m1 = msg('m-1', 'first', t1);
+        final m2 = msg('m-2', 'second', t2);
+        final queue = SteeringQueue(
+          id: 'q-1',
+          pending: [m1, m2],
+          processedCount: 3,
+          lastInjectedAt: t2,
+        );
+        final parsed = SteeringQueue.fromJson(queue.toJson());
+        expect(parsed, equals(queue));
+        expect(
+          parsed.pending.first.content,
+          'first',
+          reason: 'FIFO order survives the round-trip',
+        );
+        expect(parsed.processedCount, 3);
+      });
 
       test(
         'A8: an empty queue serializes lastInjectedAt absent and restores null',
@@ -250,7 +246,8 @@ void main() {
       );
 
       test(
-        'U5: malformed queue JSON throws ArgumentError (missing id, non-list pending, non-map entry)',
+        'U5: malformed queue JSON throws ArgumentError (missing id, non-list '
+        'pending, non-map entry)',
         () {
           expect(
             () => SteeringQueue.fromJson(const {

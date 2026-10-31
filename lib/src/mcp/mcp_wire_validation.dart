@@ -39,6 +39,7 @@ final class McpWireValidator {
   /// Maximum accepted response body size, in UTF-8 bytes.
   final int maxResponseBytes;
 
+  /// Creates an MCP wire validator.
   const McpWireValidator({
     this.maxResponseBytes = defaultMcpWireMaxResponseBytes,
   });
@@ -91,7 +92,7 @@ final class McpWireValidator {
       // `tools/list` / `tools/call` results are objects in the dialect
       // contract; anything else is an arbitrary shape and is rejected
       // instead of being silently mapped to an empty payload.
-      return McpWireResponseError(
+      return const McpWireResponseError(
         code: 'protocol-violation',
         message:
             'MCP wire: invalid JSON-RPC envelope — "result" must be '

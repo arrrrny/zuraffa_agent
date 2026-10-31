@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import '../../../domain/services/sub_agent_instance_service.dart';
 
+/// The sub agent instance provider.
 class SubAgentInstanceProvider
     with Loggable, FailureHandler
     implements SubAgentInstanceService {
   final SubAgentInstance _active;
 
+  /// Creates a sub agent instance provider.
   SubAgentInstanceProvider([SubAgentInstance? active])
     : _active =
           active ??

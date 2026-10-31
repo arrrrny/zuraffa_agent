@@ -12,15 +12,32 @@ import '../security/audit_log.dart';
 import 'llm_clock.dart';
 
 /// Breaker states (spec 008 US2): closed -> open -> half-open -> closed.
-enum CircuitState { closed, open, halfOpen }
+enum CircuitState {
+  /// Requests flow normally.
+  closed,
+
+  /// Requests fail fast until the cooldown elapses.
+  open,
+
+  /// A trial request decides whether to close again.
+  halfOpen,
+}
 
 /// Independent per-provider circuit breaker (spec 008 FR-002).
 class CircuitBreaker {
+  /// The provider identifier.
   final String providerId;
+
+  /// The max consecutive failures.
   final int maxConsecutiveFailures;
+
+  /// The cooldown window ms.
   final int cooldownWindowMs;
+
+  /// The clock.
   final LlmClock clock;
 
+  /// Creates a circuit breaker.
   CircuitBreaker({
     required this.providerId,
     this.maxConsecutiveFailures = 3,
@@ -48,6 +65,7 @@ class CircuitBreaker {
   int _consecutiveFailures = 0;
   DateTime? _lastFailureAt;
 
+  /// The state.
   CircuitState get state {
     if (_state == CircuitState.open && _cooldownElapsed) {
       _state = CircuitState.halfOpen;
@@ -62,8 +80,10 @@ class CircuitBreaker {
         cooldownWindowMs;
   }
 
+  /// The consecutive failures.
   int get consecutiveFailures => _consecutiveFailures;
 
+  /// Records success.
   void recordSuccess() {
     final previous = state; // Applies the lazy open -> half-open flip.
     _state = CircuitState.closed;
@@ -72,6 +92,7 @@ class CircuitBreaker {
     _auditTransition(previous);
   }
 
+  /// Records failure.
   void recordFailure() {
     final previous = state; // Applies the lazy open -> half-open flip.
     _lastFailureAt = clock.now();

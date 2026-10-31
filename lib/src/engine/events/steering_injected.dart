@@ -1,12 +1,18 @@
 part of 'engine_event.dart';
 
-/// Emitted by the steering layer when an injected system message overrides the loop's next-iteration context. Pairs with spec-002 steering.
+/// Emitted by the steering layer when an injected system message overrides the
+/// loop's next-iteration context. Pairs with spec-002 steering.
 final class SteeringInjected extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The content.
   final String content;
+
+  /// The injected at.
   final DateTime injectedAt;
 
+  /// Creates a steering injected.
   const SteeringInjected({
     required this.emittedAt,
     required this.content,
@@ -27,5 +33,6 @@ final class SteeringInjected extends EngineEvent {
 
   @override
   String toString() =>
-      'SteeringInjected(emittedAt: $emittedAt, content: $content, injectedAt: $injectedAt)';
+      'SteeringInjected(emittedAt: $emittedAt, content: $content, '
+      'injectedAt: $injectedAt)';
 }

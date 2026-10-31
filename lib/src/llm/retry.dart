@@ -6,8 +6,8 @@
 //
 
 import '../logging/agent_log.dart';
-import 'llm_clock.dart';
 import 'llm_client.dart';
+import 'llm_clock.dart';
 import 'llm_transport.dart';
 
 bool _isRetryableStatus(int status) => status == 429 || status >= 500;
@@ -23,6 +23,7 @@ class RetryConfig {
   /// Upper bound for a single backoff delay.
   final int maxDelayMs;
 
+  /// Creates a retry config.
   const RetryConfig({
     this.maxAttempts = 4,
     this.baseDelayMs = 500,

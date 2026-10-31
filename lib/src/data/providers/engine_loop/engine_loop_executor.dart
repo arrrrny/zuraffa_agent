@@ -11,8 +11,6 @@
 // bounded buffer, so a slow consumer pauses the provider instead of growing
 // without bound.
 
-import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
-
 import '../../../domain/entities/engine_loop/engine_loop.dart';
 import '../../../domain/entities/llm_client/chat_completion.dart';
 import '../../../domain/entities/llm_client/chat_message.dart';
@@ -40,7 +38,10 @@ class EngineLoopExecutor {
     }
   }
 
+  /// The loop.
   final EngineLoop loop;
+
+  /// The LLM client.
   final LlmClientProvider llmClient;
 
   /// High watermark of the chunk buffer backing [runTurnStream].

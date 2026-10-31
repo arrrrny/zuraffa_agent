@@ -16,13 +16,25 @@
 class ClientHealth {
   static int _idSequence = 0;
 
+  /// The identifier.
   final String id;
+
+  /// The state.
   final String state;
+
+  /// The consecutive failures.
   final int consecutiveFailures;
+
+  /// The cooldown window ms.
   final int cooldownWindowMs;
+
+  /// The last failure at.
   final DateTime lastFailureAt;
+
+  /// Whether healthy.
   final bool isHealthy;
 
+  /// Creates a client health.
   ClientHealth({
     String? id,
     this.state = 'closed',
@@ -38,6 +50,7 @@ class ClientHealth {
     return 'health_${DateTime.now().microsecondsSinceEpoch}_$_idSequence';
   }
 
+  /// Returns a copy of this client health with the given fields replaced.
   ClientHealth copyWith({
     String? id,
     String? state,
@@ -54,6 +67,7 @@ class ClientHealth {
     isHealthy: isHealthy ?? this.isHealthy,
   );
 
+  /// Converts this client health to JSON.
   Map<String, dynamic> toJson() => {
     'id': id,
     'state': state,
@@ -63,6 +77,7 @@ class ClientHealth {
     'isHealthy': isHealthy,
   };
 
+  /// Creates a client health from JSON.
   factory ClientHealth.fromJson(Map<String, dynamic> json) => ClientHealth(
     id: json['id'] as String?,
     state: json['state'] as String? ?? 'closed',

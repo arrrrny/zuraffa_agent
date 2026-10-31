@@ -32,6 +32,7 @@ class SkillFormatException extends FormatException {
   /// or `io-error` (when an underlying I/O error is wrapped).
   final String reason;
 
+  /// Creates a skill format exception.
   SkillFormatException(this.sourcePath, this.reason, [Object? parsed])
     : super(
         'Skill file at "$sourcePath" has malformed frontmatter: $reason'
@@ -64,6 +65,7 @@ class Skill {
   /// `name`/`description`.
   final Map<String, Object?> metadata;
 
+  /// Creates a skill.
   const Skill({
     required this.name,
     required this.description,

@@ -3,15 +3,13 @@
 // aggregation strategies.
 
 import 'package:test/test.dart';
-
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
+import 'package:zuraffa_agent/src/domain/entities/sub_agent_context/sub_agent_context.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_spec/sub_agent_spec.dart';
-import 'package:zuraffa_agent/src/domain/entities/sub_agent_context/sub_agent_context.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/agent_swarm.dart';
 import 'package:zuraffa_agent/src/engine/cancellation_token.dart';
@@ -194,14 +192,10 @@ class SingleAnswerLlmClient extends LlmClientProvider {
 
   @override
   Future<ChatCompletion> complete(List<ChatMessage> messages) async =>
-      ChatCompletion(
+      const ChatCompletion(
         content: 'swarm answer',
         finishReason: 'stop',
-        usage: const TokenUsage(
-          promptTokens: 1,
-          completionTokens: 1,
-          totalTokens: 2,
-        ),
+        usage: TokenUsage(promptTokens: 1, completionTokens: 1, totalTokens: 2),
       );
 }
 
@@ -532,19 +526,19 @@ void main() {
       expect(t1 == t3, isFalse);
       expect(t1.toString(), contains('x'));
 
-      final r1 = const SwarmTaskResult(
+      const r1 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: ok,
         summary: 's',
       );
-      final r2 = const SwarmTaskResult(
+      const r2 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: ok,
         summary: 's',
       );
-      final r3 = const SwarmTaskResult(
+      const r3 = SwarmTaskResult(
         taskId: 'x',
         specName: 'a',
         status: failed,

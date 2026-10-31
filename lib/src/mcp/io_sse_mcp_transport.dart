@@ -27,8 +27,13 @@ import 'mcp_wire_validation.dart';
 /// Typed failure for a failed stream open: names the HTTP status, or null
 /// when the connection itself failed.
 class McpWireOpenException implements Exception {
+  /// The status code.
   final int? statusCode;
+
+  /// The message.
   final String message;
+
+  /// Creates an MCP wire open exception.
   const McpWireOpenException(this.message, {this.statusCode});
   @override
   String toString() => 'McpWireOpenException: $message';
@@ -36,7 +41,10 @@ class McpWireOpenException implements Exception {
 
 /// Concrete [McpWire] over SSE + Bearer. See file header.
 class IoSseMcpTransport implements McpWire {
+  /// The endpoint.
   final String endpoint;
+
+  /// The bearer token.
   final String? bearerToken;
 
   /// Wire-boundary validation (issue #131). Every POST reply is validated
@@ -51,6 +59,7 @@ class IoSseMcpTransport implements McpWire {
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
+  /// Creates a I/O SSE MCP transport.
   IoSseMcpTransport({
     required this.endpoint,
     this.bearerToken,

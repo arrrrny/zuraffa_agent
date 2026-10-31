@@ -124,15 +124,17 @@ void main() {
         });
 
         final contents = body['contents'] as List;
-        expect(contents[0]['role'], 'user');
-        expect(contents[0]['parts'], [
+        final userTurn = contents[0] as Map<String, dynamic>;
+        expect(userTurn['role'], 'user');
+        expect(userTurn['parts'], [
           {'text': 'Weather in Paris?'},
           {
             'inlineData': {'mimeType': 'image/png', 'data': 'AAAA'},
           },
         ]);
-        expect(contents[1]['role'], 'model');
-        expect(contents[1]['parts'], [
+        final modelTurn = contents[1] as Map<String, dynamic>;
+        expect(modelTurn['role'], 'model');
+        expect(modelTurn['parts'], [
           {
             'functionCall': {
               'name': 'get_weather',
@@ -140,8 +142,9 @@ void main() {
             },
           },
         ]);
-        expect(contents[2]['role'], 'user');
-        expect(contents[2]['parts'], [
+        final resultTurn = contents[2] as Map<String, dynamic>;
+        expect(resultTurn['role'], 'user');
+        expect(resultTurn['parts'], [
           {
             'functionResponse': {
               'name': 'get_weather',
@@ -151,10 +154,10 @@ void main() {
         ]);
 
         final tools = body['tools'] as List;
-        expect(
-          tools.single['functionDeclarations'].single['name'],
-          'get_weather',
-        );
+        final geminiTool = tools.single as Map<String, dynamic>;
+        final declarations = geminiTool['functionDeclarations'] as List;
+        final declaration = declarations.single as Map<String, dynamic>;
+        expect(declaration['name'], 'get_weather');
 
         expect(body['generationConfig'], {
           'temperature': 0.2,
@@ -188,92 +191,102 @@ void main() {
       },
     );
 
-    test(
-      'U20: stream() parses JSONL chunks into text parts and function calls, completing cleanly',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'gemini',
-          script: [
-            ScriptedResponse(
-              statusCode: 200,
-              lines: [
-                'data: {"candidates":[{"content":{"parts":[{"text":"Hel"}],"role":"model"},"index":0}]}',
-                '',
-                'data: {"candidates":[{"content":{"parts":[{"text":"lo"}],"role":"model"},"index":0}]}',
-                'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}],"role":"model"},"index":0,"finishReason":"STOP"}]}',
-                'data: {"candidates":[{"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":25,"candidatesTokenCount":9}}',
-              ],
-            ),
-          ],
-        );
-        final client = makeClient(transport);
-
-        final chunks = await client
-            .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-            .toList();
-
-        expect(
-          chunks.where((c) => c.content != null).map((c) => c.content).toList(),
-          ['Hel', 'lo'],
-        );
-        final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
-        expect(
-          toolChunk.toolCalls.single,
-          equals(
-            const LlmToolCall(
-              id: 'call_0',
-              name: 'get_weather',
-              arguments: {'city': 'Paris'},
-            ),
+    test('U20: stream() parses JSONL chunks into text parts and function '
+        'calls, completing cleanly', () async {
+      final transport = FakeLlmTransport(
+        provider: 'gemini',
+        script: [
+          const ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'data: '
+                  '{"candidates":[{"content":{"parts":[{"text":"Hel"}]'
+                  ',"role":"model"},"index":0}]}',
+              '',
+              'data: '
+                  '{"candidates":[{"content":{"parts":[{"text":"lo"}]'
+                  ',"role":"model"},"index":0}]}',
+              'data: '
+                  '{"candidates":[{"content":{"parts":[{"functionCall":'
+                  '{"name":"get_weather","args":{"city":"Paris"}}}]'
+                  ',"role":"model"},"index":0,"finishReason":"STOP"}]}',
+              'data: '
+                  '{"candidates":[{"finishReason":"STOP","index":0}]'
+                  ',"usageMetadata":{"promptTokenCount":25'
+                  ',"candidatesTokenCount":9}}',
+            ],
           ),
-        );
-        final last = chunks.last;
-        expect(last.isComplete, isTrue);
-        expect(last.finishReason, 'stop');
-        expect(
-          last.usage,
-          equals(const LlmUsage(inputTokens: 25, outputTokens: 9)),
-        );
+        ],
+      );
+      final client = makeClient(transport);
 
-        final sent =
-            jsonDecode(transport.requests.single.body) as Map<String, dynamic>;
-        expect(sent.keys, contains('contents'));
-        expect(
-          transport.requests.single.uri.toString(),
-          'https://api.test/v1beta/models/test-model:streamGenerateContent?alt=sse',
-        );
-      },
-    );
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
 
-    test(
-      'U21: a MALFORMED_FUNCTION_CALL finishReason surfaces in the response without throwing',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'gemini',
-          script: [
-            ScriptedResponse(
-              statusCode: 200,
-              lines: [
-                'data: {"candidates":[{"content":{"parts":[{"text":"Let me try a tool call."}],"role":"model"},"index":0}]}',
-                'data: {"candidates":[{"content":{"parts":[{"functionCall":{"name":"bad_","args":{"truncated":true}}}],"role":"model"},"index":0,"finishReason":"MALFORMED_FUNCTION_CALL"}]}',
-              ],
-            ),
-          ],
-        );
-        final client = makeClient(transport);
+      expect(
+        chunks.where((c) => c.content != null).map((c) => c.content).toList(),
+        ['Hel', 'lo'],
+      );
+      final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
+      expect(
+        toolChunk.toolCalls.single,
+        equals(
+          const LlmToolCall(
+            id: 'call_0',
+            name: 'get_weather',
+            arguments: {'city': 'Paris'},
+          ),
+        ),
+      );
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.finishReason, 'stop');
+      expect(
+        last.usage,
+        equals(const LlmUsage(inputTokens: 25, outputTokens: 9)),
+      );
 
-        final chunks = await client
-            .stream(LlmRequest(messages: [UserMessage.text('do it')]))
-            .toList();
+      final sent =
+          jsonDecode(transport.requests.single.body) as Map<String, dynamic>;
+      expect(sent.keys, contains('contents'));
+      expect(
+        transport.requests.single.uri.toString(),
+        'https://api.test/v1beta/models/test-model:streamGenerateContent?alt=sse',
+      );
+    });
 
-        // No throw: the malformed call is surfaced as a tool call chunk plus a
-        // finishReason on the completing chunk.
-        expect(chunks, isNotEmpty);
-        final last = chunks.last;
-        expect(last.isComplete, isTrue);
-        expect(last.finishReason, 'malformed_function_call');
-      },
-    );
+    test('U21: a MALFORMED_FUNCTION_CALL finishReason surfaces in the response '
+        'without throwing', () async {
+      final transport = FakeLlmTransport(
+        provider: 'gemini',
+        script: [
+          const ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              'data: {"candidates":[{"content":{"parts":[{"text":"Let me '
+                  'try a tool call."}],"role":"model"},"index":0}]}',
+              'data: '
+                  '{"candidates":[{"content":{"parts":[{"functionCall":'
+                  '{"name":"bad_","args":{"truncated":true}}}],"role":"model"}'
+                  ',"index":0,"finishReason":"MALFORMED_FUNCTION_CALL"}]}',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('do it')]))
+          .toList();
+
+      // No throw: the malformed call is surfaced as a tool call chunk plus a
+      // finishReason on the completing chunk.
+      expect(chunks, isNotEmpty);
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.finishReason, 'malformed_function_call');
+    });
 
     test('U22: a non-2xx response raises a typed error', () async {
       final transport = FakeLlmTransport(

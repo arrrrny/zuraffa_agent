@@ -27,10 +27,16 @@
 
 /// Where a memory came from — at least one field must be set.
 class MemorySource {
+  /// The session identifier.
   final String? sessionId;
+
+  /// The mission identifier.
   final String? missionId;
+
+  /// The agent name.
   final String? agentName;
 
+  /// Creates a memory source.
   MemorySource({this.sessionId, this.missionId, this.agentName}) {
     if (sessionId == null && missionId == null && agentName == null) {
       throw ArgumentError.value(
@@ -63,13 +69,25 @@ class MemorySource {
 /// layer at a time (long-term or a session), decided by which store holds
 /// it, not by a field on the record.
 class MemoryRecord {
+  /// The identifier.
   final String id;
+
+  /// The content.
   final String content;
+
+  /// The tags.
   final Set<String> tags;
+
+  /// The source.
   final MemorySource source;
+
+  /// The created at.
   final DateTime createdAt;
+
+  /// The salience.
   final double salience;
 
+  /// Creates a memory record.
   MemoryRecord({
     required this.id,
     required String content,
@@ -127,7 +145,8 @@ class MemoryRecord {
 
   @override
   String toString() =>
-      'MemoryRecord(id: $id, salience: $salience, tags: ${tags.toList()..sort()}, '
+      'MemoryRecord(id: $id, salience: $salience, tags: '
+      '${tags.toList()..sort()}, '
       'content: ${content.length} chars)';
 }
 
@@ -152,12 +171,22 @@ enum MemoryLinkType {
 /// One directed edge in the cross-reference graph. Direction is
 /// meaningful: `a supports b` is a different link than `b supports a`.
 class MemoryLink {
+  /// The from record identifier.
   final String fromRecordId;
+
+  /// The to record identifier.
   final String toRecordId;
+
+  /// The type.
   final MemoryLinkType type;
+
+  /// The created at.
   final DateTime createdAt;
+
+  /// The note.
   final String? note;
 
+  /// Creates a memory link.
   const MemoryLink({
     required this.fromRecordId,
     required this.toRecordId,
@@ -189,13 +218,23 @@ class MemoryLink {
 
 /// Which layer a recalled record was found in — attribution, not
 /// partition: recall interleaves both layers in one ranking.
-enum MemoryLayer { longTerm, session }
+enum MemoryLayer {
+  /// The record was found in the long-term layer.
+  longTerm,
+
+  /// The record was found in the session layer.
+  session,
+}
 
 /// One search result: the record plus the layer it came from.
 class RecallHit {
+  /// The record.
   final MemoryRecord record;
+
+  /// The layer.
   final MemoryLayer layer;
 
+  /// Creates a recall hit.
   const RecallHit({required this.record, required this.layer});
 
   @override
@@ -234,6 +273,7 @@ class LongTermMemoryStore {
   /// All records in insertion order.
   List<MemoryRecord> get all => List.unmodifiable(_records);
 
+  /// Bies identifier.
   MemoryRecord? byId(String id) {
     for (final r in _records) {
       if (r.id == id) return r;
@@ -241,6 +281,7 @@ class LongTermMemoryStore {
     return null;
   }
 
+  /// Containses the identifier.
   bool contains(String id) => byId(id) != null;
 
   /// Case-insensitive substring search over content, ranked by salience
@@ -326,6 +367,7 @@ class SessionMemoryStore {
   List<MemoryRecord> get all =>
       List.unmodifiable([for (final session in _bySession.values) ...session]);
 
+  /// Containses the identifier.
   bool contains(String id) => byId(id) != null;
 
   /// Removes a record by id wherever it lives; returns whether anything
@@ -414,6 +456,7 @@ class MemoryGraph {
 ///   validates endpoint existence first — graph integrity).
 /// - [promote] moves a session memory into long-term (identity preserved).
 class AgentMemorySystem {
+  /// Creates an agent memory system.
   AgentMemorySystem({
     LongTermMemoryStore? longTerm,
     SessionMemoryStore? sessions,
@@ -422,8 +465,13 @@ class AgentMemorySystem {
        sessionMemory = sessions ?? SessionMemoryStore(),
        graph = graph ?? MemoryGraph();
 
+  /// The long term memory.
   final LongTermMemoryStore longTermMemory;
+
+  /// The session memory.
   final SessionMemoryStore sessionMemory;
+
+  /// The graph.
   final MemoryGraph graph;
 
   /// Stores [record]: long-term when [sessionId] is null, session memory

@@ -117,7 +117,10 @@ String sha256Hex(String input) {
 String canonicalJson(Object? value) {
   if (value is Map) {
     final keys = [for (final key in value.keys) key.toString()]..sort();
-    return '{${[for (final key in keys) '${jsonEncode(key)}:${canonicalJson(value[key])}'].join(',')}}';
+    final entries = [
+      for (final key in keys) '${jsonEncode(key)}:${canonicalJson(value[key])}',
+    ];
+    return '{${entries.join(',')}}';
   }
   if (value is List) {
     return '[${[for (final item in value) canonicalJson(item)].join(',')}]';

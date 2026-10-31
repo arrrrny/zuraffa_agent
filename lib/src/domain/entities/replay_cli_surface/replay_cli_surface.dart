@@ -1,20 +1,32 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#7 (R6 - eval harness).
 //
-// ReplayCliSurface (zfa agent replay) value object - spec-exact from epic #1 §R6 (issue #7).
+// ReplayCliSurface (zfa agent replay) value object - spec-exact from epic #1
+// §R6 (issue #7). Pattern mirrors the SteeringMessage / SteeringQueue value
+// objects (PR for spec 033): plain Dart, value equality across all fields, no
+// @Zorphy codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
 /// ReplayCliSurface (zfa agent replay) value object.
 ///
-/// zfa agent replay CLI surface — declarative replay invocation (mission id, recorded traffic, grader matrix) (epic #6 §R6.4, issue #7 US4).
+/// zfa agent replay CLI surface — declarative replay invocation (mission id,
+/// recorded traffic, grader matrix) (epic #6 §R6.4, issue #7 US4).
 class ReplayCliSurface {
+  /// The identifier.
   final String id;
+
+  /// The mission identifier.
   final String missionId;
+
+  /// The grader matrix identifier.
   final String graderMatrixId;
+
+  /// The verbosity.
   final String verbosity;
 
+  /// Creates a replay cli surface.
   const ReplayCliSurface({
     required this.id,
     required this.missionId,
@@ -37,5 +49,6 @@ class ReplayCliSurface {
 
   @override
   String toString() =>
-      'ReplayCliSurface(id: $id, missionId: $missionId, graderMatrixId: $graderMatrixId)';
+      'ReplayCliSurface(id: $id, missionId: $missionId, graderMatrixId: '
+      '$graderMatrixId)';
 }

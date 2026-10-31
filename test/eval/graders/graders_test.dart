@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
-import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/eval/graders/exact_match_grader.dart';
 import 'package:zuraffa_agent/src/eval/graders/grader.dart';
 import 'package:zuraffa_agent/src/eval/graders/grader_registry.dart';
@@ -31,7 +30,7 @@ void main() {
         expect(pass.passed, isTrue);
         expect(pass.reason, isNotEmpty);
 
-        final trimmed = ExactMatchGrader(expected: '  $missionOutput  ');
+        const trimmed = ExactMatchGrader(expected: '  $missionOutput  ');
         expect((await trimmed.grade(missionOutput)).passed, isTrue);
 
         final fail = await grader.grade('The capital of France is Lyon.');
@@ -66,7 +65,7 @@ void main() {
     test(
       'U3: resolves a documented-subset path and passes on equality',
       () async {
-        final grader = JsonPathGrader(
+        const grader = JsonPathGrader(
           path: r'$.steps[2].status',
           expected: 'failed',
         );
@@ -78,21 +77,21 @@ void main() {
     test(
       'U4: missing path / mismatch / malformed JSON fail with reasons',
       () async {
-        final missing = await JsonPathGrader(
+        final missing = await const JsonPathGrader(
           path: r'$.no.such[3].key',
           expected: 'x',
         ).grade(payload);
         expect(missing.passed, isFalse);
         expect(missing.reason, contains('no.such'));
 
-        final mismatch = await JsonPathGrader(
+        final mismatch = await const JsonPathGrader(
           path: r'$.summary.total',
           expected: 9,
         ).grade(payload);
         expect(mismatch.passed, isFalse);
         expect(mismatch.reason, contains(r'$.summary.total'));
 
-        final malformed = await JsonPathGrader(
+        final malformed = await const JsonPathGrader(
           path: r'$.a',
           expected: 1,
         ).grade('not json {');
@@ -203,7 +202,7 @@ void main() {
           )
           ..register(RegexGrader(pattern: RegExp(r'\bParis\b')), id: 'regex')
           ..register(
-            JsonPathGrader(path: r'$.answer.place', expected: 'Paris'),
+            const JsonPathGrader(path: r'$.answer.place', expected: 'Paris'),
             id: 'json',
           )
           ..register(

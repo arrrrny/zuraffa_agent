@@ -44,6 +44,7 @@ import 'tool_dispatcher.dart';
 /// the child mission records the refusal as a failed tool call and continues.
 /// Allowlisted calls delegate with arguments and mission context preserved.
 class AllowlistToolDispatcher implements ToolDispatcher {
+  /// Creates an allowlist tool dispatcher.
   AllowlistToolDispatcher({
     required ToolDispatcher inner,
     required Set<String> allowlist,
@@ -136,13 +137,25 @@ enum SubAgentDispatchStatus {
 ///
 /// House-pattern value semantics (spec 066).
 class SubAgentDispatchResult {
+  /// The instance identifier.
   final String instanceId;
+
+  /// The spec name.
   final String specName;
+
+  /// The status.
   final SubAgentDispatchStatus status;
+
+  /// The result summary.
   final String? resultSummary;
+
+  /// The instance.
   final SubAgentInstance instance;
+
+  /// The context.
   final SubAgentContext context;
 
+  /// Creates a sub agent dispatch result.
   const SubAgentDispatchResult({
     required this.instanceId,
     required this.specName,
@@ -184,6 +197,7 @@ class SubAgentDispatchResult {
 /// Runs dispatched sub-agents: isolated child missions with allowlisted
 /// tools, spec budgets, and instance bookkeeping (spec 070).
 class SubAgentDispatchService {
+  /// Creates a sub agent dispatch service.
   SubAgentDispatchService({
     required ToolDispatcher toolDispatcher,
     required LlmClientProvider llmClient,
@@ -200,7 +214,10 @@ class SubAgentDispatchService {
   final LlmClientProvider _llmClient;
   final int _fallbackMaxTurns;
 
-  /// Sink for oversized tool results; defaults to an in-memory store. Wired into
+  /// Sink for oversized tool results; defaults to an in-memory store. Wired
+  /// into the child mission's dispatcher so large tool bodies are summarized +
+  /// ref'd before reaching model context (spec-003 §4.3, FR-005 / R3#3 /
+  /// SC-003).
   /// the child mission's dispatcher so large tool bodies are summarized + ref'd
   /// before reaching model context (spec-003 §4.3, FR-005 / R3#3 / SC-003).
   final ArtifactService artifactService;
@@ -255,7 +272,9 @@ class SubAgentDispatchService {
       );
     }
 
-    // Wall-clock limiting is owned by childPolicy (StopPolicy.wallClockTimeout);
+    // Wall-clock limiting is owned by childPolicy
+    // (StopPolicy.wallClockTimeout); EngineLoop.wallClockTimeoutMs is never
+    // enforced, so it stays 0 here.
     // EngineLoop.wallClockTimeoutMs is never enforced, so it stays 0 here.
     final childLoop = EngineLoop(
       id: 'sub-${instance.id}',

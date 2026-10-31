@@ -12,6 +12,7 @@ final class SecureStoreException implements Exception {
   /// The underlying platform error.
   final Object cause;
 
+  /// Creates a secure store exception.
   const SecureStoreException({
     required this.key,
     required this.operation,

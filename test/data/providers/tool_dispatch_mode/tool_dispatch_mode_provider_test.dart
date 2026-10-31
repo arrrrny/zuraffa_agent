@@ -1,26 +1,24 @@
 // HAND-CURATED regression tests for the ToolDispatchMode value object +
 // ToolDispatchModeProvider. Pattern mirrors spec 033.
 
-import 'dart:convert';
-
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_mode/tool_dispatch_mode.dart';
-import 'package:zuraffa_agent/src/domain/services/tool_dispatch_mode_service.dart';
 import 'package:zuraffa_agent/src/data/providers/tool_dispatch_mode/tool_dispatch_mode_provider.dart';
-import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
+import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_mode/tool_dispatch_mode.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import 'package:zuraffa_agent/src/domain/services/tool_dispatch_mode_service.dart';
+import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#4 - ToolDispatchMode value equality', () {
     test('ToolDispatchMode equality is value-based across all fields', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id-a',
         mode: 'sequential',
         maxParallel: 10,
         failFast: true,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id-a',
         mode: 'sequential',
         maxParallel: 10,
@@ -31,13 +29,13 @@ void main() {
     });
 
     test('ToolDispatchMode inequality differs when a field changes', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id-a',
         mode: 'sequential',
         maxParallel: 10,
         failFast: true,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id-b',
         mode: 'parallel',
         maxParallel: 20,
@@ -47,13 +45,13 @@ void main() {
     });
 
     test('ToolDispatchMode inequality detected per-field: id', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id-1',
         mode: 'sequential',
         maxParallel: 1,
         failFast: false,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id-2',
         mode: 'sequential',
         maxParallel: 1,
@@ -63,13 +61,13 @@ void main() {
     });
 
     test('ToolDispatchMode inequality detected per-field: mode', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id',
         mode: 'sequential',
         maxParallel: 1,
         failFast: false,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id',
         mode: 'parallel',
         maxParallel: 1,
@@ -79,13 +77,13 @@ void main() {
     });
 
     test('ToolDispatchMode inequality detected per-field: maxParallel', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id',
         mode: 'sequential',
         maxParallel: 1,
         failFast: false,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id',
         mode: 'sequential',
         maxParallel: 5,
@@ -95,13 +93,13 @@ void main() {
     });
 
     test('ToolDispatchMode inequality detected per-field: failFast', () {
-      final a = ToolDispatchMode(
+      const a = ToolDispatchMode(
         id: 'id',
         mode: 'sequential',
         maxParallel: 1,
         failFast: true,
       );
-      final b = ToolDispatchMode(
+      const b = ToolDispatchMode(
         id: 'id',
         mode: 'sequential',
         maxParallel: 1,
@@ -113,7 +111,7 @@ void main() {
 
   group('arrarrny/zuraffa_agent#4 - ToolDispatchMode toString', () {
     test('toString includes id, mode, and maxParallel', () {
-      final m = ToolDispatchMode(
+      const m = ToolDispatchMode(
         id: 'dispatch-1',
         mode: 'parallel',
         maxParallel: 8,
@@ -134,7 +132,7 @@ void main() {
     test(
       'ToolDispatchModeProvider.current returns the active dispatch mode',
       () async {
-        final mode = await ToolDispatchModeProvider().current(NoParams());
+        final mode = await ToolDispatchModeProvider().current(const NoParams());
         expect(mode, isA<ToolDispatchMode>());
         expect(mode.mode, 'sequential');
         expect(mode.maxParallel, greaterThan(0));
@@ -142,7 +140,7 @@ void main() {
     );
 
     test('ToolDispatchModeProvider.count returns 1', () async {
-      expect(await ToolDispatchModeProvider().count(NoParams()), 1);
+      expect(await ToolDispatchModeProvider().count(const NoParams()), 1);
     });
   });
 

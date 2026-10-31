@@ -98,87 +98,80 @@ void main() {
       },
     );
 
-    test(
-      'U10: restore() rebuilds store entries from the storage backend in insertion order',
-      () async {
-        final storage = InMemorySessionStorage();
-        final first = PersistentEpisodicMemoryStore(storage: storage);
-        await first.add(
-          EpisodicMemory(
-            id: 'snap-1',
-            summary: 's1',
-            messages: [UserMessage.text('one')],
-          ),
-        );
-        await first.add(
-          EpisodicMemory(
-            id: 'snap-2',
-            summary: 's2',
-            messages: [UserMessage.text('two')],
-          ),
-        );
-        // A non-memory custom entry must be ignored by restore.
-        await storage.appendEntry(
-          CustomTreeEntry(
+    test('U10: restore() rebuilds store entries from the storage backend in '
+        'insertion order', () async {
+      final storage = InMemorySessionStorage();
+      final first = PersistentEpisodicMemoryStore(storage: storage);
+      await first.add(
+        EpisodicMemory(
+          id: 'snap-1',
+          summary: 's1',
+          messages: [UserMessage.text('one')],
+        ),
+      );
+      await first.add(
+        EpisodicMemory(
+          id: 'snap-2',
+          summary: 's2',
+          messages: [UserMessage.text('two')],
+        ),
+      );
+      // A non-memory custom entry must be ignored by restore.
+      await storage.appendEntry(
+        CustomTreeEntry(
+          id: 'other',
+          timestamp: DateTime.fromMillisecondsSinceEpoch(0),
+          record: CustomEntry(
             id: 'other',
             timestamp: DateTime.fromMillisecondsSinceEpoch(0),
-            record: CustomEntry(
-              id: 'other',
-              timestamp: DateTime.fromMillisecondsSinceEpoch(0),
-              customType: 'something_else',
-              payload: '{}',
-            ),
+            customType: 'something_else',
+            payload: '{}',
           ),
+        ),
+      );
+
+      // "Engine restart": a fresh store over the same storage backend.
+      final restored = PersistentEpisodicMemoryStore(storage: storage);
+      await restored.restore();
+
+      expect(restored.entries.map((m) => m.id).toList(), ['snap-1', 'snap-2']);
+      final rebuilt = restored.retrieve('snap-1');
+      expect(rebuilt, isNotNull);
+      expect(rebuilt!.summary, 's1');
+      expect(rebuilt.messages, hasLength(1));
+      expect((rebuilt.messages.first as UserMessage).content, isNotEmpty);
+    });
+
+    test('U11: a restored store serves retrieve-by-id and pagination like an '
+        'in-memory store', () async {
+      final storage = InMemorySessionStorage();
+      final writer = PersistentEpisodicMemoryStore(storage: storage);
+      for (var i = 1; i <= 4; i++) {
+        await writer.add(
+          EpisodicMemory(id: 'snap-$i', summary: 's$i', messages: const []),
         );
+      }
 
-        // "Engine restart": a fresh store over the same storage backend.
-        final restored = PersistentEpisodicMemoryStore(storage: storage);
-        await restored.restore();
+      final restored = PersistentEpisodicMemoryStore(storage: storage);
+      await restored.restore();
 
-        expect(restored.entries.map((m) => m.id).toList(), [
-          'snap-1',
-          'snap-2',
-        ]);
-        final rebuilt = restored.retrieve('snap-1');
-        expect(rebuilt, isNotNull);
-        expect(rebuilt!.summary, 's1');
-        expect(rebuilt.messages, hasLength(1));
-        expect((rebuilt.messages.first as UserMessage).content, isNotEmpty);
-      },
-    );
-
-    test(
-      'U11: a restored store serves retrieve-by-id and pagination like an in-memory store',
-      () async {
-        final storage = InMemorySessionStorage();
-        final writer = PersistentEpisodicMemoryStore(storage: storage);
-        for (var i = 1; i <= 4; i++) {
-          await writer.add(
-            EpisodicMemory(id: 'snap-$i', summary: 's$i', messages: const []),
-          );
-        }
-
-        final restored = PersistentEpisodicMemoryStore(storage: storage);
-        await restored.restore();
-
-        expect(restored.retrieve('snap-3'), isNotNull);
-        expect(restored.retrieve('nope'), isNull);
-        expect(restored.list(limit: 2, offset: 1).map((m) => m.id).toList(), [
-          'snap-2',
-          'snap-3',
-        ]);
-        expect(restored.list(), hasLength(4));
-        // Adding after restore keeps persisting.
-        await restored.add(
-          EpisodicMemory(id: 'snap-5', summary: 's5', messages: const []),
-        );
-        expect(
-          storage.storedEntries.whereType<CustomTreeEntry>().map(
-            (e) => e.record.id,
-          ),
-          contains('snap-5'),
-        );
-      },
-    );
+      expect(restored.retrieve('snap-3'), isNotNull);
+      expect(restored.retrieve('nope'), isNull);
+      expect(restored.list(limit: 2, offset: 1).map((m) => m.id).toList(), [
+        'snap-2',
+        'snap-3',
+      ]);
+      expect(restored.list(), hasLength(4));
+      // Adding after restore keeps persisting.
+      await restored.add(
+        const EpisodicMemory(id: 'snap-5', summary: 's5', messages: []),
+      );
+      expect(
+        storage.storedEntries.whereType<CustomTreeEntry>().map(
+          (e) => e.record.id,
+        ),
+        contains('snap-5'),
+      );
+    });
   });
 }

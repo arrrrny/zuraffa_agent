@@ -6,16 +6,23 @@
 
 /// Token accounting for a single completion.
 class TokenUsage {
+  /// The prompt tokens.
   final int promptTokens;
+
+  /// The completion tokens.
   final int completionTokens;
+
+  /// The total tokens.
   final int totalTokens;
 
+  /// Creates a token usage.
   const TokenUsage({
     required this.promptTokens,
     required this.completionTokens,
     required this.totalTokens,
   });
 
+  /// Creates a token usage from JSON.
   factory TokenUsage.fromJson(Map<String, dynamic> json) {
     final usage = json['usage'] as Map<String, dynamic>? ?? json;
     return TokenUsage(
@@ -39,16 +46,25 @@ class TokenUsage {
 
   @override
   String toString() =>
-      'TokenUsage(prompt: $promptTokens, completion: $completionTokens, total: $totalTokens)';
+      'TokenUsage(prompt: $promptTokens, completion: $completionTokens, '
+      'total: $totalTokens)';
 }
 
 /// A parsed assistant completion returned by an LLM gateway.
 class ChatCompletion {
+  /// The content.
   final String content;
+
+  /// The reasoning.
   final String? reasoning;
+
+  /// The finish reason.
   final String finishReason;
+
+  /// The usage.
   final TokenUsage usage;
 
+  /// Creates a chat completion.
   const ChatCompletion({
     required this.content,
     this.reasoning,
@@ -71,5 +87,6 @@ class ChatCompletion {
 
   @override
   String toString() =>
-      'ChatCompletion(finish: $finishReason, usage: $usage, content: "${content.length > 24 ? "${content.substring(0, 24)}…" : content}")';
+      'ChatCompletion(finish: $finishReason, usage: $usage, content: "'
+      '${content.length > 24 ? "${content.substring(0, 24)}…" : content}")';
 }

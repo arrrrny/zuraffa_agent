@@ -7,7 +7,6 @@
 
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
-
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
@@ -15,13 +14,13 @@ import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dar
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
+import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/llm/context_compressor.dart';
 import 'package:zuraffa_agent/src/llm/token_estimator.dart';
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
-import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
 /// LLM client that records every transcript it is handed and replays a FIFO
@@ -216,38 +215,36 @@ void main() {
 
   setUp(() => events.clear());
 
-  test(
-    'approaching 80% of the context window triggers compaction before the LLM call',
-    () async {
-      final llm = RecordingLlmClient(completions: [completionOf('done')]);
-      final estimator = FakeTokenEstimator([900]);
-      final compressor = RecordingCompressor(snapshotResult());
-      final runner = makeRunner(
-        llm: llm,
-        estimator: estimator,
-        compressor: compressor,
-      );
+  test('approaching 80% of the context window triggers compaction before the '
+      'LLM call', () async {
+    final llm = RecordingLlmClient(completions: [completionOf('done')]);
+    final estimator = FakeTokenEstimator([900]);
+    final compressor = RecordingCompressor(snapshotResult());
+    final runner = makeRunner(
+      llm: llm,
+      estimator: estimator,
+      compressor: compressor,
+    );
 
-      final result = await runner.run(
-        missionId: 'm1',
-        messages: [const ChatMessage(role: 'user', content: 'go')],
-      );
+    final result = await runner.run(
+      missionId: 'm1',
+      messages: [const ChatMessage(role: 'user', content: 'go')],
+    );
 
-      // The compressor ran exactly once, before the only LLM call, on the
-      // transcript converted into AgentMessages.
-      expect(compressor.calls, 1);
-      expect(compressor.seen, hasLength(1));
-      expect(compressor.seen.single.whereType<UserMessage>().length, 1);
-      // The model received the compacted transcript: snapshot first, then
-      // the preserved tail.
-      expect(llm.requests, hasLength(1));
-      expect(llm.requests.single.first.role, 'user');
-      expect(llm.requests.single.first.content, startsWith('<state_snapshot>'));
-      expect(llm.requests.single[1].content, 'recent');
-      expect(result.status, MissionStatus.completed);
-      expect(result.transcript.first.content, startsWith('<state_snapshot>'));
-    },
-  );
+    // The compressor ran exactly once, before the only LLM call, on the
+    // transcript converted into AgentMessages.
+    expect(compressor.calls, 1);
+    expect(compressor.seen, hasLength(1));
+    expect(compressor.seen.single.whereType<UserMessage>().length, 1);
+    // The model received the compacted transcript: snapshot first, then
+    // the preserved tail.
+    expect(llm.requests, hasLength(1));
+    expect(llm.requests.single.first.role, 'user');
+    expect(llm.requests.single.first.content, startsWith('<state_snapshot>'));
+    expect(llm.requests.single[1].content, 'recent');
+    expect(result.status, MissionStatus.completed);
+    expect(result.transcript.first.content, startsWith('<state_snapshot>'));
+  });
 
   test('below the threshold the compressor is never consulted', () async {
     final llm = RecordingLlmClient(completions: [completionOf('done')]);
@@ -365,48 +362,46 @@ void main() {
     },
   );
 
-  test(
-    'a declined compaction is logged at WARNING and passes the estimate to compress',
-    () async {
-      final records = <LogRecord>[];
-      ZuraffaLogging.install(level: Level.ALL, onRecord: records.add);
-      addTearDown(ZuraffaLogging.reset);
+  test('a declined compaction is logged at WARNING and passes the estimate to '
+      'compress', () async {
+    final records = <LogRecord>[];
+    ZuraffaLogging.install(level: Level.ALL, onRecord: records.add);
+    addTearDown(ZuraffaLogging.reset);
 
-      final llm = RecordingLlmClient(completions: [completionOf('done')]);
-      final estimator = FakeTokenEstimator([900]);
-      final compressor = RecordingCompressor(
-        const CompressionResult(
-          snapshot: '',
-          preservedMessages: [],
-          compressedMessages: [],
-          strategy: CompressionStrategy.none,
-        ),
-      );
-      final runner = makeRunner(
-        llm: llm,
-        estimator: estimator,
-        compressor: compressor,
-      );
+    final llm = RecordingLlmClient(completions: [completionOf('done')]);
+    final estimator = FakeTokenEstimator([900]);
+    final compressor = RecordingCompressor(
+      const CompressionResult(
+        snapshot: '',
+        preservedMessages: [],
+        compressedMessages: [],
+        strategy: CompressionStrategy.none,
+      ),
+    );
+    final runner = makeRunner(
+      llm: llm,
+      estimator: estimator,
+      compressor: compressor,
+    );
 
-      final result = await runner.run(
-        missionId: 'm1',
-        messages: [const ChatMessage(role: 'user', content: 'go')],
-      );
+    final result = await runner.run(
+      missionId: 'm1',
+      messages: [const ChatMessage(role: 'user', content: 'go')],
+    );
 
-      // The pre-flight's own estimate rides along to the compressor (the
-      // two gates count with the same convention — issue #138 review).
-      expect(compressor.calls, 1);
-      expect(compressor.estimatedTokensSeen.single, 900);
-      // The decline is visible to operators, not silent.
-      final warnings = records.where((r) => r.level == Level.WARNING).toList();
-      expect(warnings, hasLength(1));
-      expect(warnings.single.message, contains('compaction declined'));
-      expect(warnings.single.message, contains('900'));
-      // The transcript still goes to the provider intact.
-      expect(llm.requests.single.map((m) => m.content), ['go']);
-      expect(result.status, MissionStatus.completed);
-    },
-  );
+    // The pre-flight's own estimate rides along to the compressor (the
+    // two gates count with the same convention — issue #138 review).
+    expect(compressor.calls, 1);
+    expect(compressor.estimatedTokensSeen.single, 900);
+    // The decline is visible to operators, not silent.
+    final warnings = records.where((r) => r.level == Level.WARNING).toList();
+    expect(warnings, hasLength(1));
+    expect(warnings.single.message, contains('compaction declined'));
+    expect(warnings.single.message, contains('900'));
+    // The transcript still goes to the provider intact.
+    expect(llm.requests.single.map((m) => m.content), ['go']);
+    expect(result.status, MissionStatus.completed);
+  });
 
   test(
     'a preserved tail starting with tool rows drops the orphaned leaders',

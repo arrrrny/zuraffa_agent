@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/grader_sealed/grader_sealed.dart';
 import '../../../domain/services/grader_sealed_service.dart';
 
+/// The grader sealed provider.
 class GraderSealedProvider
     with Loggable, FailureHandler
     implements GraderSealedService {
   final GraderSealed _active;
 
+  /// Creates a grader sealed provider.
   GraderSealedProvider([GraderSealed? active])
     : _active =
           active ?? const GraderSealed(id: 'default', graderType: 'exact');

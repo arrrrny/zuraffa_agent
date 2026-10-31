@@ -16,10 +16,15 @@ import 'grader.dart';
 typedef LlmComplete =
     Future<ChatCompletion> Function(List<ChatMessage> messages);
 
+/// The LLM judge grader.
 class LlmJudgeGrader implements Grader {
+  /// The judge prompt.
   final String judgePrompt;
+
+  /// The complete.
   final LlmComplete complete;
 
+  /// Creates an LLM judge grader.
   const LlmJudgeGrader({required this.judgePrompt, required this.complete});
 
   @override

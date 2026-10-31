@@ -21,7 +21,6 @@ import 'package:zuraffa_agent/src/mcp/io_sse_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/io_stdio_mcp_transport.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_wire_validation.dart';
 import 'package:zuraffa_agent/src/mcp/sse_mcp_client.dart';
@@ -702,7 +701,7 @@ void main() {
               '1048576-byte wire cap',
         ),
       );
-      final transport = const McpTransport(
+      const transport = McpTransport(
         id: 'sse-1',
         transportType: 'sse',
         endpoint: 'https://example.invalid/sse',
