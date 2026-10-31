@@ -62,7 +62,11 @@ String? _yamlEntryBlock(List<String> lines, String parent, String child) {
 List<int>? _parseVersion(String input) {
   final m = RegExp(r'(\d+)\.(\d+)\.(\d+)').firstMatch(input);
   if (m == null) return null;
-  return [int.parse(m.group(1)!), int.parse(m.group(2)!), int.parse(m.group(3)!)];
+  return [
+    int.parse(m.group(1)!),
+    int.parse(m.group(2)!),
+    int.parse(m.group(3)!),
+  ];
 }
 
 int _compare(List<int> a, List<int> b) {
@@ -92,60 +96,68 @@ bool _versionSatisfies(String version, String constraint) {
 
 void main() {
   group('supply-chain integrity (issue #109)', () {
-        test('zuraffa is resolved through an auditable channel', () {
-          final block = _yamlEntryBlock(_readLines('pubspec.yaml'), 'dependencies', 'zuraffa');
-          expect(
-            block,
-            isNotNull,
-            reason: 'pubspec.yaml must declare zuraffa under dependencies:',
-          );
-          final b = block!;
-          if (b.contains('git:')) {
-            // Unpublished-dependency fallback: full SHA or release tag only.
-            final ref = RegExp(r'ref:\s*(\S+)').firstMatch(b)?.group(1);
-            expect(ref, isNotNull,
-                reason: 'a git dependency must pin a ref (issue #109)');
-            final isFullSha = RegExp(r'^[0-9a-fA-F]{40}$').hasMatch(ref!);
-            final isReleaseTag = RegExp(r'^v\d').hasMatch(ref);
-            expect(
-              isFullSha || isReleaseTag,
-              isTrue,
-              reason:
-                  'git ref must be a full commit SHA or a release tag, '
-                  'never a moving branch tip (got: $ref)',
-            );
-          } else {
-            // Preferred end state: published on pub.dev behind a caret
-            // range (or an exact pin — also auditable).
-            final constraint =
-                RegExp(r'^\s*zuraffa:\s*(\S+)\s*$', multiLine: true)
-                    .firstMatch(b)
-                    ?.group(1);
-            expect(
-              constraint,
-              isNotNull,
-              reason: 'hosted zuraffa entry must carry a version constraint',
-            );
-            expect(
-              RegExp(r'^(\^\d+\.\d+\.\d+|\d+\.\d+\.\d+)$').hasMatch(constraint!),
-              isTrue,
-              reason:
-                  'zuraffa constraint "$constraint" must be a caret range '
-                  'or an exact version, not a loose range (issue #109)',
-            );
-          }
-        });
+    test('zuraffa is resolved through an auditable channel', () {
+      final block = _yamlEntryBlock(
+        _readLines('pubspec.yaml'),
+        'dependencies',
+        'zuraffa',
+      );
+      expect(
+        block,
+        isNotNull,
+        reason: 'pubspec.yaml must declare zuraffa under dependencies:',
+      );
+      final b = block!;
+      if (b.contains('git:')) {
+        // Unpublished-dependency fallback: full SHA or release tag only.
+        final ref = RegExp(r'ref:\s*(\S+)').firstMatch(b)?.group(1);
+        expect(
+          ref,
+          isNotNull,
+          reason: 'a git dependency must pin a ref (issue #109)',
+        );
+        final isFullSha = RegExp(r'^[0-9a-fA-F]{40}$').hasMatch(ref!);
+        final isReleaseTag = RegExp(r'^v\d').hasMatch(ref);
+        expect(
+          isFullSha || isReleaseTag,
+          isTrue,
+          reason:
+              'git ref must be a full commit SHA or a release tag, '
+              'never a moving branch tip (got: $ref)',
+        );
+      } else {
+        // Preferred end state: published on pub.dev behind a caret
+        // range (or an exact pin — also auditable).
+        final constraint = RegExp(
+          r'^\s*zuraffa:\s*(\S+)\s*$',
+          multiLine: true,
+        ).firstMatch(b)?.group(1);
+        expect(
+          constraint,
+          isNotNull,
+          reason: 'hosted zuraffa entry must carry a version constraint',
+        );
+        expect(
+          RegExp(r'^(\^\d+\.\d+\.\d+|\d+\.\d+\.\d+)$').hasMatch(constraint!),
+          isTrue,
+          reason:
+              'zuraffa constraint "$constraint" must be a caret range '
+              'or an exact version, not a loose range (issue #109)',
+        );
+      }
+    });
 
-    test('pubspec.lock is committed, not git-ignored, and resolves zuraffa',
-        () {
+    test('pubspec.lock is committed, not git-ignored, and resolves zuraffa', () {
       final offenders = _readLines('.gitignore')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty && !line.startsWith('#'))
-          .where((line) =>
-              line == 'pubspec.lock' ||
-              line == '/pubspec.lock' ||
-              line == '**/pubspec.lock' ||
-              line == '*.lock')
+          .where(
+            (line) =>
+                line == 'pubspec.lock' ||
+                line == '/pubspec.lock' ||
+                line == '**/pubspec.lock' ||
+                line == '*.lock',
+          )
           .toList();
       expect(
         offenders,
@@ -163,14 +175,22 @@ void main() {
         reason: 'pubspec.lock must be committed to the repository',
       );
 
-      final block = _yamlEntryBlock(_readLines('pubspec.lock'), 'packages', 'zuraffa');
+      final block = _yamlEntryBlock(
+        _readLines('pubspec.lock'),
+        'packages',
+        'zuraffa',
+      );
       expect(
         block,
         isNotNull,
-        reason: 'the committed pubspec.lock must contain a resolved zuraffa entry',
+        reason:
+            'the committed pubspec.lock must contain a resolved zuraffa entry',
       );
-      expect(block!, contains('source: hosted'),
-          reason: 'zuraffa must resolve from the published host');
+      expect(
+        block!,
+        contains('source: hosted'),
+        reason: 'zuraffa must resolve from the published host',
+      );
       expect(
         RegExp(r'sha256:\s*"[0-9a-f]{64}"').hasMatch(block),
         isTrue,
@@ -181,22 +201,33 @@ void main() {
     });
 
     test('committed lockfile satisfies the pubspec constraint', () {
-      final depBlock = _yamlEntryBlock(_readLines('pubspec.yaml'), 'dependencies', 'zuraffa')!;
-      final constraint =
-          RegExp(r'^\s*zuraffa:\s*(\S+)\s*$', multiLine: true)
-              .firstMatch(depBlock)
-              ?.group(1);
+      final depBlock = _yamlEntryBlock(
+        _readLines('pubspec.yaml'),
+        'dependencies',
+        'zuraffa',
+      )!;
+      final constraint = RegExp(
+        r'^\s*zuraffa:\s*(\S+)\s*$',
+        multiLine: true,
+      ).firstMatch(depBlock)?.group(1);
       if (constraint == null || !constraint.startsWith('^')) {
         // Git-pinned or exact-pinned variant: version fit is enforced by
         // the pub resolver itself; nothing extra to check here.
         return;
       }
-      final lockBlock =
-          _yamlEntryBlock(_readLines('pubspec.lock'), 'packages', 'zuraffa')!;
-      final resolved =
-          RegExp(r'version:\s*"([^"]+)"').firstMatch(lockBlock)?.group(1);
-      expect(resolved, isNotNull,
-          reason: 'lockfile zuraffa entry must record a version');
+      final lockBlock = _yamlEntryBlock(
+        _readLines('pubspec.lock'),
+        'packages',
+        'zuraffa',
+      )!;
+      final resolved = RegExp(
+        r'version:\s*"([^"]+)"',
+      ).firstMatch(lockBlock)?.group(1);
+      expect(
+        resolved,
+        isNotNull,
+        reason: 'lockfile zuraffa entry must record a version',
+      );
       expect(
         _versionSatisfies(resolved!, constraint),
         isTrue,
@@ -227,7 +258,8 @@ void main() {
           pubGetSteps++;
           if (!lines[i].contains('--enforce-lockfile')) {
             offenders.add(
-                '${workflow.uri.pathSegments.last}:${i + 1}: ${lines[i].trim()}');
+              '${workflow.uri.pathSegments.last}:${i + 1}: ${lines[i].trim()}',
+            );
           }
         }
       }
@@ -250,17 +282,26 @@ void main() {
     test('ARCHITECTURE.md documents the dependency strategy', () {
       final arch = File('$repoRoot/ARCHITECTURE.md').readAsStringSync();
       expect(
-        RegExp('^#+.*dependenc', multiLine: true, caseSensitive: false)
-            .hasMatch(arch),
+        RegExp(
+          '^#+.*dependenc',
+          multiLine: true,
+          caseSensitive: false,
+        ).hasMatch(arch),
         isTrue,
         reason:
             'ARCHITECTURE.md must carry a dependency-strategy section '
             '(issue #109)',
       );
-      expect(arch, contains('pubspec.lock'),
-          reason: 'the strategy must cover the committed lockfile');
-      expect(arch, contains('--enforce-lockfile'),
-          reason: 'the strategy must cover CI lockfile enforcement');
+      expect(
+        arch,
+        contains('pubspec.lock'),
+        reason: 'the strategy must cover the committed lockfile',
+      );
+      expect(
+        arch,
+        contains('--enforce-lockfile'),
+        reason: 'the strategy must cover CI lockfile enforcement',
+      );
     });
   });
 }
