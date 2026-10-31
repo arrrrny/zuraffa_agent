@@ -2,14 +2,17 @@
 // #123). Pure-function coverage: SSE lines in, LlmResponseChunk out — no
 // network, same shape as the non-streaming parse tests above it.
 //
-// The parser mirrors OpenAiCompatibleClient.stream's wire handling (data:
-// lines, [DONE], delta.content, reasoning deltas, buffered tool_calls) so the
-// two OpenAI-compatible streaming paths agree on chunk semantics.
+// The parser is shared with OpenAiCompatibleClient.stream
+// (lib/src/llm/sse_chat_chunk_parser.dart, issue #123 review): one wire
+// implementation for both OpenAI-compatible streaming paths.
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_http_transport.dart';
+import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
 
 Stream<LlmResponseChunk> parse(List<String> lines) =>
@@ -255,4 +258,277 @@ void main() {
       expect(chunks.single.isComplete, isTrue);
     });
   });
+
+  group('streamComplete wire path (scripted fake HttpClient, issue #123)', () {
+    test(
+      'builds a streaming request with usage opt-in and auth headers',
+      () async {
+        final client = _ScriptedHttpClient('data: [DONE]\n\n');
+        final transport = LlmHttpTransport(clientFactory: () => client);
+
+        await transport
+            .streamComplete(
+              baseUrl: 'http://example.test/v1',
+              apiKey: 'secret-key',
+              model: 'tencent/hy3:free',
+              messages: const [ChatMessage(role: 'user', content: 'hi')],
+            )
+            .toList();
+
+        expect(client.requests, hasLength(1));
+        final request = client.requests.single;
+        expect(
+          request.uri,
+          Uri.parse('http://example.test/v1/chat/completions'),
+        );
+        expect(request.headers['content-type'], 'application/json');
+        expect(request.headers['authorization'], 'Bearer secret-key');
+
+        final body =
+            jsonDecode(request.body.toString()) as Map<String, dynamic>;
+        expect(body['stream'], isTrue);
+        // Regression (issue #123 review, finding 1): the streamed request must
+        // opt into usage reporting, or spec-compliant gateways never emit the
+        // trailing usage event and every streaming turn reports zero tokens.
+        expect(body['stream_options'], {'include_usage': true});
+      },
+    );
+
+    test(
+      'forwards SSE chunks, captures usage, and closes the client',
+      () async {
+        final sse =
+            'data: {"choices":[{"index":0,"delta":{"content":"ok"}}]}\n'
+            'data: {"choices":[],"usage":{"prompt_tokens":5,'
+            '"completion_tokens":2}}\n'
+            'data: [DONE]\n\n';
+        final client = _ScriptedHttpClient(sse);
+        final transport = LlmHttpTransport(clientFactory: () => client);
+
+        final chunks = await transport
+            .streamComplete(
+              baseUrl: 'http://example.test',
+              apiKey: 'k',
+              model: 'm',
+              messages: const [ChatMessage(role: 'user', content: 'hi')],
+            )
+            .toList();
+
+        expect(chunks, hasLength(2));
+        expect(chunks.first.content, 'ok');
+        expect(chunks.last.isComplete, isTrue);
+        // The usage event the request opt-in asks for really lands on the
+        // final chunk (pairs with the request-build test above).
+        expect(chunks.last.usage!.inputTokens, 5);
+        expect(chunks.last.usage!.outputTokens, 2);
+        expect(client.closedCount, 1);
+      },
+    );
+
+    test(
+      'maps a non-200 response to LlmTransportException and closes',
+      () async {
+        final client = _ScriptedHttpClient('boom', statusCode: 502);
+        final transport = LlmHttpTransport(clientFactory: () => client);
+
+        await expectLater(
+          transport
+              .streamComplete(
+                baseUrl: 'http://example.test',
+                apiKey: 'k',
+                model: 'm',
+                messages: const [ChatMessage(role: 'user', content: 'hi')],
+              )
+              .toList(),
+          throwsA(
+            isA<LlmTransportException>()
+                .having((e) => e.statusCode, 'statusCode', 502)
+                .having((e) => e.body, 'body', 'boom'),
+          ),
+        );
+        expect(client.closedCount, 1);
+      },
+    );
+
+    test('closes the client when the consumer cancels mid-stream', () async {
+      // First chunk now, then stay open: the consumer cancels while the
+      // producer is still live, which must tear the HttpClient down.
+      final controller = StreamController<List<int>>();
+      final client = _ScriptedHttpClient.serving(controller.stream);
+      final transport = LlmHttpTransport(clientFactory: () => client);
+
+      final firstChunk = Completer<void>();
+      final sub = transport
+          .streamComplete(
+            baseUrl: 'http://example.test',
+            apiKey: 'k',
+            model: 'm',
+            messages: const [ChatMessage(role: 'user', content: 'hi')],
+          )
+          .listen((chunk) {
+            if (!firstChunk.isCompleted) firstChunk.complete();
+          });
+
+      controller.add(
+        utf8.encode(
+          'data: {"choices":[{"index":0,"delta":{"content":"first"}}]}\n',
+        ),
+      );
+      await firstChunk.future;
+      await sub.cancel();
+      await controller.close();
+      // Allow the generator's finally block to run.
+      await pumpEventQueue();
+      expect(client.closedCount, 1);
+    });
+
+    test('installs the proxy resolver when proxyUrl is set', () async {
+      final client = _ScriptedHttpClient('data: [DONE]\n\n');
+      final transport = LlmHttpTransport(clientFactory: () => client);
+
+      await transport
+          .streamComplete(
+            baseUrl: 'http://example.test',
+            apiKey: 'k',
+            proxyUrl: 'http://localhost:8890',
+            model: 'm',
+            messages: const [ChatMessage(role: 'user', content: 'hi')],
+          )
+          .toList();
+
+      expect(client.findProxyAssigned, isTrue);
+      expect(client.findProxyDirective, 'PROXY localhost:8890');
+    });
+  });
+}
+
+/// Scripted HttpClient double (issue #123 review): `postUrl` records the
+/// request and answers with the scripted body bytes — the `clientFactory`
+/// seam makes the wire path unit-testable without any network. The response
+/// is a real one-shot byte stream so the utf8/LineSplitter transforms run
+/// unchanged.
+class _ScriptedHttpClient implements HttpClient {
+  _ScriptedHttpClient(String body, {this.statusCode = 200})
+    : _bodyBytes = utf8.encode(body),
+      _byteStream = null;
+
+  _ScriptedHttpClient.serving(Stream<List<int>> byteStream)
+    : _bodyBytes = null,
+      _byteStream = byteStream,
+      statusCode = 200;
+
+  final int statusCode;
+  final List<int>? _bodyBytes;
+  final Stream<List<int>>? _byteStream;
+  final requests = <_RecordedWireRequest>[];
+  int closedCount = 0;
+  bool findProxyAssigned = false;
+  String? findProxyDirective;
+
+  @override
+  set findProxy(String Function(Uri)? f) {
+    findProxyAssigned = true;
+    findProxyDirective = f?.call(
+      Uri.parse('http://example.test/chat/completions'),
+    );
+  }
+
+  @override
+  Future<HttpClientRequest> postUrl(Uri url) async {
+    final request = _ScriptedHttpClientRequest(this, url);
+    requests.add(request.record);
+    return request;
+  }
+
+  @override
+  void close({bool force = false}) => closedCount++;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+class _ScriptedHttpClientRequest implements HttpClientRequest {
+  _ScriptedHttpClientRequest(this._client, Uri url)
+    : record = _RecordedWireRequest(url);
+
+  final _ScriptedHttpClient _client;
+  final _RecordedWireRequest record;
+
+  @override
+  HttpHeaders get headers => _RecordedHttpHeaders(record.headers);
+
+  @override
+  void write(Object? object) => record.body.write(object);
+
+  @override
+  Future<HttpClientResponse> close() => Future.value(
+    _ScriptedHttpClientResponse(
+      _client.statusCode,
+      _client._bodyBytes,
+      _client._byteStream,
+    ),
+  );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+/// Header double: records `set` calls (lower-cased) for request assertions.
+class _RecordedHttpHeaders implements HttpHeaders {
+  _RecordedHttpHeaders(this.store);
+
+  final Map<String, String> store;
+
+  @override
+  void set(String name, Object value, {bool preserveHeaderCase = false}) =>
+      store[name.toLowerCase()] = value.toString();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+class _RecordedWireRequest {
+  _RecordedWireRequest(this.uri);
+
+  final Uri uri;
+  final Map<String, String> headers = {};
+  final StringBuffer body = StringBuffer();
+}
+
+/// Response double: either one scripted byte payload or a live byte stream
+/// (for the close-on-cancel contract). Extends Stream so `transform` works
+/// for free.
+class _ScriptedHttpClientResponse extends Stream<List<int>>
+    implements HttpClientResponse {
+  _ScriptedHttpClientResponse(this.statusCode, this._bodyBytes, this._stream);
+
+  @override
+  final int statusCode;
+  final List<int>? _bodyBytes;
+  final Stream<List<int>>? _stream;
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int> element)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    final source =
+        _stream ??
+        Stream<List<int>>.fromIterable([if (_bodyBytes != null) _bodyBytes]);
+    return source.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
 }

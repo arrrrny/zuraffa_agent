@@ -127,6 +127,13 @@ final class _BoundedBuffer<T> {
   void _onError(Object error, StackTrace stackTrace) {
     if (_closed) return;
     _queue.addLast(_BufferedError<T>(error, stackTrace));
+    // Same watermark guard as _onData: an erroring source must not push the
+    // queue past capacity while the consumer is paused (bounded-memory
+    // invariant on boundedStream).
+    if (!_sourcePaused && _queue.length >= capacity) {
+      _sourcePaused = true;
+      _subscription?.pause();
+    }
     _drain();
   }
 

@@ -16,6 +16,7 @@ import 'dart:io';
 import '../../../domain/entities/llm_client/chat_completion.dart';
 import '../../../domain/entities/llm_client/chat_message.dart';
 import '../../../llm/llm_client.dart';
+import '../../../llm/sse_chat_chunk_parser.dart';
 
 /// Raised when a completion request fails at the transport layer.
 class LlmTransportException implements Exception {
@@ -36,7 +37,11 @@ class LlmTransportException implements Exception {
 
 /// Builds an OpenAI-compatible chat-completion request body.
 ///
-/// Pure function — no I/O, fully unit-testable.
+/// Pure function — no I/O, fully unit-testable. A streamed request opts into
+/// usage reporting (`stream_options.include_usage`), mirroring
+/// `OpenAiCompatibleClient._buildBody`: spec-compliant gateways emit the
+/// trailing usage event only when the client asks for it, and without the
+/// opt-in every streaming turn silently reports zero token usage.
 Map<String, dynamic> buildChatCompletionRequest({
   required String model,
   required List<ChatMessage> messages,
@@ -46,6 +51,7 @@ Map<String, dynamic> buildChatCompletionRequest({
     'model': model,
     'messages': messages.map((m) => m.toJson()).toList(growable: false),
     'stream': stream,
+    if (stream) 'stream_options': {'include_usage': true},
   };
 }
 
@@ -249,161 +255,11 @@ class LlmHttpTransport {
 /// Parses an OpenAI-compatible streaming (SSE) response body into
 /// `LlmResponseChunk`s (issue #123).
 ///
-/// Pure function — no I/O, fully unit-testable. Mirrors the wire handling of
-/// `OpenAiCompatibleClient.stream` so both OpenAI-compatible streaming paths
-/// agree on chunk semantics:
-///
-/// * `data:` lines carry one JSON event each; `data: [DONE]` ends the
-///   stream. Empty lines, `: comment` keep-alives, and malformed payloads
-///   are skipped without killing the stream.
-/// * `delta.content` / `delta.reasoning` / `delta.reasoning_content` map to
-///   content / thinking chunks (empty deltas are dropped).
-/// * `delta.tool_calls` fragments accumulate per index slot and are emitted
-///   as one chunk when `finish_reason: tool_calls` arrives (or at stream
-///   end).
-/// * A trailing usage event (empty `choices`) updates usage and finalizes
-///   the stream; a stream that ends without `[DONE]` is finalized anyway so
-///   consumers always see exactly one `isComplete: true` chunk.
-Stream<LlmResponseChunk> parseChatCompletionChunkStream(
-  Stream<String> lines,
-) async* {
-  final toolBuffers = <int, _TransportToolBuffer>{};
-  var finishReason = 'stop';
-  LlmUsage? usage;
-  var toolCallsEmitted = false;
-  var finalEmitted = false;
-
-  Stream<LlmResponseChunk> finalize() async* {
-    if (!toolCallsEmitted && toolBuffers.isNotEmpty) {
-      toolCallsEmitted = true;
-      yield LlmResponseChunk(
-        toolCalls: [
-          for (final buffer in toolBuffers.values)
-            LlmToolCall(
-              id: buffer.id ?? '',
-              name: buffer.name,
-              arguments: parseStreamingToolArguments(buffer.arguments),
-            ),
-        ],
-      );
-    }
-    if (!finalEmitted) {
-      finalEmitted = true;
-      yield LlmResponseChunk(
-        usage: usage,
-        isComplete: true,
-        finishReason: finishReason,
-      );
-    }
-  }
-
-  await for (final line in lines) {
-    if (line.isEmpty || line.startsWith(':')) continue;
-    if (!line.startsWith('data:')) continue;
-    final payload = line.substring(5).trim();
-    if (payload == '[DONE]') {
-      yield* finalize();
-      return;
-    }
-    final Map<String, dynamic> event;
-    try {
-      event = jsonDecode(payload) as Map<String, dynamic>;
-    } on FormatException {
-      continue; // Skip malformed events without killing the stream.
-    }
-
-    final choices = (event['choices'] as List?) ?? const [];
-    if (choices.isEmpty) {
-      final rawUsage = event['usage'];
-      if (rawUsage is Map) usage = _parseStreamingUsage(rawUsage);
-      yield* finalize();
-      continue;
-    }
-    final choice = choices.first as Map;
-    final delta = (choice['delta'] as Map?) ?? const {};
-    for (final fragment in (delta['tool_calls'] as List?) ?? const []) {
-      final f = fragment as Map;
-      final index = (f['index'] as num?)?.toInt() ?? 0;
-      final buffer = toolBuffers.putIfAbsent(index, _TransportToolBuffer.new);
-      final id = f['id'] as String?;
-      if (id != null && id.isNotEmpty) buffer.id ??= id;
-      final function = f['function'] as Map?;
-      if (function != null) {
-        final name = function['name'] as String?;
-        if (name != null && name.isNotEmpty) buffer.name += name;
-        buffer.arguments += (function['arguments'] as String?) ?? '';
-      }
-    }
-    final reasoning =
-        (delta['reasoning'] as String?) ??
-        (delta['reasoning_content'] as String?);
-    if (reasoning != null && reasoning.isNotEmpty) {
-      yield LlmResponseChunk(thinking: reasoning);
-    }
-    final content = delta['content'] as String?;
-    if (content != null && content.isNotEmpty) {
-      yield LlmResponseChunk(content: content);
-    }
-    final reason = choice['finish_reason'] as String?;
-    if (reason != null) {
-      finishReason = reason;
-      if (reason == 'tool_calls' && toolBuffers.isNotEmpty) {
-        toolCallsEmitted = true;
-        yield LlmResponseChunk(
-          toolCalls: [
-            for (final buffer in toolBuffers.values)
-              LlmToolCall(
-                id: buffer.id ?? '',
-                name: buffer.name,
-                arguments: parseStreamingToolArguments(buffer.arguments),
-              ),
-          ],
-          finishReason: reason,
-        );
-      }
-    }
-  }
-  // Stream ended without an explicit [DONE] sentinel — finalize anyway.
-  yield* finalize();
-}
-
-/// Accumulates one tool-call's streamed fragments on the transport path.
-class _TransportToolBuffer {
-  String? id;
-  String name = '';
-  String arguments = '';
-}
-
-/// Parses streaming usage (`prompt_tokens` / `completion_tokens` shape) into
-/// the chunk currency. Mirrors `OpenAiCompatibleClient._parseUsage`.
-LlmUsage _parseStreamingUsage(dynamic usage) {
-  if (usage is! Map) return const LlmUsage();
-  return LlmUsage(
-    inputTokens: (usage['prompt_tokens'] as num?)?.toInt() ?? 0,
-    outputTokens: (usage['completion_tokens'] as num?)?.toInt() ?? 0,
-    cachedTokens:
-        ((usage['prompt_tokens_details'] as Map?)?['cached_tokens'] as num?)
-            ?.toInt() ??
-        0,
-    thoughtTokens:
-        ((usage['completion_tokens_details'] as Map?)?['reasoning_tokens']
-                as num?)
-            ?.toInt() ??
-        0,
-  );
-}
-
-/// Tolerates malformed streamed tool arguments (spec 007 AC-2 analogue):
-/// any unparsable payload defaults to an empty map.
-Map<String, dynamic> parseStreamingToolArguments(String raw) {
-  if (raw.isNotEmpty) {
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) return decoded;
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
-    } on FormatException {
-      // Fall through to the empty map.
-    }
-  }
-  return const {};
-}
+/// Pure function — no I/O, fully unit-testable. Delegate to the shared
+/// parser (`parseOpenAiSseChunkStream` in
+/// lib/src/llm/sse_chat_chunk_parser.dart) so both OpenAI-compatible
+/// streaming paths — this transport and `OpenAiCompatibleClient.stream` —
+/// run one wire implementation instead of twin state machines (issue #123
+/// review).
+Stream<LlmResponseChunk> parseChatCompletionChunkStream(Stream<String> lines) =>
+    parseOpenAiSseChunkStream(lines);
