@@ -67,6 +67,7 @@ import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
 import '../config/zuraffa_config.dart';
 import '../security/tool_result_sanitizer.dart';
+import 'cancellation_token.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
@@ -90,6 +91,12 @@ enum MissionStatus {
   /// Goal mode (spec 071): the GoalEvaluator judged the goal achieved
   /// from the transcript; the mission stopped early.
   goalAchieved,
+
+  /// A CancellationToken signalled the mission (issue #140): the runner
+  /// stopped COOPERATIVELY at the next turn boundary. The turn in flight
+  /// when cancel() landed still completed — Dart futures cannot be aborted
+  /// — so the transcript keeps that turn's assistant + tool messages.
+  cancelled,
 }
 
 /// Outcome of one mission run: id, terminal [status], turns consumed, the
@@ -333,12 +340,18 @@ class MissionRunner {
   /// evaluator after each turn's tool dispatch and before the natural-stop
   /// check, stopping early with [MissionStatus.goalAchieved] on a true
   /// verdict. Goal mode never overrides budgets or the natural stop.
+  ///
+  /// Cooperative cancellation (issue #140): when [cancellationToken] is
+  /// supplied and signalled, the loop stops at the NEXT turn boundary with
+  /// [MissionStatus.cancelled] instead of spending another turn. The turn
+  /// in flight when cancel() landed still completes.
   Future<MissionResult> run({
     required String missionId,
     required List<ChatMessage> messages,
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
   }) {
     return _run(
       missionId: missionId,
@@ -346,6 +359,7 @@ class MissionRunner {
       planner: planner,
       goal: goal,
       goalEvaluator: goalEvaluator,
+      cancellationToken: cancellationToken,
       streamChunks: false,
     );
   }
@@ -389,6 +403,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
   }) {
     return _run(
       missionId: missionId,
@@ -396,6 +411,7 @@ class MissionRunner {
       planner: planner,
       goal: goal,
       goalEvaluator: goalEvaluator,
+      cancellationToken: cancellationToken,
       streamChunks: true,
     );
   }
@@ -406,6 +422,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
     required bool streamChunks,
   }) async {
     final config = _config;
@@ -454,6 +471,7 @@ class MissionRunner {
           planner: planner,
           goal: goal,
           goalEvaluator: goalEvaluator,
+          cancellationToken: cancellationToken,
           tracer: tracer,
           metrics: metrics,
           missionSpan: span,
@@ -538,6 +556,7 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+    CancellationToken? cancellationToken,
     required Tracer tracer,
     required Metrics metrics,
     required Span missionSpan,
@@ -581,6 +600,14 @@ class MissionRunner {
       }
       if (deadline != null && _clock().isAfter(deadline)) {
         status = MissionStatus.budgetExhausted;
+        break;
+      }
+      // Cooperative cancellation (issue #140): a signalled token stops the
+      // mission here, before another turn is spent. Checked AFTER the
+      // budget gates and BEFORE the turn counter increments, so a cancelled
+      // mission reports exactly the turns it actually ran.
+      if (cancellationToken != null && cancellationToken.isCancelled) {
+        status = MissionStatus.cancelled;
         break;
       }
 

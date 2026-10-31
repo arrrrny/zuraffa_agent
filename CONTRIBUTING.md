@@ -27,6 +27,26 @@ dart pub get
 - `dart analyze` must be clean (the pipeline gate runs
   `dart analyze --fatal-infos`).
 
+## Required status checks
+
+Branch protection on `master` mirrors the `spec-pipeline` workflow — a PR is
+mergeable only when all of these status checks are green (issue #140):
+
+| Check | What it gates |
+|---|---|
+| `spec-pipeline / format` | `dart format .` produces no diff |
+| `spec-pipeline / verify` | `dart analyze --fatal-infos`, `dart test -j 2` (unit lane), runtime-purity and attribution gates |
+| `spec-pipeline / coverage` | `dart test -j 2 --coverage`, ≥ 80% over hand-written `lib/` |
+| `spec-pipeline / pana` | pub.dev package score |
+| `spec-pipeline / osv-scanner` | dependency vulnerability scan |
+| `spec-pipeline / pipeline` | aggregate pipeline gate |
+
+The `nightly-verification` workflow (mutation, load, fixture-drift, and the
+`dart test -P integration` integration lane) runs on a schedule; it is the
+only lane that exercises the integration tier and stays advisory for PRs.
+Keep this table in sync with `.github/workflows/pipeline.yml` when jobs are
+added, removed, or renamed.
+
 ## `.zfa/` and `.workflow/`: source vs generated
 
 The agent engine and the spec-driven delivery pipeline write runtime state

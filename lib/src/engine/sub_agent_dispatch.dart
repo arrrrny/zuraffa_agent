@@ -31,6 +31,7 @@ import '../domain/entities/sub_agent_spec/sub_agent_spec.dart';
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import '../domain/services/oversized_result_policy_service.dart';
 import 'events/engine_event.dart';
+import 'cancellation_token.dart';
 import 'mission_runner.dart';
 import 'oversized_result_policy_dispatcher.dart';
 import 'tool_dispatcher.dart';
@@ -123,6 +124,10 @@ enum SubAgentDispatchStatus {
   /// explicit grant (spec 036: "the engine refuses to dispatch admin-risk
   /// sub-agents without an admin grant")
   refusedRiskTier,
+
+  /// The dispatch's CancellationToken was signalled mid-run (issue #140):
+  /// the child mission stopped cooperatively at its next turn boundary.
+  cancelled,
 }
 
 /// Outcome of one sub-agent dispatch: ids, terminal status, the child's
@@ -215,6 +220,10 @@ class SubAgentDispatchService {
   ///
   /// Admin-tier specs require [adminGranted]; otherwise the dispatch is
   /// refused before any LLM call and the instance is returned unchanged.
+  ///
+  /// Cooperative cancellation (issue #140): a signalled [cancellationToken]
+  /// stops the child mission at its next turn boundary; the dispatch then
+  /// reports [SubAgentDispatchStatus.cancelled].
   Future<SubAgentDispatchResult> dispatch({
     required SubAgentSpec spec,
     required String mission,
@@ -223,6 +232,7 @@ class SubAgentDispatchService {
     void Function(EngineEvent)? onEvent,
     DateTime Function()? clock,
     bool adminGranted = false,
+    CancellationToken? cancellationToken,
   }) async {
     final effectiveMaxTurns = spec.maxTurns ?? _fallbackMaxTurns;
     final context = SubAgentContext(
@@ -282,6 +292,7 @@ class SubAgentDispatchService {
         ChatMessage(role: 'user', content: mission),
       ],
       planner: planner,
+      cancellationToken: cancellationToken,
     );
 
     final status = switch (child.status) {
@@ -293,6 +304,7 @@ class SubAgentDispatchService {
       MissionStatus.maxTurnsExceeded => SubAgentDispatchStatus.budgetExhausted,
       MissionStatus.loopDetected => SubAgentDispatchStatus.loopDetected,
       MissionStatus.goalAchieved => SubAgentDispatchStatus.goalAchieved,
+      MissionStatus.cancelled => SubAgentDispatchStatus.cancelled,
     };
 
     // Bookkeeping: a run happened — totalRuns + 1, outcome recorded. The
