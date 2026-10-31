@@ -24,14 +24,23 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: stable
+          # Pinned to the SDK the tree was formatted with (3.13.7): the
+          # moving `stable` channel's formatter could drift and fail this
+          # gate with zero code changes. The `verify` matrix keeps riding
+          # stable/beta — testing both channels is its point.
+          sdk: 3.13.7
       # dart format reads the package config to learn the package's
       # language version (tall style); without `pub get` it falls back to
       # a lower default and disagrees with the committed formatting.
       - name: Pub get
         run: dart pub get
       - name: Enforce dart format
-        run: dart format --output=none --set-exit-if-changed lib test example
+        # Scope mirrors the tree-wide reformat wherever it can resolve on
+        # this pure-Dart runner. packages/** is deliberately excluded: the
+        # federated subpackage analyzes in its own context
+        # (analysis_options.yaml) and its pubspec needs flutter plus a
+        # path: sibling checkout, so it cannot resolve here.
+        run: dart format --output=none --set-exit-if-changed lib test tool example
 
   verify:
     # CI gate for every PR: analyze + test the engine on supported SDKs
@@ -59,8 +68,8 @@ jobs:
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
-        # Fleet guard (AGENTS.md): cap test concurrency at 2 — overrides
-        # dart_test.yaml's concurrency: 4.
+        # Fleet guard (AGENTS.md): cap test concurrency at 2 — matches
+        # dart_test.yaml's concurrency: 2; the flag keeps CI explicit.
         run: dart test -j 2
       - name: Runtime purity gate (no dart:io in engine runtime paths)
         run: |
