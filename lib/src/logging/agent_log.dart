@@ -131,6 +131,41 @@ abstract final class AgentLog {
     engine.log(lifecycleLevel, 'mission $missionId: $outcome');
   }
 
+  /// INFO record for a pre-flight context compaction (issue #138) — turn
+  /// number, strategy, and the estimated token count only, never payload
+  /// content.
+  static void compactionInfo({
+    required String missionId,
+    required int turn,
+    required String strategy,
+    required int tokensBefore,
+  }) {
+    if (!engine.isLoggable(lifecycleLevel)) return;
+    engine.log(
+      lifecycleLevel,
+      'mission $missionId turn $turn: pre-flight compaction '
+      '($strategy) estimated~$tokensBefore tokens',
+    );
+  }
+
+  /// WARNING record when the pre-flight fired but the ContextCompressor
+  /// declined (empty snapshot — its own gates still applied, e.g. a
+  /// transcript of keepRecentMessages or fewer messages): the transcript is
+  /// left intact and the turn proceeds, so the provider's context limit
+  /// remains the backstop (issue #138).
+  static void compactionDeclined({
+    required String missionId,
+    required int turn,
+    required int estimatedTokens,
+  }) {
+    if (!engine.isLoggable(resilienceLevel)) return;
+    engine.log(
+      resilienceLevel,
+      'mission $missionId turn $turn: pre-flight compaction declined '
+      '(estimated~$estimatedTokens tokens) — transcript left intact',
+    );
+  }
+
   /// Documentation self-check (spec 112 FR-006): throws [ArgumentError]
   /// naming the missing section when the shipped ARCHITECTURE.md logging
   /// section loses any of the three required coverage areas — the

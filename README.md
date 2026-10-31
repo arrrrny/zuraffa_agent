@@ -39,6 +39,86 @@ dart test
 dart analyze
 ```
 
+## Supported LLM providers
+
+The `llm` slice speaks three wire protocols out of the box. Every client
+takes a swappable `LlmTransport` (retry, circuit breaking, and the fallback
+chain are layered on top), streams over SSE, and serializes multimodal
+`ImageBlock` content in the provider's native shape.
+
+| Provider | Client | Endpoint | Image payload |
+|----------|--------|----------|---------------|
+| OpenAI-compatible | `OpenAiCompatibleClient` | `POST {baseUrl}/chat/completions` | `image_url` part with a `data:` URI |
+| Anthropic | `AnthropicClient` | `POST {baseUrl}/messages` | `image` block with a base64 `source` |
+| Gemini | `GeminiClient` | `POST {baseUrl}/models/{model}:generateContent` | `inlineData` part (`mimeType` + base64 `data`) |
+
+"OpenAI-compatible" covers OpenAI itself plus Kimi, Groq, vLLM, and any
+gateway exposing `/chat/completions` — set `providerName` accordingly.
+The three clients are contract-tested from one shared suite over recorded
+wire fixtures (`test/fixtures/llm/<provider>/`), including multimodal
+request construction (`generate_multimodal.json`).
+
+### Not supported (wontfix, issue #138)
+
+- **OpenAI Responses API** — every model the Responses API serves is
+  reachable through the OpenAI-compatible Chat Completions client, and the
+  Responses-only stateful features (`previous_response_id`, server-side
+  conversation state) are orthogonal to zuraffa_agent's own session and
+  episodic-memory model. Revisit only when a deployment requires those
+  features specifically.
+- **AWS Bedrock** — requires SigV4 request signing and the AWS credential
+  chain: a materially different transport/auth surface with real
+  maintenance cost, and no current demand. Revisit on demand.
+
+### Token counting and pre-flight compaction
+
+Requests are estimated client-side before each turn — context overflow is
+caught before it is sent, not when the provider returns a 400. The default
+`HeuristicTokenEstimator` counts ~4 characters per token; a
+`TiktokenEstimator` consuming a tiktoken rank table is available when you
+need higher fidelity:
+
+```dart
+final estimator = await TiktokenEstimator.load('cl100k_base.tiktoken');
+final runner = MissionRunner(
+  // ...executor, dispatcher, stop policy, events...
+  model: Model(provider: 'openai', modelId: 'gpt-4o', contextWindow: 128000),
+  tokenEstimator: estimator,
+  contextCompressor: compressor,
+);
+```
+
+When the pre-flight estimate reaches `model.contextWindow * 0.8`,
+`MissionRunner` triggers the `ContextCompressor` proactively and replaces
+the compacted head of the transcript with the snapshot it produced. Omit
+`model`/`contextCompressor` to keep the pre-flight inert. The trigger
+fraction is the `preflightThreshold` constructor argument (default 0.8;
+must be in (0, 1], asserted).
+
+**Pre-flight gate ↔ compressor gate interaction.** The two gates are
+coordinated but independent. `compress` receives the pre-flight's estimate
+(`estimatedTokens`), so the compressor's trigger counts with the same
+convention as the wired estimator (a `TiktokenEstimator`'s BPE tokens, not
+a chars/4 re-derivation). The compressor's own guards still apply: a
+transcript of `keepRecentMessages` (10) or fewer messages — however
+token-heavy — or one below its own `tokenThreshold` (default 64000
+chars/4) is **declined**. A decline is logged at WARNING
+(`AgentLog.compactionDeclined`) and the turn proceeds on the intact
+transcript: the provider's context limit remains the backstop. For models
+with a context window below ~80k tokens, lower the compressor's
+`tokenThreshold` below `contextWindow * preflightThreshold` so the two
+gates agree (otherwise estimates in `[0.8 × window, tokenThreshold]` fire
+the pre-flight but never pass the compressor's gate).
+
+**Orphaned tool rows.** When the transcript is rebuilt from a snapshot,
+the preserved tail must not begin with orphaned tool results — tool rows
+whose assistant predecessor was compacted away. Providers reject that
+shape (tool results detached from the call they answer), and
+`ChatMessage` carries no tool id to re-link them. The pre-flight drops
+such leading tool rows when it rebuilds the transcript, and the same
+invariant is part of the `ContextCompressor` contract: compressors must
+not return preserved tails that begin with orphaned tool results.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
