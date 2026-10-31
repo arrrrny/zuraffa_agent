@@ -133,6 +133,9 @@ class FallbackChainClient implements LlmClient {
     throw LlmFallbackExhaustedException(errors);
   }
 
+  /// Closes every provider client in the chain — and thereby their
+  /// transports ([LlmTransport.close]). A chain whose clients share an
+  /// injected transport closes it for all of them (issue #159 review).
   @override
   Future<void> close() async {
     for (final p in providers) {

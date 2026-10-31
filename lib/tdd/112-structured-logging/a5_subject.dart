@@ -27,6 +27,9 @@ class _A5Transport implements LlmTransport {
   @override
   Future<LlmStreamResponse> openStream(LlmHttpRequest request) =>
       throw UnimplementedError('A5 exercises the retry path only');
+
+  @override
+  Future<void> close() async {}
 }
 
 class _A5Clock implements LlmClock {

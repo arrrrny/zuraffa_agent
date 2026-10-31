@@ -161,8 +161,17 @@ class OpenAiCompatibleClient implements LlmClient {
     yield* finalize();
   }
 
+  /// Closes the underlying [transport] — the seam's [LlmClient.close]
+  /// contract reaches the socket (issue #159 review: the legacy
+  /// LlmHttpTransport closed its HttpClient per call; the default stack is
+  /// long-lived for connection reuse, so hosts building clients
+  /// transiently close them through this path).
+  ///
+  /// Ownership: closing this client closes [transport]. When the transport
+  /// was injected and is shared with other clients, closing THIS client
+  /// closes it for all of them.
   @override
-  Future<void> close() async {}
+  Future<void> close() async => transport.close();
 
   LlmHttpRequest _httpRequest(String body, LlmRequest request) =>
       LlmHttpRequest(
@@ -299,6 +308,7 @@ class OpenAiCompatibleClient implements LlmClient {
     final message = (choice['message'] as Map?)?.cast<String, dynamic>() ?? {};
     return LlmResponse(
       content: (message['content'] as String?) ?? '',
+      thinking: _reasoningOf(message),
       toolCalls: [
         for (final tc in (message['tool_calls'] as List?) ?? const [])
           LlmToolCall(
@@ -310,6 +320,27 @@ class OpenAiCompatibleClient implements LlmClient {
       usage: _parseUsage(json['usage']),
       finishReason: (choice['finish_reason'] as String?) ?? 'stop',
     );
+  }
+
+  /// Surfaces gateway reasoning as [LlmResponse.thinking] — the `reasoning`
+  /// string (Kimi/OpenRouter-style) or the `reasoning_details` list,
+  /// reassembled in order. The legacy LlmHttpTransport parser exposed the
+  /// same fields as ChatCompletion.reasoning, which the engine persists as
+  /// assistant thinking (spec 002 FR-002); routing LlmClientProvider through
+  /// this client (issue #124) must not drop it.
+  static String? _reasoningOf(Map<String, dynamic> message) {
+    final reasoning = message['reasoning'] as String?;
+    if (reasoning != null && reasoning.isNotEmpty) return reasoning;
+    final details = message['reasoning_details'];
+    if (details is List) {
+      final joined = details
+          .whereType<Map<String, dynamic>>()
+          .map((d) => d['text'] as String? ?? '')
+          .where((t) => t.isNotEmpty)
+          .join('\n');
+      if (joined.isNotEmpty) return joined;
+    }
+    return null;
   }
 
   static LlmUsage _parseUsage(dynamic usage) {
