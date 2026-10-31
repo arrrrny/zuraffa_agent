@@ -43,7 +43,7 @@ jobs:
         with:
           sdk: ${{ env.DART_SDK }}
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: dmuti mutation run (>= 80% kill-rate gate)
         continue-on-error: true
         run: |
@@ -81,7 +81,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-${{ env.DART_SDK }}-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Run load benchmarks
         continue-on-error: true
         run: dart run benchmark/benchmark_runner.dart --json benchmark-results.json
@@ -105,7 +105,7 @@ jobs:
         with:
           sdk: ${{ env.DART_SDK }}
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Check LLM fixture drift against provider docs
         continue-on-error: true
         run: |
@@ -141,7 +141,7 @@ jobs:
           restore-keys: |
             pub-${{ runner.os }}-${{ env.DART_SDK }}-
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Integration tests (-P integration, live LLM lane)
         # Advisory by the nightly convention (`continue-on-error: true`, as
         # on every gate step here), so the job's status carries no signal on

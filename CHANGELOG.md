@@ -20,6 +20,17 @@ Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_inten
 - **Housekeeping** (issue #140): `.github/CODEOWNERS` added, the required
   status-check list documented in `CONTRIBUTING.md`, and the stale STUB header
   replaced with a one-line summary in `fallback_chain_client.dart`.
+- **Publish automation** (issue #126): `.github/workflows/publish.yml` — every
+  PR runs a `pub publish --dry-run` matrix over all five packages and fails on
+  any packaging warning; pushing a `v<version>` tag validates the whole fleet
+  first, then publishes it to pub.dev in the PUBLISH.md dependency order
+  (root → platform interface → android/ios/macOS) with a pub.dev propagation
+  wait after each package the next one depends on. The release is gated by the
+  `pub-dev` environment (required reviewers) and
+  uses the `PUB_CREDENTIALS_JSON` secret; a partially published fleet is
+  resumed with `gh workflow run publish.yml -f resume_from=<package>`. README
+  install snippet refreshed to `^7.3.2` (mono-version policy) and a
+  Publishing section added.
 - **Breaking**: `SessionStorage` implementations must now also implement
   `backup(dest)`, `restore(src)` and `prune(policy)` (issue #135).
 - **Session backup/restore + retention/TTL policy** (issue #135): `SessionStorage.backup(dest)` /
