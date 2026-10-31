@@ -17,3 +17,6 @@
 /build/
 /.zfa/
 /.workflow/
+
+# Docs (pub layout convention: top-level `docs/` must be `doc/`; kept in-repo only)
+/docs/
