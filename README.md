@@ -91,7 +91,33 @@ final runner = MissionRunner(
 When the pre-flight estimate reaches `model.contextWindow * 0.8`,
 `MissionRunner` triggers the `ContextCompressor` proactively and replaces
 the compacted head of the transcript with the snapshot it produced. Omit
-`model`/`contextCompressor` to keep the pre-flight inert.
+`model`/`contextCompressor` to keep the pre-flight inert. The trigger
+fraction is the `preflightThreshold` constructor argument (default 0.8;
+must be in (0, 1], asserted).
+
+**Pre-flight gate ↔ compressor gate interaction.** The two gates are
+coordinated but independent. `compress` receives the pre-flight's estimate
+(`estimatedTokens`), so the compressor's trigger counts with the same
+convention as the wired estimator (a `TiktokenEstimator`'s BPE tokens, not
+a chars/4 re-derivation). The compressor's own guards still apply: a
+transcript of `keepRecentMessages` (10) or fewer messages — however
+token-heavy — or one below its own `tokenThreshold` (default 64000
+chars/4) is **declined**. A decline is logged at WARNING
+(`AgentLog.compactionDeclined`) and the turn proceeds on the intact
+transcript: the provider's context limit remains the backstop. For models
+with a context window below ~80k tokens, lower the compressor's
+`tokenThreshold` below `contextWindow * preflightThreshold` so the two
+gates agree (otherwise estimates in `[0.8 × window, tokenThreshold]` fire
+the pre-flight but never pass the compressor's gate).
+
+**Orphaned tool rows.** When the transcript is rebuilt from a snapshot,
+the preserved tail must not begin with orphaned tool results — tool rows
+whose assistant predecessor was compacted away. Providers reject that
+shape (tool results detached from the call they answer), and
+`ChatMessage` carries no tool id to re-link them. The pre-flight drops
+such leading tool rows when it rebuilds the transcript, and the same
+invariant is part of the `ContextCompressor` contract: compressors must
+not return preserved tails that begin with orphaned tool results.
 
 ## License
 

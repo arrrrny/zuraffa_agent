@@ -5,6 +5,7 @@
 // the estimate reaches `model.contextWindow * 0.8` — instead of learning
 // about context overflow from a provider 400 after the fact.
 
+import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
@@ -19,6 +20,7 @@ import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/llm/context_compressor.dart';
 import 'package:zuraffa_agent/src/llm/token_estimator.dart';
+import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
@@ -118,11 +120,16 @@ class RecordingCompressor implements ContextCompressor {
   final CompressionResult result;
   int calls = 0;
   final List<List<AgentMessage>> seen = [];
+  final List<int?> estimatedTokensSeen = [];
 
   @override
-  Future<CompressionResult> compress(List<AgentMessage> messages) async {
+  Future<CompressionResult> compress(
+    List<AgentMessage> messages, {
+    int? estimatedTokens,
+  }) async {
     calls++;
     seen.add(List<AgentMessage>.unmodifiable(messages));
+    estimatedTokensSeen.add(estimatedTokens);
     return result;
   }
 }
@@ -357,4 +364,167 @@ void main() {
       expect(result.status, MissionStatus.completed);
     },
   );
+
+  test(
+    'a declined compaction is logged at WARNING and passes the estimate to compress',
+    () async {
+      final records = <LogRecord>[];
+      ZuraffaLogging.install(level: Level.ALL, onRecord: records.add);
+      addTearDown(ZuraffaLogging.reset);
+
+      final llm = RecordingLlmClient(completions: [completionOf('done')]);
+      final estimator = FakeTokenEstimator([900]);
+      final compressor = RecordingCompressor(
+        const CompressionResult(
+          snapshot: '',
+          preservedMessages: [],
+          compressedMessages: [],
+          strategy: CompressionStrategy.none,
+        ),
+      );
+      final runner = makeRunner(
+        llm: llm,
+        estimator: estimator,
+        compressor: compressor,
+      );
+
+      final result = await runner.run(
+        missionId: 'm1',
+        messages: [const ChatMessage(role: 'user', content: 'go')],
+      );
+
+      // The pre-flight's own estimate rides along to the compressor (the
+      // two gates count with the same convention — issue #138 review).
+      expect(compressor.calls, 1);
+      expect(compressor.estimatedTokensSeen.single, 900);
+      // The decline is visible to operators, not silent.
+      final warnings = records.where((r) => r.level == Level.WARNING).toList();
+      expect(warnings, hasLength(1));
+      expect(warnings.single.message, contains('compaction declined'));
+      expect(warnings.single.message, contains('900'));
+      // The transcript still goes to the provider intact.
+      expect(llm.requests.single.map((m) => m.content), ['go']);
+      expect(result.status, MissionStatus.completed);
+    },
+  );
+
+  test(
+    'a preserved tail starting with tool rows drops the orphaned leaders',
+    () async {
+      final llm = RecordingLlmClient(completions: [completionOf('done')]);
+      final estimator = FakeTokenEstimator([900]);
+      // The preserved window starts mid-exchange: two tool results whose
+      // assistant predecessor was compacted away, then a real user row.
+      final compressor = RecordingCompressor(
+        snapshotResult(
+          preserved: [
+            ToolResultMessage(
+              toolCallId: 'c1',
+              toolName: 'search',
+              content: 'r1',
+            ),
+            ToolResultMessage(
+              toolCallId: 'c2',
+              toolName: 'search',
+              content: 'r2',
+            ),
+            UserMessage.text('recent'),
+          ],
+        ),
+      );
+      final runner = makeRunner(
+        llm: llm,
+        estimator: estimator,
+        compressor: compressor,
+      );
+
+      await runner.run(
+        missionId: 'm1',
+        messages: [const ChatMessage(role: 'user', content: 'go')],
+      );
+
+      // Providers reject tool results detached from their call, so the
+      // orphaned leaders never reach the wire: snapshot + preserved user.
+      expect(
+        llm.requests.single.map((m) => m.role).toList(),
+        ['user', 'user'],
+      );
+      expect(llm.requests.single.last.content, 'recent');
+    },
+  );
+
+  test(
+    'a preserved tail starting with an assistant row keeps its tool rows',
+    () async {
+      final llm = RecordingLlmClient(completions: [completionOf('done')]);
+      final estimator = FakeTokenEstimator([900]);
+      // Well-formed exchange fully inside the preserved window.
+      final compressor = RecordingCompressor(
+        snapshotResult(
+          preserved: [
+            AssistantMessage(
+              content: [
+                const ToolCallBlock(
+                  id: 'c1',
+                  name: 'search',
+                  arguments: {'q': 'x'},
+                ),
+              ],
+            ),
+            ToolResultMessage(
+              toolCallId: 'c1',
+              toolName: 'search',
+              content: 'r1',
+            ),
+            UserMessage.text('recent'),
+          ],
+        ),
+      );
+      final runner = makeRunner(
+        llm: llm,
+        estimator: estimator,
+        compressor: compressor,
+      );
+
+      await runner.run(
+        missionId: 'm1',
+        messages: [const ChatMessage(role: 'user', content: 'go')],
+      );
+
+      expect(
+        llm.requests.single.map((m) => m.role).toList(),
+        ['user', 'assistant', 'tool', 'user'],
+      );
+    },
+  );
+
+  test('preflightThreshold must be in (0, 1] (asserted)', () {
+    MissionRunner runnerWith({required double threshold}) => MissionRunner(
+      executor: EngineLoopExecutor(
+        loop10,
+        RecordingLlmClient(completions: []),
+      ),
+      toolDispatcher: FakeToolDispatcher(),
+      stopPolicy: const StopPolicy(
+        id: 'test',
+        maxTurns: 100,
+        wallClockTimeout: Duration.zero,
+        repetitionThreshold: 5,
+      ),
+      onEvent: events.add,
+      model: model1k,
+      preflightThreshold: threshold,
+    );
+
+    expect(() => runnerWith(threshold: 0), throwsA(isA<AssertionError>()));
+    expect(
+      () => runnerWith(threshold: -0.5),
+      throwsA(isA<AssertionError>()),
+    );
+    expect(
+      () => runnerWith(threshold: 1.5),
+      throwsA(isA<AssertionError>()),
+    );
+    expect(() => runnerWith(threshold: 1), returnsNormally);
+  });
 }

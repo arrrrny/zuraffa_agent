@@ -37,6 +37,10 @@ class ContextCompressionSettings {
 /// Result of one compression pass (spec 009 Key Entities).
 class CompressionResult {
   final String snapshot;
+
+  /// Recent messages preserved verbatim after the snapshot. Must not begin
+  /// with orphaned tool results — tool rows whose assistant predecessor was
+  /// compacted away (see [ContextCompressor]).
   final List<AgentMessage> preservedMessages;
   final List<AgentMessage> compressedMessages;
   final EpisodicMemory? memory;
@@ -52,8 +56,23 @@ class CompressionResult {
 }
 
 /// Context compression contract (spec 009 Key Entities).
+///
+/// [compress] may receive the caller's own pre-flight estimate for
+/// [messages] as [estimatedTokens] (issue #138): when supplied, the
+/// implementation SHOULD gate on it instead of re-deriving a count with
+/// its own convention, so the pre-flight trigger and the compressor's gate
+/// cannot disagree about the same transcript.
+///
+/// Preserved-tail invariant (issue #138 review): the returned
+/// [CompressionResult.preservedMessages] must never BEGIN with orphaned
+/// tool results — tool rows whose predecessor assistant row was compacted
+/// away. Callers drop leading tool rows defensively (the pre-flight's
+/// transcript rebuild), but the compressor owns the invariant.
 abstract interface class ContextCompressor {
-  Future<CompressionResult> compress(List<AgentMessage> messages);
+  Future<CompressionResult> compress(
+    List<AgentMessage> messages, {
+    int? estimatedTokens,
+  });
 }
 
 /// LLM-powered context compressor (spec 009 US1/US3).
@@ -72,8 +91,11 @@ class LLMBasedContextCompressor implements ContextCompressor {
        fallbackSummarizer = fallbackSummarizer ?? const HeuristicSummarizer();
 
   @override
-  Future<CompressionResult> compress(List<AgentMessage> messages) async {
-    final needsCompression = _shouldCompress(messages);
+  Future<CompressionResult> compress(
+    List<AgentMessage> messages, {
+    int? estimatedTokens,
+  }) async {
+    final needsCompression = _shouldCompress(messages, estimatedTokens);
     if (!needsCompression) {
       return CompressionResult(
         snapshot: '',
@@ -185,12 +207,17 @@ class LLMBasedContextCompressor implements ContextCompressor {
     );
   }
 
-  bool _shouldCompress(List<AgentMessage> messages) {
+  bool _shouldCompress(List<AgentMessage> messages, int? estimatedTokens) {
     if (messages.length <= settings.keepRecentMessages) return false;
     if (settings.messageCountThreshold != null &&
         messages.length > settings.messageCountThreshold!) {
       return true;
     }
-    return estimateContextTokens(messages) > settings.tokenThreshold;
+    // Trust the caller's pre-flight estimate when supplied (issue #138
+    // review): it counts with the estimator's convention — a
+    // TiktokenEstimator's BPE tokens, not this class's chars/4
+    // re-derivation — so the pre-flight trigger and this gate agree.
+    final tokens = estimatedTokens ?? estimateContextTokens(messages);
+    return tokens > settings.tokenThreshold;
   }
 }

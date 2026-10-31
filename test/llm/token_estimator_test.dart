@@ -165,5 +165,42 @@ void main() {
         1 + 1024, // text + default flat image cost
       );
     });
+
+    test(
+      'at maxPieceBytes the merge loop still runs, above it bytes count',
+      () {
+        final estimator = TiktokenEstimator(ranks: tinyRanks());
+        // 4096 bytes: at the cap, the merge loop runs — 'hello' merges
+        // into one token, the unmergeable 'a' run stays one token per byte.
+        expect(estimator.estimateText('hello' + 'a' * 4091), 1 + 4091);
+        // 4097 bytes: above the cap, every byte counts — no merge scan.
+        expect(estimator.estimateText('hello' + 'a' * 4092), 4097);
+      },
+    );
+
+    test(
+      'a long unbroken run (base64 payload, hash) is counted without stalling',
+      () {
+        final estimator = TiktokenEstimator(ranks: tinyRanks());
+        final stopwatch = Stopwatch()..start();
+        // 140k chars of unbroken alphanumerics = ONE pre-tokenized piece,
+        // far above the cap: the pre-flight must not scan it quadratically.
+        final estimate = estimator.estimateText('aGVsbG8' * 20000);
+        stopwatch.stop();
+        expect(estimate, 140000); // conservative per-byte count
+        expect(stopwatch.elapsedMilliseconds, lessThan(1000));
+      },
+    );
+
+    test('repeated pieces are memoized to the same count', () {
+      final estimator = TiktokenEstimator(ranks: tinyRanks());
+      // 'hello' merges to one token, ' world' to one, and ' hello' keeps
+      // its leading space as a separate byte-token (no ' hello' rank).
+      const text = 'hello world hello world';
+      expect(estimator.estimateText(text), 5);
+      // Second pass over identical pieces (the pre-flight re-estimates the
+      // whole transcript every turn) must agree through the cache.
+      expect(estimator.estimateText(text), 5);
+    });
   });
 }

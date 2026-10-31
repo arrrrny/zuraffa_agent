@@ -166,6 +166,25 @@ class TiktokenEstimator extends TokenEstimatorBase {
   final RegExp _pattern;
   final int tokensPerImage;
 
+  /// Pieces above this many UTF-8 bytes skip the merge loop and fall back
+  /// to one token per byte. The merge scan is quadratic per piece (every
+  /// adjacent pair is rescanned with a string allocation per pair, per
+  /// merge iteration), and a long unbroken run — a base64 image payload
+  /// inside a tool result, a hash, an id list — is ONE pre-tokenized
+  /// piece: a 100KB such piece would otherwise stall the pre-flight for
+  /// minutes per turn (issue #138 review). The fallback is the same
+  /// conservative count the loop already gives bytes that never merge,
+  /// and the estimator's contract is estimation, not exactness.
+  static const int maxPieceBytes = 4096;
+
+  /// Memoized per-piece counts (issue #138 review). Only pieces under
+  /// [maxPieceBytes] are cached — large pieces never enter the merge loop
+  /// — and the cache is cleared when full, so repeated transcript content
+  /// (identical tool outputs, boilerplate) costs one lookup per turn
+  /// instead of a full re-scan, without unbounded growth across a mission.
+  final Map<String, int> _pieceCache = {};
+  static const int maxCachedPieces = 1024;
+
   @override
   int estimateText(String text) {
     if (text.isEmpty) return 0;
@@ -179,14 +198,29 @@ class TiktokenEstimator extends TokenEstimatorBase {
   @override
   int estimateImage(ImageBlock image) => tokensPerImage;
 
-  /// Runs the BPE merge loop over one pre-tokenized piece.
+  /// Counts one pre-tokenized piece, memoized (see [_pieceCache]).
+  int _pieceTokenCount(String piece) {
+    final cached = _pieceCache[piece];
+    if (cached != null) return cached;
+    final bytes = utf8.encode(piece);
+    final count = bytes.isEmpty
+        ? 0
+        : bytes.length > maxPieceBytes
+        ? bytes.length
+        : _mergePiece(bytes);
+    if (bytes.length <= maxPieceBytes) {
+      if (_pieceCache.length >= maxCachedPieces) _pieceCache.clear();
+      _pieceCache[piece] = count;
+    }
+    return count;
+  }
+
+  /// Runs the BPE merge loop over one pre-tokenized piece's UTF-8 bytes.
   ///
   /// Adjacent parts merge lowest-rank-first while any adjacent pair is in
   /// the rank table; parts that can never merge fall back to one token per
   /// byte, mirroring tiktoken's behaviour on unknown bytes.
-  int _pieceTokenCount(String piece) {
-    final bytes = utf8.encode(piece);
-    if (bytes.isEmpty) return 0;
+  int _mergePiece(List<int> bytes) {
     var parts = [
       for (final byte in bytes) [byte],
     ];

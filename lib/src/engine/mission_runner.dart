@@ -181,7 +181,12 @@ class MissionRunner {
     TokenEstimator tokenEstimator = const HeuristicTokenEstimator(),
     ContextCompressor? contextCompressor,
     this.preflightThreshold = 0.8,
-  }) : _executor = executor,
+  }) : assert(
+         preflightThreshold > 0 && preflightThreshold <= 1,
+         'preflightThreshold must be in (0, 1]: a value <= 0 compacts '
+         'every turn, > 1 never fires',
+       ),
+       _executor = executor,
        _toolDispatcher = toolDispatcher,
        _stopPolicy = stopPolicy,
        _queue = steeringQueue,
@@ -230,6 +235,11 @@ class MissionRunner {
 
   /// Fraction of `model.contextWindow` at which the pre-flight triggers
   /// compaction (issue #138). Default 0.8 — "approaching" the window.
+  ///
+  /// Must be in (0, 1] — asserted in the constructor: a value <= 0 would
+  /// compact every turn, > 1 would never fire. A deliberate operator knob,
+  /// so unlike the other pre-flight fields ([_model], [_tokenEstimator],
+  /// [_contextCompressor]) it stays public.
   final double preflightThreshold;
 
   /// Appends [message] to this mission's steering / follow-up queue.
@@ -353,22 +363,37 @@ class MissionRunner {
         final estimated = _tokenEstimator.estimateMessages(agentTranscript);
         final threshold = (model.contextWindow * preflightThreshold).floor();
         if (estimated >= threshold) {
-          final result = await compressor.compress(agentTranscript);
-          // An empty snapshot means the compressor declined (nothing worth
-          // compacting); the transcript is left untouched in that case.
+          // The estimate rides along so the compressor's own gate counts
+          // with the same convention as the estimator (a TiktokenEstimator's
+          // BPE tokens, not a chars/4 re-derivation) — the two gates cannot
+          // disagree about the same transcript (issue #138 review).
+          final result = await compressor.compress(
+            agentTranscript,
+            estimatedTokens: estimated,
+          );
+          // An empty snapshot means the compressor declined (its own gates
+          // still apply — e.g. a transcript of keepRecentMessages or fewer
+          // messages, or one below its tokenThreshold): the transcript is
+          // left untouched, the decline is logged at WARNING, and the
+          // provider's context limit remains the backstop.
           if (result.snapshot.isNotEmpty) {
             transcript
               ..clear()
               ..addAll([
                 ChatMessage(role: 'user', content: result.snapshot),
-                for (final message in result.preservedMessages)
-                  _toChatMessage(message),
+                ..._preservedTail(result.preservedMessages),
               ]);
             AgentLog.compactionInfo(
               missionId: missionId,
               turn: turnsUsed,
               strategy: result.strategy.name,
               tokensBefore: estimated,
+            );
+          } else {
+            AgentLog.compactionDeclined(
+              missionId: missionId,
+              turn: turnsUsed,
+              estimatedTokens: estimated,
             );
           }
         }
@@ -541,6 +566,28 @@ AgentMessage _toAgentMessage(ChatMessage message) {
     default:
       return UserMessage.text(message.content);
   }
+}
+
+/// Bridges the compressor's preserved tail back into the transcript
+/// currency, dropping leading tool rows (issue #138 review).
+///
+/// The preserved window can start mid-exchange: tool rows whose assistant
+/// predecessor was compacted away are orphans — detached from the call they
+/// answer, a shape providers reject (OpenAI `tool_call_id` linkage, Anthropic
+/// `tool_use_id` matching; `ChatMessage` carries no id to re-link them).
+/// Leading tool rows are therefore dropped, and the rebuilt transcript is
+/// `[user(snapshot)] + tail` without orphans. Tool rows INSIDE the preserved
+/// window keep their assistant predecessor beside them, so only the head of
+/// the tail is affected. The [ContextCompressor] contract carries the same
+/// invariant — compressors must not return tails that begin with orphaned
+/// tool results.
+List<ChatMessage> _preservedTail(List<AgentMessage> preservedMessages) {
+  final bridged = [
+    for (final message in preservedMessages) _toChatMessage(message),
+  ];
+  final firstKept = bridged.indexWhere((message) => message.role != 'tool');
+  if (firstKept < 0) return const <ChatMessage>[];
+  return bridged.sublist(firstKept);
 }
 
 /// Bridges a compressor result back into the mission transcript (issue
