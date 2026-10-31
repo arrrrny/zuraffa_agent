@@ -39,6 +39,17 @@ dart test
 dart analyze
 ```
 
+## Security
+
+The engine's threat model — prompt injection via tool output, secret
+exfiltration, MCP server impersonation, and model-vendor data exposure —
+lives in [SECURITY.md](SECURITY.md) together with the per-threat
+mitigations and the vulnerability reporting channel. High-risk tools
+(`RiskTier.confirm` / `RiskTier.admin`, spec 034) are gated behind an
+approval callback at dispatch. Please report vulnerabilities through
+[GitHub Security Advisories](https://github.com/arrrrny/zuraffa_agent/security/advisories/new)
+— not the issue tracker.
+
 ## Supported LLM providers
 
 The `llm` slice speaks three wire protocols out of the box. Every client

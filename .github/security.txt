@@ -1,0 +1,4 @@
+Contact: https://github.com/arrrrny/zuraffa_agent/security/advisories/new
+Expires: 2027-10-01T00:00:00.000Z
+Preferred-Languages: en
+Policy: https://github.com/arrrrny/zuraffa_agent/blob/master/SECURITY.md
