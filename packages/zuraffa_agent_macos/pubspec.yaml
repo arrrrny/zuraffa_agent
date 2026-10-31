@@ -32,6 +32,3 @@ dependency_overrides:
     path: ../zuraffa_agent_platform_interface
 
   xml: 7.1.0
-
-  zuraffa:
-    path: ../../../zuraffa
