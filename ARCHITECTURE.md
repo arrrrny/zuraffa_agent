@@ -126,3 +126,20 @@ is a one-way mapping — a leading `system` message rides
 `ChatCompletion.reasoning` (persisted as assistant thinking, spec 002
 FR-002), and `tool` transcripts (which carry no tool-call identity in
 `ChatMessage`) map to `ToolResultMessage` with empty ids.
+
+Close contract (issue #159 review): `LlmClient.close()` reaches the
+socket. `OpenAiCompatibleClient.close()` closes its `LlmTransport` — the
+seam interface carries `close()` for exactly this — `FallbackChainClient`
+closes every child, and `LlmClientProvider.close()` closes its seam
+client. Ownership is the closer's: a transport injected into more than one
+client is closed for ALL of them when any closer closes it, so share a
+transport only when its lifetime is managed above the clients. The
+provider's default stack holds ONE long-lived `HttpClient` per provider
+for connection reuse (the legacy per-call client is retired with
+`LlmHttpTransport`); hosts that build providers transiently (per mission,
+per config reload) must `close()` them, long-lived singletons need not.
+The provider boundary also keeps the legacy failure parity: a 200
+completion with no choices or empty content throws (the seam parser
+reduces both shapes to empty content), so the engine's `providerFailed`
+handling, the last-LLM-error tracker and the breaker/fallback stack keep
+their loud signal.

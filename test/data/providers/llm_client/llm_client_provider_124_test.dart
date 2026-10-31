@@ -259,5 +259,134 @@ void main() {
         expect(chain.breakers['b']!.state, CircuitState.closed);
       },
     );
+
+    // Issue #159 review (functional correctness): the reroute must keep the
+    // legacy empty-completion failure semantics — LlmHttpTransport's parser
+    // threw on a 200 with no choices or empty content, and the resilience
+    // stack only reacts to thrown errors.
+    test(
+      'a 200 with empty message content throws (legacy empty-content guard)',
+      () async {
+        final transport = FakeLlmTransport(
+          script: [
+            ScriptedResponse(statusCode: 200, body: _completionBody('')),
+          ],
+        );
+        final provider = LlmClientProvider(
+          config: _config(baseUrl: 'https://kilo.test/v1'),
+          apiKey: 'test-key',
+          transport: transport,
+        );
+
+        await expectLater(
+          provider.complete(const [ChatMessage(role: 'user', content: 'hi')]),
+          throwsA(
+            isA<StateError>().having(
+              (e) => e.message.toString(),
+              'message',
+              contains('completion content was empty'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('a 200 with no choices throws (legacy no-choices guard)', () async {
+      final transport = FakeLlmTransport(
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            body: jsonEncode({
+              'usage': {
+                'prompt_tokens': 1,
+                'completion_tokens': 0,
+                'total_tokens': 1,
+              },
+            }),
+          ),
+        ],
+      );
+      final provider = LlmClientProvider(
+        config: _config(baseUrl: 'https://kilo.test/v1'),
+        apiKey: 'test-key',
+        transport: transport,
+      );
+
+      // The seam parser reduces a choices-less payload to empty content;
+      // the provider boundary must still fail loudly.
+      await expectLater(
+        provider.complete(const [ChatMessage(role: 'user', content: 'hi')]),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    // Issue #159 review (stability): the default stack owns a long-lived
+    // HttpClient; close() must reach the socket.
+    test(
+      'close() reaches the seam: provider.close() closes the injected transport',
+      () async {
+        final transport = _CloseCountingTransport(
+          script: [
+            ScriptedResponse(statusCode: 200, body: _completionBody('ok')),
+          ],
+        );
+        final provider = LlmClientProvider(
+          config: _config(baseUrl: 'https://kilo.test/v1'),
+          apiKey: 'test-key',
+          transport: transport,
+        );
+
+        expect(transport.closeCount, 0);
+        await provider.close();
+        expect(transport.closeCount, 1);
+      },
+    );
+
+    test(
+      'close() on the default stack closes the underlying HttpClient',
+      () async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        late final StreamSubscription<HttpRequest> sub;
+        sub = server.listen((request) async {
+          await request.drain<void>();
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(_completionBody('ok'));
+          await request.response.close();
+        });
+        addTearDown(() async {
+          await sub.cancel();
+          await server.close(force: true);
+        });
+
+        final provider = LlmClientProvider(
+          config: _config(baseUrl: 'http://127.0.0.1:${server.port}'),
+          apiKey: 'test-key',
+        );
+        final first = await provider.complete(const [
+          ChatMessage(role: 'user', content: 'hi'),
+        ]);
+        expect(first.content, 'ok');
+
+        await provider.close();
+        // dart:io answers a request on a closed HttpClient with
+        // "Bad state: Client is closed" — proof the close reached the
+        // socket the default IoLlmTransport holds.
+        await expectLater(
+          provider.complete(const [ChatMessage(role: 'user', content: 'hi')]),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
   });
+}
+
+/// Counts close() calls — pins that the provider's close path reaches the
+/// injected seam transport (issue #159 review).
+class _CloseCountingTransport extends FakeLlmTransport {
+  _CloseCountingTransport({required super.script});
+
+  int closeCount = 0;
+
+  @override
+  Future<void> close() async => closeCount++;
 }

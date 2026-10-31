@@ -91,10 +91,34 @@ class LlmClientProvider
   /// through [llm.LlmClient] (issue #124) — the same seam the spec-007
   /// clients use — so retry, circuit breakers and fallback chains apply to
   /// this path too.
+  ///
+  /// Legacy parity (issue #159 review): a 200 completion with no choices or
+  /// empty content was a loud failure on the retired LlmHttpTransport path
+  /// (its parser threw). The seam parser reduces both shapes to empty
+  /// content, so the guard lives here — throwing keeps mission_runner's
+  /// catch firing the ProviderError event + providerFailed mission, keeps
+  /// the last-LLM-error tracker recording the malfunction, and lets the
+  /// breaker/fallback stack react (it only advances on thrown errors, so a
+  /// silent empty 200 would blind the resilience stack).
   Future<ChatCompletion> complete(List<ChatMessage> messages) async {
     final response = await _client.generate(_toLlmRequest(messages));
+    if (response.content.isEmpty) {
+      throw StateError('${config.id}: completion content was empty');
+    }
     return _toChatCompletion(response);
   }
+
+  /// Closes the seam client — and with it the transport the default stack
+  /// built (the provider's own `IoLlmTransport`, i.e. its `HttpClient`).
+  ///
+  /// Lifetime (issue #159 review): the default stack holds ONE long-lived
+  /// `HttpClient` per provider for connection reuse — an improvement over
+  /// the legacy per-call client, but a leak for any host that builds
+  /// providers transiently (per mission, per config reload). Such hosts must
+  /// `close()` them; long-lived singletons need not. Closing a provider
+  /// whose `client:`/`transport:` was injected closes the injected seam —
+  /// ownership of a shared injected transport belongs to whoever shares it.
+  Future<void> close() => _client.close();
 
   /// Converts the legacy [ChatMessage] transcript into the seam's
   /// [llm.LlmRequest].

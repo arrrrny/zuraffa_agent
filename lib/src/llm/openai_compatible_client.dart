@@ -161,8 +161,17 @@ class OpenAiCompatibleClient implements LlmClient {
     yield* finalize();
   }
 
+  /// Closes the underlying [transport] — the seam's [LlmClient.close]
+  /// contract reaches the socket (issue #159 review: the legacy
+  /// LlmHttpTransport closed its HttpClient per call; the default stack is
+  /// long-lived for connection reuse, so hosts building clients
+  /// transiently close them through this path).
+  ///
+  /// Ownership: closing this client closes [transport]. When the transport
+  /// was injected and is shared with other clients, closing THIS client
+  /// closes it for all of them.
   @override
-  Future<void> close() async {}
+  Future<void> close() async => transport.close();
 
   LlmHttpRequest _httpRequest(String body, LlmRequest request) =>
       LlmHttpRequest(

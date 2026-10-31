@@ -66,4 +66,12 @@ abstract interface class LlmTransport {
 
   /// Sends a request and opens a streaming response (line stream).
   Future<LlmStreamResponse> openStream(LlmHttpRequest request);
+
+  /// Releases the transport's resources (sockets, connection pools).
+  ///
+  /// Ownership (issue #159 review): the closer owns the transport. A
+  /// transport injected into more than one client is closed for ALL of them
+  /// when any closer closes it — share a transport only when its lifetime
+  /// is managed above the clients.
+  Future<void> close();
 }

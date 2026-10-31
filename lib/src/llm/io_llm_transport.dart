@@ -67,6 +67,7 @@ class IoLlmTransport implements LlmTransport {
   }
 
   /// Releases the underlying [HttpClient].
+  @override
   Future<void> close() async => _client.close();
 
   Future<HttpClientResponse> _open(LlmHttpRequest request) async {
