@@ -100,8 +100,13 @@ jobs:
         # notice every member prints.
         working-directory: ${{ matrix.package }}
         run: |
-          out="$(${{ matrix.publisher }} pub publish --dry-run 2>&1)"
+          # `|| true`: pub exits non-zero on warnings, and a failed command
+          # substitution under `set -e` would abort before the diagnostic is
+          # printed — the log is the whole value of this gate.
+          out="$(${{ matrix.publisher }} pub publish --dry-run 2>&1 || true)"
           printf '%s\n' "$out"
+          grep -q "Package has" <<<"$out" \
+            || { echo "::error::${{ matrix.package }}: pub publish --dry-run produced no validation summary — see above"; exit 1; }
           grep -q "Package has 0 warnings" <<<"$out" \
             || { echo "::error::pub publish reported warnings for ${{ matrix.package }} — see above"; exit 1; }
 
@@ -216,9 +221,14 @@ jobs:
             dir="$1"; cmd="$2"; out=""
             echo "::group::validating $dir"
             ( cd "$dir" && "$cmd" pub get )
-            out="$( cd "$dir" && "$cmd" pub publish --dry-run 2>&1 )"
+            # `|| true`: pub exits non-zero on warnings, and a failed command
+            # substitution under `set -e` would abort before the diagnostic is
+            # printed — the log is the whole value of this gate.
+            out="$( cd "$dir" && "$cmd" pub publish --dry-run 2>&1 || true )"
             printf '%s\n' "$out"
             echo "::endgroup::"
+            grep -q "Package has" <<<"$out" \
+              || { echo "::error::$dir: pub publish --dry-run produced no validation summary — see above"; return 1; }
             grep -q "Package has 0 warnings" <<<"$out" \
               || { echo "::error::$dir reports packaging warnings — see above"; return 1; }
           }
