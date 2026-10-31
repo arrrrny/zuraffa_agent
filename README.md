@@ -10,9 +10,12 @@ clean-architecture conventions.
 The dartdoc API reference for tagged releases is published at
 [arrrrny.github.io/zuraffa_agent](https://arrrrny.github.io/zuraffa_agent/)
 — rebuilt and redeployed automatically on every `v*` tag push by the
-`docs` workflow (issue #127). Pull requests gate on
+`docs` workflow (issue #127). ⚠️ The site goes live with the first `v*`
+tag after GitHub Pages is enabled for this repository
+(Settings → Pages → Build and deployment → Source: "GitHub Actions");
+until both have happened the URL returns 404. Pull requests gate on
 `dart doc --dry-run`, so the exported API always renders. Locally,
-`dart doc` renders the same reference into `doc/api`.
+`dart doc` writes the same reference into `doc/api`.
 
 ## Getting started
 
