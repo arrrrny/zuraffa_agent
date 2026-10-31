@@ -94,6 +94,11 @@ class _SseMock {
   /// post-read half of the size cap).
   bool chunked = false;
 
+  /// When set, the POST reply streams chunks forever (never closes on its
+  /// own) — the client must abort the read at the cap instead of buffering
+  /// the unbounded body.
+  bool endlessPost = false;
+
   late Uri url;
 
   Future<void> start() async {
@@ -110,6 +115,29 @@ class _SseMock {
       req.response.writeln(': keep-alive');
       await req.response.flush();
       _openResponses.add(req.response); // hold the stream open
+      return;
+    }
+    if (endlessPost) {
+      // Unbounded chunked 2xx body: bufferOutput=false streams each write
+      // straight to the socket (the buffered-flush() quirk pinned in the
+      // adapter-test mock). Only a client that ABORTS the read at the cap
+      // can complete this request — one that buffers the whole stream
+      // first hangs on it forever.
+      req.response.bufferOutput = false;
+      req.response.headers.contentType = ContentType.json;
+      for (var i = 0; i < 1024; i++) {
+        try {
+          req.response.write('{"pad":"${'x' * 4096}"}');
+          await req.response.flush();
+        } on Object {
+          break; // client aborted — the socket is gone
+        }
+      }
+      try {
+        await req.response.close();
+      } on Object {
+        // already aborted — nothing to close
+      }
       return;
     }
     final body = await utf8.decoder.bind(req).join();
@@ -308,7 +336,12 @@ void main() {
 
     test('V23: a control character in a map key is invalid content', () {
       final envelope = _okEnvelope(result: {'bad\u0001key': 'value'});
-      _expectViolation(_validate(envelope), 'invalid-content');
+      final resp = _validate(envelope);
+      _expectViolation(resp, 'invalid-content');
+      // The offending key is named in the diagnostic, log-safely
+      // (control characters are \uXXXX-escaped), so it can be acted on.
+      final err = resp as McpWireResponseError;
+      expect(err.message, contains(r'$.result."bad\u0001key"'));
     });
 
     test('V24: the violation message names the JSON path of the content', () {
@@ -524,6 +557,34 @@ void main() {
         );
       },
     );
+
+    test('V43: a chunked 2xx stream over the cap is aborted as it arrives — '
+        'not fully buffered first — and the session survives', () async {
+      mock.postResponder = (envelope) => {
+        'jsonrpc': '2.0',
+        'id': envelope['id'],
+        'result': {'ok': true},
+      };
+      mock.endlessPost = true;
+      final transport = IoSseMcpTransport(
+        endpoint: mock.url.toString(),
+        maxResponseBytes: 64,
+      );
+      addTearDown(transport.close);
+      await transport.open();
+      // The reply never ends: only a read that ABORTS at the cap (not
+      // one that buffers the whole stream first — the pre-fix exposure —
+      // can complete this send within the timeout).
+      final resp = await transport
+          .send(const McpWireRequestListTools())
+          .timeout(const Duration(seconds: 10));
+      _expectViolation(resp, 'response-too-large');
+      // The aborted POST did not poison the session: the event stream
+      // (a separate socket) and the next RPC still work on this transport.
+      mock.endlessPost = false;
+      final stillWorks = await transport.send(const McpWireRequestListTools());
+      _expectOk(stillWorks);
+    });
   });
 
   group('issue-131 — IoStdioMcpTransport wire boundary', () {
@@ -597,6 +658,28 @@ void main() {
         const McpWireRequestCallTool(name: 'bad-jsonrpc', arguments: {}),
       );
       _expectViolation(rejected, 'protocol-violation');
+      final stillWorks = await transport.send(
+        const McpWireRequestCallTool(name: 'echo', arguments: {'x': 1}),
+      );
+      _expectOk(stillWorks);
+      expect((stillWorks as McpWireResponseOk).payload, {
+        'echo': {'x': 1},
+      });
+    });
+
+    test('V44: an oversized child line is rejected typed by the byte-budgeted '
+        'framer — never fully buffered — and the session survives', () async {
+      final transport = _spawn('badwire', maxResponseBytes: 64);
+      addTearDown(transport.close);
+      await transport.open();
+      // 'echo' answers with a ~250-byte line: the budgeted framer trips
+      // past 64 bytes, discards the rest of the line and fails the
+      // outstanding request typed (the oversized line's id is unroutable
+      // without buffering the whole line — the thing the budget refuses).
+      final resp = await transport.send(
+        McpWireRequestCallTool(name: 'echo', arguments: {'x': 'y' * 200}),
+      );
+      _expectViolation(resp, 'response-too-large');
       final stillWorks = await transport.send(
         const McpWireRequestCallTool(name: 'echo', arguments: {'x': 1}),
       );

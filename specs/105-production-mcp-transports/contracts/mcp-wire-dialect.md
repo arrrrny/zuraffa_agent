@@ -41,11 +41,41 @@ Field rules:
 - Unknown methods / extra JSON-RPC fields (`params` on responses, etc.) are
   tolerated.
 
+### Wire-boundary validation (both transports, issue #131)
+
+Every server response is validated at the wire boundary before it reaches
+the clients / engine. Violations are typed `McpWireResponseError`s, never
+throws — a protocol violation means the peer is misbehaving, not that the
+transport dropped (throwing would send the clients' reconnect policy
+chasing a healthy connection). None of these codes is in
+`transientCallCodes`, so a wire rejection is never retried.
+
+- `protocol-violation` — the JSON-RPC 2.0 envelope is malformed: `jsonrpc`
+  != `"2.0"`, the response `id` is missing or does not match the request
+  id, `result`/`error` XOR is broken, `error` or `result` is not an
+  object, or the body decodes to a non-object (e.g. `[1,2,3]`).
+- `response-too-large` — the raw body exceeds the response size cap
+  (1 MiB default, measured in UTF-8 bytes).
+- `invalid-content` — a tool-result string (value or map key, scanned
+  recursively) carries a control character (C0 minus tab/newline/CR, DEL,
+  C1) or an unmatched UTF-16 surrogate pair.
+
+An undecodable (non-JSON) 2xx body remains a transport drop — the
+`McpWireClosedException` path of §3 — because a body truncated by a
+dropped connection is indistinguishable from garbage at this layer. The
+typed paths above apply to decodable bodies only.
+
 ## 2. stdio framing (`IoStdioMcpTransport`)
 
 - One JSON document per **newline-terminated** line on the child's stdout;
   requests are written the same way to the child's stdin. UTF-8. `\n` and
   `\r\n` both terminate a line; a trailing partial line at EOF is discarded.
+- Lines are framed under a byte budget (issue #131): a line exceeding the
+  response size cap is discarded to its next newline and answered with the
+  typed `response-too-large` rejection — one unbounded child line can never
+  be fully buffered. Its JSON-RPC id is unroutable without buffering the
+  whole line, so every outstanding request is failed typed; the session
+  itself survives the rejection.
 - Lines that do not JSON-decode are skipped (log noise tolerance).
 - stderr is drained, never parsed; retained in a bounded buffer for
   diagnostics.
@@ -68,10 +98,22 @@ Field rules:
   the auth header; body = the JSON-RPC request line. 2xx + decodable body →
   Ok/Error per §1; non-2xx → `McpWireClosedException` naming the status;
   undecodable 2xx body → same exception naming the parse failure.
+- `send()` size enforcement (issue #131): a 2xx reply whose declared
+  `Content-Length` already exceeds the cap is rejected before the body is
+  buffered (the connection is drained so it stays reusable); a 2xx reply of
+  unknown/chunked length is read under a byte budget that ABORTS the read
+  past the cap as chunks arrive (an aborted read cannot keep the connection
+  reusable — it is destroyed — but the session survives); a decodable
+  non-object 2xx body is a typed `protocol-violation`; non-2xx bodies are
+  drained, never buffered.
 - `close()`: aborts the in-flight GET and closes the `HttpClient`.
 
 ## 4. Mock fixture contract (test-only, `test/mcp/_mock_stdio_mcp_server.dart`)
 
 Invocation: `dart run test/mcp/_mock_stdio_mcp_server.dart <mode>`, modes:
-`echo` | `notify` | `crash` | `garbage` (behaviors as in plan.md §3). The
-mock speaks §1+§2 exactly so it doubles as a dialect conformance probe.
+`echo` | `notify` | `crash` | `garbage` | `slow` | `badwire` (behaviors as
+in plan.md §3). The mock speaks §1+§2 exactly so it doubles as a dialect
+conformance probe. `badwire` is the issue-#131 fixture mode: each tool name
+answers with a specific wire-boundary violation (wrong `jsonrpc` version,
+control character, lone surrogate, over-cap body) so every rejection rule
+of §1/§2/§3 is exercised against a real subprocess.

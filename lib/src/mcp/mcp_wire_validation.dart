@@ -146,7 +146,13 @@ final class McpWireValidator {
     } else if (value is Map) {
       for (final key in value.keys) {
         if (key is String) {
-          final keyViolation = _stringViolation(key, '$path.<key>');
+          // The key is named log-safely (control characters become \uXXXX
+          // escapes) so the diagnostic can be acted on — a literal
+          // `<key>` placeholder names nothing.
+          final keyViolation = _stringViolation(
+            key,
+            '$path.${jsonEncode(key)}',
+          );
           if (keyViolation != null) return keyViolation;
         }
         final label = key is String ? key : '<key>';
