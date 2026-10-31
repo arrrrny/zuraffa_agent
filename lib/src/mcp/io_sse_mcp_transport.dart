@@ -22,6 +22,7 @@ import 'dart:io';
 
 import 'io_stdio_mcp_transport.dart' show McpWireClosedException;
 import 'mcp_wire.dart';
+import 'mcp_wire_validation.dart';
 
 /// Typed failure for a failed stream open: names the HTTP status, or null
 /// when the connection itself failed.
@@ -38,13 +39,25 @@ class IoSseMcpTransport implements McpWire {
   final String endpoint;
   final String? bearerToken;
 
+  /// Wire-boundary validation (issue #131). Every POST reply is validated
+  /// against the JSON-RPC 2.0 envelope, the size cap and the content policy
+  /// before it becomes an [McpWireResponse]; violations come back as typed
+  /// `McpWireResponseError`s, never as unvalidated payloads.
+  final McpWireValidator _validator;
+
   HttpClient? _client;
   bool _isOpen = false;
   int _nextId = 0;
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoSseMcpTransport({required this.endpoint, this.bearerToken}) {
+  IoSseMcpTransport({
+    required this.endpoint,
+    this.bearerToken,
+    int? maxResponseBytes,
+  }) : _validator = McpWireValidator(
+         maxResponseBytes: maxResponseBytes ?? defaultMcpWireMaxResponseBytes,
+       ) {
     final uri = Uri.tryParse(endpoint);
     if (uri == null ||
         !uri.hasScheme ||
@@ -201,33 +214,52 @@ class IoSseMcpTransport implements McpWire {
         'IoSseMcpTransport: the connection dropped during send',
       );
     }
+    final statusOk = response.statusCode >= 200 && response.statusCode <= 299;
+    // Issue #131: a 2xx reply that already declares more bytes than the cap
+    // is rejected before the body is buffered at all. The connection is
+    // drained so it stays reusable. Non-2xx replies keep the contract's
+    // typed-throw path below.
+    if (statusOk && response.contentLength > _validator.maxResponseBytes) {
+      await response.drain<void>().catchError((Object _) {});
+      return McpWireResponseError(
+        code: 'response-too-large',
+        message:
+            'IoSseMcpTransport: ${envelope['method']} response declares '
+            '${response.contentLength} bytes, over the '
+            '${_validator.maxResponseBytes}-byte wire cap',
+      );
+    }
     final body = await utf8.decoder.bind(response).join();
-    if (response.statusCode < 200 || response.statusCode > 299) {
+    if (!statusOk) {
       throw McpWireClosedException(
         'IoSseMcpTransport: the endpoint answered HTTP '
         '${response.statusCode} for ${envelope['method']}',
       );
     }
-    final Map<String, dynamic> decoded;
+    final Object? decoded;
     try {
-      decoded = jsonDecode(body) as Map<String, dynamic>;
+      decoded = jsonDecode(body);
     } on FormatException {
       throw McpWireClosedException(
         'IoSseMcpTransport: undecodable response body for '
         '${envelope['method']}',
       );
     }
-    final error = decoded['error'];
-    if (error is Map) {
-      return McpWireResponseError(
-        code: error['code']?.toString() ?? '',
-        message: error['message']?.toString() ?? '',
+    if (decoded is! Map<String, dynamic>) {
+      // Issue #131: a decodable non-object body is a wire violation, not a
+      // transport drop — reject it typed instead of crashing the send.
+      return const McpWireResponseError(
+        code: 'protocol-violation',
+        message:
+            'IoSseMcpTransport: response body is not a JSON-RPC 2.0 '
+            'object',
       );
     }
-    final result =
-        (decoded['result'] as Map?)?.cast<String, dynamic>() ??
-        const <String, dynamic>{};
-    return McpWireResponseOk(result);
+    return _validator.validateResponse(
+      rawBody: body,
+      message: decoded,
+      expectedId: id,
+    );
   }
 
   @override

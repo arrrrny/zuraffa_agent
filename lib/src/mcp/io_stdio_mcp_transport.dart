@@ -20,6 +20,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'mcp_wire.dart';
+import 'mcp_wire_validation.dart';
 
 /// Typed transport failure: the wire is not open (used before open, after
 /// close, or after the child process exited).
@@ -35,6 +36,13 @@ class IoStdioMcpTransport implements McpWire {
   final String executable;
   final List<String> args;
 
+  /// Wire-boundary validation (issue #131). Every line the child answers a
+  /// pending request with is validated against the JSON-RPC 2.0 envelope,
+  /// the size cap and the content policy before the pending send completes;
+  /// violations come back as typed `McpWireResponseError`s, never as
+  /// unvalidated payloads.
+  final McpWireValidator _validator;
+
   Process? _process;
   StreamSubscription<String>? _stdoutSub;
   StreamSubscription<String>? _stderrSub;
@@ -45,7 +53,13 @@ class IoStdioMcpTransport implements McpWire {
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoStdioMcpTransport({required this.executable, this.args = const []}) {
+  IoStdioMcpTransport({
+    required this.executable,
+    this.args = const [],
+    int? maxResponseBytes,
+  }) : _validator = McpWireValidator(
+         maxResponseBytes: maxResponseBytes ?? defaultMcpWireMaxResponseBytes,
+       ) {
     if (executable.trim().isEmpty) {
       throw ArgumentError.value(
         executable,
@@ -173,7 +187,18 @@ class IoStdioMcpTransport implements McpWire {
     }
     final id = message['id'];
     if (id is int && _pending.containsKey(id)) {
-      _pending.remove(id)!.complete(_responseFor(message));
+      // Issue #131: the response is validated at the wire boundary (JSON-RPC
+      // envelope, size cap, content policy) before the pending send resolves;
+      // a violation completes the request as a typed error response.
+      _pending
+          .remove(id)!
+          .complete(
+            _validator.validateResponse(
+              rawBody: line,
+              message: message,
+              expectedId: id,
+            ),
+          );
       return;
     }
     // Server-pushed notification (no id): only the tools-changed method has
@@ -181,23 +206,6 @@ class IoStdioMcpTransport implements McpWire {
     if (message['method'] == 'notifications/tools/list_changed') {
       _notifications.add(const McpWireNotificationToolsChanged());
     }
-  }
-
-  /// Maps a JSON-RPC response object onto the sealed response family:
-  /// an `error` object becomes the typed error (application-level failure),
-  /// anything else carries its `result` map.
-  McpWireResponse _responseFor(Map<String, dynamic> message) {
-    final error = message['error'];
-    if (error is Map) {
-      return McpWireResponseError(
-        code: error['code']?.toString() ?? '',
-        message: error['message']?.toString() ?? '',
-      );
-    }
-    final result =
-        (message['result'] as Map?)?.cast<String, dynamic>() ??
-        const <String, dynamic>{};
-    return McpWireResponseOk(result);
   }
 
   @override
