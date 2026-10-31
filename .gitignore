@@ -15,3 +15,9 @@
 
 # speckit worktrees (never commit)
 .worktrees/
+
+# Agent/pipeline run artifacts — generated at runtime, never committed.
+# Which .zfa/ paths are source vs generated: see CONTRIBUTING.md.
+.zfa/runs/
+.zfa/plans/last_run_*
+.workflow/state-archive/
