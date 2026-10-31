@@ -38,6 +38,6 @@ jobs:
         with:
           sdk: ${{ env.DART_SDK }}
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Dependency freshness gate (direct majors-behind fails)
         run: dart run tool/check_dependency_freshness.dart

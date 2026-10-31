@@ -143,3 +143,54 @@ completion with no choices or empty content throws (the seam parser
 reduces both shapes to empty content), so the engine's `providerFailed`
 handling, the last-LLM-error tracker and the breaker/fallback stack keep
 their loud signal.
+
+## Dependency management & supply-chain integrity (issue #109)
+
+The engine's dependency graph is auditable and reproducible end to end.
+The policy below is enforced by
+`test/supply_chain_integrity_test.dart`, so a regression fails
+`dart test`, not a supply-chain audit.
+
+### Resolution strategy
+
+- **Published dependencies resolve from pub.dev behind a caret range.**
+  `zuraffa` (the issue's subject) is hosted (`zuraffa: ^7.3.2`) — the
+  preferred end state #109 describes. A git dependency is the fallback
+  for anything NOT published, and it must then pin a **full commit SHA
+  or a release tag** — never a moving branch tip (`development`,
+  `master`), which was the original #109 finding and cannot be
+  re-resolved to the same bytes twice.
+- **`pubspec.lock` is committed.** The "libraries don't commit
+  lockfiles" convention is consciously overridden: the engine is built
+  and verified as a unit, and the lockfile is the only auditable record
+  of the resolved transitive graph — every entry carries the host URL
+  and the content sha256, which is the pin that survives a registry
+  compromise of version metadata. Consumers of the published package
+  still resolve against their own constraints; the committed lockfile
+  governs THIS repository's builds and CI.
+- **CI enforces lockfile sync.** Every `pub get` in
+  `.github/workflows/` (every workflow) runs with
+  `--enforce-lockfile`: if `pubspec.yaml` and `pubspec.lock` drift
+  apart (a constraint edited without re-resolving, or a floor with no
+  published version yet), pub fails fast instead of silently
+  re-resolving to whatever the registry serves that minute.
+
+### Upgrade procedure
+
+Edit the constraint in `pubspec.yaml`, run `dart pub get`, review the
+`pubspec.lock` diff — version bumps and NEW transitive packages are the
+review surface — and commit both together. Never hand-edit
+`pubspec.lock`; never land a constraint that the host cannot satisfy
+(the committed lockfile makes that state unresolvable and CI red).
+
+### Overrides policy
+
+`dependency_overrides` carry a justification comment and are version
+overrides only (version pins with an in-file justification — none
+active on master today; the former `xml: 7.1.0` pin steered graphs
+away from the abandoned `minio`'s xml 6.x). Out-of-repo `path:`
+overrides are local development hygiene and must never land on
+`master` (see 81d6d55). The federated `packages/*` subpackages resolve
+under the Flutter SDK in their own contexts and are excluded from the
+root lockfile; committing their lockfiles is a follow-up once they get
+a CI lane.
