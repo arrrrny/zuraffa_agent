@@ -41,7 +41,10 @@ class OpenAiCompatibleClient implements LlmClient {
   Future<LlmResponse> generate(LlmRequest request) async {
     final response = await sendWithRetry(
       transport: transport,
-      request: _httpRequest(jsonEncode(_buildBody(request, stream: false))),
+      request: _httpRequest(
+        jsonEncode(_buildBody(request, stream: false)),
+        request,
+      ),
       config: retryConfig,
       clock: clock,
       provider: providerName,
@@ -54,7 +57,10 @@ class OpenAiCompatibleClient implements LlmClient {
   Stream<LlmResponseChunk> stream(LlmRequest request) async* {
     final response = await openStreamWithRetry(
       transport: transport,
-      request: _httpRequest(jsonEncode(_buildBody(request, stream: true))),
+      request: _httpRequest(
+        jsonEncode(_buildBody(request, stream: true)),
+        request,
+      ),
       config: retryConfig,
       clock: clock,
       provider: providerName,
@@ -158,16 +164,19 @@ class OpenAiCompatibleClient implements LlmClient {
   @override
   Future<void> close() async {}
 
-  LlmHttpRequest _httpRequest(String body) => LlmHttpRequest(
-    uri: Uri.parse(
-      '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}chat/completions',
-    ),
-    headers: {
-      if (apiKey != null) 'authorization': 'Bearer $apiKey',
-      'content-type': 'application/json',
-    },
-    body: body,
-  );
+  LlmHttpRequest _httpRequest(String body, LlmRequest request) =>
+      LlmHttpRequest(
+        uri: Uri.parse(
+          '$baseUrl${baseUrl.endsWith('/') ? '' : '/'}chat/completions',
+        ),
+        headers: {
+          if (apiKey != null) 'authorization': 'Bearer $apiKey',
+          'content-type': 'application/json',
+          // Caller-supplied headers win — traceparent and friends.
+          ...request.headers,
+        },
+        body: body,
+      );
 
   Map<String, dynamic> _buildBody(LlmRequest request, {required bool stream}) =>
       {

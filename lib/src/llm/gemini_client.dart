@@ -44,6 +44,7 @@ class GeminiClient implements LlmClient {
       request: _httpRequest(
         ':generateContent',
         jsonEncode(_buildBody(request)),
+        request,
       ),
       config: retryConfig,
       clock: clock,
@@ -60,6 +61,7 @@ class GeminiClient implements LlmClient {
       request: _httpRequest(
         ':streamGenerateContent?alt=sse',
         jsonEncode(_buildBody(request)),
+        request,
       ),
       config: retryConfig,
       clock: clock,
@@ -130,11 +132,17 @@ class GeminiClient implements LlmClient {
   @override
   Future<void> close() async {}
 
-  LlmHttpRequest _httpRequest(String action, String body) => LlmHttpRequest(
-    uri: Uri.parse('$baseUrl/models/$model$action'),
-    headers: {'x-goog-api-key': ?apiKey, 'content-type': 'application/json'},
-    body: body,
-  );
+  LlmHttpRequest _httpRequest(String action, String body, LlmRequest request) =>
+      LlmHttpRequest(
+        uri: Uri.parse('$baseUrl/models/$model$action'),
+        headers: {
+          'x-goog-api-key': ?apiKey,
+          'content-type': 'application/json',
+          // Caller-supplied headers win — traceparent and friends.
+          ...request.headers,
+        },
+        body: body,
+      );
 
   Map<String, dynamic> _buildBody(LlmRequest request) => {
     if (request.systemPrompt != null)

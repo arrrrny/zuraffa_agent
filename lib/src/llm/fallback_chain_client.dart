@@ -9,6 +9,8 @@ import 'circuit_breaker.dart';
 import 'llm_client.dart';
 import 'llm_clock.dart';
 import '../domain/entities/client_health/client_health.dart';
+import '../observability/health_check.dart';
+import '../observability/metrics.dart';
 
 /// One provider slot in the chain.
 typedef FallbackProvider = ({String id, LlmClient client});
@@ -32,12 +34,21 @@ class FallbackChainClient implements LlmClient {
   final LlmClock clock;
   final Map<String, CircuitBreaker> _breakers = {};
 
+  /// Optional last-LLM-error tracker (issue #133, O-3 wiring). Every
+  /// provider failure in the chain is recorded here with its provider id —
+  /// including failures the chain recovered from by advancing — and a
+  /// clean completion clears the state, so [LastLlmErrorProbe] reflects
+  /// the chain's real history instead of reporting `ok` forever.
+  final LastLlmErrorTracker? llmErrorTracker;
+
   FallbackChainClient({
     required this.providers,
     this.policyMode = 'restart',
     int maxConsecutiveFailures = 3,
     int cooldownMs = 60000,
     required this.clock,
+    Metrics? metrics,
+    this.llmErrorTracker,
   }) {
     for (final p in providers) {
       _breakers[p.id] = CircuitBreaker(
@@ -45,6 +56,7 @@ class FallbackChainClient implements LlmClient {
         maxConsecutiveFailures: maxConsecutiveFailures,
         cooldownWindowMs: cooldownMs,
         clock: clock,
+        metrics: metrics,
       );
     }
   }
@@ -67,9 +79,11 @@ class FallbackChainClient implements LlmClient {
       try {
         final response = await p.client.generate(request);
         breaker.recordSuccess();
+        llmErrorTracker?.recordSuccess();
         return response;
       } catch (error) {
         breaker.recordFailure();
+        llmErrorTracker?.recordError(error, provider: p.id);
         if (_shouldAdvance(error)) {
           errors[p.id] = error;
           continue; // Advance to the next provider.
@@ -96,9 +110,11 @@ class FallbackChainClient implements LlmClient {
           yield chunk;
         }
         breaker.recordSuccess();
+        llmErrorTracker?.recordSuccess();
         return; // Stream completed on this provider.
       } catch (error) {
         breaker.recordFailure();
+        llmErrorTracker?.recordError(error, provider: p.id);
         if (!_shouldAdvance(error)) rethrow;
         if (emitted > 0 && policyMode == 'skip') {
           // Configurable mid-stream policy (FR-004): skip propagates the
@@ -126,6 +142,12 @@ class FallbackChainClient implements LlmClient {
   Map<String, ClientHealth> healthSnapshot() => {
     for (final p in providers) p.id: _breakers[p.id]!.health(),
   };
+
+  /// The chain's per-provider circuit breakers, keyed by provider id
+  /// (issue #133 review F2). [BreakerHealthProbe] consumes these — the
+  /// map was private before, so the shipped breaker probe had no feed
+  /// from the code that owns the breakers.
+  Map<String, CircuitBreaker> get breakers => Map.unmodifiable(_breakers);
 
   /// Context-overflow detection: a 400 whose body indicates the request
   /// exceeded the model's context window — a smaller/other model may fit.
