@@ -79,11 +79,10 @@ const _providers = [
   _ProviderHarness('gemini', _gemini),
 ];
 
-/// The shared snapshot gate: parse the raw fixture through the real client,
-/// canonically serialize, and byte-compare (or author) the expected sibling.
+/// The shared snapshot gate: canonically serialize the parsed response (or
+/// assembled chunk stream) and byte-compare it against the `*.expected.json`
+/// sibling (or author it in update mode).
 Future<void> _expectSnapshot(
-  _ProviderHarness provider,
-  String rawFixture,
   String expectedFile,
   String Function() canonicalize,
 ) async {
@@ -127,8 +126,6 @@ void main() {
             LlmRequest(messages: [UserMessage.text('hi')]),
           );
           await _expectSnapshot(
-            provider,
-            raw,
             '$_fixtureRoot/${provider.id}/generate.expected.json',
             () => canonicalResponse(response),
           );
@@ -149,8 +146,6 @@ void main() {
               LlmRequest(messages: [UserMessage.text('describe the image')]),
             );
             await _expectSnapshot(
-              provider,
-              raw,
               '$_fixtureRoot/${provider.id}/generate_multimodal.expected.json',
               () => canonicalResponse(response),
             );
@@ -172,8 +167,6 @@ void main() {
                 .stream(LlmRequest(messages: [UserMessage.text('hi')]))
                 .toList();
             await _expectSnapshot(
-              provider,
-              lines.join('\n'),
               '$_fixtureRoot/${provider.id}/stream.expected.json',
               () => canonicalChunks(chunks),
             );

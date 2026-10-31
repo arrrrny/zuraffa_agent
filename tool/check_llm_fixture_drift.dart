@@ -112,6 +112,16 @@ const _requiredFixtures = [
   'rate_limited.json',
 ];
 
+/// Word-boundary presence check for a pinned wire key. A raw substring test
+/// false-passes the exact rename this tool exists to catch: keys like `role`,
+/// `usage` or `message` occur in many unrelated schemas, so a rename inside
+/// the target schema still matches somewhere else in the document. Word
+/// boundaries keep the check a coarse tripwire (a per-schema YAML/proto parse
+/// would be stronger, but is out of proportion for a nightly early-warning
+/// lane).
+bool _wordPresent(String body, String key) =>
+    RegExp(r'\b' + RegExp.escape(key) + r'\b').hasMatch(body);
+
 Future<void> main(List<String> args) async {
   final offline = args.contains('--offline');
   final reportIndex = args.indexOf('--report');
@@ -133,6 +143,11 @@ Future<void> main(List<String> args) async {
       'fixtures': <Map<String, dynamic>>[],
       'drifted': false,
     };
+    // Per-provider drift flag. The global `drifted` above drives the report
+    // verdict and the exit code, but it must NOT leak into a single
+    // provider's row — one unreachable source would otherwise mark every
+    // later provider drifted in the JSON artifact.
+    var providerDrifted = false;
 
     // 1. Local fixture presence + parseability.
     for (final fixture in _requiredFixtures) {
@@ -151,7 +166,10 @@ Future<void> main(List<String> args) async {
         parseable = true; // stream.sse is a line document
       }
       final ok = exists && parseable;
-      if (!ok) drifted = true;
+      if (!ok) {
+        drifted = true;
+        providerDrifted = true;
+      }
       providerReport['fixtures'] = [
         ...providerReport['fixtures'] as List,
         {
@@ -172,7 +190,10 @@ Future<void> main(List<String> args) async {
       final exists = File(
         'test/fixtures/llm/${provider.id}/$snapshot',
       ).existsSync();
-      if (!exists) drifted = true;
+      if (!exists) {
+        drifted = true;
+        providerDrifted = true;
+      }
       providerReport['fixtures'] = [
         ...providerReport['fixtures'] as List,
         {
@@ -198,15 +219,17 @@ Future<void> main(List<String> args) async {
           // An unreachable doc is a check failure (network blip or the doc
           // moved) — surfaced, never silently ignored.
           drifted = true;
+          providerDrifted = true;
           sourceReport['missingKeys'] = ['<source unreachable>'];
         } else {
           final missing = [
             for (final key in source.pinnedKeys)
-              if (!body.contains(key)) key,
+              if (!_wordPresent(body, key)) key,
           ];
           sourceReport['missingKeys'] = missing;
           if (missing.isNotEmpty) {
             drifted = true;
+            providerDrifted = true;
             stdout.writeln(
               '  DRIFT: keys missing from ${source.name}: $missing',
             );
@@ -221,7 +244,7 @@ Future<void> main(List<String> args) async {
       }
     }
 
-    providerReport['drifted'] = drifted;
+    providerReport['drifted'] = providerDrifted;
     report['providers'][provider.id] = providerReport;
   }
 
@@ -238,9 +261,8 @@ Future<void> main(List<String> args) async {
 }
 
 Future<String?> _fetch(Uri url) async {
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 20);
   try {
-    final client = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 20);
     final request = await client.getUrl(url);
     final response = await request.close();
     if (response.statusCode != 200) {
@@ -248,10 +270,11 @@ Future<String?> _fetch(Uri url) async {
       return null;
     }
     final body = await response.transform(utf8.decoder).join();
-    client.close();
     return body;
   } on IOException catch (error) {
     stdout.writeln('  fetch failed: $error');
     return null;
+  } finally {
+    client.close();
   }
 }

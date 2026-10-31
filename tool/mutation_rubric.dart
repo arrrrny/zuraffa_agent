@@ -182,7 +182,11 @@ void main(List<String> args) {
   final reportPath = _argValue(args, '--report');
   final gateArg = _argValue(args, '--gate');
   final keepGoing = args.contains('--keep-going');
-  final gate = gateArg == null ? 0.80 : double.parse(gateArg);
+  final gate = gateArg == null ? 0.80 : double.tryParse(gateArg);
+  if (gate == null || gate < 0 || gate > 1) {
+    stderr.writeln('--gate must be a number in [0, 1], got: "$gateArg"');
+    exit(2);
+  }
 
   final mutants = [
     for (final m in _registry)
@@ -197,6 +201,7 @@ void main(List<String> args) {
   var killed = 0;
   var errors = 0;
 
+  mutantLoop:
   for (final mutant in mutants) {
     stdout.write('${mutant.id}  ${mutant.description}\n  ... ');
     final outcome = _runMutant(mutant);
@@ -215,7 +220,7 @@ void main(List<String> args) {
       default:
         errors++;
         stdout.writeln('ERROR: ${outcome['detail']}');
-        if (!keepGoing) break;
+        if (!keepGoing) break mutantLoop;
     }
   }
 

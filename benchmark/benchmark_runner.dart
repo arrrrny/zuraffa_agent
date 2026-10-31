@@ -348,7 +348,7 @@ Future<void> _benchFallbackFailover(
       );
       final sw = Stopwatch()..start();
       try {
-        await await2(chain);
+        await chain.generate(LlmRequest(messages: [UserMessage.text('hi')]));
       } on Object {
         // Exhausted chains are a valid outcome; latency is what we measure.
       }
@@ -398,11 +398,6 @@ Future<void> _benchFallbackFailover(
     ),
   );
 }
-
-/// Awaits one failover generate() end-to-end (the timing wrapper lives in
-/// the caller; this exists so the awaited call is a single statement).
-Future<LlmResponse> await2(FallbackChainClient chain) =>
-    chain.generate(LlmRequest(messages: [UserMessage.text('hi')]));
 
 Map<String, double> _percentiles(List<double> samplesUs) {
   final sorted = List.of(samplesUs)..sort();

@@ -25,8 +25,11 @@
   </files>
   <commands>
     <!-- Scoped fast slice: the property suites + the entity/provider tests
-         for the four targets. -j 2 is the fleet concurrency cap. -->
-    <command group="test" expected-return="0" working-directory="." timeout="300">dart test test/property test/domain/entities/pass_at_k test/domain/entities/ui_tree_payload test/domain/entities/circuit_breaker test/llm/circuit_breaker_test.dart test/data/providers/engine_loop test/domain/entities/stop_policy -j 2 --reporter compact</command>
+         for the four targets. -j 2 is the fleet concurrency cap. The wider
+         suites for the rubric-only mutants (ENG-1, STP-1) are intentionally
+         NOT here — they cover none of the four dmuti-scoped files and would
+         only add wall-clock per mutant; tool/mutation_rubric.dart owns them. -->
+    <command group="test" expected-return="0" working-directory="." timeout="300">dart test test/property test/domain/entities/pass_at_k test/domain/entities/ui_tree_payload test/domain/entities/circuit_breaker test/llm/circuit_breaker_test.dart -j 2 --reporter compact</command>
   </commands>
   <!-- Mutation blacklist: doc comments must never be mutated — a comment
        "mutant" always survives and would poison the kill-rate gate with
