@@ -40,6 +40,9 @@ class _ScriptedTransport implements LlmTransport {
   @override
   Future<LlmStreamResponse> openStream(LlmHttpRequest request) async =>
       LlmStreamResponse(statusCode: 200, lines: Stream<String>.empty());
+
+  @override
+  Future<void> close() async {}
 }
 
 class _InstantClock implements LlmClock {

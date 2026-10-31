@@ -83,4 +83,10 @@ class FakeLlmTransport implements LlmTransport {
       lines: Stream.fromIterable(scripted.lines ?? const <String>[]),
     );
   }
+
+  /// Stateless fixture replay — nothing to release. The seam interface
+  /// carries close() so clients can reach real transports' sockets
+  /// (issue #159 review).
+  @override
+  Future<void> close() async {}
 }
