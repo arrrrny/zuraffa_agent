@@ -274,6 +274,37 @@ void main() {
       },
     );
 
+    test('reasoning deltas surface as thinking chunks (issue #123 review: '
+        'the shared SSE parser gives the provider-client path the same '
+        'reasoning mapping the legacy transport path already had)', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              // OpenRouter-style `reasoning` and DeepSeek-style
+              // `reasoning_content` both carry thinking text.
+              'data: {"id":"1","choices":[{"index":0,"delta":{"reasoning":"step "}}]}',
+              'data: {"id":"1","choices":[{"index":0,"delta":{"reasoning_content":"one"}}]}',
+              'data: {"id":"1","choices":[{"index":0,"delta":{"content":"done"}}]}',
+              'data: [DONE]',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('think')]))
+          .toList();
+
+      expect(chunks[0].thinking, 'step ');
+      expect(chunks[1].thinking, 'one');
+      expect(chunks[2].content, 'done');
+      expect(chunks.last.isComplete, isTrue);
+    });
+
     test(
       'U13: tool-call fragments assemble by index across chunks; malformed arguments default to an empty map',
       () async {

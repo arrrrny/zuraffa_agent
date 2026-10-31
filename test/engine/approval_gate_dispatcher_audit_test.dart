@@ -15,6 +15,8 @@
 //   - without an AuditLog wired, the gate behaves exactly as before
 //     (issue #130 contract unchanged).
 
+import 'dart:async';
+
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/entities/approval_request/approval_request.dart';
@@ -205,6 +207,9 @@ void main() {
         auditLog: audit,
       );
 
+      // A5 (issue #4): admin tools run only on internal missions — the
+      // internal mission is the admin grant — so this batch dispatches on
+      // an internal mission to exercise the admin approval path.
       await g.dispatchBatch(
         calls: [
           const ToolCall(
@@ -218,7 +223,7 @@ void main() {
             executionMode: 'sequential',
           ),
         ],
-        isInternalMission: false,
+        isInternalMission: true,
       );
 
       expect(
@@ -241,7 +246,9 @@ void main() {
       () async {
         final g = ApprovalGateToolDispatcher(
           inner: inner,
-          riskTiers: const {'deploy': RiskTier.admin},
+          // `confirm`, not `admin`: an admin call on a non-internal mission
+          // IS a decision and is audited (see the admin-grant tests below).
+          riskTiers: const {'deploy': RiskTier.confirm},
           auditLog: audit,
         );
 
@@ -284,6 +291,123 @@ void main() {
         // this run; the gate must stay ignorant of audit-backend failures.
         await Future<void>.delayed(Duration.zero);
       },
+    );
+    test(
+      'an admin grant refusal records approval.denied (issue #4 review)',
+      () async {
+        final g = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {'cluster.delete-namespace': RiskTier.admin},
+          approvalCallback: callback.call,
+          auditLog: audit,
+        );
+
+        final result = await g.dispatch(
+          toolName: 'cluster.delete-namespace',
+          arguments: {'ns': 'prod'},
+          isInternalMission: false,
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(result.success, isFalse);
+        expect(
+          callback.requests,
+          isEmpty,
+          reason: 'the surface is never consulted without a grant',
+        );
+        expect(inner.dispatchCount, 0, reason: 'the tool never ran');
+        // The highest-severity denial of all must be the MOST visible event
+        // in the trail, not the only invisible one.
+        expect(
+          [for (final e in sink.stored) e.action],
+          [AuditActions.approvalDenied],
+        );
+        expect(
+          sink.stored.single.details['toolName'],
+          'cluster.delete-namespace',
+        );
+        expect(
+          sink.stored.single.details['argsHash'],
+          auditHash({'ns': 'prod'}),
+        );
+      },
+    );
+
+    test('a batch admin-grant refusal records one denial per blocked call '
+        'and no invocation', () async {
+      final g = ApprovalGateToolDispatcher(
+        inner: inner,
+        riskTiers: const {
+          'fs.read': RiskTier.safe,
+          'cluster.delete-namespace': RiskTier.admin,
+        },
+        approvalCallback: callback.call,
+        auditLog: audit,
+      );
+
+      final results = await g.dispatchBatch(
+        calls: [
+          const ToolCall(
+            toolName: 'fs.read',
+            arguments: {'path': '/tmp/a.txt'},
+            executionMode: 'sequential',
+          ),
+          const ToolCall(
+            toolName: 'cluster.delete-namespace',
+            arguments: {'ns': 'prod'},
+            executionMode: 'sequential',
+          ),
+        ],
+        isInternalMission: false,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(results.every((r) => !r.success), isTrue);
+      expect(inner.batchCalls, isEmpty);
+      expect(
+        [for (final e in sink.stored) e.action],
+        [AuditActions.approvalDenied],
+        reason: 'the blocked admin attempt is in the trail; nothing ran',
+      );
+      expect(
+        sink.stored.single.details['toolName'],
+        'cluster.delete-namespace',
+      );
+    });
+
+    test(
+      'an approval timeout is audited as approval.denied (spec-003 A4)',
+      () async {
+        final g = ApprovalGateToolDispatcher(
+          inner: inner,
+          riskTiers: const {'shell': RiskTier.confirm},
+          approvalCallback: (_) => Completer<bool>().future,
+          approvalTimeoutMs: 20,
+          auditLog: audit,
+        );
+
+        final result = await g.dispatch(
+          toolName: 'shell',
+          arguments: {'cmd': 'ls'},
+          isInternalMission: false,
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(result.success, isFalse);
+        expect(result.error, contains('timed out'));
+        expect(inner.dispatchCount, 0);
+        // The dispatch outcome IS a denial, whatever the surface failed to
+        // answer — so the trail says so.
+        expect(
+          [for (final e in sink.stored) e.action],
+          [AuditActions.approvalDenied],
+        );
+        expect(
+          sink.stored.single.details['argsHash'],
+          auditHash({'cmd': 'ls'}),
+        );
+      },
+      timeout: const Timeout(Duration(seconds: 5)),
     );
   });
 }

@@ -16,7 +16,7 @@ class StoreOpenResult {
   final int loadedEntriesCount;
   final JsonlTear? tearReport;
 
-  /// The schema version the store is at after [init] completed (spec 110).
+  /// The schema version the store is at after `init()` completed (spec 110).
   final int? schemaVersion;
 
   /// When a migration ran at open time: the version migrated FROM.
@@ -86,7 +86,7 @@ abstract interface class SessionStorage {
   ///
   /// Strict: a snapshot newer than [SessionSchema.currentVersion] is
   /// refused (downgrade is not supported, matching [init]); older
-  /// snapshots migrate through the [SessionMigrator] registry; a malformed
+  /// snapshots migrate through the `SessionMigrator` registry; a malformed
   /// envelope throws. The replacement is durable when the future
   /// completes.
   Future<void> restore(String src);

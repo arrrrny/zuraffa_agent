@@ -21,7 +21,7 @@ import 'metrics.dart';
 import 'tracing.dart';
 
 /// Wraps a [ToolDispatcher]: one `tool.dispatch` span per dispatch (child
-/// of the ambient span — the mission span under [MissionRunner.run]), one
+/// of the ambient span — the mission span under `MissionRunner.run`), one
 /// `tool.dispatchBatch` span per batch, and `agent_tool_calls_failed_total`
 /// incremented for every unsuccessful result — including dispatches that
 /// threw and failed results inside a batch.

@@ -169,7 +169,7 @@ The policy below is enforced by
   still resolve against their own constraints; the committed lockfile
   governs THIS repository's builds and CI.
 - **CI enforces lockfile sync.** Every `pub get` in
-  `.github/workflows/pipeline.yml` and `nightly.yml` runs with
+  `.github/workflows/` (every workflow) runs with
   `--enforce-lockfile`: if `pubspec.yaml` and `pubspec.lock` drift
   apart (a constraint edited without re-resolving, or a floor with no
   published version yet), pub fails fast instead of silently
@@ -186,7 +186,8 @@ review surface — and commit both together. Never hand-edit
 ### Overrides policy
 
 `dependency_overrides` carry a justification comment and are version
-overrides only (currently `xml: 7.1.0`, fleet policy steering graphs
+overrides only (version pins with an in-file justification — none
+active on master today; the former `xml: 7.1.0` pin steered graphs
 away from the abandoned `minio`'s xml 6.x). Out-of-repo `path:`
 overrides are local development hygiene and must never land on
 `master` (see 81d6d55). The federated `packages/*` subpackages resolve

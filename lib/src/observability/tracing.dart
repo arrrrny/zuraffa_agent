@@ -58,7 +58,7 @@ abstract interface class Span {
   void end({DateTime? timestamp});
 }
 
-/// Span factory. The engine accepts a [Tracer] on [MissionRunner]; when
+/// Span factory. The engine accepts a [Tracer] on `MissionRunner`; when
 /// none is injected the no-op [NoopTracer] is used and tracing costs
 /// nothing. Vendor adapters (package:opentelemetry, Sentry spans, OTLP
 /// exporters) implement this interface.
@@ -98,7 +98,7 @@ const Symbol _currentSpanKey = #zuraffa_agent.observability.currentSpan;
 /// Ambient span scope + outbound propagation helpers.
 abstract final class Spans {
   /// The span ambient in the current [Zone], or null. Set only by
-  /// [withScope]; engine code running under [MissionRunner.run] sees the
+  /// [withScope]; engine code running under `MissionRunner.run` sees the
   /// mission span here.
   static Span? get current => Zone.current[_currentSpanKey] as Span?;
 
