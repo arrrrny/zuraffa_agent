@@ -14,8 +14,14 @@
 
 ## Scripts
 
-- No pre-publish or publish scripts — the flow is manual (this file + the
-  publish-manager skill steps).
+- `.github/workflows/publish.yml` (issue #126) automates the flow: every PR
+  runs `dart pub publish --dry-run` as a packaging gate, and pushing a
+  `v<version>` tag publishes the five packages below in dependency order
+  using the `PUB_DEV_PAT` credential secret. That secret holds the contents
+  of `~/.pub-cache/credentials.json` from one local publish (pub.dev uses
+  OAuth credentials, not a GitHub PAT).
+- The manual steps below remain the fallback (and the way the credential is
+  minted once, locally).
 
 ## Workflow
 

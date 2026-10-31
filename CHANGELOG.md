@@ -4,6 +4,13 @@ Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_inten
 
 ## Unreleased
 
+- **Publish automation** (issue #126): `.github/workflows/publish.yml` — every
+  PR runs `dart pub publish --dry-run` as a packaging gate; pushing a
+  `v<version>` tag publishes the five-package fleet to pub.dev in the
+  PUBLISH.md dependency order (root → platform interface → android/ios/macOS)
+  with the `PUB_DEV_PAT` credential secret and a pub.dev propagation wait
+  between the root and member publishes. README install snippet refreshed to
+  `^7.3.2` (mono-version policy) and a Publishing section added.
 - **Breaking**: `SessionStorage` implementations must now also implement
   `backup(dest)`, `restore(src)` and `prune(policy)` (issue #135).
 - **Session backup/restore + retention/TTL policy** (issue #135): `SessionStorage.backup(dest)` /

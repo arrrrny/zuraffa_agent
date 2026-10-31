@@ -1,0 +1,149 @@
+name: publish
+
+# Issue #126: the fleet publishes to pub.dev (the `publish_to: none` line was
+# removed from pubspec.yaml when the package first shipped), but the publish
+# flow lived only in PUBLISH.md as a manual, skill-driven dance. This workflow
+# makes the intent executable:
+#
+#   * pull_request  -> `dart pub publish --dry-run` gates every PR, so the
+#     tree can never drift away from publishable packaging (the 47 MB test
+#     dill that PUBLISH.md warns about is exactly this class of drift).
+#   * push of a `v<version>` tag -> publishes the five-package fleet in the
+#     dependency order PUBLISH.md documents (root -> platform interface ->
+#     android/ios/macos) using the PUB_DEV_PAT credential secret.
+#
+# The tag job needs a Flutter SDK: the four federated member packages declare
+# `flutter: {sdk: flutter}` and `dart pub publish` refuses Flutter-SDK
+# dependencies, so members publish via `flutter pub publish` (same publisher,
+# Flutter-aware resolution). The pure-Dart root keeps the literal
+# `dart pub publish` the issue asks for — the Dart toolchain bundled with
+# Flutter runs it.
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    tags: ["v*"]
+
+concurrency:
+  # One run per ref (PR branch or tag): superseded runs are cancelled
+  # instead of piling up — same convention as pipeline.yml.
+  group: publish-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    # Issue #126 AC: every PR proves the package stays publishable.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Pinned for the same reason as the format gate (pipeline.yml):
+          # the dry-run must be reproducible instead of drifting with the
+          # `stable` channel's validator.
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get
+      - name: Publish dry-run (packaging gate)
+        # Validation errors abort here; `build/`, `.dart_tool/` and
+        # gitignored paths never reach the archive (verified: the tracked
+        # build/test_cache dills are excluded by the publisher itself).
+        run: dart pub publish --dry-run
+
+  publish:
+    # Issue #126 AC: tag push -> real publish, in PUBLISH.md's order.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TAG_VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          # Lower bound of the member pubspecs' `flutter: ">=3.44.0"`.
+          # Pinned like the format gate's Dart SDK: a moving `stable` must
+          # not change what a release publishes.
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+      - name: Verify the tag matches the pubspec version
+        # Fleet mono-version policy (PUBLISH.md): one version number across
+        # the five packages. A tag that disagrees with the pubspec is a
+        # release-engineering mistake — stop before anything is uploaded.
+        run: |
+          want="${TAG_VERSION#v}"
+          have="$(awk '/^version:/{print $2; exit}' pubspec.yaml)"
+          if [ "$want" != "$have" ]; then
+            echo "::error::tag v$want does not match pubspec.yaml version $have"
+            exit 1
+          fi
+          echo "Tag v$want matches pubspec version $have."
+      - name: Restore pub.dev publish credentials (PUB_DEV_PAT)
+        env:
+          PUB_DEV_PAT: ${{ secrets.PUB_DEV_PAT }}
+        run: |
+          # pub.dev authenticates publishers with the OAuth credential file
+          # pub writes to $PUB_CACHE/credentials.json on a manual publish —
+          # not a GitHub PAT. Mint the secret once: run `flutter pub publish`
+          # locally, complete the browser flow, and store the *contents* of
+          # `~/.pub-cache/credentials.json` as the PUB_DEV_PAT secret.
+          if [ -z "$PUB_DEV_PAT" ]; then
+            echo "::error::PUB_DEV_PAT secret is not set. Mint it once: run 'flutter pub publish' locally, complete the browser OAuth flow, then copy ~/.pub-cache/credentials.json into the PUB_DEV_PAT secret."
+            exit 1
+          fi
+          mkdir -p "${PUB_CACHE:-$HOME/.pub-cache}"
+          printf '%s' "$PUB_DEV_PAT" > "${PUB_CACHE:-$HOME/.pub-cache}/credentials.json"
+      - name: "1/5 Publish zuraffa_agent (root, pure Dart)"
+        run: |
+          dart pub get
+          dart pub publish --dry-run
+          dart pub publish --force
+      - name: Wait for pub.dev to serve the new root version
+        # PUBLISH.md step 5: wait for each new version to propagate on
+        # pub.dev before dependents publish — the four members all declare
+        # `zuraffa_agent: ^<version>`, and the server validates dependency
+        # constraints against the live index at publish time.
+        run: |
+          want="${TAG_VERSION#v}"
+          for i in $(seq 1 30); do
+            if curl -fsSL "https://pub.dev/api/packages/zuraffa_agent" \
+                | grep -q "\"version\":\"$want\""; then
+              echo "pub.dev serves zuraffa_agent $want."
+              exit 0
+            fi
+            echo "waiting for zuraffa_agent $want on pub.dev ($i/30)…"
+            sleep 10
+          done
+          echo "::error::pub.dev does not serve zuraffa_agent $want after 5 minutes."
+          exit 1
+      - name: "2/5 Publish zuraffa_agent_platform_interface"
+        working-directory: packages/zuraffa_agent_platform_interface
+        run: |
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+      - name: "3/5 Publish zuraffa_agent_android"
+        working-directory: packages/zuraffa_agent_android
+        run: |
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+      - name: "4/5 Publish zuraffa_agent_ios"
+        working-directory: packages/zuraffa_agent_ios
+        run: |
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+      - name: "5/5 Publish zuraffa_agent_macos"
+        working-directory: packages/zuraffa_agent_macos
+        run: |
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force

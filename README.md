@@ -9,7 +9,7 @@ clean-architecture conventions.
 
 ```yaml
 dependencies:
-  zuraffa_agent: ^0.1.0
+  zuraffa_agent: ^7.3.2
 ```
 
 ```dart
@@ -38,6 +38,26 @@ dart run build_runner build --delete-conflicting-outputs
 dart test
 dart analyze
 ```
+
+## Publishing
+
+Packages ship to [pub.dev](https://pub.dev/packages/zuraffa_agent). The fleet
+publishes under one version number: this root package together with the
+federated platform packages (`zuraffa_agent_platform_interface`,
+`zuraffa_agent_android`, `zuraffa_agent_ios`, `zuraffa_agent_macos`) — see
+[PUBLISH.md](PUBLISH.md).
+
+The `.github/workflows/publish.yml` workflow automates the flow (issue #126):
+
+- **Every pull request** runs `dart pub publish --dry-run`, so the tree never
+  drifts away from publishable packaging.
+- **Pushing a `v<version>` tag** (e.g. `v7.3.2`) publishes the five-package
+  fleet in dependency order — root first, then the platform packages — using
+  the `PUB_DEV_PAT` credential secret.
+
+The manual flow in [PUBLISH.md](PUBLISH.md) stays as the fallback and is how
+the `PUB_DEV_PAT` credential (`~/.pub-cache/credentials.json` from one local
+publish) is minted.
 
 ## Security
 
