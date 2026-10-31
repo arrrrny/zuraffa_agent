@@ -1,13 +1,23 @@
-// R3#3 acceptance (spec-003 §4.3, FR-005): a large tool result is auto-converted
-// to a summarized ToolResult carrying an ArtifactRef; the full body is retrievable
+// R3#3 acceptance (spec-003 §4.3, FR-005): a large tool result is
+// auto-converted to a summarized ToolResult carrying an ArtifactRef; the full
+// body is retrievable by artifact id and never reaches model context. by
+// artifact id and never reaches model context.
+// to a summarized ToolResult carrying an ArtifactRef; the full body is
+// retrievable by artifact id and never reaches model context.
 // by artifact id and never reaches model context.
 //
 // Traces: specs/003-tools-and-mcp tdd/test-list.md A9 (oversized result -> model
-// summary + artifactRef only) and SC-003 (2 MB -> artifactRef, never in context).
+// summary + artifactRef only) and SC-003 (2 MB -> artifactRef, never in
+// context).
 //
-// This is the threshold-enforcement discipline that was previously untested: the
+// This is the threshold-enforcement discipline that was previously untested:
+// the OversizedResultPolicy value object, the ArtifactService.store sink, and
+// the ToolResult.oversized factory all existed, but nothing tied them together
+// for a raw tool result. enforceOversizedResultPolicy is that seam. raw tool
+// result. enforceOversizedResultPolicy is that seam.
 // OversizedResultPolicy value object, the ArtifactService.store sink, and the
-// ToolResult.oversized factory all existed, but nothing tied them together for a
+// ToolResult.oversized factory all existed, but nothing tied them together for
+// a raw tool result. enforceOversizedResultPolicy is that seam.
 // raw tool result. enforceOversizedResultPolicy is that seam.
 
 import 'dart:convert';
@@ -32,7 +42,7 @@ void main() {
         final store = InMemoryArtifactStore(
           config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
         );
-        final policy = const OversizedResultPolicy(
+        const policy = OversizedResultPolicy(
           id: 'test',
           thresholdBytes: 1024 * 1024,
           summaryMaxChars: 64,
@@ -57,31 +67,29 @@ void main() {
       },
     );
 
-    test(
-      'a tool result exceeding the policy threshold is auto-converted to an ArtifactRef',
-      () async {
-        final store = InMemoryArtifactStore(
-          config: const ArtifactServiceConfig(thresholdBytes: 100),
-        );
-        final policy = const OversizedResultPolicy(
-          id: 'test',
-          thresholdBytes: 100,
-          summaryMaxChars: 64,
-          artifactStore: './artifacts',
-        );
-        final large = ToolResult.success(content: 'x' * 200);
+    test('a tool result exceeding the policy threshold is auto-converted to an '
+        'ArtifactRef', () async {
+      final store = InMemoryArtifactStore(
+        config: const ArtifactServiceConfig(thresholdBytes: 100),
+      );
+      const policy = OversizedResultPolicy(
+        id: 'test',
+        thresholdBytes: 100,
+        summaryMaxChars: 64,
+        artifactStore: './artifacts',
+      );
+      final large = ToolResult.success(content: 'x' * 200);
 
-        final converted = await enforceOversizedResultPolicy(
-          result: large,
-          policy: policy,
-          artifactService: store,
-        );
+      final converted = await enforceOversizedResultPolicy(
+        result: large,
+        policy: policy,
+        artifactService: store,
+      );
 
-        expect(converted.isSummarized, isTrue);
-        expect(converted.artifactRef, isNotNull);
-        expect(converted.artifactRef!.kind, 'artifact');
-      },
-    );
+      expect(converted.isSummarized, isTrue);
+      expect(converted.artifactRef, isNotNull);
+      expect(converted.artifactRef!.kind, 'artifact');
+    });
 
     test(
       'the full body of a converted result is retrievable by artifact id',
@@ -89,7 +97,7 @@ void main() {
         final store = InMemoryArtifactStore(
           config: const ArtifactServiceConfig(thresholdBytes: 100),
         );
-        final policy = const OversizedResultPolicy(
+        const policy = OversizedResultPolicy(
           id: 'test',
           thresholdBytes: 100,
           summaryMaxChars: 64,
@@ -114,13 +122,13 @@ void main() {
         final store = InMemoryArtifactStore(
           config: const ArtifactServiceConfig(thresholdBytes: 100),
         );
-        final policy = const OversizedResultPolicy(
+        const policy = OversizedResultPolicy(
           id: 'test',
           thresholdBytes: 100,
           summaryMaxChars: 64,
           artifactStore: './artifacts',
         );
-        final small = ToolResult.success(content: 'small');
+        const small = ToolResult.success(content: 'small');
 
         final converted = await enforceOversizedResultPolicy(
           result: small,

@@ -45,7 +45,8 @@ int _toolInvocationCount(List<SessionTreeEntry> entries) =>
 void main() {
   group('epic R2 AC3 — 50+ tool-call fixture mission under budget', () {
     test(
-      'the 52-tool mission reduces to a kept tail + summary that stays under the context window',
+      'the 52-tool mission reduces to a kept tail + summary that stays under '
+      'the context window',
       () async {
         final entries = await _loadFixtureEntries();
 

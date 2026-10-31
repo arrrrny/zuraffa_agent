@@ -18,30 +18,22 @@ import 'package:zuraffa_agent/src/domain/entities/tool_result/tool_result.dart';
 
 void main() {
   group('spec 031 — ToolResult isError + equality/hashCode (cycle 1)', () {
-    test(
-      'A7: equal results with distinct-but-equal payload instances share hashCode',
-      () {
-        final a = ToolResult(
-          content: 'c',
-          structuredPayload: {'k': 'v', 'n': 1},
-        );
-        final b = ToolResult(
-          content: 'c',
-          structuredPayload: {'k': 'v', 'n': 1},
-        );
-        expect(a, equals(b));
-        expect(a.hashCode, equals(b.hashCode));
-      },
-    );
+    test('A7: equal results with distinct-but-equal payload instances share '
+        'hashCode', () {
+      const a = ToolResult(content: 'c', structuredPayload: {'k': 'v', 'n': 1});
+      const b = ToolResult(content: 'c', structuredPayload: {'k': 'v', 'n': 1});
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
 
     test(
       'U4: payload hashing is order-independent across insertion orders',
       () {
-        final a = ToolResult(
+        const a = ToolResult(
           content: 'c',
           structuredPayload: {'x': 1, 'y': 2, 'z': 3},
         );
-        final b = ToolResult(
+        const b = ToolResult(
           content: 'c',
           structuredPayload: {'z': 3, 'x': 1, 'y': 2},
         );
@@ -51,18 +43,19 @@ void main() {
     );
 
     test(
-      'A8: results differing in content, payload, isError or artifactRef are unequal',
+      'A8: results differing in content, payload, isError or artifactRef are '
+      'unequal',
       () {
-        final base = ToolResult(content: 'c', structuredPayload: {'k': 'v'});
-        final otherContent = ToolResult(
+        const base = ToolResult(content: 'c', structuredPayload: {'k': 'v'});
+        const otherContent = ToolResult(
           content: 'd',
           structuredPayload: {'k': 'v'},
         );
-        final otherPayload = ToolResult(
+        const otherPayload = ToolResult(
           content: 'c',
           structuredPayload: {'k': 'w'},
         );
-        final otherIsError = ToolResult.error(content: 'c');
+        const otherIsError = ToolResult.error(content: 'c');
         final ref = ArtifactRef(kind: 'file', id: 'a-1');
         final withRef = ToolResult(
           content: 'c',
@@ -79,27 +72,27 @@ void main() {
     test(
       'U1: success factory sets isError false; error factory sets isError true',
       () {
-        final ok = ToolResult.success(content: 'done');
-        final err = ToolResult.error(content: 'boom');
+        const ok = ToolResult.success(content: 'done');
+        const err = ToolResult.error(content: 'boom');
         expect(ok.isError, isFalse);
         expect(err.isError, isTrue);
       },
     );
 
     test('U2: default construction stays isError=false (backward compat)', () {
-      final result = ToolResult(content: 'legacy');
+      const result = ToolResult(content: 'legacy');
       expect(result.isError, isFalse);
     });
 
     test('U3: isError participates in equality', () {
-      final ok = ToolResult.success(content: 'c');
-      final err = ToolResult.error(content: 'c');
+      const ok = ToolResult.success(content: 'c');
+      const err = ToolResult.error(content: 'c');
       expect(ok, isNot(equals(err)));
     });
 
     test('U5: null payload equals null only — never an empty map', () {
       const nullPayload = ToolResult(content: 'c');
-      final emptyPayload = ToolResult(content: 'c', structuredPayload: {});
+      const emptyPayload = ToolResult(content: 'c', structuredPayload: {});
       expect(nullPayload, isNot(equals(emptyPayload)));
       expect(nullPayload.structuredPayload, isNull);
     });
@@ -109,7 +102,7 @@ void main() {
     test(
       'A1: a success result with payload round-trips through JSON exactly',
       () {
-        final original = ToolResult.success(
+        const original = ToolResult.success(
           content: 'processed',
           structuredPayload: {'rows': 3, 'truncated': false},
         );
@@ -124,7 +117,7 @@ void main() {
     test(
       'A2: an error result round-trips with isError true and content preserved',
       () {
-        final original = ToolResult.error(
+        const original = ToolResult.error(
           content: 'MCP transport error: server crashed',
           structuredPayload: {'code': -32000},
         );
@@ -140,7 +133,7 @@ void main() {
     test(
       'A3: an error result without payload serializes without a payload key',
       () {
-        final original = ToolResult.error(content: 'denied by policy');
+        const original = ToolResult.error(content: 'denied by policy');
         final json = original.toJson();
         expect(json.containsKey('structuredPayload'), isFalse);
         final parsed = ToolResult.fromJson(
@@ -151,19 +144,17 @@ void main() {
       },
     );
 
-    test(
-      'A6: an inline result serializes without artifactRef and isSummarized is false',
-      () {
-        final inline = ToolResult.success(content: 'inline body');
-        expect(inline.isSummarized, isFalse);
-        expect(inline.toJson().containsKey('artifactRef'), isFalse);
-        final parsed = ToolResult.fromJson(
-          jsonDecode(jsonEncode(inline.toJson())) as Map<String, dynamic>,
-        );
-        expect(parsed, equals(inline));
-        expect(parsed.isSummarized, isFalse);
-      },
-    );
+    test('A6: an inline result serializes without artifactRef and isSummarized '
+        'is false', () {
+      const inline = ToolResult.success(content: 'inline body');
+      expect(inline.isSummarized, isFalse);
+      expect(inline.toJson().containsKey('artifactRef'), isFalse);
+      final parsed = ToolResult.fromJson(
+        jsonDecode(jsonEncode(inline.toJson())) as Map<String, dynamic>,
+      );
+      expect(parsed, equals(inline));
+      expect(parsed.isSummarized, isFalse);
+    });
 
     test(
       'U8: fromJson round-trips a ref with null uri (nullable uri survives)',
@@ -220,16 +211,14 @@ void main() {
       expect(parsed.isSummarized, isTrue);
     });
 
-    test(
-      'U6: oversized constructor requires summary + artifactRef (assert contract)',
-      () {
-        final ref = ArtifactRef(kind: 'file', id: 'a-1');
-        expect(
-          () => ToolResult.oversized(summary: 's', artifactRef: ref),
-          returnsNormally,
-        );
-      },
-    );
+    test('U6: oversized constructor requires summary + artifactRef (assert '
+        'contract)', () {
+      final ref = ArtifactRef(kind: 'file', id: 'a-1');
+      expect(
+        () => ToolResult.oversized(summary: 's', artifactRef: ref),
+        returnsNormally,
+      );
+    });
 
     test('U7: oversized error results are constructible (edge-5)', () {
       final ref = ArtifactRef(kind: 'stderr', id: 'e-1');

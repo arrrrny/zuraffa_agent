@@ -31,6 +31,7 @@ import '../../datasources/stop_policy/stop_policy_mock_datasource.dart';
 class StopPolicyProvider
     with Loggable, FailureHandler
     implements StopPolicyService {
+  /// Creates a stop policy provider.
   StopPolicyProvider({StopPolicyDatasource? datasource})
     : _datasource = datasource ?? StopPolicyMockDatasource();
 

@@ -4,6 +4,17 @@ Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_inten
 
 ## Unreleased
 
+- **Publish automation** (issue #126): `.github/workflows/publish.yml` — every
+  PR runs a `pub publish --dry-run` matrix over all five packages and fails on
+  any packaging warning; pushing a `v<version>` tag validates the whole fleet
+  first, then publishes it to pub.dev in the PUBLISH.md dependency order
+  (root → platform interface → android/ios/macOS) with a pub.dev propagation
+  wait after each package the next one depends on. The release is gated by the
+  `pub-dev` environment (required reviewers) and uses the
+  `PUB_CREDENTIALS_JSON` secret; a partially published fleet is resumed with
+  `gh workflow run publish.yml -f resume_from=<package>`. README install
+  snippet refreshed to `^7.3.2` (mono-version policy) and a Publishing section
+  added.
 - **Breaking**: `SessionStorage` implementations must now also implement
   `backup(dest)`, `restore(src)` and `prune(policy)` (issue #135).
 - **Session backup/restore + retention/TTL policy** (issue #135): `SessionStorage.backup(dest)` /
@@ -16,6 +27,14 @@ Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_inten
   default off) and an atomic close-time rewrite — the pre-135 in-place flush was the exact crash
   window the issue cites. Retention defaults are "unlimited"; configuration is documented in the
   README (Session backup, restore & retention).
+- **Analyzer hardening** (issue #116): the 4 pre-existing analyzer warnings are fixed and
+  `analysis_options.yaml` gains a stricter lint set — `avoid_dynamic_calls`,
+  `require_trailing_commas`, `prefer_const_constructors`, `prefer_const_declarations`,
+  `directives_ordering`, `sort_pub_dependencies`, `public_member_api_docs`,
+  `lines_longer_than_80_chars` — with `unused_import` re-enabled as `warning` (was `ignore`).
+  zfa/Zorphy-generated subtrees descope the style/doc lints via nested `analysis_options.yaml`
+  files (generated output is never hand-edited); ~1,400 doc comments added across hand-written
+  `lib/` code.
 
 ## 7.3.0 - 2026-10-28
 

@@ -15,12 +15,11 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/sub_agent_spec/sub_agent_spec_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart'
     show RiskTier;
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_spec/sub_agent_spec.dart';
 import 'package:zuraffa_agent/src/domain/services/sub_agent_spec_service.dart';
-import 'package:zuraffa_agent/src/data/providers/sub_agent_spec/sub_agent_spec_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#6 — SubAgentSpec declarative value object', () {
@@ -177,7 +176,7 @@ void main() {
     });
 
     test('SubAgentSpecProvider.current returns the active spec', () async {
-      final spec = await SubAgentSpecProvider().current(NoParams());
+      final spec = await SubAgentSpecProvider().current(const NoParams());
       expect(spec, isA<SubAgentSpec>());
       expect(spec.name, 'explore');
       expect(spec.description, 'Default exploratory sub-agent.');
@@ -193,12 +192,15 @@ void main() {
           description: 'Compose.',
           systemPrompt: 'You compose.',
         );
-        expect(await SubAgentSpecProvider(active).current(NoParams()), active);
+        expect(
+          await SubAgentSpecProvider(active).current(const NoParams()),
+          active,
+        );
       },
     );
 
     test('SubAgentSpecProvider.count returns 1', () async {
-      expect(await SubAgentSpecProvider().count(NoParams()), 1);
+      expect(await SubAgentSpecProvider().count(const NoParams()), 1);
     });
   });
 }

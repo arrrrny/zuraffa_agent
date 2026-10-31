@@ -3,20 +3,20 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/oversized_result_policy/oversized_result_policy_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/oversized_result_policy/oversized_result_policy.dart';
 import 'package:zuraffa_agent/src/domain/services/oversized_result_policy_service.dart';
-import 'package:zuraffa_agent/src/data/providers/oversized_result_policy/oversized_result_policy_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#4 - OversizedResultPolicy value equality', () {
     test('OversizedResultPolicy equality is value-based across all fields', () {
-      final a = OversizedResultPolicy(
+      const a = OversizedResultPolicy(
         id: 'id-a',
         thresholdBytes: 10,
         summaryMaxChars: 10,
         artifactStore: './artifacts',
       );
-      final b = OversizedResultPolicy(
+      const b = OversizedResultPolicy(
         id: 'id-a',
         thresholdBytes: 10,
         summaryMaxChars: 10,
@@ -27,13 +27,13 @@ void main() {
     });
 
     test('OversizedResultPolicy inequality differs when a field changes', () {
-      final a = OversizedResultPolicy(
+      const a = OversizedResultPolicy(
         id: 'id-a',
         thresholdBytes: 10,
         summaryMaxChars: 10,
         artifactStore: './artifacts',
       );
-      final b = OversizedResultPolicy(
+      const b = OversizedResultPolicy(
         id: 'id-b',
         thresholdBytes: 20,
         summaryMaxChars: 20,
@@ -58,7 +58,7 @@ void main() {
         'OversizedResultPolicyProvider.current returns the active policy',
         () async {
           final policy = await OversizedResultPolicyProvider().current(
-            NoParams(),
+            const NoParams(),
           );
           expect(policy, isA<OversizedResultPolicy>());
           expect(policy.id, 'default');
@@ -71,7 +71,7 @@ void main() {
       test(
         'OversizedResultPolicyProvider honors an injected active policy',
         () async {
-          final injected = const OversizedResultPolicy(
+          const injected = OversizedResultPolicy(
             id: 'custom',
             thresholdBytes: 1024,
             summaryMaxChars: 128,
@@ -79,13 +79,16 @@ void main() {
           );
           final policy = await OversizedResultPolicyProvider(
             injected,
-          ).current(NoParams());
+          ).current(const NoParams());
           expect(policy, same(injected));
         },
       );
 
       test('OversizedResultPolicyProvider.count returns 1', () async {
-        expect(await OversizedResultPolicyProvider().count(NoParams()), 1);
+        expect(
+          await OversizedResultPolicyProvider().count(const NoParams()),
+          1,
+        );
       });
     },
   );

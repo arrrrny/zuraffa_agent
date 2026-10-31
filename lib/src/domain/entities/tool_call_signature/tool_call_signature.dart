@@ -39,6 +39,7 @@ class ToolCallSignature {
   /// dedup. Defaults to 1.
   final int version;
 
+  /// Creates a tool call signature.
   const ToolCallSignature({
     String? id,
     this.toolName = '',

@@ -26,7 +26,8 @@ void main() {
     );
 
     test(
-      'A3: a registered BeforeToolCallRequest handler receives the caller\'s args and its response is used',
+      'A3: a registered BeforeToolCallRequest handler receives the caller\'s '
+      'args and its response is used',
       () async {
         // Case 1: the handler echoes the caller's payload and appends its own
         // decision. The assertion pins both directions of the round-trip: the
@@ -45,7 +46,8 @@ void main() {
         expect(approved.args, equals({'url': 'x', 'approved': true}));
         expect(approved.approved, isTrue);
 
-        // Case 2: the `approved` flag is the handler's value, not a free default —
+        // Case 2: the `approved` flag is the handler's value, not a free
+        // default —
         // a declining handler must be reflected in the response.
         final denyBus = EventBus();
         denyBus.registerHandler<BeforeToolCallRequest, BeforeToolCallResponse>((

@@ -12,9 +12,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart';
+import 'package:zuraffa_agent/src/data/providers/artifact/artifact_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/artifact_ref/artifact_ref.dart';
 import 'package:zuraffa_agent/src/domain/services/artifact_service.dart';
-import 'package:zuraffa_agent/src/data/providers/artifact/artifact_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#11 — ArtifactProvider NoParams contract', () {
@@ -25,7 +25,7 @@ void main() {
     test(
       'ArtifactProvider.list returns the persisted artifact references',
       () async {
-        final refs = await ArtifactProvider().list(NoParams());
+        final refs = await ArtifactProvider().list(const NoParams());
         expect(refs, isA<List<ArtifactRef>>());
         expect(refs, hasLength(1));
         expect(refs.first, isA<ArtifactRef>());
@@ -35,7 +35,10 @@ void main() {
     );
 
     test('ArtifactProvider.thresholdBytes returns a positive byte budget', () {
-      expect(ArtifactProvider().thresholdBytes(NoParams()), greaterThan(0));
+      expect(
+        ArtifactProvider().thresholdBytes(const NoParams()),
+        greaterThan(0),
+      );
     });
 
     test(
@@ -46,18 +49,18 @@ void main() {
           ArtifactRef(kind: 'dir', id: 'art-2'),
         ];
         final provider = ArtifactProvider(injected, 1024);
-        final refs = await provider.list(NoParams());
+        final refs = await provider.list(const NoParams());
         expect(refs, hasLength(2));
         expect(refs[1].id, 'art-2');
-        expect(provider.thresholdBytes(NoParams()), 1024);
+        expect(provider.thresholdBytes(const NoParams()), 1024);
       },
     );
 
     // Sentinel — guards against accidental removal of the NoParams parameter
     // in a future refactor. If this stops compiling, the bug is back.
     test('NoParams is the declared parameter type (compile-time guard)', () {
-      NoParams decode(Object? src) => src is NoParams ? src : NoParams();
-      expect(decode(NoParams()), isA<NoParams>());
+      NoParams decode(Object? src) => src is NoParams ? src : const NoParams();
+      expect(decode(const NoParams()), isA<NoParams>());
     });
   });
 

@@ -1,13 +1,22 @@
 part of 'engine_event.dart';
 
-/// Emitted by the tool dispatch layer when a tool implementation returns (success or error). Pairs with ToolCallStarted (issue #22). Correlated via callId.
+/// Emitted by the tool dispatch layer when a tool implementation returns
+/// (success or error). Pairs with ToolCallStarted (issue #22). Correlated via
+/// callId.
 final class ToolCallCompleted extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The tool name.
   final String toolName;
+
+  /// The call identifier.
   final String callId;
+
+  /// Whether ok.
   final bool ok;
 
+  /// Creates a tool call completed.
   const ToolCallCompleted({
     required this.emittedAt,
     required this.toolName,
@@ -30,5 +39,6 @@ final class ToolCallCompleted extends EngineEvent {
 
   @override
   String toString() =>
-      'ToolCallCompleted(emittedAt: $emittedAt, toolName: $toolName, callId: $callId, ok: $ok)';
+      'ToolCallCompleted(emittedAt: $emittedAt, toolName: $toolName, callId: '
+      '$callId, ok: $ok)';
 }

@@ -36,6 +36,7 @@ class DistillationPolicy {
   /// Maximum promotions per distill run; null means uncapped.
   final int? maxPerSession;
 
+  /// Creates a distillation policy.
   DistillationPolicy({this.salienceThreshold = 0.7, this.maxPerSession}) {
     if (salienceThreshold < 0.0 || salienceThreshold > 1.0) {
       throw ArgumentError.value(
@@ -84,9 +85,13 @@ enum SkipReason {
 
 /// One skipped record with its typed reason.
 class SkippedRecord {
+  /// The identifier.
   final String id;
+
+  /// The reason.
   final SkipReason reason;
 
+  /// Creates a skipped record.
   const SkippedRecord(this.id, this.reason);
 
   @override
@@ -117,6 +122,7 @@ class DistillationReport {
   /// How many records remain in the session after the run.
   final int sessionRemaining;
 
+  /// Creates a distillation report.
   DistillationReport({
     required List<String> promoted,
     required List<SkippedRecord> skipped,
@@ -153,6 +159,7 @@ class DistillationReport {
 /// Auto-promotes session memories into long-term memory per policy
 /// (spec 077).
 class MemoryDistiller {
+  /// Creates a memory distiller.
   MemoryDistiller({required this.system, DistillationPolicy? policy})
     : policy = policy ?? DistillationPolicy();
 

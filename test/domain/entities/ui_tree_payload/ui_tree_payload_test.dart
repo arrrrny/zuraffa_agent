@@ -283,14 +283,14 @@ void main() {
     });
 
     test('U9: UiTreeDiff equality holds across all six fields', () {
-      final d1 = UiTreeDiff(
+      const d1 = UiTreeDiff(
         addedPaths: ['root/2'],
         removedPaths: ['root/1'],
         changedPaths: ['root/0'],
         vocabularyChanged: false,
         schemaChanged: true,
       );
-      final d2 = UiTreeDiff(
+      const d2 = UiTreeDiff(
         addedPaths: ['root/2'],
         removedPaths: ['root/1'],
         changedPaths: ['root/0'],
@@ -303,10 +303,10 @@ void main() {
     });
 
     test('U10: UiTreeDiff path lists are deterministically ordered', () {
-      final delta = UiTreeDiff(
+      const delta = UiTreeDiff(
         addedPaths: ['root/10', 'root/2'],
-        removedPaths: const [],
-        changedPaths: const [],
+        removedPaths: [],
+        changedPaths: [],
         vocabularyChanged: false,
         schemaChanged: false,
       );

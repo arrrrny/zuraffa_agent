@@ -19,6 +19,7 @@
 /// A monotonically increasing counter handle created by
 /// [Metrics.counter]. Labels are fixed at creation; [inc] only adds.
 abstract interface class Counter {
+  /// The name.
   String get name;
 
   /// Adds [amount] (default 1) to the counter.
@@ -50,8 +51,10 @@ String metricsKey(String name, Map<String, String>? labels) {
 
 /// The default implementation — accepts every record and drops it.
 class NoopMetrics implements Metrics {
+  /// Creates a noop metrics.
   const NoopMetrics();
 
+  /// The instance.
   static const NoopMetrics instance = NoopMetrics();
 
   @override

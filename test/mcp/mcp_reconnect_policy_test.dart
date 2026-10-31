@@ -21,7 +21,8 @@ void main() {
       for (var i = 0; i < McpReconnectPolicyConfig.sse.maxAttempts; i++) {
         await policy.nextBackoff();
       }
-      // Expected: 100ms, 200ms, 400ms, 800ms, 1000ms (capped), 1000ms, 1000ms, 1000ms.
+      // Expected: 100ms, 200ms, 400ms, 800ms, 1000ms (capped), 1000ms, 1000ms,
+      // 1000ms.
       final millis = delays.map((d) => d.inMilliseconds).toList();
       expect(millis.length, 8);
       expect(millis[0], 100);

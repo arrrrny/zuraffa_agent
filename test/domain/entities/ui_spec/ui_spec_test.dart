@@ -227,7 +227,8 @@ void main() {
         },
       );
       final errors = spec.validatePayload(payload);
-      // vocabularyMismatch, disallowedComponent, capExceeded(depth), capExceeded(nodeCount).
+      // vocabularyMismatch, disallowedComponent, capExceeded(depth),
+      // capExceeded(nodeCount).
       expect(errors.length, 4);
       expect(errors[0].kind, UiVocabularyPinErrorKind.vocabularyMismatch);
       expect(errors[1].kind, UiVocabularyPinErrorKind.disallowedComponent);

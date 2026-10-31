@@ -20,7 +20,7 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/planner/planner_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/entities/planner/plan_changed_event.dart';
 import 'package:zuraffa_agent/src/domain/entities/planner/plan_mode.dart';
@@ -31,7 +31,6 @@ import 'package:zuraffa_agent/src/domain/entities/planner/step_status.dart';
 import 'package:zuraffa_agent/src/domain/entities/planner/write_todos_tool.dart';
 import 'package:zuraffa_agent/src/domain/repositories/plan_state_repository.dart';
 import 'package:zuraffa_agent/src/domain/services/planner_service.dart';
-import 'package:zuraffa_agent/src/data/providers/planner/planner_provider.dart';
 
 void main() {
   PlanStep step(
@@ -249,7 +248,7 @@ void main() {
 
   group('Planner + WriteTodosTool — FR-001 injectable tool', () {
     test('write_todos is an AgentTool declaration with a todos schema', () {
-      final tool = WriteTodosTool.declaration;
+      const tool = WriteTodosTool.declaration;
       expect(tool, isA<AgentTool>());
       expect(tool.id, 'write_todos');
       expect(tool.riskTier, RiskTier.safe);
@@ -350,14 +349,14 @@ void main() {
 
     test('PlannerProvider.current throws UnimplementedError', () {
       expect(
-        () => PlannerProvider().current(NoParams()),
+        () => PlannerProvider().current(const NoParams()),
         throwsA(isA<UnimplementedError>()),
       );
     });
 
     test('PlannerProvider.mode throws UnimplementedError', () {
       expect(
-        () => PlannerProvider().mode(NoParams()),
+        () => PlannerProvider().mode(const NoParams()),
         throwsA(isA<UnimplementedError>()),
       );
     });

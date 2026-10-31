@@ -10,13 +10,25 @@
 ///
 /// Selective compaction policy — retain decisions/tool names/key results/plan state verbatim; replace verbose outputs with structured summaries referencing artifacts (epic #1 §R2.3, issue #3 AC1).
 class CompactionStrategy {
+  /// The identifier.
   final String id;
+
+  /// The session identifier.
   final String sessionId;
+
+  /// The retain entry identifiers.
   final List<String> retainEntryIds;
+
+  /// The summarize entry identifiers.
   final List<String> summarizeEntryIds;
+
+  /// The artifact refs.
   final List<String> artifactRefs;
+
+  /// The compacted at.
   final int compactedAt;
 
+  /// Creates a compaction strategy.
   const CompactionStrategy({
     required this.id,
     required this.sessionId,
@@ -50,5 +62,6 @@ class CompactionStrategy {
 
   @override
   String toString() =>
-      'CompactionStrategy(id: $id, sessionId: $sessionId, retainEntryIds: $retainEntryIds)';
+      'CompactionStrategy(id: $id, sessionId: $sessionId, retainEntryIds: '
+      '$retainEntryIds)';
 }

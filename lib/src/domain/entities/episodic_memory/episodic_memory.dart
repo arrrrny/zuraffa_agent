@@ -16,16 +16,23 @@ import '../../../types.dart';
 /// A compressed slice of conversation history: the XML snapshot that replaced
 /// it plus the original messages (spec 009 FR-003 / US2).
 class EpisodicMemory {
+  /// The identifier.
   final String id;
+
+  /// The summary.
   final String summary;
+
+  /// The messages.
   final List<AgentMessage> messages;
 
+  /// Creates an episodic memory.
   const EpisodicMemory({
     required this.id,
     required this.summary,
     this.messages = const [],
   });
 
+  /// Returns a copy of this episodic memory with the given fields replaced.
   EpisodicMemory copyWith({
     String? id,
     String? summary,
@@ -36,12 +43,14 @@ class EpisodicMemory {
     messages: messages ?? this.messages,
   );
 
+  /// Converts this episodic memory to JSON.
   Map<String, dynamic> toJson() => {
     'id': id,
     'summary': summary,
     'messages': [for (final m in messages) m.toJson()],
   };
 
+  /// Creates an episodic memory from JSON.
   factory EpisodicMemory.fromJson(Map<String, dynamic> json) => EpisodicMemory(
     id: json['id'] as String,
     summary: json['summary'] as String,

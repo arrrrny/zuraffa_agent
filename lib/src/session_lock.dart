@@ -15,7 +15,9 @@
 
 import 'dart:io';
 
+/// The session lock.
 class SessionLock {
+  /// Creates a session lock.
   SessionLock(this.path);
 
   /// The store path being guarded — the sidecar is `<path>.lock`.

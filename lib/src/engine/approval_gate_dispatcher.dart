@@ -69,6 +69,7 @@ import 'tool_dispatcher.dart';
 /// [ApprovalCallback] wired on this gate or their dispatch is refused
 /// before the tool runs.
 class ApprovalGateToolDispatcher implements ToolDispatcher {
+  /// Creates an approval gate tool dispatcher.
   ApprovalGateToolDispatcher({
     required ToolDispatcher inner,
     required Map<String, RiskTier> riskTiers,
@@ -96,6 +97,8 @@ class ApprovalGateToolDispatcher implements ToolDispatcher {
 
   final ApprovalCallback? _approvalCallback;
   final DateTime Function() _clock;
+
+  /// The approval timeout ms.
   final int approvalTimeoutMs;
 
   /// Optional audit seam (issue #132): every approval decision that reaches

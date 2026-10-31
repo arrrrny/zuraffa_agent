@@ -34,6 +34,7 @@ class RepetitionTracker {
   /// exactly [window] old are expired; strictly younger ones are alive.
   final Duration window;
 
+  /// Creates a repetition tracker.
   const RepetitionTracker({
     required this.id,
     this.maxCalls = 5,

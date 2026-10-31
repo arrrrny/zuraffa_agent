@@ -27,6 +27,7 @@ class Planner {
   /// tools available but optional, User Story 2 acceptance scenario 1).
   final PlanMode mode;
 
+  /// Creates a planner.
   const Planner({this.mode = PlanMode.auto});
 
   /// The write_todos AgentTool declaration this planner injects —

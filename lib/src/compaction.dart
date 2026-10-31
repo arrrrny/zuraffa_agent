@@ -20,6 +20,7 @@ class CompactionSettings {
   /// Ratio of usable window that triggers compaction (default: 0.85).
   final double triggerThresholdRatio;
 
+  /// Creates a compaction settings.
   const CompactionSettings({
     this.enabled = true,
     this.reserveTokens = 16384,
@@ -30,6 +31,8 @@ class CompactionSettings {
 
 /// Abstract contract for generating structured compaction summaries.
 abstract interface class CompactionSummarizer {
+  /// Summarizes the cut window into a compaction summary, chaining
+  /// [previousSummary] when the session was compacted before.
   Future<CompactionSummary> summarize({
     required List<SessionTreeEntry> cutEntries,
     required List<SessionTreeEntry> keptEntries,
@@ -39,6 +42,7 @@ abstract interface class CompactionSummarizer {
 
 /// Abstract contract for resolving preserved [ArtifactRef] instances.
 abstract interface class ArtifactResolver {
+  /// Resolves the ref.
   Future<Object?> resolve(ArtifactRef ref);
 }
 
@@ -50,6 +54,7 @@ class CompactionPreparation {
   /// Entries to keep uncompacted (recent).
   final List<SessionTreeEntry> keptEntries;
 
+  /// Creates a compaction preparation.
   const CompactionPreparation({
     required this.cutEntries,
     required this.keptEntries,
@@ -126,7 +131,8 @@ bool shouldCompact(
   return tokens > (usableTokens * settings.triggerThresholdRatio).floor();
 }
 
-/// Finds the split index separating entries to be compacted from entries to keep.
+/// Finds the split index separating entries to be compacted from entries to
+/// keep.
 ///
 /// Returns `null` if no cut point is needed (everything fits).
 int? findCutPoint(List<SessionTreeEntry> rootFirstEntries, int keepTokens) {
@@ -162,9 +168,13 @@ CompactionPreparation prepareCompaction(
 
 /// Result of a compaction operation: the entry to append and its summary.
 class CompactionResult {
+  /// The entry.
   final CompactionEntry entry;
+
+  /// The summary.
   final CompactionSummary summary;
 
+  /// Creates a compaction result.
   const CompactionResult({required this.entry, required this.summary});
 }
 
@@ -230,8 +240,10 @@ Future<CompactionResult> compact(
 
 /// Built-in rule-based summarizer extracting decisions, tools, and outputs.
 class HeuristicSummarizer implements CompactionSummarizer {
+  /// The max key result length.
   final int maxKeyResultLength;
 
+  /// Creates a heuristic summarizer.
   const HeuristicSummarizer({this.maxKeyResultLength = 300});
 
   @override

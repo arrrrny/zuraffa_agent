@@ -146,7 +146,7 @@ void main() {
       expect(report.promoted, equals(['fresh-1']));
       expect(
         report.skipped.single,
-        equals(SkippedRecord('dup-1', SkipReason.duplicateOfLongTerm)),
+        equals(const SkippedRecord('dup-1', SkipReason.duplicateOfLongTerm)),
       );
       // The duplicate stayed in the session and long-term was not doubled.
       expect(system.longTermMemory.all, hasLength(2));
@@ -170,7 +170,7 @@ void main() {
       expect(report.promoted, equals(['first']));
       expect(
         report.skipped.single,
-        equals(SkippedRecord('second', SkipReason.duplicateOfLongTerm)),
+        equals(const SkippedRecord('second', SkipReason.duplicateOfLongTerm)),
       );
       expect(system.longTermMemory.all, hasLength(1));
     });
@@ -275,8 +275,8 @@ void main() {
         DistillationReport(
           promoted: ['a'],
           skipped: [
-            SkippedRecord('b', SkipReason.belowThreshold),
-            SkippedRecord('c', SkipReason.capReached),
+            const SkippedRecord('b', SkipReason.belowThreshold),
+            const SkippedRecord('c', SkipReason.capReached),
           ],
           sessionRemaining: 2,
         ),
@@ -285,7 +285,7 @@ void main() {
       expect(
         DistillationReport(
           promoted: ['a'],
-          skipped: [SkippedRecord('b', SkipReason.belowThreshold)],
+          skipped: [const SkippedRecord('b', SkipReason.belowThreshold)],
           sessionRemaining: 2,
         ),
         isNot(equals(report)),

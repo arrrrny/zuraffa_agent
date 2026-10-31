@@ -6,6 +6,7 @@
 
 /// The verdict one grader produces for one output.
 class GraderResult {
+  /// Whether passed.
   final bool passed;
 
   /// Optional normalized score (e.g. judge confidence); null when the
@@ -16,10 +17,13 @@ class GraderResult {
   /// and what was actually seen.
   final String reason;
 
+  /// Creates a grader result.
   const GraderResult({required this.passed, this.score, required this.reason});
 
+  /// Creates a grader result (pass variant).
   const GraderResult.pass(String reason) : this(passed: true, reason: reason);
 
+  /// Creates a grader result (fail variant).
   const GraderResult.fail(String reason) : this(passed: false, reason: reason);
 
   @override
@@ -34,7 +38,8 @@ class GraderResult {
 
   @override
   String toString() =>
-      'GraderResult(${passed ? "PASS" : "FAIL"}, score: $score, reason: $reason)';
+      'GraderResult(${passed ? "PASS" : "FAIL"}, score: $score, reason: '
+      '$reason)';
 }
 
 /// A grader evaluates one mission output and returns a [GraderResult].
@@ -46,5 +51,6 @@ abstract interface class Grader {
   /// Stable identifier used by golden-mission grader bindings.
   String get id;
 
+  /// Grades the output.
   Future<GraderResult> grade(String output);
 }

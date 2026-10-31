@@ -19,15 +19,28 @@ import 'sse_chat_chunk_parser.dart';
 class OpenAiCompatibleClient implements LlmClient {
   @override
   final String providerName;
+
+  /// The transport.
   final LlmTransport transport;
+
+  /// The base URL.
   final String baseUrl;
   @override
   final String model;
+
+  /// The API key.
   final String? apiKey;
+
+  /// The retry config.
   final RetryConfig retryConfig;
+
+  /// The clock.
   final LlmClock clock;
+
+  /// The jitter callback.
   final int Function(int coreDelayMs)? jitter;
 
+  /// Creates an open ai compatible client.
   OpenAiCompatibleClient({
     this.providerName = 'openai',
     required this.transport,

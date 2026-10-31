@@ -10,9 +10,9 @@
 // byte-identical (its group covers U1 of that spec).
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/types.dart';
 import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memory.dart';
 import 'package:zuraffa_agent/src/llm/agent_message_history.dart';
+import 'package:zuraffa_agent/src/types.dart';
 
 EpisodicMemory _memory(String id, String goal) => EpisodicMemory(
   id: id,

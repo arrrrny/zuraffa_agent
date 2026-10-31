@@ -32,6 +32,7 @@ set agentPlatformInstance(AgentPlatform platform) {
   AgentPlatformBinding.instance = platform;
 }
 
+/// The agent platform binding.
 abstract final class AgentPlatformBinding {
   /// The bound implementation; replace via [instance] or the
   /// [agentPlatformInstance] setter.

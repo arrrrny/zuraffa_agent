@@ -26,6 +26,7 @@ class McpBreakerConfig {
   /// (half-open).
   final Duration cooldown;
 
+  /// Creates an MCP breaker config.
   const McpBreakerConfig({
     this.failureThreshold = 5,
     this.cooldown = const Duration(seconds: 30),
@@ -41,6 +42,7 @@ class McpRetryConfig {
   /// hermetic).
   final Duration backoff;
 
+  /// Creates an MCP retry config.
   const McpRetryConfig({
     this.maxAttempts = 3,
     this.backoff = const Duration(milliseconds: 100),
@@ -58,8 +60,10 @@ class McpCallOptions {
   /// Opt-in retry settings; `null` = never retry.
   final McpRetryConfig? retry;
 
+  /// The default timeout.
   static const Duration defaultTimeout = Duration(seconds: 30);
 
+  /// Creates an MCP call options.
   const McpCallOptions({this.timeout, this.readOnly = false, this.retry});
 
   /// The effective timeout for a call with these options.
@@ -76,10 +80,12 @@ const transientCallCodes = <String>{
 
 /// Per-server breaker holder over the immutable [CircuitBreaker].
 class McpCallGuard {
+  /// The config.
   final McpBreakerConfig config;
   final DateTime Function() _now;
   CircuitBreaker _breaker;
 
+  /// Creates an MCP call guard.
   McpCallGuard({
     McpBreakerConfig config = const McpBreakerConfig(),
     DateTime Function()? now,
@@ -92,8 +98,13 @@ class McpCallGuard {
          halfOpenThreshold: 1,
        );
 
+  /// The state.
   CircuitBreakerState get state => _breaker.state;
+
+  /// Whether the MCP call guard is open.
   bool get isOpen => _breaker.isOpen;
+
+  /// Whether the MCP call guard is closed.
   bool get isClosed => _breaker.isClosed;
 
   /// Runs [action] under the breaker:

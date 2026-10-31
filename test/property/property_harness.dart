@@ -14,8 +14,8 @@
 // test/property/<file>` plus the printed trial index.
 library;
 
-import 'dart:math';
 import 'dart:io' show Platform, stderr;
+import 'dart:math';
 
 /// Default seed — fixed so the suite is CI-stable (no flaky "passed last
 /// time"). Override locally with ZURAFFA_PROPERTY_SEED to search for new
@@ -60,7 +60,7 @@ int intBetween(Random rnd, int min, int max) {
 
 /// Random printable string, biased toward ASCII identifiers with occasional
 /// unicode (incl. one astral-plane char) and empty strings mixed in.
-final _stringAlphabet =
+const _stringAlphabet =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./: ';
 const _unicodeSamples = ['é', '日', '⚔', '𝕏', ' ', 'Ø'];
 

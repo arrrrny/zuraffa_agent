@@ -14,11 +14,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/provider_config/provider_config.dart';
 import '../../../domain/services/provider_config_service.dart';
 
+/// The provider config provider.
 class ProviderConfigProvider
     with Loggable, FailureHandler
     implements ProviderConfigService {
   final ProviderConfig _active;
 
+  /// Creates a provider config provider.
   ProviderConfigProvider([ProviderConfig? active]) : _active = _require(active);
 
   static ProviderConfig _require(ProviderConfig? active) {

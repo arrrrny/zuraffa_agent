@@ -11,10 +11,9 @@ import 'dart:io';
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart'
     show DeleteParams, ListQueryParams, QueryParams, UpdateParams;
-
-import 'package:zuraffa_agent/src/domain/entities/usage_ledger_entry/usage_ledger_entry.dart';
 import 'package:zuraffa_agent/src/data/datasources/usage_ledger_entry/usage_ledger_entry_datasource.dart';
 import 'package:zuraffa_agent/src/data/datasources/usage_ledger_entry/usage_ledger_entry_remote_datasource.dart';
+import 'package:zuraffa_agent/src/domain/entities/usage_ledger_entry/usage_ledger_entry.dart';
 
 UsageLedgerEntry make(String id, {int inputTokens = 10}) => UsageLedgerEntry(
   id: id,
@@ -40,14 +39,14 @@ void main() {
       final ds = UsageLedgerEntryRemoteDataSource();
       final created = await ds.create(make('a'));
       expect(created.id, 'a');
-      final fetched = await ds.get(QueryParams(params: {'id': 'a'}));
+      final fetched = await ds.get(const QueryParams(params: {'id': 'a'}));
       expect(fetched, same(created));
     });
 
     test('get throws StateError for a missing id', () async {
       final ds = UsageLedgerEntryRemoteDataSource();
       expect(
-        () => ds.get(QueryParams(params: {'id': 'nope'})),
+        () => ds.get(const QueryParams(params: {'id': 'nope'})),
         throwsA(isA<StateError>()),
       );
     });
@@ -78,7 +77,7 @@ void main() {
       );
       expect(updated.inputTokens, 99);
 
-      final fetched = await ds.get(QueryParams(params: {'id': 'a'}));
+      final fetched = await ds.get(const QueryParams(params: {'id': 'a'}));
       expect(fetched.inputTokens, 99);
     });
 
@@ -98,9 +97,9 @@ void main() {
     test('delete removes the entity from the store', () async {
       final ds = UsageLedgerEntryRemoteDataSource();
       await ds.create(make('a'));
-      await ds.delete(DeleteParams(id: 'a'));
+      await ds.delete(const DeleteParams(id: 'a'));
       expect(
-        () => ds.get(QueryParams(params: {'id': 'a'})),
+        () => ds.get(const QueryParams(params: {'id': 'a'})),
         throwsA(isA<StateError>()),
       );
     });
@@ -126,7 +125,7 @@ void main() {
       await a.create(make('p1', inputTokens: 10));
 
       final b = UsageLedgerEntryRemoteDataSource(path: path);
-      final fetched = await b.get(QueryParams(params: {'id': 'p1'}));
+      final fetched = await b.get(const QueryParams(params: {'id': 'p1'}));
       expect(fetched.id, 'p1');
       expect(fetched.inputTokens, 10);
     });
@@ -142,13 +141,13 @@ void main() {
       );
 
       final b = UsageLedgerEntryRemoteDataSource(path: path);
-      final updated = await b.get(QueryParams(params: {'id': 'p2'}));
+      final updated = await b.get(const QueryParams(params: {'id': 'p2'}));
       expect(updated.inputTokens, 99);
 
-      await b.delete(DeleteParams(id: 'p2'));
+      await b.delete(const DeleteParams(id: 'p2'));
       final c = UsageLedgerEntryRemoteDataSource(path: path);
       expect(
-        () => c.get(QueryParams(params: {'id': 'p2'})),
+        () => c.get(const QueryParams(params: {'id': 'p2'})),
         throwsA(isA<StateError>()),
       );
     });

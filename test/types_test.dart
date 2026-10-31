@@ -160,7 +160,7 @@ void main() {
     });
 
     test('ToolCallBlock', () {
-      final original = ToolCallBlock(
+      const original = ToolCallBlock(
         id: 'tc_1',
         name: 'search',
         arguments: {'q': 'test'},
@@ -169,7 +169,7 @@ void main() {
     });
 
     test('ToolCallBlock preserves arguments through round-trip', () {
-      final original = ToolCallBlock(
+      const original = ToolCallBlock(
         id: 'tc_1',
         name: 'search',
         arguments: {'query': 'test', 'limit': 10},
@@ -789,14 +789,14 @@ void main() {
     });
 
     test('ToolCallBlock equality compares id, name, and arguments', () {
-      final a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
-      final b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 2});
+      const a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
+      const b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 2});
       expect(a, isNot(equals(b)));
     });
 
     test('ToolCallBlock equality considers same arguments equal', () {
-      final a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
-      final b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
+      const a = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
+      const b = ToolCallBlock(id: '1', name: 'n', arguments: {'a': 1});
       expect(a, equals(b));
     });
   });

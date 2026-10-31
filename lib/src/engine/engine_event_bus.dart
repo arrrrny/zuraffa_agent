@@ -24,8 +24,6 @@
 // and an EngineEventSubscriberError is published onto the bus itself —
 // never swallowed (spec 113, issue #134).
 
-import 'package:logging/logging.dart';
-
 import '../logging/agent_log.dart';
 import 'events/engine_event.dart';
 
@@ -72,6 +70,7 @@ class _SubscriberEntry {
 /// emitter.onEvent = bus.publish;             // the bridge
 /// ```
 class EngineEventBus {
+  /// Creates an engine event bus.
   EngineEventBus({
     void Function(Object error, EngineEvent event)? onSubscriberError,
   }) : _onSubscriberError = onSubscriberError;

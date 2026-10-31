@@ -5,9 +5,11 @@
 
 import 'grader.dart';
 
+/// The grader registry.
 class GraderRegistry {
   final Map<String, Grader> _graders = {};
 
+  /// Registers the grader.
   void register(Grader grader, {String? id}) {
     final effectiveId = id ?? grader.id;
     if (_graders.containsKey(effectiveId)) {

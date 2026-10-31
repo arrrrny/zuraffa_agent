@@ -37,6 +37,7 @@ import 'agent_memory.dart';
 /// (no toJson/fromJson on them) — serialization is a persistence concern
 /// and lives here, beside its only consumer.
 class MemoryJsonCodec {
+  /// Records to JSON.
   static Map<String, dynamic> recordToJson(MemoryRecord record) => {
     'id': record.id,
     'content': record.content,
@@ -81,6 +82,7 @@ class MemoryJsonCodec {
     );
   }
 
+  /// Links to JSON.
   static Map<String, dynamic> linkToJson(MemoryLink link) => {
     'fromRecordId': link.fromRecordId,
     'toRecordId': link.toRecordId,
@@ -89,6 +91,7 @@ class MemoryJsonCodec {
     if (link.note != null) 'note': link.note,
   };
 
+  /// Links from JSON.
   static MemoryLink linkFromJson(Map<String, dynamic> json) => MemoryLink(
     fromRecordId: json['fromRecordId'] as String,
     toRecordId: json['toRecordId'] as String,
@@ -133,6 +136,7 @@ void _atomicWrite(File file, String contents) {
 /// Same-id replaces land as replacements — a full-snapshot rewrite cannot
 /// duplicate (FR-005).
 class PersistentLongTermMemoryStore extends LongTermMemoryStore {
+  /// Creates a persistent long term memory store.
   PersistentLongTermMemoryStore({required this.file});
 
   /// The backing JSON file. Its directory is created on first write.
@@ -213,6 +217,7 @@ class PersistentLongTermMemoryStore extends LongTermMemoryStore {
 /// would lose the persisted timestamps. All read paths are overridden to
 /// serve the shadow list; base semantics are replicated exactly.
 class PersistentMemoryGraph extends MemoryGraph {
+  /// Creates a persistent memory graph.
   PersistentMemoryGraph({required this.file});
 
   /// The backing JSON file. Its directory is created on first write.

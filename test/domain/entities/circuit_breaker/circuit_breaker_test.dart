@@ -21,10 +21,10 @@ import 'package:zuraffa_agent/src/domain/entities/circuit_breaker/circuit_breake
 void main() {
   // threshold 3 / cooldown 30s / halfOpenThreshold 2 — same shape as the
   // provider regression suite.
-  CircuitBreaker fresh() => CircuitBreaker(
+  CircuitBreaker fresh() => const CircuitBreaker(
     id: 'openai-compat',
     failureThreshold: 3,
-    cooldown: const Duration(seconds: 30),
+    cooldown: Duration(seconds: 30),
     halfOpenThreshold: 2,
   );
 
@@ -36,7 +36,8 @@ void main() {
       .recordFailure(at: openAt)
       .recordFailure(at: openAt);
 
-  group('spec 035 — CircuitBreaker shouldProbe recovery readiness (cycle 1)', () {
+  group('spec 035 — CircuitBreaker shouldProbe recovery readiness '
+      '(cycle 1)', () {
     test('A1: shouldProbe is false in closed (nothing to recover)', () {
       expect(fresh().shouldProbe(cooldownEnd), isFalse);
       // Even a closed breaker with failures on the streak.
@@ -49,27 +50,25 @@ void main() {
       );
     });
 
-    test(
-      'A2: shouldProbe is false one tick before the cooldown boundary, true at it',
-      () {
-        final breaker = tripped();
-        expect(breaker.isOpen, isTrue);
-        // One tick (1ms) before the boundary: false.
-        expect(
-          breaker.shouldProbe(
-            cooldownEnd.subtract(const Duration(milliseconds: 1)),
-          ),
-          isFalse,
-        );
-        // Exactly at the boundary: true (inclusive, matching tryHalfOpen).
-        expect(breaker.shouldProbe(cooldownEnd), isTrue);
-        // Well after: true.
-        expect(
-          breaker.shouldProbe(cooldownEnd.add(const Duration(seconds: 5))),
-          isTrue,
-        );
-      },
-    );
+    test('A2: shouldProbe is false one tick before the cooldown boundary, true '
+        'at it', () {
+      final breaker = tripped();
+      expect(breaker.isOpen, isTrue);
+      // One tick (1ms) before the boundary: false.
+      expect(
+        breaker.shouldProbe(
+          cooldownEnd.subtract(const Duration(milliseconds: 1)),
+        ),
+        isFalse,
+      );
+      // Exactly at the boundary: true (inclusive, matching tryHalfOpen).
+      expect(breaker.shouldProbe(cooldownEnd), isTrue);
+      // Well after: true.
+      expect(
+        breaker.shouldProbe(cooldownEnd.add(const Duration(seconds: 5))),
+        isTrue,
+      );
+    });
 
     test('A3: shouldProbe is false in halfOpen (probe in flight, not due)', () {
       final halfOpen = tripped().tryHalfOpen(cooldownEnd);
@@ -80,21 +79,19 @@ void main() {
       );
     });
 
-    test(
-      'U1: shouldProbe is false for an open breaker with null openedAt (defensive)',
-      () {
-        final unanchoredOpen = CircuitBreaker(
-          id: 'openai-compat',
-          failureThreshold: 3,
-          cooldown: const Duration(seconds: 30),
-          halfOpenThreshold: 2,
-          state: CircuitBreakerState.open,
-          failureCount: 3,
-          halfOpenSuccesses: 0,
-        );
-        expect(unanchoredOpen.shouldProbe(cooldownEnd), isFalse);
-      },
-    );
+    test('U1: shouldProbe is false for an open breaker with null openedAt '
+        '(defensive)', () {
+      const unanchoredOpen = CircuitBreaker(
+        id: 'openai-compat',
+        failureThreshold: 3,
+        cooldown: Duration(seconds: 30),
+        halfOpenThreshold: 2,
+        state: CircuitBreakerState.open,
+        failureCount: 3,
+        halfOpenSuccesses: 0,
+      );
+      expect(unanchoredOpen.shouldProbe(cooldownEnd), isFalse);
+    });
 
     test('U2: shouldProbe never transitions the breaker (read-only)', () {
       final breaker = tripped();
@@ -109,70 +106,64 @@ void main() {
     });
   });
 
-  group(
-    'spec 035 — CircuitBreaker full recovery cycle regression (cycle 2, characterization)',
-    () {
-      test(
-        'A4: a recovered breaker next single failure stays closed on a fresh streak',
-        () {
-          // Trip, cool down, probe, recover.
-          final recovered = tripped()
-              .tryHalfOpen(cooldownEnd)
-              .recordSuccess()
-              .recordSuccess();
-          expect(recovered.isClosed, isTrue);
-          expect(recovered.failureCount, 0);
-          // One failure after recovery: fresh streak of 1, NOT a re-trip.
-          final afterFailure = recovered.recordFailure(
-            at: cooldownEnd.add(const Duration(seconds: 10)),
-          );
-          expect(
-            afterFailure.isClosed,
-            isTrue,
-            reason: 'the old streak did not survive recovery',
-          );
-          expect(afterFailure.failureCount, 1);
-        },
+  group('spec 035 — CircuitBreaker full recovery cycle regression (cycle 2, '
+      'characterization)', () {
+    test('A4: a recovered breaker next single failure stays closed on a fresh '
+        'streak', () {
+      // Trip, cool down, probe, recover.
+      final recovered = tripped()
+          .tryHalfOpen(cooldownEnd)
+          .recordSuccess()
+          .recordSuccess();
+      expect(recovered.isClosed, isTrue);
+      expect(recovered.failureCount, 0);
+      // One failure after recovery: fresh streak of 1, NOT a re-trip.
+      final afterFailure = recovered.recordFailure(
+        at: cooldownEnd.add(const Duration(seconds: 10)),
       );
+      expect(
+        afterFailure.isClosed,
+        isTrue,
+        reason: 'the old streak did not survive recovery',
+      );
+      expect(afterFailure.failureCount, 1);
+    });
 
-      test(
-        'A5: fresh-threshold failures after recovery re-trip the breaker open',
-        () {
-          final recovered = tripped()
-              .tryHalfOpen(cooldownEnd)
-              .recordSuccess()
-              .recordSuccess();
-          final retripAt = DateTime.utc(2026, 8, 24, 9, 5, 0);
-          final reTripped = recovered
-              .recordFailure(at: retripAt)
-              .recordFailure(at: retripAt)
-              .recordFailure(at: retripAt);
-          expect(reTripped.isOpen, isTrue);
-          expect(reTripped.failureCount, 3);
-          expect(reTripped.openedAt, retripAt);
-        },
-      );
+    test(
+      'A5: fresh-threshold failures after recovery re-trip the breaker open',
+      () {
+        final recovered = tripped()
+            .tryHalfOpen(cooldownEnd)
+            .recordSuccess()
+            .recordSuccess();
+        final retripAt = DateTime.utc(2026, 8, 24, 9, 5, 0);
+        final reTripped = recovered
+            .recordFailure(at: retripAt)
+            .recordFailure(at: retripAt)
+            .recordFailure(at: retripAt);
+        expect(reTripped.isOpen, isTrue);
+        expect(reTripped.failureCount, 3);
+        expect(reTripped.openedAt, retripAt);
+      },
+    );
 
-      test(
-        'A6: a half-open failure re-trips open with probes reset and openedAt stamped',
-        () {
-          final halfOpen = tripped().tryHalfOpen(cooldownEnd);
-          // Partial probe success.
-          final probing = halfOpen.recordSuccess();
-          expect(probing.halfOpenSuccesses, 1);
-          final failAt = DateTime.utc(2026, 8, 24, 9, 1, 0);
-          final reTripped = probing.recordFailure(at: failAt);
-          expect(reTripped.isOpen, isTrue);
-          expect(
-            reTripped.halfOpenSuccesses,
-            0,
-            reason: 'probe counters reset on re-trip',
-          );
-          expect(reTripped.openedAt, failAt);
-        },
+    test('A6: a half-open failure re-trips open with probes reset and '
+        'openedAt stamped', () {
+      final halfOpen = tripped().tryHalfOpen(cooldownEnd);
+      // Partial probe success.
+      final probing = halfOpen.recordSuccess();
+      expect(probing.halfOpenSuccesses, 1);
+      final failAt = DateTime.utc(2026, 8, 24, 9, 1, 0);
+      final reTripped = probing.recordFailure(at: failAt);
+      expect(reTripped.isOpen, isTrue);
+      expect(
+        reTripped.halfOpenSuccesses,
+        0,
+        reason: 'probe counters reset on re-trip',
       );
-    },
-  );
+      expect(reTripped.openedAt, failAt);
+    });
+  });
 
   group('spec 035 — CircuitBreaker persistence contract (cycle 3)', () {
     test(
@@ -192,37 +183,33 @@ void main() {
       },
     );
 
-    test(
-      'A8: a restored open breaker continues its cooldown from the original openedAt',
-      () {
-        final open = tripped(); // openedAt = openAt, cooldown 30s
-        final restored = CircuitBreaker.fromJson(open.toJson());
-        // One tick before the boundary (against the ORIGINAL openedAt): false.
-        expect(
-          restored.shouldProbe(
-            cooldownEnd.subtract(const Duration(milliseconds: 1)),
-          ),
-          isFalse,
-        );
-        // At the boundary: true — the cooldown did not restart at parse time.
-        expect(restored.shouldProbe(cooldownEnd), isTrue);
-        expect(restored.openedAt, openAt);
-      },
-    );
+    test('A8: a restored open breaker continues its cooldown from the original '
+        'openedAt', () {
+      final open = tripped(); // openedAt = openAt, cooldown 30s
+      final restored = CircuitBreaker.fromJson(open.toJson());
+      // One tick before the boundary (against the ORIGINAL openedAt): false.
+      expect(
+        restored.shouldProbe(
+          cooldownEnd.subtract(const Duration(milliseconds: 1)),
+        ),
+        isFalse,
+      );
+      // At the boundary: true — the cooldown did not restart at parse time.
+      expect(restored.shouldProbe(cooldownEnd), isTrue);
+      expect(restored.openedAt, openAt);
+    });
 
-    test(
-      'A9: mid-probe halfOpen resumes with partial halfOpenSuccesses after round-trip',
-      () {
-        // halfOpenSuccesses 1 of threshold 2.
-        final probing = tripped().tryHalfOpen(cooldownEnd).recordSuccess();
-        final restored = CircuitBreaker.fromJson(probing.toJson());
-        expect(restored.isHalfOpen, isTrue);
-        expect(restored.halfOpenSuccesses, 1);
-        // One more success closes it — the probe RESUMES, not restarts.
-        final closed = restored.recordSuccess();
-        expect(closed.isClosed, isTrue);
-      },
-    );
+    test('A9: mid-probe halfOpen resumes with partial halfOpenSuccesses after '
+        'round-trip', () {
+      // halfOpenSuccesses 1 of threshold 2.
+      final probing = tripped().tryHalfOpen(cooldownEnd).recordSuccess();
+      final restored = CircuitBreaker.fromJson(probing.toJson());
+      expect(restored.isHalfOpen, isTrue);
+      expect(restored.halfOpenSuccesses, 1);
+      // One more success closes it — the probe RESUMES, not restarts.
+      final closed = restored.recordSuccess();
+      expect(closed.isClosed, isTrue);
+    });
 
     test('U3: malformed JSON throws ArgumentError naming the field', () {
       expect(
@@ -330,10 +317,10 @@ void main() {
     test(
       'U5: cooldown duration round-trips exactly as microseconds (no drift)',
       () {
-        final odd = CircuitBreaker(
+        const odd = CircuitBreaker(
           id: 'b',
           failureThreshold: 3,
-          cooldown: const Duration(
+          cooldown: Duration(
             milliseconds: 15729,
           ), // 15,729,000 µs — not a whole second
           halfOpenThreshold: 2,

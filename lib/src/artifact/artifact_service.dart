@@ -1,14 +1,16 @@
 /// Artifact Service — minimal interface for artifact storage.
 ///
 /// Provides sink/fetch operations for oversized tool results.
-/// Concrete implementations delegated to consuming packages (in-memory, Hive CE, etc.).
+/// Concrete implementations delegated to consuming packages (in-memory, Hive
+/// CE, etc.).
 library;
 
-import '../domain/entities/artifact_ref/artifact_ref.dart';
 import '../domain/entities/artifact/artifact.dart';
+import '../domain/entities/artifact_ref/artifact_ref.dart';
 
 /// Configuration for artifact service threshold behavior.
 class ArtifactServiceConfig {
+  /// Creates an artifact service config.
   const ArtifactServiceConfig({
     this.thresholdBytes = 262144, // 256 KB default
   });
@@ -17,6 +19,8 @@ class ArtifactServiceConfig {
   /// and only a summary + artifactRef enters model context.
   final int thresholdBytes;
 
+  /// Returns a copy of this artifact service config with the given fields
+  /// replaced.
   ArtifactServiceConfig copyWith({int? thresholdBytes}) {
     return ArtifactServiceConfig(
       thresholdBytes: thresholdBytes ?? this.thresholdBytes,
@@ -26,14 +30,20 @@ class ArtifactServiceConfig {
 
 /// Result of artifact storage operation.
 class ArtifactStoreResult {
+  /// Creates an artifact store result.
   const ArtifactStoreResult({
     required this.ref,
     required this.summarized,
     this.summary,
   });
 
+  /// The ref.
   final ArtifactRef ref;
+
+  /// Whether summarized.
   final bool summarized;
+
+  /// The summary.
   final String? summary;
 }
 

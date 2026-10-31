@@ -12,11 +12,11 @@
 import 'dart:async';
 
 import '../domain/entities/mcp_transport/mcp_transport.dart';
+import 'mcp_call_guard.dart';
 import 'mcp_call_result.dart';
 import 'mcp_client.dart';
 import 'mcp_reconnect_policy.dart';
 import 'mcp_tool_descriptor.dart';
-import 'mcp_call_guard.dart';
 import 'mcp_wire.dart';
 
 /// Factory that builds a fresh [McpWire] for stdio. The stdio client
@@ -48,6 +48,7 @@ class StdioMcpClient implements McpClient {
     _lastStateChangeAt = _clock();
   }
 
+  /// Creates a stdio MCP client.
   StdioMcpClient({
     required this.transport,
     required McpStdioWireFactory wireFactory,

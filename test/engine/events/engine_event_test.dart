@@ -1,9 +1,8 @@
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
-import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/domain/entities/planner/plan_changed_event.dart';
 import 'package:zuraffa_agent/src/domain/entities/planner/plan_state.dart';
+import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#24 — sealed EngineEvent library', () {
@@ -54,7 +53,7 @@ void main() {
     });
 
     test('NoParams is reachable (smoke)', () {
-      expect(NoParams(), isA<NoParams>());
+      expect(const NoParams(), isA<NoParams>());
     });
   });
 
@@ -193,33 +192,30 @@ void main() {
       expect(event.error, '401 unauthorized (terminal)');
     });
 
-    test(
-      'describe(EngineEvent) switch routes ProviderError to provider_error(providerName)',
-      () {
-        String describe(EngineEvent e) => switch (e) {
-          TurnStarted(:final turnId) => 'turn_started($turnId)',
-          TurnCompleted(:final reason) => 'turn_completed($reason)',
-          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-          ToolCallCompleted(:final toolName) =>
-            'tool_call_completed($toolName)',
-          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-          ContentDelta(:final delta) => 'content_delta($delta)',
-          SteeringInjected(:final content) => 'steering_injected($content)',
-          ProviderError(:final providerName) => 'provider_error($providerName)',
-          MissionStarted(:final missionId) => 'mission_started($missionId)',
-          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-          EngineEventSubscriberError() => 'subscriber_error',
-        };
+    test('describe(EngineEvent) switch routes ProviderError to '
+        'provider_error(providerName)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        EngineEventSubscriberError() => 'subscriber_error',
+      };
 
-        final event = ProviderError(
-          emittedAt: fixedTime,
-          providerName: 'openai',
-          error: '401 unauthorized (terminal)',
-        );
-        expect(describe(event), 'provider_error(openai)');
-      },
-    );
+      final event = ProviderError(
+        emittedAt: fixedTime,
+        providerName: 'openai',
+        error: '401 unauthorized (terminal)',
+      );
+      expect(describe(event), 'provider_error(openai)');
+    });
   });
   group('arrarrny/zuraffa_agent#17 — EngineEvent.MissionStarted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
@@ -247,33 +243,30 @@ void main() {
       expect(event.startedAt, isNot(equals(event.emittedAt)));
     });
 
-    test(
-      'describe(EngineEvent) switch routes MissionStarted to mission_started(missionId)',
-      () {
-        String describe(EngineEvent e) => switch (e) {
-          TurnStarted(:final turnId) => 'turn_started($turnId)',
-          TurnCompleted(:final reason) => 'turn_completed($reason)',
-          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-          ToolCallCompleted(:final toolName) =>
-            'tool_call_completed($toolName)',
-          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-          ContentDelta(:final delta) => 'content_delta($delta)',
-          SteeringInjected(:final content) => 'steering_injected($content)',
-          ProviderError(:final providerName) => 'provider_error($providerName)',
-          MissionStarted(:final missionId) => 'mission_started($missionId)',
-          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-          EngineEventSubscriberError() => 'subscriber_error',
-        };
+    test('describe(EngineEvent) switch routes MissionStarted to '
+        'mission_started(missionId)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        EngineEventSubscriberError() => 'subscriber_error',
+      };
 
-        final event = MissionStarted(
-          emittedAt: fixedTime,
-          missionId: 'm-7',
-          startedAt: startedTime,
-        );
-        expect(describe(event), 'mission_started(m-7)');
-      },
-    );
+      final event = MissionStarted(
+        emittedAt: fixedTime,
+        missionId: 'm-7',
+        startedAt: startedTime,
+      );
+      expect(describe(event), 'mission_started(m-7)');
+    });
   });
   group('arrarrny/zuraffa_agent#16 — EngineEvent.MissionCompleted', () {
     final fixedTime = DateTime.utc(2026, 8, 24, 8, 0, 0);
@@ -312,34 +305,31 @@ void main() {
       expect(event.summary, isNull);
     });
 
-    test(
-      'describe(EngineEvent) switch routes MissionCompleted to mission_completed(missionId)',
-      () {
-        String describe(EngineEvent e) => switch (e) {
-          TurnStarted(:final turnId) => 'turn_started($turnId)',
-          TurnCompleted(:final reason) => 'turn_completed($reason)',
-          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-          ToolCallCompleted(:final toolName) =>
-            'tool_call_completed($toolName)',
-          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-          ContentDelta(:final delta) => 'content_delta($delta)',
-          SteeringInjected(:final content) => 'steering_injected($content)',
-          ProviderError(:final providerName) => 'provider_error($providerName)',
-          MissionStarted(:final missionId) => 'mission_started($missionId)',
-          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-          EngineEventSubscriberError() => 'subscriber_error',
-        };
+    test('describe(EngineEvent) switch routes MissionCompleted to '
+        'mission_completed(missionId)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        EngineEventSubscriberError() => 'subscriber_error',
+      };
 
-        final event = MissionCompleted(
-          emittedAt: fixedTime,
-          missionId: 'm-42',
-          status: 'fail',
-          summary: 'goal 2 unreachable',
-        );
-        expect(describe(event), 'mission_completed(m-42)');
-      },
-    );
+      final event = MissionCompleted(
+        emittedAt: fixedTime,
+        missionId: 'm-42',
+        status: 'fail',
+        summary: 'goal 2 unreachable',
+      );
+      expect(describe(event), 'mission_completed(m-42)');
+    });
   });
 
   group('spec 066 — EngineEvent value semantics', () {
@@ -437,7 +427,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'ToolCallStarted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1)',
+        'ToolCallStarted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: '
+        'fs.read, callId: c-1)',
       );
     });
 
@@ -510,7 +501,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'ToolCallCompleted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: fs.read, callId: c-1, ok: true)',
+        'ToolCallCompleted(emittedAt: 2026-08-24 07:30:00.000Z, toolName: '
+        'fs.read, callId: c-1, ok: true)',
       );
     });
 
@@ -528,7 +520,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'ThinkingDelta(emittedAt: 2026-08-24 07:30:00.000Z, delta: thinking...)',
+        'ThinkingDelta(emittedAt: 2026-08-24 07:30:00.000Z, delta: '
+        'thinking...)',
       );
     });
 
@@ -583,7 +576,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'SteeringInjected(emittedAt: 2026-08-24 07:30:00.000Z, content: new direction, injectedAt: 2026-08-24 09:15:00.000Z)',
+        'SteeringInjected(emittedAt: 2026-08-24 07:30:00.000Z, content: new '
+        'direction, injectedAt: 2026-08-24 09:15:00.000Z)',
       );
     });
 
@@ -638,7 +632,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'ProviderError(emittedAt: 2026-08-24 07:30:00.000Z, providerName: openai, error: 401 unauthorized)',
+        'ProviderError(emittedAt: 2026-08-24 07:30:00.000Z, providerName: '
+        'openai, error: 401 unauthorized)',
       );
     });
 
@@ -687,7 +682,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'MissionStarted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, startedAt: 2026-08-24 09:15:00.000Z)',
+        'MissionStarted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, '
+        'startedAt: 2026-08-24 09:15:00.000Z)',
       );
     });
 
@@ -760,7 +756,8 @@ void main() {
       );
       expect(
         a.toString(),
-        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: success, summary: all goals met)',
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, '
+        'status: success, summary: all goals met)',
       );
       expect(
         MissionCompleted(
@@ -769,7 +766,8 @@ void main() {
           status: 'cancelled',
           summary: null,
         ).toString(),
-        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, status: cancelled, summary: null)',
+        'MissionCompleted(emittedAt: 2026-08-24 07:30:00.000Z, missionId: m-7, '
+        'status: cancelled, summary: null)',
       );
     });
 
@@ -786,8 +784,8 @@ void main() {
   group('spec 067 — EngineEvent.PlanChanged', () {
     final emitted = DateTime.utc(2026, 8, 24, 7, 30, 0);
     final applied = DateTime.utc(2026, 8, 24, 7, 29, 0);
-    final previous = PlanState(id: 'p-1', steps: []);
-    final next = PlanState(id: 'p-2', steps: []);
+    const previous = PlanState(id: 'p-1', steps: []);
+    const next = PlanState(id: 'p-2', steps: []);
 
     PlanChangedEvent change() =>
         PlanChangedEvent(emittedAt: applied, previous: previous, next: next);
@@ -811,29 +809,26 @@ void main() {
       expect(event.change.emittedAt, isNot(equals(event.emittedAt)));
     });
 
-    test(
-      'describe(EngineEvent) switch routes PlanChanged to plan_changed(next plan id)',
-      () {
-        String describe(EngineEvent e) => switch (e) {
-          TurnStarted(:final turnId) => 'turn_started($turnId)',
-          TurnCompleted(:final reason) => 'turn_completed($reason)',
-          ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
-          ToolCallCompleted(:final toolName) =>
-            'tool_call_completed($toolName)',
-          ThinkingDelta(:final delta) => 'thinking_delta($delta)',
-          ContentDelta(:final delta) => 'content_delta($delta)',
-          SteeringInjected(:final content) => 'steering_injected($content)',
-          ProviderError(:final providerName) => 'provider_error($providerName)',
-          MissionStarted(:final missionId) => 'mission_started($missionId)',
-          MissionCompleted(:final missionId) => 'mission_completed($missionId)',
-          PlanChanged(:final change) => 'plan_changed(${change.next.id})',
-          EngineEventSubscriberError() => 'subscriber_error',
-        };
+    test('describe(EngineEvent) switch routes PlanChanged to plan_changed(next '
+        'plan id)', () {
+      String describe(EngineEvent e) => switch (e) {
+        TurnStarted(:final turnId) => 'turn_started($turnId)',
+        TurnCompleted(:final reason) => 'turn_completed($reason)',
+        ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
+        ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
+        ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
+        SteeringInjected(:final content) => 'steering_injected($content)',
+        ProviderError(:final providerName) => 'provider_error($providerName)',
+        MissionStarted(:final missionId) => 'mission_started($missionId)',
+        MissionCompleted(:final missionId) => 'mission_completed($missionId)',
+        PlanChanged(:final change) => 'plan_changed(${change.next.id})',
+        EngineEventSubscriberError() => 'subscriber_error',
+      };
 
-        final event = PlanChanged(emittedAt: emitted, change: change());
-        expect(describe(event), 'plan_changed(p-2)');
-      },
-    );
+      final event = PlanChanged(emittedAt: emitted, change: change());
+      expect(describe(event), 'plan_changed(p-2)');
+    });
 
     test('PlanChanged value semantics (born with spec 066 pattern)', () {
       final a = PlanChanged(emittedAt: emitted, change: change());
@@ -854,7 +849,7 @@ void main() {
       final otherChange = PlanChangedEvent(
         emittedAt: applied,
         previous: previous,
-        next: PlanState(id: 'p-9', steps: []),
+        next: const PlanState(id: 'p-9', steps: []),
       );
       expect(
         a,
@@ -863,7 +858,8 @@ void main() {
       expect(
         a.toString(),
         'PlanChanged(emittedAt: 2026-08-24 07:30:00.000Z, change: '
-        'PlanChangedEvent(emittedAt: 2026-08-24 07:29:00.000Z, completedGained: 0, '
+        'PlanChangedEvent(emittedAt: 2026-08-24 07:29:00.000Z, '
+        'completedGained: 0, '
         'previous: PlanState(id: p-1, steps: 0, completed: 0, inProgress: 0, '
         'pending: 0, cancelled: 0, currentStepId: null), '
         'next: PlanState(id: p-2, steps: 0, completed: 0, inProgress: 0, '

@@ -34,6 +34,7 @@ class SanitizedToolResult {
   /// deferred acceptance).
   final List<String> matchedRules;
 
+  /// Creates a sanitized tool result.
   const SanitizedToolResult({
     required this.content,
     required this.matchedRules,
@@ -50,13 +51,16 @@ class SanitizedToolResult {
 
   @override
   String toString() =>
-      'SanitizedToolResult(${content.length} chars, redacted by: $matchedRules)';
+      'SanitizedToolResult(${content.length} chars, redacted by: '
+      '$matchedRules)';
 }
 
 /// Redacts credential material from tool output before it reaches the LLM.
 abstract class ToolResultSanitizer {
+  /// Creates a tool result sanitizer.
   const ToolResultSanitizer();
 
+  /// Sanitizes the content.
   SanitizedToolResult sanitize(String content);
 }
 
@@ -66,12 +70,19 @@ abstract class ToolResultSanitizer {
 /// - [markerTemplate]: replacement template; `{rule}` is substituted with
 ///   the matching rule's name.
 class SanitizerConfig {
+  /// The disabled rules.
   final Set<String> disabledRules;
+
+  /// The custom patterns.
   final Map<String, RegExp> customPatterns;
+
+  /// The marker template.
   final String markerTemplate;
 
+  /// The default marker template.
   static const String defaultMarkerTemplate = '[REDACTED:{rule}]';
 
+  /// Creates a sanitizer config.
   const SanitizerConfig({
     this.disabledRules = const {},
     this.customPatterns = const {},
@@ -108,9 +119,11 @@ class RegexToolResultSanitizer implements ToolResultSanitizer {
     'stripe-live-key': r'[sr]k_live_[A-Za-z0-9]{20,}',
   };
 
+  /// The config.
   final SanitizerConfig config;
   final List<_Rule> _rules;
 
+  /// Creates a regex tool result sanitizer.
   RegexToolResultSanitizer({this.config = const SanitizerConfig()})
     : _rules = _buildRules(config);
 

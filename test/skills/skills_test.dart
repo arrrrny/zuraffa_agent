@@ -95,33 +95,31 @@ void main() {
         expect(skill.metadata.containsKey('description'), isFalse);
       });
 
-      test(
-        'U5: metadata is a defensive copy and values are coerced to plain Dart types',
-        () {
-          const content =
-              '---\n'
-              'name: defensive\n'
-              'version: 1.0.0\n'
-              'metadata:\n'
-              '  source: foo\n'
-              '---\n'
-              'body\n';
-          final first = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
-          // Mutate the returned map — must not affect a second parse.
-          first.metadata['version'] = 'tampered';
-          final second = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
+      test('U5: metadata is a defensive copy and values are coerced to plain '
+          'Dart types', () {
+        const content =
+            '---\n'
+            'name: defensive\n'
+            'version: 1.0.0\n'
+            'metadata:\n'
+            '  source: foo\n'
+            '---\n'
+            'body\n';
+        final first = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
+        // Mutate the returned map — must not affect a second parse.
+        first.metadata['version'] = 'tampered';
+        final second = parseSkill(content, sourcePath: '/tmp/x/SKILL.md');
 
-          expect(second.metadata['version'], '1.0.0');
+        expect(second.metadata['version'], '1.0.0');
 
-          // The nested value must be a plain Dart Map (not a YamlMap node),
-          // so callers don't accidentally depend on the yaml package's
-          // internal node types.
-          expect(second.metadata['metadata'], isA<Map<String, Object?>>());
-          expect((second.metadata['metadata'] as Map)['source'], 'foo');
-          // And the top-level metadata map itself is a plain Dart Map.
-          expect(second.metadata, isA<Map<String, Object?>>());
-        },
-      );
+        // The nested value must be a plain Dart Map (not a YamlMap node),
+        // so callers don't accidentally depend on the yaml package's
+        // internal node types.
+        expect(second.metadata['metadata'], isA<Map<String, Object?>>());
+        expect((second.metadata['metadata'] as Map)['source'], 'foo');
+        // And the top-level metadata map itself is a plain Dart Map.
+        expect(second.metadata, isA<Map<String, Object?>>());
+      });
     });
 
     // ----------------------------------------------------------------
@@ -260,19 +258,17 @@ void main() {
         );
       });
 
-      test(
-        'U12: filename rules — SKILL.md and *.skill.md match, README.md ignored',
-        () async {
-          await writeSkill('SKILL.md', '---\nname: alpha\n---\nbody-a\n');
-          await writeSkill('beta.skill.md', '---\nname: beta\n---\nbody-b\n');
-          await writeSkill('README.md', '# not a skill file\n');
+      test('U12: filename rules — SKILL.md and *.skill.md match, README.md '
+          'ignored', () async {
+        await writeSkill('SKILL.md', '---\nname: alpha\n---\nbody-a\n');
+        await writeSkill('beta.skill.md', '---\nname: beta\n---\nbody-b\n');
+        await writeSkill('README.md', '# not a skill file\n');
 
-          final skills = await loadSkills(tempDir.path);
-          final names = skills.map((s) => s.name).toSet();
-          expect(names, {'alpha', 'beta'});
-          expect(skills, hasLength(2));
-        },
-      );
+        final skills = await loadSkills(tempDir.path);
+        final names = skills.map((s) => s.name).toSet();
+        expect(names, {'alpha', 'beta'});
+        expect(skills, hasLength(2));
+      });
 
       test('U13: does NOT recurse into subdirectories', () async {
         await writeSkill('SKILL.md', '---\nname: top\n---\ntop body\n');
@@ -297,7 +293,8 @@ void main() {
       });
 
       test(
-        'U15: two skills render as two ## Skill: blocks separated by a blank line',
+        'U15: two skills render as two ## Skill: blocks separated by a blank '
+        'line',
         () {
           final skills = <Skill>[
             const Skill(

@@ -16,6 +16,7 @@ class SessionTreeEntryAdapter extends TypeAdapter<SessionTreeEntry> {
   @override
   final int typeId;
 
+  /// Creates a session tree entry adapter.
   SessionTreeEntryAdapter(this.typeId);
 
   @override
@@ -35,6 +36,7 @@ class ModelAdapter extends TypeAdapter<Model> {
   @override
   final int typeId;
 
+  /// Creates a model adapter.
   ModelAdapter(this.typeId);
 
   @override
@@ -54,6 +56,7 @@ class AgentMessageAdapter extends TypeAdapter<AgentMessage> {
   @override
   final int typeId;
 
+  /// Creates an agent message adapter.
   AgentMessageAdapter(this.typeId);
 
   @override
@@ -73,6 +76,7 @@ class ContentBlockAdapter extends TypeAdapter<ContentBlock> {
   @override
   final int typeId;
 
+  /// Creates a content block adapter.
   ContentBlockAdapter(this.typeId);
 
   @override

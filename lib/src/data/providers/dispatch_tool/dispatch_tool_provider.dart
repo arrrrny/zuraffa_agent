@@ -11,11 +11,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/dispatch_tool/dispatch_tool.dart';
 import '../../../domain/services/dispatch_tool_service.dart';
 
+/// The dispatch tool provider.
 class DispatchToolProvider
     with Loggable, FailureHandler
     implements DispatchToolService {
   final DispatchTool _active;
 
+  /// Creates a dispatch tool provider.
   DispatchToolProvider([DispatchTool? active])
     : _active =
           active ??

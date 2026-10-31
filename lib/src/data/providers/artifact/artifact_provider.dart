@@ -27,6 +27,7 @@ class ArtifactProvider
   final List<ArtifactRef> _refs;
   final int _thresholdBytes;
 
+  /// Creates an artifact provider.
   ArtifactProvider([List<ArtifactRef>? refs, int? thresholdBytes])
     : _refs =
           refs ??

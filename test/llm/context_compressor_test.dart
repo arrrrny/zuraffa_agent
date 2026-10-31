@@ -2,11 +2,12 @@
 // Behaviors U3..U11 — see specs/009-context-compression-llm/tdd/test-list.md.
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/llm/context_compressor.dart';
 import 'package:zuraffa_agent/src/compaction.dart' show estimateContextTokens;
+import 'package:zuraffa_agent/src/llm/context_compressor.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
-import 'fake_llm_client.dart';
 import 'package:zuraffa_agent/src/types.dart';
+
+import 'fake_llm_client.dart';
 
 const fiveSectionSnapshot =
     '<state_snapshot>\n'
@@ -35,28 +36,26 @@ void main() {
   }) => LLMBasedContextCompressor(client: client, settings: settings);
 
   group('LLMBasedContextCompressor (U3..U11)', () {
-    test(
-      'U3: below tokenThreshold compress() returns an identity result (no LLM call, no memory entry)',
-      () async {
-        final client = FakeLlmClient(
-          providerName: 'compressor',
-          outcomes: const [],
-        );
-        final compressor = makeCompressor(client);
+    test('U3: below tokenThreshold compress() returns an identity result (no '
+        'LLM call, no memory entry)', () async {
+      final client = FakeLlmClient(
+        providerName: 'compressor',
+        outcomes: const [],
+      );
+      final compressor = makeCompressor(client);
 
-        final result = await compressor.compress([
-          UserMessage.text('short history'),
-        ]);
+      final result = await compressor.compress([
+        UserMessage.text('short history'),
+      ]);
 
-        expect(result.strategy, CompressionStrategy.none);
-        expect(result.snapshot, isEmpty);
-        expect(result.preservedMessages, hasLength(1));
-        expect(result.compressedMessages, isEmpty);
-        expect(result.memory, isNull);
-        expect(client.generateCalls, 0);
-        expect(compressor.store.entries, isEmpty);
-      },
-    );
+      expect(result.strategy, CompressionStrategy.none);
+      expect(result.snapshot, isEmpty);
+      expect(result.preservedMessages, hasLength(1));
+      expect(result.compressedMessages, isEmpty);
+      expect(result.memory, isNull);
+      expect(client.generateCalls, 0);
+      expect(compressor.store.entries, isEmpty);
+    });
 
     test(
       'issue #138 review: a caller-supplied estimatedTokens drives the gate (no chars/4 re-derivation)',
@@ -94,7 +93,8 @@ void main() {
     );
 
     test(
-      'U4: above threshold the LLM is called once; the last keepRecentMessages stay verbatim; older messages are compressed',
+      'U4: above threshold the LLM is called once; the last '
+      'keepRecentMessages stay verbatim; older messages are compressed',
       () async {
         final history = bigHistory(
           messages: 30,
@@ -136,74 +136,70 @@ void main() {
       },
     );
 
-    test(
-      'U5: the compression prompt names the five XML sections and carries the older messages',
-      () async {
-        final history = bigHistory(messages: 20, charsPerMessage: 400);
-        final client = FakeLlmClient(
-          providerName: 'compressor',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(content: fiveSectionSnapshot),
-            ),
-          ],
-        );
-        final compressor = makeCompressor(
-          client,
-          settings: const ContextCompressionSettings(
-            tokenThreshold: 500,
-            keepRecentMessages: 5,
+    test('U5: the compression prompt names the five XML sections and carries '
+        'the older messages', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(
+        providerName: 'compressor',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(content: fiveSectionSnapshot),
           ),
-        );
+        ],
+      );
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 500,
+          keepRecentMessages: 5,
+        ),
+      );
 
-        await compressor.compress(history);
+      await compressor.compress(history);
 
-        final request = client.requests.single;
-        // The system prompt demands the exact five-section XML contract.
-        expect(request.systemPrompt, contains('<overall_goal>'));
-        expect(request.systemPrompt, contains('<key_knowledge>'));
-        expect(request.systemPrompt, contains('<file_system_state>'));
-        expect(request.systemPrompt, contains('<recent_actions>'));
-        expect(request.systemPrompt, contains('<current_plan>'));
-        // The older messages are the conversation payload (15 of 20).
-        expect(request.messages, hasLength(15));
-        expect(request.messages.first, same(history.first));
-      },
-    );
+      final request = client.requests.single;
+      // The system prompt demands the exact five-section XML contract.
+      expect(request.systemPrompt, contains('<overall_goal>'));
+      expect(request.systemPrompt, contains('<key_knowledge>'));
+      expect(request.systemPrompt, contains('<file_system_state>'));
+      expect(request.systemPrompt, contains('<recent_actions>'));
+      expect(request.systemPrompt, contains('<current_plan>'));
+      // The older messages are the conversation payload (15 of 20).
+      expect(request.messages, hasLength(15));
+      expect(request.messages.first, same(history.first));
+    });
 
-    test(
-      'U6: an invalid XML snapshot (missing sections) falls back to the heuristic summarizer',
-      () async {
-        final history = bigHistory(messages: 20, charsPerMessage: 400);
-        final client = FakeLlmClient(
-          providerName: 'compressor',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(
-                content: 'sure, here is a summary without xml',
-              ),
+    test('U6: an invalid XML snapshot (missing sections) falls back to the '
+        'heuristic summarizer', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(
+        providerName: 'compressor',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(
+              content: 'sure, here is a summary without xml',
             ),
-          ],
-        );
-        final compressor = makeCompressor(
-          client,
-          settings: const ContextCompressionSettings(
-            tokenThreshold: 500,
-            keepRecentMessages: 5,
           ),
-        );
+        ],
+      );
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 500,
+          keepRecentMessages: 5,
+        ),
+      );
 
-        final result = await compressor.compress(history);
+      final result = await compressor.compress(history);
 
-        expect(result.strategy, CompressionStrategy.heuristic);
-        // Heuristic fallback still produces the five-section XML shape.
-        expect(result.snapshot, contains('<state_snapshot>'));
-        expect(result.snapshot, contains('<overall_goal>'));
-        expect(result.snapshot, contains('<current_plan>'));
-        expect(result.compressedMessages, hasLength(15));
-        expect(result.preservedMessages, hasLength(5));
-      },
-    );
+      expect(result.strategy, CompressionStrategy.heuristic);
+      // Heuristic fallback still produces the five-section XML shape.
+      expect(result.snapshot, contains('<state_snapshot>'));
+      expect(result.snapshot, contains('<overall_goal>'));
+      expect(result.snapshot, contains('<current_plan>'));
+      expect(result.compressedMessages, hasLength(15));
+      expect(result.preservedMessages, hasLength(5));
+    });
 
     test(
       'U7: an LLM error falls back to the heuristic summarizer (SC-003)',
@@ -241,131 +237,124 @@ void main() {
       },
     );
 
-    test(
-      'U8: compression creates an EpisodicMemory entry (snapshot + originals) retrievable from the store',
-      () async {
-        final history = bigHistory(messages: 20, charsPerMessage: 400);
-        final client = FakeLlmClient(
-          providerName: 'compressor',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(content: fiveSectionSnapshot),
-            ),
-          ],
-        );
-        final compressor = makeCompressor(
-          client,
-          settings: const ContextCompressionSettings(
-            tokenThreshold: 500,
-            keepRecentMessages: 5,
+    test('U8: compression creates an EpisodicMemory entry (snapshot + '
+        'originals) retrievable from the store', () async {
+      final history = bigHistory(messages: 20, charsPerMessage: 400);
+      final client = FakeLlmClient(
+        providerName: 'compressor',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(content: fiveSectionSnapshot),
           ),
-        );
+        ],
+      );
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 500,
+          keepRecentMessages: 5,
+        ),
+      );
 
-        final result = await compressor.compress(history);
+      final result = await compressor.compress(history);
 
-        final memory = result.memory;
-        expect(memory, isNotNull);
-        expect(memory!.summary, fiveSectionSnapshot);
-        expect(memory.messages, hasLength(15));
+      final memory = result.memory;
+      expect(memory, isNotNull);
+      expect(memory!.summary, fiveSectionSnapshot);
+      expect(memory.messages, hasLength(15));
 
-        // The entry is in the store and retrievable with its originals.
-        expect(compressor.store.entries, hasLength(1));
-        final retrieved = compressor.store.retrieve(memory.id);
-        expect(retrieved, isNotNull);
-        expect(retrieved!.summary, fiveSectionSnapshot);
-        expect(retrieved.messages, hasLength(15));
-      },
-    );
+      // The entry is in the store and retrievable with its originals.
+      expect(compressor.store.entries, hasLength(1));
+      final retrieved = compressor.store.retrieve(memory.id);
+      expect(retrieved, isNotNull);
+      expect(retrieved!.summary, fiveSectionSnapshot);
+      expect(retrieved.messages, hasLength(15));
+    });
 
-    test(
-      'U9: a 100-message conversation compresses to <3000 total tokens (SC-001)',
-      () async {
-        final history = bigHistory(messages: 100, charsPerMessage: 400);
-        final client = FakeLlmClient(
-          providerName: 'compressor',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(content: fiveSectionSnapshot),
-            ),
-          ],
-        );
-        final compressor = makeCompressor(
-          client,
-          settings: const ContextCompressionSettings(
-            tokenThreshold: 5000,
-            keepRecentMessages: 10,
+    test('U9: a 100-message conversation compresses to <3000 total tokens '
+        '(SC-001)', () async {
+      final history = bigHistory(messages: 100, charsPerMessage: 400);
+      final client = FakeLlmClient(
+        providerName: 'compressor',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(content: fiveSectionSnapshot),
           ),
-        );
+        ],
+      );
+      final compressor = makeCompressor(
+        client,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 5000,
+          keepRecentMessages: 10,
+        ),
+      );
 
-        final result = await compressor.compress(history);
+      final result = await compressor.compress(history);
 
-        final snapshotTokens = (result.snapshot.length / 4).ceil();
-        final preservedTokens = estimateContextTokens(result.preservedMessages);
-        expect(snapshotTokens + preservedTokens, lessThan(3000));
-        expect(result.compressedMessages, hasLength(90));
-        expect(result.preservedMessages, hasLength(10));
-      },
-    );
+      final snapshotTokens = (result.snapshot.length / 4).ceil();
+      final preservedTokens = estimateContextTokens(result.preservedMessages);
+      expect(snapshotTokens + preservedTokens, lessThan(3000));
+      expect(result.compressedMessages, hasLength(90));
+      expect(result.preservedMessages, hasLength(10));
+    });
 
-    test(
-      'U10: tokenThreshold 32000 triggers where 64000 does not; messageCountThreshold honored (AC-5)',
-      () async {
-        // ~40,000 tokens of history (100 msgs x 1600 chars / 4).
-        final history = bigHistory(messages: 100, charsPerMessage: 1600);
+    test('U10: tokenThreshold 32000 triggers where 64000 does not; '
+        'messageCountThreshold honored (AC-5)', () async {
+      // ~40,000 tokens of history (100 msgs x 1600 chars / 4).
+      final history = bigHistory(messages: 100, charsPerMessage: 1600);
 
-        // Default 64000: no compression.
-        final idleClient = FakeLlmClient(providerName: 'c', outcomes: const []);
-        final idle = makeCompressor(idleClient);
-        expect(
-          (await idle.compress(history)).strategy,
-          CompressionStrategy.none,
-        );
-        expect(idleClient.generateCalls, 0);
+      // Default 64000: no compression.
+      final idleClient = FakeLlmClient(providerName: 'c', outcomes: const []);
+      final idle = makeCompressor(idleClient);
+      expect((await idle.compress(history)).strategy, CompressionStrategy.none);
+      expect(idleClient.generateCalls, 0);
 
-        // 32000: compression triggers.
-        final activeClient = FakeLlmClient(
-          providerName: 'c',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(content: fiveSectionSnapshot),
-            ),
-          ],
-        );
-        final active = makeCompressor(
-          activeClient,
-          settings: const ContextCompressionSettings(tokenThreshold: 32000),
-        );
-        expect(
-          (await active.compress(history)).strategy,
-          CompressionStrategy.llm,
-        );
-
-        // Message-count trigger: 50 messages is small in tokens but big in count.
-        final shortHistory = bigHistory(messages: 50, charsPerMessage: 10);
-        final countClient = FakeLlmClient(
-          providerName: 'c',
-          outcomes: [
-            const ScriptedOutcome(
-              response: LlmResponse(content: fiveSectionSnapshot),
-            ),
-          ],
-        );
-        final byCount = makeCompressor(
-          countClient,
-          settings: const ContextCompressionSettings(
-            tokenThreshold: 64000,
-            messageCountThreshold: 40,
+      // 32000: compression triggers.
+      final activeClient = FakeLlmClient(
+        providerName: 'c',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(content: fiveSectionSnapshot),
           ),
-        );
-        expect(
-          (await byCount.compress(shortHistory)).strategy,
-          CompressionStrategy.llm,
-        );
-      },
-    );
+        ],
+      );
+      final active = makeCompressor(
+        activeClient,
+        settings: const ContextCompressionSettings(tokenThreshold: 32000),
+      );
+      expect(
+        (await active.compress(history)).strategy,
+        CompressionStrategy.llm,
+      );
+
+      // Message-count trigger: 50 messages is small in tokens but big in
+      // count.
+      final shortHistory = bigHistory(messages: 50, charsPerMessage: 10);
+      final countClient = FakeLlmClient(
+        providerName: 'c',
+        outcomes: [
+          const ScriptedOutcome(
+            response: LlmResponse(content: fiveSectionSnapshot),
+          ),
+        ],
+      );
+      final byCount = makeCompressor(
+        countClient,
+        settings: const ContextCompressionSettings(
+          tokenThreshold: 64000,
+          messageCountThreshold: 40,
+        ),
+      );
+      expect(
+        (await byCount.compress(shortHistory)).strategy,
+        CompressionStrategy.llm,
+      );
+    });
 
     test(
-      'U11: the heuristic fallback also creates a memory entry and preserves recent messages',
+      'U11: the heuristic fallback also creates a memory entry and preserves '
+      'recent messages',
       () async {
         final history = bigHistory(messages: 20, charsPerMessage: 400);
         final client = FakeLlmClient(

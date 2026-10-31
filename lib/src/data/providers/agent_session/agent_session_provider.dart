@@ -9,11 +9,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/agent_session/agent_session.dart';
 import '../../../domain/services/agent_session_service.dart';
 
+/// The agent session provider.
 class AgentSessionProvider
     with Loggable, FailureHandler
     implements AgentSessionService {
   final AgentSession _active;
 
+  /// Creates an agent session provider.
   AgentSessionProvider([AgentSession? active])
     : _active =
           active ??

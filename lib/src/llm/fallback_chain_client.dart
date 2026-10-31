@@ -5,21 +5,23 @@
 //
 // STUB (TDD red phase for U10) — failover runtime not implemented yet.
 
-import 'circuit_breaker.dart';
-import 'llm_client.dart';
-import 'llm_clock.dart';
 import '../domain/entities/client_health/client_health.dart';
 import '../observability/health_check.dart';
 import '../observability/metrics.dart';
 import '../security/audit_log.dart';
+import 'circuit_breaker.dart';
+import 'llm_client.dart';
+import 'llm_clock.dart';
 
 /// One provider slot in the chain.
 typedef FallbackProvider = ({String id, LlmClient client});
 
 /// Thrown when every provider in the chain failed (or is gated open).
 class LlmFallbackExhaustedException implements Exception {
+  /// The errors by provider.
   final Map<String, Object> errorsByProvider;
 
+  /// Creates an LLM fallback exhausted exception.
   LlmFallbackExhaustedException(this.errorsByProvider);
 
   @override
@@ -30,8 +32,13 @@ class LlmFallbackExhaustedException implements Exception {
 
 /// Ordered provider chain with automatic failover (spec 008 FR-001..FR-005).
 class FallbackChainClient implements LlmClient {
+  /// The providers.
   final List<FallbackProvider> providers;
+
+  /// The policy mode.
   final String policyMode;
+
+  /// The clock.
   final LlmClock clock;
   final Map<String, CircuitBreaker> _breakers = {};
 
@@ -42,6 +49,7 @@ class FallbackChainClient implements LlmClient {
   /// the chain's real history instead of reporting `ok` forever.
   final LastLlmErrorTracker? llmErrorTracker;
 
+  /// Creates a fallback chain client.
   FallbackChainClient({
     required this.providers,
     this.policyMode = 'restart',

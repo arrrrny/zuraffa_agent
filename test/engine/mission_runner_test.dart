@@ -218,28 +218,26 @@ void main() {
       },
     );
 
-    test(
-      'natural completion returns completed status, summary, and grown transcript',
-      () async {
-        final events = <EngineEvent>[];
-        final runner = makeRunner(
-          ScriptedLlmClient(completions: [completionOf('hello done')]),
-          events: events,
-        );
+    test('natural completion returns completed status, summary, and grown '
+        'transcript', () async {
+      final events = <EngineEvent>[];
+      final runner = makeRunner(
+        ScriptedLlmClient(completions: [completionOf('hello done')]),
+        events: events,
+      );
 
-        final result = await runner.run(
-          missionId: 'm1',
-          messages: const [ChatMessage(role: 'user', content: 'go')],
-        );
+      final result = await runner.run(
+        missionId: 'm1',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+      );
 
-        expect(result.missionId, 'm1');
-        expect(result.status, MissionStatus.completed);
-        expect(result.turnsUsed, 1);
-        expect(result.summary, 'hello done');
-        expect(result.transcript.map((m) => m.role), ['user', 'assistant']);
-        expect(result.transcript.last.content, 'hello done');
-      },
-    );
+      expect(result.missionId, 'm1');
+      expect(result.status, MissionStatus.completed);
+      expect(result.turnsUsed, 1);
+      expect(result.summary, 'hello done');
+      expect(result.transcript.map((m) => m.role), ['user', 'assistant']);
+      expect(result.transcript.last.content, 'hello done');
+    });
 
     test(
       'tool dispatch round-trip emits correlated events and feeds results back',
@@ -308,7 +306,8 @@ void main() {
 
         // planner seam: consulted after EVERY turn (its output participates in
         // the stop decision — FR-002), so turn 1 ('need tool', 2-message
-        // transcript) and turn 2 ('all done', 4-message transcript) both hit it.
+        // transcript) and turn 2 ('all done', 4-message transcript) both hit
+        // it.
         expect(planner.invocations, hasLength(2));
         expect(planner.invocations[0].completion.content, 'need tool');
         expect(planner.invocations[0].transcriptLength, 2);
@@ -317,53 +316,51 @@ void main() {
       },
     );
 
-    test(
-      'failed tool dispatch reports ok:false and the error text, mission continues',
-      () async {
-        final events = <EngineEvent>[];
-        final dispatcher = FakeToolDispatcher({
-          'broken': ToolDispatchResult(
-            success: false,
-            result: '',
-            error: 'exploded',
-            artifactRefs: const [],
+    test('failed tool dispatch reports ok:false and the error text, mission '
+        'continues', () async {
+      final events = <EngineEvent>[];
+      final dispatcher = FakeToolDispatcher({
+        'broken': ToolDispatchResult(
+          success: false,
+          result: '',
+          error: 'exploded',
+          artifactRefs: const [],
+        ),
+      });
+      final planner = ScriptedPlanner({
+        1: [
+          const ToolCall(
+            toolName: 'broken',
+            arguments: {},
+            executionMode: 'sequential',
           ),
-        });
-        final planner = ScriptedPlanner({
-          1: [
-            const ToolCall(
-              toolName: 'broken',
-              arguments: {},
-              executionMode: 'sequential',
-            ),
+        ],
+      });
+      final runner = makeRunner(
+        ScriptedLlmClient(
+          completions: [
+            completionOf('try tool', finish: 'tool_calls'),
+            completionOf('recovered'),
           ],
-        });
-        final runner = makeRunner(
-          ScriptedLlmClient(
-            completions: [
-              completionOf('try tool', finish: 'tool_calls'),
-              completionOf('recovered'),
-            ],
-          ),
-          events: events,
-          dispatcher: dispatcher,
-        );
+        ),
+        events: events,
+        dispatcher: dispatcher,
+      );
 
-        final result = await runner.run(
-          missionId: 'm1',
-          messages: const [ChatMessage(role: 'user', content: 'go')],
-          planner: planner,
-        );
+      final result = await runner.run(
+        missionId: 'm1',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        planner: planner,
+      );
 
-        final completedCall = events.whereType<ToolCallCompleted>().single;
-        expect(completedCall.ok, isFalse);
-        expect(completedCall.toolName, 'broken');
-        expect(result.transcript[2].role, 'tool');
-        expect(result.transcript[2].content, 'exploded');
-        expect(result.status, MissionStatus.completed);
-        expect(result.summary, 'recovered');
-      },
-    );
+      final completedCall = events.whereType<ToolCallCompleted>().single;
+      expect(completedCall.ok, isFalse);
+      expect(completedCall.toolName, 'broken');
+      expect(result.transcript[2].role, 'tool');
+      expect(result.transcript[2].content, 'exploded');
+      expect(result.status, MissionStatus.completed);
+      expect(result.summary, 'recovered');
+    });
 
     test('steering queue drains at turn start in FIFO order', () async {
       final events = <EngineEvent>[];
