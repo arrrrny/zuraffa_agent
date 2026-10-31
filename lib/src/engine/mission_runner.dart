@@ -67,7 +67,7 @@ import '../types.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
-import 'cancellation_token';
+import 'cancellation_token.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {
