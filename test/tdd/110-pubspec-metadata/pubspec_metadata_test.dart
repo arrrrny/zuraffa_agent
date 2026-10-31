@@ -142,11 +142,11 @@ void main() {
       // Test for actual Dart entry points, not the bare directory: an empty
       // bin/ (or one holding only non-Dart files) declares nothing, so it
       // must not fail the audit (review finding 1 — false positive).
-      final bool hasDartEntryPoints = binDir.existsSync() &&
-          binDir
-              .listSync()
-              .whereType<File>()
-              .any((final f) => f.path.endsWith('.dart'));
+      final bool hasDartEntryPoints =
+          binDir.existsSync() &&
+          binDir.listSync().whereType<File>().any(
+            (final f) => f.path.endsWith('.dart'),
+          );
       if (executables == null) {
         // Issue #110 audit outcome: no CLI entry points today, so the
         // executables block is correctly absent — but the moment a bin/
