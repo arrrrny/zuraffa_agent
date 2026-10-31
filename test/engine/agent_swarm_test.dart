@@ -580,7 +580,7 @@ void main() {
 
   group('cooperative cancellation (issue #140)', () {
     test('firstCompleted signals the members that have not finished', () async {
-      final service = ScriptedDispatchService({
+      final service = ScriptedDispatchService(const {
         'a': (delay: Duration.zero, status: ok, summary: 'winner'),
         'b': (delay: Duration(seconds: 30), status: ok, summary: 'loser'),
       })..cooperative.add('b');
@@ -610,7 +610,7 @@ void main() {
     });
 
     test('quorum signals only the members past the quorum', () async {
-      final service = ScriptedDispatchService({
+      final service = ScriptedDispatchService(const {
         'a': (delay: Duration.zero, status: ok, summary: 'q1'),
         'b': (delay: Duration.zero, status: ok, summary: 'q2'),
         'c': (delay: Duration(seconds: 30), status: ok, summary: 'extra'),
@@ -635,7 +635,7 @@ void main() {
     test(
       'allCompleted never signals — the barrier waits for everyone',
       () async {
-        final service = ScriptedDispatchService({
+        final service = ScriptedDispatchService(const {
           'a': (delay: Duration.zero, status: ok, summary: 'x'),
           'b': (
             delay: Duration(milliseconds: 10),

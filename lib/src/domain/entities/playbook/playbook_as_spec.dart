@@ -55,8 +55,8 @@
 // compiles without running build_runner — the documented constitution IX
 // exemption precedent (Playbook, SubAgentSpec, SteeringMessage).
 
-import '../sub_agent_spec/sub_agent_spec.dart';
 import '../agent_tool/agent_tool.dart' show RiskTier;
+import '../sub_agent_spec/sub_agent_spec.dart';
 import 'playbook.dart';
 
 /// Resolves a loaded [Playbook] as an instance of the declarative
@@ -96,8 +96,9 @@ extension PlaybookAsSpec on Playbook {
         throw ArgumentError.value(
           toolGate,
           'toolGating',
-          "playbook '$id' gates with a blocklist — a refusal list has no "
-              'allowlist semantics for a spec; restate the gate as an allowlist',
+          "playbook '$id' gates with a blocklist — a refusal list has "
+              'no allowlist semantics for a spec; restate the gate as '
+              'an allowlist',
         );
     }
 
