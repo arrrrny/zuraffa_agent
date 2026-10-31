@@ -1,0 +1,17 @@
+# Issue #114 AC-3: Dependabot for the pub ecosystem, weekly.
+#
+# Meaningful advisory/updates require the committed pubspec.lock — the
+# lockfile is the reviewed, scannable resolution Dependabot diffs against.
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+# Root package only — deliberate. The federated subpackages under
+# packages/ resolve via path dependency_overrides to sibling checkouts
+# (including a `zuraffa` override OUTSIDE the repo), which Dependabot's
+# update environment cannot resolve, and their external surface is ~nil
+# (flutter SDK + fleet-internal zuraffa_agent* deps). Coverage for them is
+# not worth update PRs that fail resolution; revisit when a subpackage
+# gains real external dependencies.

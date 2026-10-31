@@ -32,6 +32,7 @@ void main() {
         ToolCallStarted(:final toolName) => 'tool_call_started($toolName)',
         ToolCallCompleted(:final toolName) => 'tool_call_completed($toolName)',
         ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+        ContentDelta(:final delta) => 'content_delta($delta)',
         SteeringInjected(:final content) => 'steering_injected($content)',
         ProviderError(:final providerName) => 'provider_error($providerName)',
         MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -202,6 +203,7 @@ void main() {
           ToolCallCompleted(:final toolName) =>
             'tool_call_completed($toolName)',
           ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          ContentDelta(:final delta) => 'content_delta($delta)',
           SteeringInjected(:final content) => 'steering_injected($content)',
           ProviderError(:final providerName) => 'provider_error($providerName)',
           MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -255,6 +257,7 @@ void main() {
           ToolCallCompleted(:final toolName) =>
             'tool_call_completed($toolName)',
           ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          ContentDelta(:final delta) => 'content_delta($delta)',
           SteeringInjected(:final content) => 'steering_injected($content)',
           ProviderError(:final providerName) => 'provider_error($providerName)',
           MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -319,6 +322,7 @@ void main() {
           ToolCallCompleted(:final toolName) =>
             'tool_call_completed($toolName)',
           ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          ContentDelta(:final delta) => 'content_delta($delta)',
           SteeringInjected(:final content) => 'steering_injected($content)',
           ProviderError(:final providerName) => 'provider_error($providerName)',
           MissionStarted(:final missionId) => 'mission_started($missionId)',
@@ -817,6 +821,7 @@ void main() {
           ToolCallCompleted(:final toolName) =>
             'tool_call_completed($toolName)',
           ThinkingDelta(:final delta) => 'thinking_delta($delta)',
+          ContentDelta(:final delta) => 'content_delta($delta)',
           SteeringInjected(:final content) => 'steering_injected($content)',
           ProviderError(:final providerName) => 'provider_error($providerName)',
           MissionStarted(:final missionId) => 'mission_started($missionId)',

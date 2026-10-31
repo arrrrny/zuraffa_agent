@@ -3,7 +3,7 @@ description: >-
   The agent engine of the Zuraffa ecosystem: missions, sessions, tool and
   MCP orchestration, eval harness, and event-driven observability for
   building type-safe AI agents.
-version: 7.3.0
+version: 7.3.2
 homepage: https://zuraffa.com
 documentation: https://github.com/arrrrny/zuraffa_agent#readme
 repository: https://github.com/arrrrny/zuraffa_agent
@@ -27,7 +27,7 @@ dependencies:
   uuid: ^4.6.0
   yaml: ^3.1.4
   zorphy_annotation: ^2.0.0
-  zuraffa: ^7.3.0
+  zuraffa: ^7.3.2
 
 dev_dependencies:
   build_runner: ^2.16.0
@@ -37,9 +37,8 @@ dev_dependencies:
   test: ^1.25.0
 
   coverage: ^1.15.1
+  # dartdoc for API-doc generation (issue #114 asks for ^8.x). Every
+  # dartdoc <=8.x needs analyzer <=7.x while zuraffa 7.3.0 pins analyzer
+  # ^14.4.0, so ^8.x cannot resolve here — ^9 is the documented deviation.
+  dartdoc: ^9.0.11
   mutation_test: ^1.8.0
-
-# Fleet-wide xml policy: pin the override to the latest xml so graphs that
-# still transitively pull the abandoned minio (xml 6.x) resolve cleanly.
-dependency_overrides:
-  xml: 7.1.0
