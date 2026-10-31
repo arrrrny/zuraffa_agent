@@ -25,7 +25,10 @@ import 'mcp_wire_validation.dart';
 /// Typed transport failure: the wire is not open (used before open, after
 /// close, or after the child process exited).
 class McpWireClosedException implements Exception {
+  /// The message.
   final String message;
+
+  /// Creates an MCP wire closed exception.
   const McpWireClosedException(this.message);
   @override
   String toString() => 'McpWireClosedException: $message';
@@ -96,7 +99,10 @@ StreamTransformer<List<int>, String> _budgetedLineFramer({
 
 /// Concrete [McpWire] over stdio (subprocess JSON-RPC). See file header.
 class IoStdioMcpTransport implements McpWire {
+  /// The executable.
   final String executable;
+
+  /// The args.
   final List<String> args;
 
   /// Wire-boundary validation (issue #131). Every line the child answers a
@@ -116,6 +122,7 @@ class IoStdioMcpTransport implements McpWire {
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
+  /// Creates a I/O stdio MCP transport.
   IoStdioMcpTransport({
     required this.executable,
     this.args = const [],

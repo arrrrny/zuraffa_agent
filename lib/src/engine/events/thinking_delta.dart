@@ -1,11 +1,15 @@
 part of 'engine_event.dart';
 
-/// Emitted by the engine loop on every thinking-text delta chunk from the provider. Streamed; not persisted.
+/// Emitted by the engine loop on every thinking-text delta chunk from the
+/// provider. Streamed; not persisted.
 final class ThinkingDelta extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The delta.
   final String delta;
 
+  /// Creates a thinking delta.
   const ThinkingDelta({required this.emittedAt, required this.delta});
 
   @override

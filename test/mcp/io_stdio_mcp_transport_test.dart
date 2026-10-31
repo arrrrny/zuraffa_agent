@@ -101,21 +101,19 @@ void main() {
       },
     );
 
-    test(
-      'U8: a response with an unknown id is dropped; the real answer still resolves',
-      () async {
-        // garbage mode emits a result for id 999 (nobody asked) at startup.
-        final transport = _spawn('garbage');
-        addTearDown(transport.close);
-        await transport.open();
-        final resp = await transport.send(const McpWireRequestListTools());
-        expect(resp, isA<McpWireResponseOk>());
-        final payload = (resp as McpWireResponseOk).payload;
-        expect(payload['tools'], [
-          _echoDescriptor,
-        ]); // the echo descriptor, not 999's
-      },
-    );
+    test('U8: a response with an unknown id is dropped; the real answer still '
+        'resolves', () async {
+      // garbage mode emits a result for id 999 (nobody asked) at startup.
+      final transport = _spawn('garbage');
+      addTearDown(transport.close);
+      await transport.open();
+      final resp = await transport.send(const McpWireRequestListTools());
+      expect(resp, isA<McpWireResponseOk>());
+      final payload = (resp as McpWireResponseOk).payload;
+      expect(payload['tools'], [
+        _echoDescriptor,
+      ]); // the echo descriptor, not 999's
+    });
 
     test(
       'U6: the tools-changed notification is observed on notifications',

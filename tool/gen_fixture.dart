@@ -20,7 +20,8 @@ void main() {
       parentId: null,
       timestamp: fixedBase,
       message: UserMessage.text(
-        'Analyze the codebase for security vulnerabilities and generate a report.',
+        'Analyze the codebase for security vulnerabilities and generate a '
+        'report.',
       ),
     ).toJson(),
   );

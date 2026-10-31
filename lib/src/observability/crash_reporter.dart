@@ -28,8 +28,10 @@ abstract interface class CrashReporter {
 
 /// The default reporter — drops every record.
 class NoopCrashReporter implements CrashReporter {
+  /// Creates a noop crash reporter.
   const NoopCrashReporter();
 
+  /// The instance.
   static const NoopCrashReporter instance = NoopCrashReporter();
 
   @override
@@ -42,14 +44,20 @@ class NoopCrashReporter implements CrashReporter {
 
 /// One crash captured by [RecordingCrashReporter].
 final class CapturedCrash {
+  /// Creates a captured crash.
   const CapturedCrash({
     required this.error,
     required this.stackTrace,
     this.context,
   });
 
+  /// The error.
   final Object error;
+
+  /// The stack trace.
   final StackTrace stackTrace;
+
+  /// The context.
   final Map<String, Object?>? context;
 
   @override

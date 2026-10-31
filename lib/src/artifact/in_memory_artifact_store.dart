@@ -15,6 +15,7 @@ import 'artifact_service.dart';
 
 /// In-memory implementation of [ArtifactService].
 class InMemoryArtifactStore implements ArtifactService {
+  /// Creates an in memory artifact store.
   InMemoryArtifactStore({ArtifactServiceConfig? config})
     : _config = config ?? const ArtifactServiceConfig(),
       _store = <String, Artifact>{},

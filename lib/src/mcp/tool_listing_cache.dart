@@ -35,7 +35,10 @@ import 'mcp_tool_descriptor.dart';
 /// server-side tools-changed notification while severed, so the safe
 /// default after any recovery is to re-list on next demand.
 class ToolListingCache {
+  /// The client.
   final McpClient client;
+
+  /// The max age.
   final Duration maxAge;
   final McpClock _now;
 
@@ -44,6 +47,7 @@ class ToolListingCache {
   StreamSubscription<void>? _sub;
   StreamSubscription<void>? _reconnectSub;
 
+  /// Creates a tool listing cache.
   ToolListingCache({
     required this.client,
     this.maxAge = const Duration(seconds: 60),

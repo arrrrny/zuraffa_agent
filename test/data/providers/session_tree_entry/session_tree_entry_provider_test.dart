@@ -3,20 +3,20 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/session_tree_entry/session_tree_entry_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/session_tree_entry/session_tree_entry.dart';
 import 'package:zuraffa_agent/src/domain/services/session_tree_entry_service.dart';
-import 'package:zuraffa_agent/src/data/providers/session_tree_entry/session_tree_entry_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#3 - SessionTreeEntry value equality', () {
     test('SessionTreeEntry equality is value-based across all fields', () {
-      final a = SessionTreeEntry(
+      const a = SessionTreeEntry(
         id: 'id-a',
         sessionId: 'sess-1',
         parentEntryId: null,
         createdAt: 10,
       );
-      final b = SessionTreeEntry(
+      const b = SessionTreeEntry(
         id: 'id-a',
         sessionId: 'sess-1',
         parentEntryId: null,
@@ -27,13 +27,13 @@ void main() {
     });
 
     test('SessionTreeEntry inequality differs when a field changes', () {
-      final a = SessionTreeEntry(
+      const a = SessionTreeEntry(
         id: 'id-a',
         sessionId: 'sess-1',
         parentEntryId: null,
         createdAt: 10,
       );
-      final b = SessionTreeEntry(
+      const b = SessionTreeEntry(
         id: 'id-b',
         sessionId: 'sess-2',
         parentEntryId: null,
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('SessionTreeEntryProvider.current returns the active entry', () async {
-      final entry = await SessionTreeEntryProvider().current(NoParams());
+      final entry = await SessionTreeEntryProvider().current(const NoParams());
       expect(entry, isA<SessionTreeEntry>());
       expect(entry.id, 'entry-default');
       expect(entry.sessionId, 'session-default');
@@ -60,21 +60,21 @@ void main() {
     test(
       'SessionTreeEntryProvider.current returns a supplied active entry',
       () async {
-        final active = SessionTreeEntry(
+        const active = SessionTreeEntry(
           id: 'entry-x',
           sessionId: 'sess-x',
           parentEntryId: 'entry-parent',
           createdAt: 99,
         );
         expect(
-          await SessionTreeEntryProvider(active).current(NoParams()),
+          await SessionTreeEntryProvider(active).current(const NoParams()),
           active,
         );
       },
     );
 
     test('SessionTreeEntryProvider.count returns 1', () async {
-      expect(await SessionTreeEntryProvider().count(NoParams()), 1);
+      expect(await SessionTreeEntryProvider().count(const NoParams()), 1);
     });
   });
 }

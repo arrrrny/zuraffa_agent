@@ -54,6 +54,7 @@ class ToolResult {
   /// tool crash, denied approval). Defaults to false.
   final bool isError;
 
+  /// Creates a tool result.
   const ToolResult({
     required this.content,
     this.structuredPayload,
@@ -200,8 +201,13 @@ class ToolResult {
   }
 
   @override
-  String toString() =>
-      'ToolResult(content: ${content.length > 60 ? '${content.substring(0, 60)}…' : content}, '
-      'structuredPayload: ${structuredPayload == null ? 'null' : '{${structuredPayload!.length} keys}'}, '
-      'artifactRef: $artifactRef, isError: $isError)';
+  String toString() {
+    final payload = structuredPayload == null
+        ? 'null'
+        : '{${structuredPayload!.length} keys}';
+    return 'ToolResult(content: '
+        '${content.length > 60 ? '${content.substring(0, 60)}…' : content}, '
+        'structuredPayload: $payload, '
+        'artifactRef: $artifactRef, isError: $isError)';
+  }
 }

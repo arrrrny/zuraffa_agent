@@ -22,8 +22,10 @@ import 'types.dart';
 /// Per-store retention limits (issue #135). A null axis is unlimited on
 /// that axis; [RetentionPolicy.unlimited] is unlimited everywhere.
 class RetentionPolicy {
+  /// Creates a retention policy.
   const RetentionPolicy({this.maxAge, this.maxCount, this.maxBytes});
 
+  /// Creates a retention policy (unlimited variant).
   const RetentionPolicy.unlimited()
     : maxAge = null,
       maxCount = null,
@@ -44,6 +46,7 @@ class RetentionPolicy {
   /// JSON render of its events.
   final int? maxBytes;
 
+  /// Whether the retention policy is unlimited.
   bool get isUnlimited =>
       maxAge == null && maxCount == null && maxBytes == null;
 
@@ -60,7 +63,8 @@ class RetentionPolicy {
 
   @override
   String toString() =>
-      'RetentionPolicy(maxAge: $maxAge, maxCount: $maxCount, maxBytes: $maxBytes)';
+      'RetentionPolicy(maxAge: $maxAge, maxCount: $maxCount, maxBytes: '
+      '$maxBytes)';
 }
 
 /// One prune candidate: identity, ordering time, and serialized size.
@@ -69,14 +73,19 @@ typedef PruneCandidate = ({String id, DateTime timestamp, int bytes});
 /// What one prune pass removed. [removedBytes] is the serialized size of
 /// the pruned victims — an approximation of what the backing store frees.
 class PruneResult {
+  /// Creates a prune result.
   const PruneResult({required this.removedCount, required this.removedBytes});
 
+  /// The empty prune result.
   static const PruneResult empty = PruneResult(
     removedCount: 0,
     removedBytes: 0,
   );
 
+  /// The removed count.
   final int removedCount;
+
+  /// The removed bytes.
   final int removedBytes;
 
   @override

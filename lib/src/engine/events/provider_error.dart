@@ -1,12 +1,18 @@
 part of 'engine_event.dart';
 
-/// Emitted when a provider call fails terminally (auth, rate-limit, network). Pairs with the fallback chain (spec-004).
+/// Emitted when a provider call fails terminally (auth, rate-limit, network).
+/// Pairs with the fallback chain (spec-004).
 final class ProviderError extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The provider name.
   final String providerName;
+
+  /// The error.
   final String error;
 
+  /// Creates a provider error.
   const ProviderError({
     required this.emittedAt,
     required this.providerName,
@@ -27,5 +33,6 @@ final class ProviderError extends EngineEvent {
 
   @override
   String toString() =>
-      'ProviderError(emittedAt: $emittedAt, providerName: $providerName, error: $error)';
+      'ProviderError(emittedAt: $emittedAt, providerName: $providerName, '
+      'error: $error)';
 }

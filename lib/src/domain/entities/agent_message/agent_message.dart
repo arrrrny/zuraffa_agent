@@ -1,7 +1,10 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#3 (R1 - state & sessions).
 //
-// AgentMessage (multimodal parts) value object - spec-exact from epic #1 §R1 (issue #3).
+// AgentMessage (multimodal parts) value object - spec-exact from epic #1 §R1
+// (issue #3). Pattern mirrors the SteeringMessage / SteeringQueue value objects
+// (PR for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
@@ -10,10 +13,16 @@
 ///
 /// Multimodal assistant/user message — text, image, audio, document parts — ported from pi_agent's types.dart (epic #1 §R2.1, issue #3). The atomic conversational unit the engine assembles into turns.
 class AgentMessage {
+  /// The identifier.
   final String id;
+
+  /// The role.
   final String role;
+
+  /// The parts.
   final List<Object> parts;
 
+  /// Creates an agent message.
   AgentMessage({required this.id, required this.role, required this.parts}) {
     // Construction-time validation (spec 041, FR-001): a message without
     // identity or role is unaddressable in the session tree.

@@ -76,6 +76,7 @@ class AgentSession {
   /// etc.). Initially equal to [createdAt].
   final DateTime updatedAt;
 
+  /// Creates an agent session.
   const AgentSession({
     required this.id,
     required this.rootEntryId,

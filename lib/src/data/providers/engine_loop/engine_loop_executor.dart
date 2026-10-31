@@ -6,8 +6,6 @@
 // the model" step; multi-turn looping (tool dispatch, stop policies, steering
 // drain) is composed by the caller on top of runTurn. See spec 045 / issue #2.
 
-import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
-
 import '../../../domain/entities/engine_loop/engine_loop.dart';
 import '../../../domain/entities/llm_client/chat_completion.dart';
 import '../../../domain/entities/llm_client/chat_message.dart';
@@ -15,9 +13,13 @@ import '../llm_client/llm_client_provider.dart';
 
 /// Executes one turn of the engine loop against a configured LLM client.
 class EngineLoopExecutor {
+  /// Creates an engine loop executor.
   EngineLoopExecutor(this.loop, this.llmClient);
 
+  /// The loop.
   final EngineLoop loop;
+
+  /// The LLM client.
   final LlmClientProvider llmClient;
 
   /// Runs a single turn for [turnNumber] and returns the model completion.

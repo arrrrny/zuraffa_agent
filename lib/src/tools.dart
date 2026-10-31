@@ -9,11 +9,19 @@
 
 /// Represents an executable agent tool with typed parameters.
 class AgentTool<TParameters, TDetails> {
+  /// The name.
   final String name;
+
+  /// The description.
   final String description;
+
+  /// The input schema.
   final Map<String, dynamic> inputSchema;
+
+  /// The execute callback.
   final Future<TDetails> Function(TParameters params)? execute;
 
+  /// Creates an agent tool.
   const AgentTool({
     required this.name,
     required this.description,
@@ -94,7 +102,8 @@ List<String> validateParameters(
             for (var i = 0; i < value.length; i++) {
               if (!_typeMatches(value[i], itemType)) {
                 errors.add(
-                  'Field $fieldName[$i]: expected $itemType, got ${value[i].runtimeType}',
+                  'Field $fieldName[$i]: expected $itemType, got '
+                  '${value[i].runtimeType}',
                 );
               }
             }

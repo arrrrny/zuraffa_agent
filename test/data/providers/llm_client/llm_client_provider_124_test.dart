@@ -120,7 +120,8 @@ void main() {
     });
 
     test(
-      'a leading system message rides LlmRequest.systemPrompt (wire position preserved)',
+      'a leading system message rides LlmRequest.systemPrompt (wire position '
+      'preserved)',
       () async {
         final transport = FakeLlmTransport(
           script: [
@@ -322,25 +323,23 @@ void main() {
 
     // Issue #159 review (stability): the default stack owns a long-lived
     // HttpClient; close() must reach the socket.
-    test(
-      'close() reaches the seam: provider.close() closes the injected transport',
-      () async {
-        final transport = _CloseCountingTransport(
-          script: [
-            ScriptedResponse(statusCode: 200, body: _completionBody('ok')),
-          ],
-        );
-        final provider = LlmClientProvider(
-          config: _config(baseUrl: 'https://kilo.test/v1'),
-          apiKey: 'test-key',
-          transport: transport,
-        );
+    test('close() reaches the seam: provider.close() closes the injected '
+        'transport', () async {
+      final transport = _CloseCountingTransport(
+        script: [
+          ScriptedResponse(statusCode: 200, body: _completionBody('ok')),
+        ],
+      );
+      final provider = LlmClientProvider(
+        config: _config(baseUrl: 'https://kilo.test/v1'),
+        apiKey: 'test-key',
+        transport: transport,
+      );
 
-        expect(transport.closeCount, 0);
-        await provider.close();
-        expect(transport.closeCount, 1);
-      },
-    );
+      expect(transport.closeCount, 0);
+      await provider.close();
+      expect(transport.closeCount, 1);
+    });
 
     test(
       'close() on the default stack closes the underlying HttpClient',

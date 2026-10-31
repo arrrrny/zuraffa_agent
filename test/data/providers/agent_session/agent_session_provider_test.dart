@@ -12,10 +12,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/agent_session/agent_session_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_session/agent_session.dart';
 import 'package:zuraffa_agent/src/domain/services/agent_session_service.dart';
-import 'package:zuraffa_agent/src/data/providers/agent_session/agent_session_provider.dart';
 
 void main() {
   group(
@@ -159,14 +158,14 @@ void main() {
     });
 
     test('AgentSessionProvider.current returns the active session', () async {
-      final session = await AgentSessionProvider().current(NoParams());
+      final session = await AgentSessionProvider().current(const NoParams());
       expect(session, isA<AgentSession>());
       expect(session.id, 'default');
       expect(session.rootEntryId, 'root');
     });
 
     test('AgentSessionProvider.count returns 1', () async {
-      expect(await AgentSessionProvider().count(NoParams()), 1);
+      expect(await AgentSessionProvider().count(const NoParams()), 1);
     });
   });
 }

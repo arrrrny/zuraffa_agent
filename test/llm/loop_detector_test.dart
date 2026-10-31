@@ -47,17 +47,17 @@ void main() {
     test(
       'U3: toolCallSignature is key-order-insensitive and call-id-insensitive',
       () {
-        final callA = const ToolCallBlock(
+        const callA = ToolCallBlock(
           id: 'call-1',
           name: 'read_file',
           arguments: {'path': 'lib/a.dart', 'offset': 10},
         );
-        final callB = const ToolCallBlock(
+        const callB = ToolCallBlock(
           id: 'call-999', // different id, same name+args
           name: 'read_file',
           arguments: {'offset': 10, 'path': 'lib/a.dart'}, // reordered keys
         );
-        final callC = const ToolCallBlock(
+        const callC = ToolCallBlock(
           id: 'call-2',
           name: 'read_file',
           arguments: {'path': 'lib/other.dart', 'offset': 10},

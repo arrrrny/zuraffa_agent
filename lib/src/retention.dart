@@ -28,6 +28,7 @@ export 'retention_policy.dart';
 /// stale state between missions. [RetentionCoordinator] is the stock
 /// implementation; tests inject fakes.
 abstract interface class RetentionSweep {
+  /// Sweeps stale state; runs between missions.
   Future<void> prune();
 }
 
@@ -36,26 +37,36 @@ abstract interface class RetentionSweep {
 /// so the owner supplies a [ledger] getter and a [writeback] that receives
 /// the pruned projection.
 final class UsageLedgerBinding {
+  /// Creates an usage ledger binding.
   const UsageLedgerBinding({
     required this.ledger,
     required this.writeback,
     required this.policy,
   });
 
+  /// The ledger callback.
   final UsageLedger Function() ledger;
+
+  /// The writeback callback.
   final void Function(UsageLedger) writeback;
+
+  /// The policy.
   final RetentionPolicy policy;
 }
 
 /// Aggregated outcome of one [RetentionCoordinator] sweep.
 class PruneReport {
+  /// Creates a prune report.
   const PruneReport({required this.results});
 
+  /// The results.
   final List<PruneResult> results;
 
+  /// The total removed count.
   int get totalRemovedCount =>
       results.fold(0, (sum, r) => sum + r.removedCount);
 
+  /// The total removed bytes.
   int get totalRemovedBytes =>
       results.fold(0, (sum, r) => sum + r.removedBytes);
 }
@@ -64,6 +75,7 @@ class PruneReport {
 /// wired store with its policy. A store axis left out (null store or null
 /// policy) is simply not swept; usage-ledger bindings always run.
 final class RetentionCoordinator implements RetentionSweep {
+  /// Creates a retention coordinator.
   RetentionCoordinator({
     this.sessionStorage,
     this.sessionPolicy,
@@ -75,12 +87,25 @@ final class RetentionCoordinator implements RetentionSweep {
     this.clock,
   });
 
+  /// The session storage.
   final SessionStorage? sessionStorage;
+
+  /// The session policy.
   final RetentionPolicy? sessionPolicy;
+
+  /// The episodic memory store.
   final EpisodicMemoryStore? episodicMemoryStore;
+
+  /// The memory policy.
   final RetentionPolicy? memoryPolicy;
+
+  /// The usage ledgers.
   final List<UsageLedgerBinding> usageLedgers;
+
+  /// The event log.
   final EngineEventLog? eventLog;
+
+  /// The event policy.
   final RetentionPolicy? eventPolicy;
 
   /// Injectable clock for maxAge cutoffs (defaults to `DateTime.now`).

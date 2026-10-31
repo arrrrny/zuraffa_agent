@@ -12,7 +12,8 @@ import 'package:test/test.dart';
 
 void main() {
   group(
-    'spec 004 A2 - engine has no dart_agent_core dependency; vendored files attributed',
+    'spec 004 A2 - engine has no dart_agent_core dependency; vendored files '
+    'attributed',
     () {
       final libDir = Directory('lib');
       final dartFiles = libDir

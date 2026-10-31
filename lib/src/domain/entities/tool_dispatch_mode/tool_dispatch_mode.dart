@@ -8,13 +8,23 @@
 
 /// ToolDispatchMode (sequential/parallel) value object.
 ///
-/// Dispatch policy — sequential (one tool, then re-prompt) or parallel (fan-out, gather, then re-prompt). Maps directly to the LLM's tool-call batch (epic #3 §R3.2, issue #4 FR-002).
+/// Dispatch policy — sequential (one tool, then re-prompt) or parallel
+/// (fan-out, gather, then re-prompt). Maps directly to the LLM's tool-call
+/// batch (epic #3 §R3.2, issue #4 FR-002).
 class ToolDispatchMode {
+  /// The identifier.
   final String id;
+
+  /// The mode.
   final String mode;
+
+  /// The max parallel.
   final int maxParallel;
+
+  /// Whether fail fast.
   final bool failFast;
 
+  /// Creates a tool dispatch mode.
   const ToolDispatchMode({
     required this.id,
     required this.mode,

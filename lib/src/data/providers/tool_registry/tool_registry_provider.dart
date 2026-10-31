@@ -11,11 +11,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/tool_registry/tool_registry.dart';
 import '../../../domain/services/tool_registry_service.dart';
 
+/// The tool registry provider.
 class ToolRegistryProvider
     with Loggable, FailureHandler
     implements ToolRegistryService {
   final ToolRegistry _active;
 
+  /// Creates a tool registry provider.
   ToolRegistryProvider([ToolRegistry? active])
     : _active =
           active ??

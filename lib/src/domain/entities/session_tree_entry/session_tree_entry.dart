@@ -1,7 +1,10 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#3 (R1 - state & sessions).
 //
-// SessionTreeEntry sealed hierarchy value object - spec-exact from epic #1 §R1 (issue #3).
+// SessionTreeEntry sealed hierarchy value object - spec-exact from epic #1 §R1
+// (issue #3). Pattern mirrors the SteeringMessage / SteeringQueue value objects
+// (PR for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
@@ -10,11 +13,19 @@
 ///
 /// Sealed SessionTreeEntry unifying the existing entry types (message / thinking-level-change / model-change / compaction / label / custom). Dispatch by type gives the engine one entry-list walk per turn (epic #1 §R2.1).
 class SessionTreeEntry {
+  /// The identifier.
   final String id;
+
+  /// The session identifier.
   final String sessionId;
+
+  /// The parent entry identifier.
   final String? parentEntryId;
+
+  /// The created at.
   final int createdAt;
 
+  /// Creates a session tree entry.
   const SessionTreeEntry({
     required this.id,
     required this.sessionId,
@@ -37,5 +48,6 @@ class SessionTreeEntry {
 
   @override
   String toString() =>
-      'SessionTreeEntry(id: $id, sessionId: $sessionId, parentEntryId: $parentEntryId)';
+      'SessionTreeEntry(id: $id, sessionId: $sessionId, parentEntryId: '
+      '$parentEntryId)';
 }

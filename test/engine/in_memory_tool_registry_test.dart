@@ -4,7 +4,8 @@
 // existed only as an abstract interface: McpToolAdapter's header says "no
 // concrete registry required to test — a fake suffices", and the audit
 // (specs/003-tools-and-mcp/tdd/verification.md, finding F3) records that NO
-// test resolves a call across tool origins at a real registry. InMemoryToolRegistry
+// test resolves a call across tool origins at a real registry.
+// InMemoryToolRegistry is that concrete one-namespace registry:
 // is that concrete one-namespace registry:
 //
 //   - DDA-registered tools live under their bare id (native namespace);

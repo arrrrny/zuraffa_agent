@@ -3,20 +3,20 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/loop_safety_rails/loop_safety_rails_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/loop_safety_rails/loop_safety_rails.dart';
 import 'package:zuraffa_agent/src/domain/services/loop_safety_rails_service.dart';
-import 'package:zuraffa_agent/src/data/providers/loop_safety_rails/loop_safety_rails_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#2 - LoopSafetyRails value equality', () {
     test('LoopSafetyRails equality is value-based across all fields', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 10,
         reason: 'val-a',
         emittedAt: 10,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 10,
         reason: 'val-a',
@@ -27,13 +27,13 @@ void main() {
     });
 
     test('LoopSafetyRails inequality differs when a field changes', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 10,
         reason: 'val-a',
         emittedAt: 10,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'LoopDetected',
         turnNumber: 20,
         reason: 'val-b',
@@ -43,13 +43,13 @@ void main() {
     });
 
     test('LoopSafetyRails inequality detected per-field: outcomeType', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r',
         emittedAt: 1,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'LoopDetected',
         turnNumber: 1,
         reason: 'r',
@@ -59,13 +59,13 @@ void main() {
     });
 
     test('LoopSafetyRails inequality detected per-field: turnNumber', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r',
         emittedAt: 1,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 2,
         reason: 'r',
@@ -75,13 +75,13 @@ void main() {
     });
 
     test('LoopSafetyRails inequality detected per-field: reason', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r1',
         emittedAt: 1,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r2',
@@ -91,13 +91,13 @@ void main() {
     });
 
     test('LoopSafetyRails inequality detected per-field: emittedAt', () {
-      final a = LoopSafetyRails(
+      const a = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r',
         emittedAt: 1,
       );
-      final b = LoopSafetyRails(
+      const b = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 1,
         reason: 'r',
@@ -107,7 +107,7 @@ void main() {
     });
 
     test('identical instances are equal via identical() shortcut', () {
-      final instance = LoopSafetyRails(
+      const instance = LoopSafetyRails(
         outcomeType: 'WallClockTimeout',
         turnNumber: 5,
         reason: 'timeout',
@@ -120,7 +120,7 @@ void main() {
 
   group('arrarrny/zuraffa_agent#2 - LoopSafetyRails toString', () {
     test('toString includes outcomeType and turnNumber', () {
-      final r = LoopSafetyRails(
+      const r = LoopSafetyRails(
         outcomeType: 'MaxTurnsExceeded',
         turnNumber: 42,
         reason: 'limit',
@@ -132,7 +132,7 @@ void main() {
     });
 
     test('toString includes reason', () {
-      final r = LoopSafetyRails(
+      const r = LoopSafetyRails(
         outcomeType: 'LoopDetected',
         turnNumber: 1,
         reason: 'infinite-loop',
@@ -143,7 +143,7 @@ void main() {
     });
 
     test('toString omits emittedAt for readability', () {
-      final r = LoopSafetyRails(
+      const r = LoopSafetyRails(
         outcomeType: 'WallClockTimeout',
         turnNumber: 10,
         reason: 't',
@@ -163,7 +163,7 @@ void main() {
     test(
       'LoopSafetyRailsProvider.current returns the active rails snapshot',
       () async {
-        final rails = await LoopSafetyRailsProvider().current(NoParams());
+        final rails = await LoopSafetyRailsProvider().current(const NoParams());
         expect(rails, isA<LoopSafetyRails>());
         expect(rails.outcomeType, isNotEmpty);
         expect(rails.turnNumber, greaterThanOrEqualTo(0));
@@ -172,7 +172,7 @@ void main() {
     );
 
     test('LoopSafetyRailsProvider.count returns 1', () async {
-      expect(await LoopSafetyRailsProvider().count(NoParams()), 1);
+      expect(await LoopSafetyRailsProvider().count(const NoParams()), 1);
     });
 
     test('LoopSafetyRailsProvider constructor takes no arguments', () {

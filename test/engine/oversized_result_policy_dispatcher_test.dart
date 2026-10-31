@@ -2,19 +2,28 @@
 // discipline.
 //
 // The model must never see a large tool body: a result exceeding the active
-// OversizedResultPolicy.thresholdBytes is stored via ArtifactService and rewritten
-// as a summary + artifactRef before it joins the mission transcript. These tests
-// prove (a) the per-result converter and (b) the discipline end-to-end through the
+// OversizedResultPolicy.thresholdBytes is stored via ArtifactService and
+// rewritten as a summary + artifactRef before it joins the mission transcript.
+// These tests prove (a) the per-result converter and (b) the discipline
+// end-to-end through the actual MissionRunner loop via the
+// OversizedResultPolicyDispatcher decorator. actual MissionRunner loop via the
+// OversizedResultPolicyDispatcher decorator. prove (a) the per-result converter
+// and (b) the discipline end-to-end through the actual MissionRunner loop via
+// the OversizedResultPolicyDispatcher decorator. actual MissionRunner loop via
+// the OversizedResultPolicyDispatcher decorator.
+// as a summary + artifactRef before it joins the mission transcript. These
+// tests prove (a) the per-result converter and (b) the discipline end-to-end
+// through the actual MissionRunner loop via the OversizedResultPolicyDispatcher
+// decorator. actual MissionRunner loop via the OversizedResultPolicyDispatcher
+// decorator.
+// prove (a) the per-result converter and (b) the discipline end-to-end through
+// the actual MissionRunner loop via the OversizedResultPolicyDispatcher
+// decorator.
 // actual MissionRunner loop via the OversizedResultPolicyDispatcher decorator.
 
 import 'dart:convert';
 
 import 'package:test/test.dart';
-import 'package:zuraffa/zuraffa.dart' show NoParams;
-// zuraffa >=6.2.0 no longer exports ProviderConfig; spec 052's local
-// entity is the one in scope.
-import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
-
 import 'package:zuraffa_agent/src/artifact/artifact_service.dart';
 import 'package:zuraffa_agent/src/artifact/in_memory_artifact_store.dart';
 import 'package:zuraffa_agent/src/artifact/oversized_result_policy_applier.dart';
@@ -26,6 +35,9 @@ import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/oversized_result_policy/oversized_result_policy.dart';
+// zuraffa >=6.2.0 no longer exports ProviderConfig; spec 052's local
+// entity is the one in scope.
+import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
@@ -137,7 +149,8 @@ void main() {
   group('R3#3 / SC-003 — oversized-result loop wiring', () {
     group('enforceOversizedResultPolicyOnDispatch (unit)', () {
       test(
-        'a successful result exceeding the threshold is rewritten as summary + artifactRef',
+        'a successful result exceeding the threshold is rewritten as summary '
+        '+ artifactRef',
         () async {
           final store = InMemoryArtifactStore(
             config: const ArtifactServiceConfig(thresholdBytes: 100),
@@ -212,70 +225,71 @@ void main() {
       });
     });
 
-    group('OversizedResultPolicyDispatcher (integration through MissionRunner)', () {
-      test(
-        'a 2 MB tool result reaches the model transcript as a summary only, with artifactRef recorded',
-        () async {
-          final store = InMemoryArtifactStore(
-            config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
-          );
-          final big = 'x' * (2 * 1024 * 1024); // 2 MB
-          final dispatcher = OversizedResultPolicyDispatcher(
-            inner: FakeBigToolDispatcher(big),
-            policyService: OversizedResultPolicyProvider(_testPolicy),
-            artifactService: store,
-          );
-          final loop = const EngineLoop(
-            id: 'l',
-            sessionId: 's',
+    group('OversizedResultPolicyDispatcher (integration through '
+        'MissionRunner)', () {
+      test('a 2 MB tool result reaches the model transcript as a summary only, '
+          'with artifactRef recorded', () async {
+        final store = InMemoryArtifactStore(
+          config: const ArtifactServiceConfig(thresholdBytes: 1024 * 1024),
+        );
+        final big = 'x' * (2 * 1024 * 1024); // 2 MB
+        final dispatcher = OversizedResultPolicyDispatcher(
+          inner: FakeBigToolDispatcher(big),
+          policyService: OversizedResultPolicyProvider(_testPolicy),
+          artifactService: store,
+        );
+        const loop = EngineLoop(
+          id: 'l',
+          sessionId: 's',
+          maxTurns: 5,
+          wallClockTimeoutMs: 0,
+          repetitionThreshold: 0,
+        );
+        final runner = MissionRunner(
+          executor: EngineLoopExecutor(
+            loop,
+            ScriptedLlmClient(
+              completions: [completionOf('thinking'), completionOf('done')],
+            ),
+          ),
+          toolDispatcher: dispatcher,
+          stopPolicy: const StopPolicy(
+            id: 't',
             maxTurns: 5,
-            wallClockTimeoutMs: 0,
-            repetitionThreshold: 0,
-          );
-          final runner = MissionRunner(
-            executor: EngineLoopExecutor(
-              loop,
-              ScriptedLlmClient(
-                completions: [completionOf('thinking'), completionOf('done')],
+            wallClockTimeout: Duration.zero,
+            repetitionThreshold: 5,
+          ),
+          onEvent: (_) {},
+        );
+
+        final result = await runner.run(
+          missionId: 'm',
+          messages: const [ChatMessage(role: 'user', content: 'go')],
+          planner: ScriptedPlanner({
+            1: [
+              const ToolCall(
+                toolName: 'big',
+                arguments: {},
+                executionMode: 'sequential',
               ),
-            ),
-            toolDispatcher: dispatcher,
-            stopPolicy: const StopPolicy(
-              id: 't',
-              maxTurns: 5,
-              wallClockTimeout: Duration.zero,
-              repetitionThreshold: 5,
-            ),
-            onEvent: (_) {},
-          );
+            ],
+          }),
+        );
 
-          final result = await runner.run(
-            missionId: 'm',
-            messages: const [ChatMessage(role: 'user', content: 'go')],
-            planner: ScriptedPlanner({
-              1: [
-                const ToolCall(
-                  toolName: 'big',
-                  arguments: {},
-                  executionMode: 'sequential',
-                ),
-              ],
-            }),
-          );
+        // The tool-role message in the transcript must NOT contain the 2 MB
+        // body.
+        final toolMsg = result.transcript.firstWhere((m) => m.role == 'tool');
+        expect(toolMsg.content.length, lessThan(big.length));
+        expect(toolMsg.content, isNot(equals(big)));
 
-          // The tool-role message in the transcript must NOT contain the 2 MB body.
-          final toolMsg = result.transcript.firstWhere((m) => m.role == 'tool');
-          expect(toolMsg.content.length, lessThan(big.length));
-          expect(toolMsg.content, isNot(equals(big)));
-
-          // The full body is retrievable from the store by the recorded artifactRef.
-          final refs = await store.list();
-          expect(refs, hasLength(1));
-          final artifact = await store.fetch(refs.first);
-          expect(artifact, isNotNull);
-          expect(utf8.decode(artifact!.data), equals(big));
-        },
-      );
+        // The full body is retrievable from the store by the recorded
+        // artifactRef.
+        final refs = await store.list();
+        expect(refs, hasLength(1));
+        final artifact = await store.fetch(refs.first);
+        expect(artifact, isNotNull);
+        expect(utf8.decode(artifact!.data), equals(big));
+      });
     });
   });
 }

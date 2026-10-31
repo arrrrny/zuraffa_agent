@@ -12,6 +12,7 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/agent_message/agent_message.dart';
 import '../../../domain/services/agent_message_service.dart';
 
+/// The agent message provider.
 class AgentMessageProvider
     with Loggable, FailureHandler
     implements AgentMessageService {
@@ -24,6 +25,7 @@ class AgentMessageProvider
 
   final List<AgentMessage> _messages;
 
+  /// Creates an agent message provider.
   AgentMessageProvider([List<AgentMessage>? messages])
     : _messages = List<AgentMessage>.of(messages ?? const <AgentMessage>[]);
 

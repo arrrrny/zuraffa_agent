@@ -4,7 +4,8 @@
 // exceeds [OversizedResultPolicy.thresholdBytes], the full body is stored via
 // [ArtifactService] and the result is rewritten as an oversized result carrying
 // the resulting [ArtifactRef] + a bounded summary (spec-003 §4.3, FR-005). This
-// keeps large tool bodies out of model context while keeping the data retrievable.
+// keeps large tool bodies out of model context while keeping the data
+// retrievable.
 
 import 'dart:convert';
 

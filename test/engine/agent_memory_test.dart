@@ -453,32 +453,30 @@ void main() {
       expect(system.longTermMemory.byId('keep')!.content, contains('/bin'));
     });
 
-    test(
-      'forgetSession evaporates session memory and leaves honest dangling links',
-      () {
-        final system = AgentMemorySystem();
-        system.remember(rec('fact', 'a durable fact'));
-        system.remember(
-          rec(
-            'evap',
-            'a session note that will evaporate',
-            source: src(sessionId: 's1'),
-          ),
-          sessionId: 's1',
-        );
-        system.link('evap', 'fact', MemoryLinkType.supports);
+    test('forgetSession evaporates session memory and leaves honest dangling '
+        'links', () {
+      final system = AgentMemorySystem();
+      system.remember(rec('fact', 'a durable fact'));
+      system.remember(
+        rec(
+          'evap',
+          'a session note that will evaporate',
+          source: src(sessionId: 's1'),
+        ),
+        sessionId: 's1',
+      );
+      system.link('evap', 'fact', MemoryLinkType.supports);
 
-        system.sessionMemory.forgetSession('s1');
+      system.sessionMemory.forgetSession('s1');
 
-        // The link is still in the graph — the record it points at is gone.
-        final linked = system.linked('fact');
-        expect(linked, hasLength(1));
-        final (link, record, layer) = linked.single;
-        expect(link.fromRecordId, 'evap');
-        expect(record, isNull, reason: 'dangling link resolves to null');
-        expect(layer, isNull);
-      },
-    );
+      // The link is still in the graph — the record it points at is gone.
+      final linked = system.linked('fact');
+      expect(linked, hasLength(1));
+      final (link, record, layer) = linked.single;
+      expect(link.fromRecordId, 'evap');
+      expect(record, isNull, reason: 'dangling link resolves to null');
+      expect(layer, isNull);
+    });
 
     test('remember rejects an id already used in the opposite layer', () {
       final system = AgentMemorySystem();

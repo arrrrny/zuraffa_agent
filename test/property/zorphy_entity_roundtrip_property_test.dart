@@ -8,7 +8,8 @@
 //
 // Equality note: the generated `operator ==` compares List/Map fields by
 // identity, so these properties assert round-trip fidelity at the JSON level
-// — `jsonEncode(fromJson(jsonEncode(toJson(e))).toJson())` must be byte-identical
+// — `jsonEncode(fromJson(jsonEncode(toJson(e))).toJson())` must be
+// byte-identical
 // to `jsonEncode(e.toJson())`. That is the wire contract the codecs actually
 // own, and it is strictly stronger than an identity-tainted `==`.
 //

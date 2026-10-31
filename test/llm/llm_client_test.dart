@@ -7,75 +7,73 @@ import 'package:zuraffa_agent/src/llm/llm_client.dart';
 
 void main() {
   group('LlmClient value objects (U1)', () {
-    test(
-      'LlmUsage, LlmToolCall, LlmResponse, LlmResponseChunk are value types with spec-exact fields',
-      () {
-        final usage = LlmUsage(
-          inputTokens: 25,
-          outputTokens: 42,
-          cachedTokens: 8,
-          thoughtTokens: 7,
-        );
-        expect(
-          usage,
-          equals(
-            LlmUsage(
-              inputTokens: 25,
-              outputTokens: 42,
-              cachedTokens: 8,
-              thoughtTokens: 7,
-            ),
+    test('LlmUsage, LlmToolCall, LlmResponse, LlmResponseChunk are value types '
+        'with spec-exact fields', () {
+      const usage = LlmUsage(
+        inputTokens: 25,
+        outputTokens: 42,
+        cachedTokens: 8,
+        thoughtTokens: 7,
+      );
+      expect(
+        usage,
+        equals(
+          const LlmUsage(
+            inputTokens: 25,
+            outputTokens: 42,
+            cachedTokens: 8,
+            thoughtTokens: 7,
           ),
-        );
-        expect(usage.copyWith(outputTokens: 99).outputTokens, 99);
-        expect(usage.copyWith(outputTokens: 99).inputTokens, 25);
+        ),
+      );
+      expect(usage.copyWith(outputTokens: 99).outputTokens, 99);
+      expect(usage.copyWith(outputTokens: 99).inputTokens, 25);
 
-        final call = LlmToolCall(
-          id: 'call_1',
-          name: 'get_weather',
-          arguments: const {'city': 'Paris'},
-        );
-        expect(
-          call,
-          equals(
-            LlmToolCall(
-              id: 'call_1',
-              name: 'get_weather',
-              arguments: const {'city': 'Paris'},
-            ),
+      const call = LlmToolCall(
+        id: 'call_1',
+        name: 'get_weather',
+        arguments: {'city': 'Paris'},
+      );
+      expect(
+        call,
+        equals(
+          const LlmToolCall(
+            id: 'call_1',
+            name: 'get_weather',
+            arguments: {'city': 'Paris'},
           ),
-        );
-        expect(call.arguments['city'], 'Paris');
+        ),
+      );
+      expect(call.arguments['city'], 'Paris');
 
-        final resp = LlmResponse(
-          content: 'hi',
-          toolCalls: [call],
-          usage: usage,
-          finishReason: 'stop',
-        );
-        expect(resp.content, 'hi');
-        expect(resp.toolCalls.single.name, 'get_weather');
-        expect(resp.usage.outputTokens, 42);
-        expect(resp.finishReason, 'stop');
+      const resp = LlmResponse(
+        content: 'hi',
+        toolCalls: [call],
+        usage: usage,
+        finishReason: 'stop',
+      );
+      expect(resp.content, 'hi');
+      expect(resp.toolCalls.single.name, 'get_weather');
+      expect(resp.usage.outputTokens, 42);
+      expect(resp.finishReason, 'stop');
 
-        final chunk = LlmResponseChunk(content: 'he', isComplete: false);
-        expect(chunk.content, 'he');
-        expect(chunk.isComplete, isFalse);
+      const chunk = LlmResponseChunk(content: 'he', isComplete: false);
+      expect(chunk.content, 'he');
+      expect(chunk.isComplete, isFalse);
 
-        final done = LlmResponseChunk(
-          content: 'llo',
-          usage: usage,
-          isComplete: true,
-          finishReason: 'stop',
-        );
-        expect(done.isComplete, isTrue);
-        expect(done.usage, equals(usage));
-      },
-    );
+      const done = LlmResponseChunk(
+        content: 'llo',
+        usage: usage,
+        isComplete: true,
+        finishReason: 'stop',
+      );
+      expect(done.isComplete, isTrue);
+      expect(done.usage, equals(usage));
+    });
   });
   group('LlmHttpException (U2)', () {
     test('carries provider, statusCode, body, and a readable message', () {
-      final err = LlmHttpException(
+      const err = LlmHttpException(
         provider: 'openai',
         statusCode: 503,
         body: '{"error":{"message":"overloaded"}}',

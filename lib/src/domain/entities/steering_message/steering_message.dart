@@ -43,6 +43,7 @@ class SteeringMessage {
   /// the steering timeline.
   final DateTime injectedAt;
 
+  /// Creates a steering message.
   const SteeringMessage({
     required this.id,
     required this.content,
@@ -113,5 +114,7 @@ class SteeringMessage {
 
   @override
   String toString() =>
-      'SteeringMessage(id: $id, content: ${content.length > 40 ? "${content.substring(0, 40)}…" : content}, injectedAt: $injectedAt)';
+      'SteeringMessage(id: $id, content: '
+      '${content.length > 40 ? "${content.substring(0, 40)}…" : content}, '
+      'injectedAt: $injectedAt)';
 }

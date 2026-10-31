@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/fallback_chain/fallback_chain.dart';
 import '../../../domain/services/fallback_chain_service.dart';
 
+/// The fallback chain provider.
 class FallbackChainProvider
     with Loggable, FailureHandler
     implements FallbackChainService {
   final FallbackChain _active;
 
+  /// Creates a fallback chain provider.
   FallbackChainProvider([FallbackChain? active])
     : _active =
           active ??

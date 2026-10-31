@@ -8,7 +8,7 @@ void main() {
     test(
       'U11: the stub resolver reports absence for all three sources',
       () async {
-        final resolver = NullSecretResolver();
+        const resolver = NullSecretResolver();
         expect(await resolver.fromEnv('KIMI_API_KEY'), isNull);
         expect(await resolver.fromFile('/run/secrets/kimi'), isNull);
         expect(

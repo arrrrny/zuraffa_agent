@@ -36,14 +36,21 @@ import '../../../llm/llm_transport.dart';
 import '../../../llm/openai_compatible_client.dart';
 import '../../../types.dart';
 
+/// The LLM client provider.
 class LlmClientProvider
     with Loggable, FailureHandler
     implements LlmClientService {
+  /// The config.
   final ProviderConfig config;
+
+  /// The API key.
   final String apiKey;
+
+  /// The proxy URL.
   final String? proxyUrl;
   final llm.LlmClient _client;
 
+  /// Creates an LLM client provider.
   LlmClientProvider({
     required this.config,
     required this.apiKey,

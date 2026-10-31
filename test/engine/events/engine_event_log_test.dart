@@ -55,7 +55,8 @@ void main() {
       expect(log.events.first, same(turnStarted));
       // Non-aliasing: each read is a fresh, independent copy, not a live view
       // into the log. A second read returns a distinct instance, and appending
-      // to the log after the read does not mutate the already-returned snapshot.
+      // to the log after the read does not mutate the already-returned
+      // snapshot.
       final secondRead = log.events;
       expect(identical(snapshot, secondRead), isFalse);
       log.add(providerError);

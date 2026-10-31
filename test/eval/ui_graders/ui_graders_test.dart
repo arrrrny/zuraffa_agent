@@ -114,36 +114,34 @@ void main() {
       expect(grader.grade(_payload()).passed, isTrue);
     });
 
-    test(
-      'PASS when actual equals pinned (different insertion order, same content)',
-      () {
-        final pinned = UiTreePayload(
-          vocabularyId: 'shadcn-ui@1.0.0',
-          schemaVersion: '1.0.0',
-          tree: {
-            'type': 'Column',
-            'props': {'a': 1, 'b': 2, 'c': 3},
-            'children': [
-              {'type': 'Text'},
-            ],
-          },
-        );
-        final grader = UiSnapshotGrader(pinned);
-        // Same content, different insertion order.
-        final actual = UiTreePayload(
-          vocabularyId: 'shadcn-ui@1.0.0',
-          schemaVersion: '1.0.0',
-          tree: {
-            'children': [
-              {'type': 'Text'},
-            ],
-            'props': {'c': 3, 'a': 1, 'b': 2},
-            'type': 'Column',
-          },
-        );
-        expect(grader.grade(actual).passed, isTrue);
-      },
-    );
+    test('PASS when actual equals pinned (different insertion order, same '
+        'content)', () {
+      final pinned = UiTreePayload(
+        vocabularyId: 'shadcn-ui@1.0.0',
+        schemaVersion: '1.0.0',
+        tree: {
+          'type': 'Column',
+          'props': {'a': 1, 'b': 2, 'c': 3},
+          'children': [
+            {'type': 'Text'},
+          ],
+        },
+      );
+      final grader = UiSnapshotGrader(pinned);
+      // Same content, different insertion order.
+      final actual = UiTreePayload(
+        vocabularyId: 'shadcn-ui@1.0.0',
+        schemaVersion: '1.0.0',
+        tree: {
+          'children': [
+            {'type': 'Text'},
+          ],
+          'props': {'c': 3, 'a': 1, 'b': 2},
+          'type': 'Column',
+        },
+      );
+      expect(grader.grade(actual).passed, isTrue);
+    });
 
     test('FAIL when actual differs from pinned', () {
       final pinned = _payload();

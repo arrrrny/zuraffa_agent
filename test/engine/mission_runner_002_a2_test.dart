@@ -3,7 +3,9 @@
 //
 // Drives MissionRunner (spec 069) end-to-end with a scripted LLM that returns
 // `tool_calls` for the first 199 turns then `stop`, and a planner that asks for
-// exactly one tool call per turn. Both the loop cap and the stop-policy cap must
+// exactly one tool call per turn. Both the loop cap and the stop-policy cap
+// must allow >= 200 turns, otherwise the mission would stop early on budget —
+// which is exactly what this test pins against.
 // allow >= 200 turns, otherwise the mission would stop early on budget — which
 // is exactly what this test pins against.
 //
@@ -110,7 +112,9 @@ class ScriptedPlanner implements ToolCallPlanner {
     ChatCompletion completion,
     List<ChatMessage> transcript,
   ) async {
-    // Model only wants tools when it explicitly asked (finishReason == 'tool_calls').
+    // Model only wants tools when it explicitly asked (finishReason ==
+    // 'tool_calls'). On the natural stop turn it returns nothing, which ends
+    // the mission.
     // On the natural stop turn it returns nothing, which ends the mission.
     if (completion.finishReason != 'tool_calls') return const [];
     return [
@@ -195,7 +199,8 @@ void main() {
       expect(events.whereType<ToolCallCompleted>().length, _turns - 1);
       expect(events.length, 1 + _turns * 2 + (_turns - 1) * 2 + 1);
 
-      // No state corruption: every tool call was dispatched once, transcript grows
+      // No state corruption: every tool call was dispatched once, transcript
+      // grows by exactly two messages per tool turn + one on the final turn.
       // by exactly two messages per tool turn + one on the final turn.
       expect(dispatcher.calls, hasLength(_turns - 1));
       expect(result.transcript.length, 1 + (_turns - 1) * 2 + 1);

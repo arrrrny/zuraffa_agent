@@ -260,39 +260,37 @@ void main() {
       expect((events.last as MissionCompleted).status, 'goalAchieved');
     });
 
-    test(
-      'unmet goal leaves the mission to its natural stop, evaluator consulted every turn',
-      () async {
-        final events = <EngineEvent>[];
-        final llm = ScriptedLlmClient(
-          completions: [
-            completionOf('a', finish: 'tool_calls'),
-            completionOf('b', finish: 'tool_calls'),
-            completionOf('c'),
-          ],
-        );
-        final runner = MissionRunner(
-          executor: EngineLoopExecutor(loop10, llm),
-          toolDispatcher: FakeToolDispatcher(),
-          stopPolicy: defaultPolicy,
-          onEvent: events.add,
-          clock: () => fakeNow,
-        );
-        final evaluator = RuleEvaluator((_) => false);
+    test('unmet goal leaves the mission to its natural stop, evaluator '
+        'consulted every turn', () async {
+      final events = <EngineEvent>[];
+      final llm = ScriptedLlmClient(
+        completions: [
+          completionOf('a', finish: 'tool_calls'),
+          completionOf('b', finish: 'tool_calls'),
+          completionOf('c'),
+        ],
+      );
+      final runner = MissionRunner(
+        executor: EngineLoopExecutor(loop10, llm),
+        toolDispatcher: FakeToolDispatcher(),
+        stopPolicy: defaultPolicy,
+        onEvent: events.add,
+        clock: () => fakeNow,
+      );
+      final evaluator = RuleEvaluator((_) => false);
 
-        final result = await runner.run(
-          missionId: 'm1',
-          messages: const [ChatMessage(role: 'user', content: 'go')],
-          goal: goal,
-          goalEvaluator: evaluator,
-        );
+      final result = await runner.run(
+        missionId: 'm1',
+        messages: const [ChatMessage(role: 'user', content: 'go')],
+        goal: goal,
+        goalEvaluator: evaluator,
+      );
 
-        expect(result.status, MissionStatus.completed);
-        expect(result.goalAchieved, isFalse);
-        expect(result.turnsUsed, 3);
-        expect(evaluator.invocations, 3);
-      },
-    );
+      expect(result.status, MissionStatus.completed);
+      expect(result.goalAchieved, isFalse);
+      expect(result.turnsUsed, 3);
+      expect(evaluator.invocations, 3);
+    });
 
     test('budget exhaustion overrides goal mode', () async {
       final events = <EngineEvent>[];

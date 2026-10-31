@@ -16,6 +16,7 @@ import 'types.dart';
 class UsageLedger {
   final List<UsageEntry> _entries;
 
+  /// Creates an usage ledger.
   UsageLedger(List<UsageEntry> entries) : _entries = List.unmodifiable(entries);
 
   /// The immutable entry sequence this projection aggregates over

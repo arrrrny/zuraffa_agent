@@ -3,23 +3,23 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/dart_io_free_gate/dart_io_free_gate_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/dart_io_free_gate/dart_io_free_gate.dart';
 import 'package:zuraffa_agent/src/domain/services/dart_io_free_gate_service.dart';
-import 'package:zuraffa_agent/src/data/providers/dart_io_free_gate/dart_io_free_gate_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#7 - DartIoFreeGate value equality', () {
     test('DartIoFreeGate equality is value-based across all fields', () {
-      final a = DartIoFreeGate(
+      const a = DartIoFreeGate(
         id: 'id-a',
         gateName: 'dart_io_free',
-        enforcedPaths: const ['a', 'b'],
+        enforcedPaths: ['a', 'b'],
         violationCount: 10,
       );
-      final b = DartIoFreeGate(
+      const b = DartIoFreeGate(
         id: 'id-a',
         gateName: 'dart_io_free',
-        enforcedPaths: const ['a', 'b'],
+        enforcedPaths: ['a', 'b'],
         violationCount: 10,
       );
       expect(a, equals(b));
@@ -27,16 +27,16 @@ void main() {
     });
 
     test('DartIoFreeGate inequality differs when a field changes', () {
-      final a = DartIoFreeGate(
+      const a = DartIoFreeGate(
         id: 'id-a',
         gateName: 'dart_io_free',
-        enforcedPaths: const ['a', 'b'],
+        enforcedPaths: ['a', 'b'],
         violationCount: 10,
       );
-      final b = DartIoFreeGate(
+      const b = DartIoFreeGate(
         id: 'id-b',
         gateName: 'dart_io_free',
-        enforcedPaths: const ['a', 'b', 'c'],
+        enforcedPaths: ['a', 'b', 'c'],
         violationCount: 20,
       );
       expect(a == b, isFalse);
@@ -51,7 +51,7 @@ void main() {
 
     test('DartIoFreeGateProvider.current returns the active gate', () async {
       final provider = DartIoFreeGateProvider();
-      final gate = await provider.current(NoParams());
+      final gate = await provider.current(const NoParams());
       expect(gate, isA<DartIoFreeGate>());
       expect(gate.id, 'default');
       expect(gate.gateName, 'dart-io-free');
@@ -61,18 +61,18 @@ void main() {
 
     test('DartIoFreeGateProvider.count returns 1', () async {
       final provider = DartIoFreeGateProvider();
-      expect(await provider.count(NoParams()), 1);
+      expect(await provider.count(const NoParams()), 1);
     });
 
     test('DartIoFreeGateProvider honours an injected value object', () async {
-      final custom = DartIoFreeGate(
+      const custom = DartIoFreeGate(
         id: 'custom',
         gateName: 'dart-io-free',
-        enforcedPaths: const [],
+        enforcedPaths: [],
         violationCount: 2,
       );
       final provider = DartIoFreeGateProvider(custom);
-      final gate = await provider.current(NoParams());
+      final gate = await provider.current(const NoParams());
       expect(gate.id, 'custom');
       expect(gate.violationCount, 2);
       expect(gate.enforcedPaths, isEmpty);

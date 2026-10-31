@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
-import 'package:zuraffa_agent/src/llm/llm_clock.dart';
 import 'package:zuraffa_agent/src/llm/openai_compatible_client.dart';
 import 'package:zuraffa_agent/src/llm/retry.dart';
 import 'package:zuraffa_agent/src/types.dart';
@@ -132,16 +131,18 @@ void main() {
 
         final messages = body['messages'] as List;
         expect(messages[0], {'role': 'system', 'content': 'You are helpful.'});
-        expect(messages[1]['role'], 'user');
-        expect(messages[1]['content'], [
+        final userTurn = messages[1] as Map<String, dynamic>;
+        expect(userTurn['role'], 'user');
+        expect(userTurn['content'], [
           {'type': 'text', 'text': 'What is the weather in Paris?'},
           {
             'type': 'image_url',
             'image_url': {'url': 'data:image/png;base64,AAAA'},
           },
         ]);
-        expect(messages[2]['role'], 'assistant');
-        expect(messages[2]['tool_calls'], [
+        final assistantTurn = messages[2] as Map<String, dynamic>;
+        expect(assistantTurn['role'], 'assistant');
+        expect(assistantTurn['tool_calls'], [
           {
             'id': 'call_1',
             'type': 'function',
@@ -158,11 +159,13 @@ void main() {
         });
 
         final tools = body['tools'] as List;
-        expect(tools.single['function']['name'], 'get_weather');
-        expect(
-          tools.single['function']['parameters']['properties']['city']['type'],
-          'string',
-        );
+        final tool = tools.single as Map<String, dynamic>;
+        final function = tool['function'] as Map<String, dynamic>;
+        expect(function['name'], 'get_weather');
+        final parameters = function['parameters'] as Map<String, dynamic>;
+        final properties = parameters['properties'] as Map<String, dynamic>;
+        final city = properties['city'] as Map<String, dynamic>;
+        expect(city['type'], 'string');
 
         // Response parsing.
         expect(response.content, 'It is sunny in Paris.');
@@ -191,172 +194,178 @@ void main() {
       },
     );
 
-    test(
-      'U11a: responseFormat is emitted verbatim as response_format, omitted when null',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'openai',
-          script: [
-            const ScriptedResponse(
-              statusCode: 200,
-              headers: {'content-type': 'application/json'},
-              body: _generateBody,
-            ),
-            const ScriptedResponse(
-              statusCode: 200,
-              headers: {'content-type': 'application/json'},
-              body: _generateBody,
-            ),
-          ],
-        );
-        final client = makeClient(transport);
-
-        await client.generate(
-          LlmRequest(
-            messages: [UserMessage.text('hi')],
-            responseFormat: {'type': 'json_object'},
+    test('U11a: responseFormat is emitted verbatim as response_format, omitted '
+        'when null', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(
+            statusCode: 200,
+            headers: {'content-type': 'application/json'},
+            body: _generateBody,
           ),
-        );
-        await client.generate(LlmRequest(messages: [UserMessage.text('hi')]));
-
-        final bodies = transport.requests
-            .map((r) => jsonDecode(r.body) as Map<String, dynamic>)
-            .toList();
-        expect(bodies[0]['response_format'], {'type': 'json_object'});
-        expect(bodies[1].containsKey('response_format'), isFalse);
-      },
-    );
-
-    test(
-      'U12: stream() parses SSE data lines to content deltas; the final chunk carries usage; [DONE] yields isComplete',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'openai',
-          script: [
-            ScriptedResponse(
-              statusCode: 200,
-              headers: const {'content-type': 'text/event-stream'},
-              lines: [
-                '',
-                'data: {"id":"1","choices":[{"index":0,"delta":{"role":"assistant","content":"Hel"}}]}',
-                ': keep-alive comment line',
-                'data: {"id":"1","choices":[{"index":0,"delta":{"content":"lo"}}]}',
-                'data: {"id":"1","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
-                'data: {"id":"1","choices":[],"usage":{"prompt_tokens":25,"completion_tokens":9}}',
-                'data: [DONE]',
-              ],
-            ),
-          ],
-        );
-        final client = makeClient(transport);
-
-        final chunks = await client
-            .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-            .toList();
-
-        expect(chunks, hasLength(3));
-        expect(chunks[0].content, 'Hel');
-        expect(chunks[0].isComplete, isFalse);
-        expect(chunks[1].content, 'lo');
-        expect(chunks[1].isComplete, isFalse);
-        expect(chunks[2].isComplete, isTrue);
-        expect(
-          chunks[2].usage,
-          equals(const LlmUsage(inputTokens: 25, outputTokens: 9)),
-        );
-        expect(chunks[2].finishReason, 'stop');
-
-        // The request asked for a streamed completion with usage accounting.
-        final sent =
-            jsonDecode(transport.requests.single.body) as Map<String, dynamic>;
-        expect(sent['stream'], isTrue);
-        expect(sent['stream_options'], {'include_usage': true});
-      },
-    );
-
-    test(
-      'U13: tool-call fragments assemble by index across chunks; malformed arguments default to an empty map',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'openai',
-          script: [
-            ScriptedResponse(
-              statusCode: 200,
-              lines: [
-                // Two interleaved tool streams (index 0 and 1) + one malformed
-                // argument payload on index 1.
-                'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_a","type":"function","function":{"name":"get_weather","arguments":"{\\"ci"}}]}}]}',
-                'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":1,"id":"call_b","type":"function","function":{"name":"get_time","arguments":"{bad json"}}]}}]}',
-                'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"ty\\":\\"Paris\\"}"}}]}}]}',
-                'data: {"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}',
-                'data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":5}}',
-                'data: [DONE]',
-              ],
-            ),
-          ],
-        );
-        final client = makeClient(transport);
-
-        final chunks = await client
-            .stream(LlmRequest(messages: [UserMessage.text('call tools')]))
-            .toList();
-
-        final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
-        expect(toolChunk.toolCalls, hasLength(2));
-        expect(
-          toolChunk.toolCalls[0],
-          equals(
-            const LlmToolCall(
-              id: 'call_a',
-              name: 'get_weather',
-              arguments: {'city': 'Paris'},
-            ),
+          const ScriptedResponse(
+            statusCode: 200,
+            headers: {'content-type': 'application/json'},
+            body: _generateBody,
           ),
-        );
-        // Malformed argument JSON tolerates gracefully (AC-2): empty map.
-        expect(
-          toolChunk.toolCalls[1],
-          equals(
-            const LlmToolCall(id: 'call_b', name: 'get_time', arguments: {}),
-          ),
-        );
-        expect(chunks.last.isComplete, isTrue);
-      },
-    );
+        ],
+      );
+      final client = makeClient(transport);
 
-    test(
-      'U14: a non-2xx response raises LlmHttpException with statusCode and body',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: 'openai',
-          script: List.filled(
-            3,
-            const ScriptedResponse(
-              statusCode: 500,
-              body: '{"error":{"message":"upstream boom"}}',
-            ),
-          ),
-        );
-        final client = makeClient(
-          transport,
-          retryConfig: const RetryConfig(maxAttempts: 3, baseDelayMs: 10),
-        );
+      await client.generate(
+        LlmRequest(
+          messages: [UserMessage.text('hi')],
+          responseFormat: {'type': 'json_object'},
+        ),
+      );
+      await client.generate(LlmRequest(messages: [UserMessage.text('hi')]));
 
-        await expectLater(
-          client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
-          throwsA(
-            isA<LlmHttpException>()
-                .having((e) => e.statusCode, 'statusCode', 500)
-                .having(
-                  (e) => e.body,
-                  'body',
-                  '{"error":{"message":"upstream boom"}}',
-                )
-                .having((e) => e.provider, 'provider', 'openai'),
+      final bodies = transport.requests
+          .map((r) => jsonDecode(r.body) as Map<String, dynamic>)
+          .toList();
+      expect(bodies[0]['response_format'], {'type': 'json_object'});
+      expect(bodies[1].containsKey('response_format'), isFalse);
+    });
+
+    test('U12: stream() parses SSE data lines to content deltas; the final '
+        'chunk carries usage; [DONE] yields isComplete', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(
+            statusCode: 200,
+            headers: {'content-type': 'text/event-stream'},
+            lines: [
+              '',
+              'data: '
+                  '{"id":"1","choices":[{"index":0,"delta":{"role":"assistant"'
+                  ',"content":"Hel"}}]}',
+              ': keep-alive comment line',
+              'data: '
+                  '{"id":"1","choices":[{"index":0,"delta":{"content":"lo"}}]}',
+              'data: '
+                  '{"id":"1","choices":[{"index":0,"delta":{}'
+                  ',"finish_reason":"stop"}]}',
+              'data: '
+                  '{"id":"1","choices":[],"usage":{"prompt_tokens":25'
+                  ',"completion_tokens":9}}',
+              'data: [DONE]',
+            ],
           ),
-        );
-        expect(transport.requests, hasLength(3));
-      },
-    );
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
+
+      expect(chunks, hasLength(3));
+      expect(chunks[0].content, 'Hel');
+      expect(chunks[0].isComplete, isFalse);
+      expect(chunks[1].content, 'lo');
+      expect(chunks[1].isComplete, isFalse);
+      expect(chunks[2].isComplete, isTrue);
+      expect(
+        chunks[2].usage,
+        equals(const LlmUsage(inputTokens: 25, outputTokens: 9)),
+      );
+      expect(chunks[2].finishReason, 'stop');
+
+      // The request asked for a streamed completion with usage accounting.
+      final sent =
+          jsonDecode(transport.requests.single.body) as Map<String, dynamic>;
+      expect(sent['stream'], isTrue);
+      expect(sent['stream_options'], {'include_usage': true});
+    });
+
+    test('U13: tool-call fragments assemble by index across chunks; malformed '
+        'arguments default to an empty map', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: [
+          const ScriptedResponse(
+            statusCode: 200,
+            lines: [
+              // Two interleaved tool streams (index 0 and 1) + one malformed
+              // argument payload on index 1.
+              'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_a","type":"function","function":{"name":"get_weather","arguments":"{\\"ci"}}]}}]}',
+              'data: '
+                  '{"choices":[{"index":0,"delta":{"tool_calls":[{"index":1'
+                  ',"id":"call_b","type":"function","function":'
+                  '{"name":"get_time","arguments":"{bad json"}}]}}]}',
+              'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"ty\\":\\"Paris\\"}"}}]}}]}',
+              'data: '
+                  '{"choices":[{"index":0,"delta":{}'
+                  ',"finish_reason":"tool_calls"}]}',
+              'data: '
+                  '{"choices":[],"usage":{"prompt_tokens":10'
+                  ',"completion_tokens":5}}',
+              'data: [DONE]',
+            ],
+          ),
+        ],
+      );
+      final client = makeClient(transport);
+
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('call tools')]))
+          .toList();
+
+      final toolChunk = chunks.firstWhere((c) => c.toolCalls.isNotEmpty);
+      expect(toolChunk.toolCalls, hasLength(2));
+      expect(
+        toolChunk.toolCalls[0],
+        equals(
+          const LlmToolCall(
+            id: 'call_a',
+            name: 'get_weather',
+            arguments: {'city': 'Paris'},
+          ),
+        ),
+      );
+      // Malformed argument JSON tolerates gracefully (AC-2): empty map.
+      expect(
+        toolChunk.toolCalls[1],
+        equals(
+          const LlmToolCall(id: 'call_b', name: 'get_time', arguments: {}),
+        ),
+      );
+      expect(chunks.last.isComplete, isTrue);
+    });
+
+    test('U14: a non-2xx response raises LlmHttpException with statusCode and '
+        'body', () async {
+      final transport = FakeLlmTransport(
+        provider: 'openai',
+        script: List.filled(
+          3,
+          const ScriptedResponse(
+            statusCode: 500,
+            body: '{"error":{"message":"upstream boom"}}',
+          ),
+        ),
+      );
+      final client = makeClient(
+        transport,
+        retryConfig: const RetryConfig(maxAttempts: 3, baseDelayMs: 10),
+      );
+
+      await expectLater(
+        client.generate(LlmRequest(messages: [UserMessage.text('hi')])),
+        throwsA(
+          isA<LlmHttpException>()
+              .having((e) => e.statusCode, 'statusCode', 500)
+              .having(
+                (e) => e.body,
+                'body',
+                '{"error":{"message":"upstream boom"}}',
+              )
+              .having((e) => e.provider, 'provider', 'openai'),
+        ),
+      );
+      expect(transport.requests, hasLength(3));
+    });
   });
 }

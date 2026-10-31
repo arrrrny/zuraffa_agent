@@ -1,10 +1,27 @@
 // HAND-CURATED — DO NOT REGENERATE VIA zfa.
 //
-// OversizedResultPolicyDispatcher — a ToolDispatcher decorator that enforces the
+// OversizedResultPolicyDispatcher — a ToolDispatcher decorator that enforces
+// the oversized-result threshold on every dispatched result before it reaches
+// the mission loop (spec-003 §4.3, FR-005 / R3#3 / SC-003). Mirrors the
+// existing AllowlistToolDispatcher decorator shape. Successful results whose
+// body exceeds the active OversizedResultPolicy.thresholdBytes are stored via
+// ArtifactService and rewritten with a bounded summary + artifactRef; the model
+// never sees the full body. and rewritten with a bounded summary + artifactRef;
+// the model never sees the full body. the active
+// OversizedResultPolicy.thresholdBytes are stored via ArtifactService and
+// rewritten with a bounded summary + artifactRef; the model never sees the full
+// body. and rewritten with a bounded summary + artifactRef; the model never
+// sees the full body.
 // oversized-result threshold on every dispatched result before it reaches the
 // mission loop (spec-003 §4.3, FR-005 / R3#3 / SC-003). Mirrors the existing
-// AllowlistToolDispatcher decorator shape. Successful results whose body exceeds
-// the active OversizedResultPolicy.thresholdBytes are stored via ArtifactService
+// AllowlistToolDispatcher decorator shape. Successful results whose body
+// exceeds the active OversizedResultPolicy.thresholdBytes are stored via
+// ArtifactService and rewritten with a bounded summary + artifactRef; the model
+// never sees the full body. and rewritten with a bounded summary + artifactRef;
+// the model never sees the full body.
+// the active OversizedResultPolicy.thresholdBytes are stored via
+// ArtifactService and rewritten with a bounded summary + artifactRef; the model
+// never sees the full body.
 // and rewritten with a bounded summary + artifactRef; the model never sees the
 // full body.
 
@@ -16,7 +33,9 @@ import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import '../domain/services/oversized_result_policy_service.dart';
 import 'tool_dispatcher.dart';
 
+/// The oversized result policy dispatcher.
 class OversizedResultPolicyDispatcher implements ToolDispatcher {
+  /// Creates an oversized result policy dispatcher.
   OversizedResultPolicyDispatcher({
     required ToolDispatcher inner,
     required OversizedResultPolicyService policyService,
@@ -71,7 +90,7 @@ class OversizedResultPolicyDispatcher implements ToolDispatcher {
   );
 
   Future<ToolDispatchResult> _enforce(ToolDispatchResult result) async {
-    final policy = await _policyService.current(NoParams());
+    final policy = await _policyService.current(const NoParams());
     return enforceOversizedResultPolicyOnDispatch(
       result: result,
       policy: policy,

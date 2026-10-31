@@ -3,8 +3,8 @@
 // package (constitution VIII): re-implemented in-tree per
 // specs/009-context-compression-llm/spec.md with this attribution retained.
 
-import '../retention_policy.dart';
 import '../domain/entities/episodic_memory/episodic_memory.dart';
+import '../retention_policy.dart';
 
 /// In-memory store for [EpisodicMemory] entries — the `retrieve_memory`
 /// surface (spec 009 US2 / FR-003). Persistence belongs to the session-store

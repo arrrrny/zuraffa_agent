@@ -4,12 +4,11 @@
 // ignore_for_file: non_constant_identifier_names
 library;
 
-import 'package:zuraffa_agent/src/llm/llm_clock.dart';
+import 'package:logging/logging.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
+import 'package:zuraffa_agent/src/llm/llm_clock.dart';
 import 'package:zuraffa_agent/src/llm/llm_transport.dart';
 import 'package:zuraffa_agent/src/llm/retry.dart';
-import 'package:logging/logging.dart';
-
 import 'package:zuraffa_agent/src/logging/agent_log.dart';
 import 'package:zuraffa_agent/src/logging/memory_log_sink.dart';
 

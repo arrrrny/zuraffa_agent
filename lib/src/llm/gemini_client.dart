@@ -17,15 +17,28 @@ import 'retry.dart';
 class GeminiClient implements LlmClient {
   @override
   final String providerName;
+
+  /// The transport.
   final LlmTransport transport;
+
+  /// The base URL.
   final String baseUrl;
   @override
   final String model;
+
+  /// The API key.
   final String? apiKey;
+
+  /// The retry config.
   final RetryConfig retryConfig;
+
+  /// The clock.
   final LlmClock clock;
+
+  /// The jitter callback.
   final int Function(int coreDelayMs)? jitter;
 
+  /// Creates a gemini client.
   GeminiClient({
     this.providerName = 'gemini',
     required this.transport,
@@ -204,7 +217,8 @@ class GeminiClient implements LlmClient {
           'parts': [
             {
               'text':
-                  '[custom:${message.messageType}] ${jsonEncode(message.payload)}',
+                  '[custom:${message.messageType}] '
+                  '${jsonEncode(message.payload)}',
             },
           ],
         };

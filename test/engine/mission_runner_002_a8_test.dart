@@ -121,7 +121,8 @@ ChatCompletion completionOf(String content, {String finish = 'stop'}) =>
 
 void main() {
   test(
-    'A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after turn 5',
+    'A8: maxTurns=5 with a non-stopping model ends in MaxTurnsExceeded after '
+    'turn 5',
     () async {
       final events = <EngineEvent>[];
 

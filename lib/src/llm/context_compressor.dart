@@ -14,7 +14,16 @@ import 'episodic_memory_store.dart';
 import 'llm_client.dart';
 
 /// Which path produced a compression result (spec 009).
-enum CompressionStrategy { none, llm, heuristic }
+enum CompressionStrategy {
+  /// No compression ran; the transcript fit as-is.
+  none,
+
+  /// An LLM summarizer call produced the compaction.
+  llm,
+
+  /// The built-in heuristic produced the compaction (no LLM call).
+  heuristic,
+}
 
 /// Configurable compression triggers (spec 009 US3).
 class ContextCompressionSettings {
@@ -27,6 +36,7 @@ class ContextCompressionSettings {
   /// Optional message-count trigger (US3).
   final int? messageCountThreshold;
 
+  /// Creates a context compression settings.
   const ContextCompressionSettings({
     this.tokenThreshold = 64000,
     this.keepRecentMessages = 10,
@@ -36,16 +46,24 @@ class ContextCompressionSettings {
 
 /// Result of one compression pass (spec 009 Key Entities).
 class CompressionResult {
+  /// The snapshot.
   final String snapshot;
 
   /// Recent messages preserved verbatim after the snapshot. Must not begin
   /// with orphaned tool results — tool rows whose assistant predecessor was
   /// compacted away (see [ContextCompressor]).
   final List<AgentMessage> preservedMessages;
+
+  /// The compressed messages.
   final List<AgentMessage> compressedMessages;
+
+  /// The memory.
   final EpisodicMemory? memory;
+
+  /// The strategy.
   final CompressionStrategy strategy;
 
+  /// Creates a compression result.
   const CompressionResult({
     required this.snapshot,
     required this.preservedMessages,
@@ -69,6 +87,8 @@ class CompressionResult {
 /// away. Callers drop leading tool rows defensively (the pre-flight's
 /// transcript rebuild), but the compressor owns the invariant.
 abstract interface class ContextCompressor {
+  /// Compresses the transcript to fit the token budget, preserving the
+  /// tail per the invariant above.
   Future<CompressionResult> compress(
     List<AgentMessage> messages, {
     int? estimatedTokens,
@@ -77,11 +97,19 @@ abstract interface class ContextCompressor {
 
 /// LLM-powered context compressor (spec 009 US1/US3).
 class LLMBasedContextCompressor implements ContextCompressor {
+  /// The client.
   final LlmClient client;
+
+  /// The settings.
   final ContextCompressionSettings settings;
+
+  /// The store.
   final EpisodicMemoryStore store;
+
+  /// The fallback summarizer.
   final CompactionSummarizer fallbackSummarizer;
 
+  /// Creates an LLM based context compressor.
   LLMBasedContextCompressor({
     required this.client,
     this.settings = const ContextCompressionSettings(),

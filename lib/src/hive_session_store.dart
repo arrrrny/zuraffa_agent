@@ -1,4 +1,5 @@
-// HiveSessionStorage — Hive binary storage backend for session tree persistence.
+// HiveSessionStorage — Hive binary storage backend for session tree
+// persistence.
 //
 // Hand-written integration glue against zfa-generated entity types only.
 // Uses dart:io indirectly via hive_ce (quarantined per Constitution VII).
@@ -22,8 +23,10 @@ import 'types.dart';
 /// Entries are stored in a Hive box keyed by their [SessionTreeEntry.id].
 /// The active leaf ID is stored in a separate meta box.
 class HiveSessionStorage implements SessionStorage {
+  /// Creates a hive session storage.
   HiveSessionStorage({required this.boxName});
 
+  /// The box name.
   final String boxName;
 
   static const _metaBoxName = '_zuraffa_meta';

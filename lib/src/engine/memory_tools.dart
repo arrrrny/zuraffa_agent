@@ -122,8 +122,10 @@ class MemoryTools {
 /// Bridges tool dispatches onto an [AgentMemorySystem] — the runtime
 /// behind `MemoryTools.declarations`.
 class MemoryToolDispatcher implements ToolDispatcher {
+  /// Creates a memory tool dispatcher.
   MemoryToolDispatcher({required this.memory});
 
+  /// The memory.
   final AgentMemorySystem memory;
   int _counter = 0;
 
@@ -335,8 +337,10 @@ class MemoryToolDispatcher implements ToolDispatcher {
 /// notes prepended. Empty memory renders an empty list — callers omit
 /// the memory section entirely.
 class MemoryPromptProjection {
+  /// Creates a memory prompt projection.
   MemoryPromptProjection({required this.memory});
 
+  /// The memory.
   final AgentMemorySystem memory;
 
   /// The top [limit] long-term memories by salience (desc, then

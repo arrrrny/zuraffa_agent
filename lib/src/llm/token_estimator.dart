@@ -43,6 +43,7 @@ abstract interface class TokenEstimator {
 /// the text and image primitives, this class turns a transcript into
 /// primitive calls.
 abstract class TokenEstimatorBase implements TokenEstimator {
+  /// Creates a token estimator base.
   const TokenEstimatorBase();
 
   @override
@@ -84,6 +85,7 @@ abstract class TokenEstimatorBase implements TokenEstimator {
 /// a flat conservative placeholder in place of provider-specific image
 /// tokenization formulas.
 class HeuristicTokenEstimator extends TokenEstimatorBase {
+  /// Creates a heuristic token estimator.
   const HeuristicTokenEstimator({
     this.charsPerToken = 4,
     this.tokensPerImage = defaultTokensPerImage,
@@ -93,7 +95,10 @@ class HeuristicTokenEstimator extends TokenEstimatorBase {
   /// Shared flat image cost for estimators that do not tokenize pixels.
   static const int defaultTokensPerImage = 1024;
 
+  /// The chars per token.
   final int charsPerToken;
+
+  /// The tokens per image.
   final int tokensPerImage;
 
   @override
@@ -116,6 +121,7 @@ class HeuristicTokenEstimator extends TokenEstimatorBase {
 /// their leading space; digits are not re-chunked), so counts track
 /// tiktoken closely for English prose but are not bit-identical.
 class TiktokenEstimator extends TokenEstimatorBase {
+  /// Creates a tiktoken estimator.
   TiktokenEstimator({
     required Map<String, int> ranks,
     this.tokensPerImage = HeuristicTokenEstimator.defaultTokensPerImage,
@@ -164,6 +170,8 @@ class TiktokenEstimator extends TokenEstimatorBase {
 
   final Map<String, int> _ranks;
   final RegExp _pattern;
+
+  /// The tokens per image.
   final int tokensPerImage;
 
   /// Pieces above this many UTF-8 bytes skip the merge loop and fall back
@@ -183,6 +191,8 @@ class TiktokenEstimator extends TokenEstimatorBase {
   /// (identical tool outputs, boilerplate) costs one lookup per turn
   /// instead of a full re-scan, without unbounded growth across a mission.
   final Map<String, int> _pieceCache = {};
+
+  /// The max cached pieces.
   static const int maxCachedPieces = 1024;
 
   @override

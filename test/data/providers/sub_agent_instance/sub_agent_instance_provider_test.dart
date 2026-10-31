@@ -3,21 +3,21 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/sub_agent_instance/sub_agent_instance_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import 'package:zuraffa_agent/src/domain/services/sub_agent_instance_service.dart';
-import 'package:zuraffa_agent/src/data/providers/sub_agent_instance/sub_agent_instance_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#6 - SubAgentInstance value equality', () {
     test('SubAgentInstance equality is value-based across all fields', () {
-      final a = SubAgentInstance(
+      const a = SubAgentInstance(
         id: 'id-a',
         subAgentSpecId: 'ref-1',
         parentSessionId: 'sess-1',
         totalRuns: 10,
         lastRunOutcome: null,
       );
-      final b = SubAgentInstance(
+      const b = SubAgentInstance(
         id: 'id-a',
         subAgentSpecId: 'ref-1',
         parentSessionId: 'sess-1',
@@ -29,14 +29,14 @@ void main() {
     });
 
     test('SubAgentInstance inequality differs when a field changes', () {
-      final a = SubAgentInstance(
+      const a = SubAgentInstance(
         id: 'id-a',
         subAgentSpecId: 'ref-1',
         parentSessionId: 'sess-1',
         totalRuns: 10,
         lastRunOutcome: null,
       );
-      final b = SubAgentInstance(
+      const b = SubAgentInstance(
         id: 'id-b',
         subAgentSpecId: 'ref-2',
         parentSessionId: 'sess-2',
@@ -56,7 +56,7 @@ void main() {
     test(
       'SubAgentInstanceProvider.current returns the active instance',
       () async {
-        final inst = await SubAgentInstanceProvider().current(NoParams());
+        final inst = await SubAgentInstanceProvider().current(const NoParams());
         expect(inst, isA<SubAgentInstance>());
         expect(inst.id, 'instance-default');
         expect(inst.parentSessionId, 'session-default');
@@ -68,7 +68,7 @@ void main() {
     test(
       'SubAgentInstanceProvider.current returns a supplied active instance',
       () async {
-        final active = SubAgentInstance(
+        const active = SubAgentInstance(
           id: 'inst-x',
           subAgentSpecId: 'spec-x',
           parentSessionId: 'sess-x',
@@ -76,14 +76,14 @@ void main() {
           lastRunOutcome: 'ok',
         );
         expect(
-          await SubAgentInstanceProvider(active).current(NoParams()),
+          await SubAgentInstanceProvider(active).current(const NoParams()),
           active,
         );
       },
     );
 
     test('SubAgentInstanceProvider.count returns 1', () async {
-      expect(await SubAgentInstanceProvider().count(NoParams()), 1);
+      expect(await SubAgentInstanceProvider().count(const NoParams()), 1);
     });
   });
 }

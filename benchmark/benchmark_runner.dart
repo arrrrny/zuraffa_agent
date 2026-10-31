@@ -19,7 +19,6 @@
 // Every scenario uses fresh temp dirs and cleans up after itself.
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
@@ -34,7 +33,6 @@ import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/jsonl_session_storage.dart';
-import 'package:zuraffa_agent/src/llm/circuit_breaker.dart';
 import 'package:zuraffa_agent/src/llm/fallback_chain_client.dart';
 import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/src/llm/llm_clock.dart';

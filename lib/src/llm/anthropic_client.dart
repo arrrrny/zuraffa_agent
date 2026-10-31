@@ -15,19 +15,33 @@ import 'retry.dart';
 /// Anthropic Messages API client (spec 007 US2) with thinking, content
 /// blocks, and tool use.
 class AnthropicClient implements LlmClient {
+  /// The API version.
   static const apiVersion = '2023-06-01';
 
   @override
   final String providerName;
+
+  /// The transport.
   final LlmTransport transport;
+
+  /// The base URL.
   final String baseUrl;
   @override
   final String model;
+
+  /// The API key.
   final String? apiKey;
+
+  /// The retry config.
   final RetryConfig retryConfig;
+
+  /// The clock.
   final LlmClock clock;
+
+  /// The jitter callback.
   final int Function(int coreDelayMs)? jitter;
 
+  /// Creates an anthropic client.
   AnthropicClient({
     this.providerName = 'anthropic',
     required this.transport,
@@ -244,7 +258,8 @@ class AnthropicClient implements LlmClient {
             {
               'type': 'text',
               'text':
-                  '[custom:${message.messageType}] ${jsonEncode(message.payload)}',
+                  '[custom:${message.messageType}] '
+                  '${jsonEncode(message.payload)}',
             },
           ],
         };

@@ -12,11 +12,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/yaml_agent_spec/yaml_agent_spec.dart';
 import '../../../domain/services/yaml_agent_spec_service.dart';
 
+/// The yaml agent spec provider.
 class YamlAgentSpecProvider
     with Loggable, FailureHandler
     implements YamlAgentSpecService {
   final YamlAgentSpec _active;
 
+  /// Creates a yaml agent spec provider.
   YamlAgentSpecProvider([YamlAgentSpec? active]) : _active = _require(active);
 
   static YamlAgentSpec _require(YamlAgentSpec? active) {

@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/health_snapshot/health_snapshot.dart';
 import '../../../domain/services/health_snapshot_service.dart';
 
+/// The health snapshot provider.
 class HealthSnapshotProvider
     with Loggable, FailureHandler
     implements HealthSnapshotService {
   final HealthSnapshot _active;
 
+  /// Creates a health snapshot provider.
   HealthSnapshotProvider([HealthSnapshot? active])
     : _active =
           active ??

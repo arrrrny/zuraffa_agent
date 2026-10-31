@@ -1,7 +1,6 @@
 // A tool dispatcher that hosts no tools: tool calls never arrive in
 // this example, but the engine requires the seam.
 
-import 'package:zuraffa_agent/zuraffa_agent.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 

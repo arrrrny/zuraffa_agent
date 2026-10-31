@@ -68,6 +68,7 @@ class UiTreePayload {
   /// Used by budget caps (§8.3) for O(1) lookup.
   final int nodeCount;
 
+  /// Creates a UI tree payload.
   UiTreePayload({
     required this.vocabularyId,
     required this.schemaVersion,
@@ -334,7 +335,8 @@ class UiTreePayload {
 
   @override
   String toString() =>
-      'UiTreePayload(vocabularyId: $vocabularyId, schemaVersion: $schemaVersion, '
+      'UiTreePayload(vocabularyId: $vocabularyId, schemaVersion: '
+      '$schemaVersion, '
       'depth: $depth, nodeCount: $nodeCount, mimeType: $mimeType)';
 }
 
@@ -364,6 +366,7 @@ class UiTreeDiff {
   /// True when the two payloads carry different schema versions.
   final bool schemaChanged;
 
+  /// Creates a UI tree diff.
   const UiTreeDiff({
     required this.addedPaths,
     required this.removedPaths,

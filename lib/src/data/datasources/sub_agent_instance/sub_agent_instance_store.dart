@@ -11,6 +11,7 @@ import '../jsonl_entity_storage.dart';
 
 /// Persists and resumes [SubAgentInstance]s by id.
 class SubAgentInstanceStore {
+  /// Creates a sub agent instance store.
   SubAgentInstanceStore({this.path})
     : _storage = path == null
           ? null
@@ -21,6 +22,7 @@ class SubAgentInstanceStore {
               getId: (i) => i.id,
             );
 
+  /// The path.
   final String? path;
   final JsonlEntityStorage<SubAgentInstance>? _storage;
   final Map<String, SubAgentInstance> _mem = <String, SubAgentInstance>{};

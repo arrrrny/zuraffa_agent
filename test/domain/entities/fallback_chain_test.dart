@@ -62,7 +62,7 @@ void main() {
     });
 
     test('equality with same id', () {
-      final fixedId = 'fixed-id-123';
+      const fixedId = 'fixed-id-123';
       final a = makeChain()..copyWith(id: fixedId);
       final b = makeChain()..copyWith(id: fixedId);
       // Both have same fields except id, so we test field equality

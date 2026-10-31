@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/oversized_result_policy/oversized_result_policy.dart';
 import '../../../domain/services/oversized_result_policy_service.dart';
 
+/// The oversized result policy provider.
 class OversizedResultPolicyProvider
     with Loggable, FailureHandler
     implements OversizedResultPolicyService {
   final OversizedResultPolicy _active;
 
+  /// Creates an oversized result policy provider.
   OversizedResultPolicyProvider([OversizedResultPolicy? active])
     : _active =
           active ??

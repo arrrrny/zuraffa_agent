@@ -7,7 +7,10 @@
 
 /// A single chat message sent to / received from an LLM gateway.
 class ChatMessage {
+  /// The role.
   final String role;
+
+  /// The content.
   final String content;
 
   /// The assistant's thinking/reasoning block for this message, when the
@@ -19,6 +22,7 @@ class ChatMessage {
   /// non-assistant message and on assistant turns with no reasoning.
   final String? thinking;
 
+  /// Creates a chat message.
   const ChatMessage({required this.role, required this.content, this.thinking});
 
   /// Wire form for the gateway request.
@@ -45,5 +49,6 @@ class ChatMessage {
 
   @override
   String toString() =>
-      'ChatMessage(role: $role, content: "${content.length > 24 ? "${content.substring(0, 24)}…" : content}")';
+      'ChatMessage(role: $role, content: "'
+      '${content.length > 24 ? "${content.substring(0, 24)}…" : content}")';
 }

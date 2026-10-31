@@ -56,7 +56,8 @@ class FakeMcpWire implements McpWire {
       return next;
     }
     throw StateError(
-      'FakeMcpWire: enqueued value must be Exception or McpWireResponse, got $next',
+      'FakeMcpWire: enqueued value must be Exception or McpWireResponse, got '
+      '$next',
     );
   }
 

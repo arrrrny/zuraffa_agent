@@ -40,7 +40,16 @@ bool _listEq(List<String> a, List<String> b) {
 /// [off] gates nothing — every tool call delegates. [allowlist] admits only
 /// the tools in `allowed` (an empty `allowed` list locks down every tool).
 /// [blocklist] refuses exactly the tools in `blocked`.
-enum PlaybookGateMode { off, allowlist, blocklist }
+enum PlaybookGateMode {
+  /// Gates nothing — every tool call delegates.
+  off,
+
+  /// Admits only the tools in `allowed`; an empty list locks every tool.
+  allowlist,
+
+  /// Refuses exactly the tools in `blocked`.
+  blocklist,
+}
 
 /// One steering entry of a playbook (FR-001): the text the engine injects
 /// as a [SteeringMessage] when the playbook is applied. Ordered narrative,
@@ -54,6 +63,7 @@ class PlaybookSteering {
   /// The steering text. Required non-empty (validated by the aggregate).
   final String content;
 
+  /// Creates a playbook steering.
   const PlaybookSteering({this.id, required this.content});
 
   @override
@@ -69,7 +79,8 @@ class PlaybookSteering {
 
   @override
   String toString() =>
-      'PlaybookSteering(id: $id, content: ${content.length > 40 ? '${content.substring(0, 40)}…' : content})';
+      'PlaybookSteering(id: $id, content: '
+      '${content.length > 40 ? '${content.substring(0, 40)}…' : content})';
 }
 
 /// The tool-gating section of a playbook (FR-001 / FR-004).
@@ -81,10 +92,16 @@ class PlaybookSteering {
 /// `allowed`; an `off` gate carries both lists empty. A non-empty
 /// irrelevant list is loader drift and is rejected.
 class PlaybookToolGate {
+  /// The mode.
   final PlaybookGateMode mode;
+
+  /// The allowed.
   final List<String> allowed;
+
+  /// The blocked.
   final List<String> blocked;
 
+  /// Creates a playbook tool gate.
   const PlaybookToolGate({
     this.mode = PlaybookGateMode.off,
     this.allowed = const [],
@@ -106,7 +123,8 @@ class PlaybookToolGate {
 
   @override
   String toString() =>
-      'PlaybookToolGate(mode: ${mode.name}, allowed: ${allowed.length}, blocked: ${blocked.length})';
+      'PlaybookToolGate(mode: ${mode.name}, allowed: ${allowed.length}, '
+      'blocked: ${blocked.length})';
 }
 
 /// The response-constraint section of a playbook (FR-001 / FR-005).
@@ -121,6 +139,7 @@ class PlaybookResponse {
   /// Maximum characters of the final response. Null = unconstrained.
   final int? maxChars;
 
+  /// Creates a playbook response.
   const PlaybookResponse({this.language, this.maxChars});
 
   @override
@@ -179,6 +198,7 @@ class Playbook {
   /// The response constraints. Defaults to none.
   final PlaybookResponse response;
 
+  /// Creates a playbook.
   Playbook({
     required this.id,
     required this.name,

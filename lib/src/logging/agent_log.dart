@@ -74,11 +74,22 @@ abstract final class AgentLog {
     return Logger('${ZuraffaLogging.hierarchyRoot}.$subsystem');
   }
 
+  /// The LLM.
   static Logger get llm => logger('llm');
+
+  /// The MCP.
   static Logger get mcp => logger('mcp');
+
+  /// The engine.
   static Logger get engine => logger('engine');
+
+  /// The eval.
   static Logger get eval => logger('eval');
+
+  /// The session.
   static Logger get session => logger('session');
+
+  /// The event bus.
   static Logger get eventBus => logger('eventBus');
 
   // -- Level policy (spec 112 FR-002). -------------------------------------

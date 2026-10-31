@@ -3,25 +3,24 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/tool_registry/tool_registry_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_registry/tool_registry.dart';
 import 'package:zuraffa_agent/src/domain/services/tool_registry_service.dart';
-import 'package:zuraffa_agent/src/data/providers/tool_registry/tool_registry_provider.dart';
 import 'package:zuraffa_agent/src/engine/tool_registry.dart' as engine;
-import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#4 - ToolRegistry value equality', () {
     test('ToolRegistry equality is value-based across all fields', () {
-      final a = ToolRegistry(
+      const a = ToolRegistry(
         id: 'id-a',
-        toolNames: const ['a', 'b'],
+        toolNames: ['a', 'b'],
         ddToolCount: 10,
         generatedToolCount: 10,
         mcpToolCount: 10,
       );
-      final b = ToolRegistry(
+      const b = ToolRegistry(
         id: 'id-a',
-        toolNames: const ['a', 'b'],
+        toolNames: ['a', 'b'],
         ddToolCount: 10,
         generatedToolCount: 10,
         mcpToolCount: 10,
@@ -31,16 +30,16 @@ void main() {
     });
 
     test('ToolRegistry inequality differs when a field changes', () {
-      final a = ToolRegistry(
+      const a = ToolRegistry(
         id: 'id-a',
-        toolNames: const ['a', 'b'],
+        toolNames: ['a', 'b'],
         ddToolCount: 10,
         generatedToolCount: 10,
         mcpToolCount: 10,
       );
-      final b = ToolRegistry(
+      const b = ToolRegistry(
         id: 'id-b',
-        toolNames: const ['a', 'b', 'c'],
+        toolNames: ['a', 'b', 'c'],
         ddToolCount: 20,
         generatedToolCount: 20,
         mcpToolCount: 20,
@@ -49,16 +48,16 @@ void main() {
     });
 
     test('ToolRegistry inequality detected per-field: id', () {
-      final a = ToolRegistry(
+      const a = ToolRegistry(
         id: 'id-1',
-        toolNames: const [],
+        toolNames: [],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
       );
-      final b = ToolRegistry(
+      const b = ToolRegistry(
         id: 'id-2',
-        toolNames: const [],
+        toolNames: [],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
@@ -67,16 +66,16 @@ void main() {
     });
 
     test('ToolRegistry inequality detected per-field: toolNames', () {
-      final a = ToolRegistry(
+      const a = ToolRegistry(
         id: 'id',
-        toolNames: const ['x'],
+        toolNames: ['x'],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
       );
-      final b = ToolRegistry(
+      const b = ToolRegistry(
         id: 'id',
-        toolNames: const ['x', 'y'],
+        toolNames: ['x', 'y'],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
@@ -85,16 +84,16 @@ void main() {
     });
 
     test('ToolRegistry inequality detected per-field: ddToolCount', () {
-      final a = ToolRegistry(
+      const a = ToolRegistry(
         id: 'id',
-        toolNames: const [],
+        toolNames: [],
         ddToolCount: 1,
         generatedToolCount: 0,
         mcpToolCount: 0,
       );
-      final b = ToolRegistry(
+      const b = ToolRegistry(
         id: 'id',
-        toolNames: const [],
+        toolNames: [],
         ddToolCount: 2,
         generatedToolCount: 0,
         mcpToolCount: 0,
@@ -103,9 +102,9 @@ void main() {
     });
 
     test('ToolRegistry empty toolNames list is valid', () {
-      final r = ToolRegistry(
+      const r = ToolRegistry(
         id: 'empty',
-        toolNames: const [],
+        toolNames: [],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
@@ -114,9 +113,9 @@ void main() {
     });
 
     test('ToolRegistry zero counts are valid', () {
-      final r = ToolRegistry(
+      const r = ToolRegistry(
         id: 'zero',
-        toolNames: const ['t'],
+        toolNames: ['t'],
         ddToolCount: 0,
         generatedToolCount: 0,
         mcpToolCount: 0,
@@ -129,9 +128,9 @@ void main() {
 
   group('arrarrny/zuraffa_agent#4 - ToolRegistry toString', () {
     test('toString includes id and toolNames', () {
-      final r = ToolRegistry(
+      const r = ToolRegistry(
         id: 'my-reg',
-        toolNames: const ['fs.read', 'web.fetch'],
+        toolNames: ['fs.read', 'web.fetch'],
         ddToolCount: 1,
         generatedToolCount: 2,
         mcpToolCount: 3,
@@ -151,7 +150,7 @@ void main() {
     test(
       'ToolRegistryProvider.current returns the active registry snapshot',
       () async {
-        final registry = await ToolRegistryProvider().current(NoParams());
+        final registry = await ToolRegistryProvider().current(const NoParams());
         expect(registry, isA<ToolRegistry>());
         expect(registry.id, 'default');
         expect(registry.toolNames, isNotEmpty);
@@ -165,21 +164,21 @@ void main() {
     );
 
     test('ToolRegistryProvider.current honours an injected registry', () async {
-      final injected = ToolRegistry(
+      const injected = ToolRegistry(
         id: 'custom',
-        toolNames: const ['x'],
+        toolNames: ['x'],
         ddToolCount: 1,
         generatedToolCount: 0,
         mcpToolCount: 0,
       );
       expect(
-        await ToolRegistryProvider(injected).current(NoParams()),
+        await ToolRegistryProvider(injected).current(const NoParams()),
         equals(injected),
       );
     });
 
     test('ToolRegistryProvider.count returns 1', () async {
-      expect(await ToolRegistryProvider().count(NoParams()), 1);
+      expect(await ToolRegistryProvider().count(const NoParams()), 1);
     });
   });
 

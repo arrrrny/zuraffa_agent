@@ -15,7 +15,6 @@
 
 import 'package:zuraffa_agent/src/domain/entities/ui_spec/ui_spec.dart';
 import 'package:zuraffa_agent/src/domain/entities/ui_tree_payload/ui_tree_payload.dart';
-import 'package:zuraffa_agent/src/eval/ui_graders/ui_graders.dart';
 
 /// The in-memory GM-6 fixture (dws_playground).
 class Gm6Fixture {

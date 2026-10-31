@@ -1,20 +1,33 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// DispatchTool (built-in) value object - spec-exact from epic #1 §R5 (issue #6).
+// DispatchTool (built-in) value object - spec-exact from epic #1 §R5 (issue
+// #6). Pattern mirrors the SteeringMessage / SteeringQueue value objects (PR
+// for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
 /// DispatchTool (built-in) value object.
 ///
-/// Built-in dispatch tool — the model calls dispatch(subAgentType='X', mission='…') and the engine spawns an isolated sub-agent (epic #5 §R5.4, issue #6 US4).
+/// Built-in dispatch tool — the model calls dispatch(subAgentType='X',
+/// mission='…') and the engine spawns an isolated sub-agent (epic #5 §R5.4,
+/// issue #6 US4).
 class DispatchTool {
+  /// The identifier.
   final String id;
+
+  /// The tool name.
   final String toolName;
+
+  /// The sub agent spec identifier.
   final String subAgentSpecId;
+
+  /// The risk tier.
   final String riskTier;
 
+  /// Creates a dispatch tool.
   const DispatchTool({
     required this.id,
     required this.toolName,
@@ -37,5 +50,6 @@ class DispatchTool {
 
   @override
   String toString() =>
-      'DispatchTool(id: $id, toolName: $toolName, subAgentSpecId: $subAgentSpecId)';
+      'DispatchTool(id: $id, toolName: $toolName, subAgentSpecId: '
+      '$subAgentSpecId)';
 }
