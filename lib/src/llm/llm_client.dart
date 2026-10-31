@@ -63,6 +63,13 @@ class LlmRequest {
   /// request body when set; providers without support ignore it.
   final Map<String, dynamic>? responseFormat;
 
+  /// Extra HTTP headers merged into every outbound request (issue #133,
+  /// O-1). Intended for W3C trace-context propagation — build it from
+  /// `Spans.propagationHeaders()` so the current span's `traceparent`
+  /// reaches the model vendor's edge. Explicit request headers win over
+  /// the client's defaults (they can override `authorization`).
+  final Map<String, String> headers;
+
   const LlmRequest({
     this.systemPrompt,
     required this.messages,
@@ -72,6 +79,7 @@ class LlmRequest {
     this.toolChoice,
     this.parallelToolCalls,
     this.responseFormat,
+    this.headers = const {},
   });
 }
 

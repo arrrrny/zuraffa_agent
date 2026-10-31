@@ -11,6 +11,8 @@ import 'dart:io';
 
 import 'package:synchronized/synchronized.dart';
 
+import 'retention_policy.dart';
+import 'session_backup.dart';
 import 'session_lock.dart';
 import 'session_migrator.dart';
 import 'session_storage.dart';
@@ -22,10 +24,19 @@ import 'types.dart';
 /// Each line is a JSON-serialized [SessionTreeEntry]. The active leaf ID
 /// is stored as the first line with a special `_meta` wrapper.
 class JsonlSessionStorage implements SessionStorage {
-  JsonlSessionStorage(this.path, {SessionLock? lock})
-    : _lock = lock ?? SessionLock(path);
+  JsonlSessionStorage(
+    this.path, {
+    SessionLock? lock,
+    this.backupGenerations = 0,
+  }) : _lock = lock ?? SessionLock(path);
 
   final String path;
+
+  /// N-generation automatic backup on [close] (issue #135, optional AC).
+  /// When a close actually flushes (the store was dirty) and this is > 0,
+  /// the just-persisted file is rotated into `<path>.backup.1` and older
+  /// generations shift by one up to `<path>.backup.N`. Default 0 — off.
+  final int backupGenerations;
 
   /// The advisory single-writer lock (spec 114 FR-002), held from init
   /// until close.
@@ -81,11 +92,19 @@ class JsonlSessionStorage implements SessionStorage {
             );
           }
           lines[i] = ''; // header consumed — never surfaced as an entry
+          // A backup envelope may follow the header (issue #135): a backup
+          // file is itself a valid session store, so its provenance line
+          // is consumed here too.
+          continue;
+        }
+        if (decoded.containsKey(SessionBackupCodec.backupKey)) {
+          lines[i] = ''; // backup provenance consumed — never an entry
+          continue;
         }
       } on FormatException {
         break; // no header — tear scan handles the corrupt line below
       }
-      break; // the header (if any) is the first non-empty line
+      break; // the first non-header line: the entry scan takes over
     }
     final fromVersion = headerVersion ?? 1;
     final needsMigration = fromVersion < SessionSchema.currentVersion;
@@ -231,6 +250,61 @@ class JsonlSessionStorage implements SessionStorage {
   }
 
   @override
+  Future<void> backup(String dest) async {
+    if (!_initialized) await init();
+    await SessionBackupFile.write(
+      dest,
+      entries: _entries.values.toList(),
+      activeLeafId: _activeLeafId.isEmpty ? null : _activeLeafId,
+    );
+  }
+
+  @override
+  Future<void> restore(String src) async {
+    if (!_initialized) await init();
+    final backup = await SessionBackupFile.read(src);
+    final restored = SessionBackupCodec.decodeEntries(backup);
+    return _mutex.synchronized(() async {
+      _entries
+        ..clear()
+        ..addAll({for (final entry in restored) entry.id: entry});
+      _activeLeafId = backup.activeLeafId ?? '';
+      // Durable immediately (issue #135): a crash after restore must not
+      // resurrect the replaced state, so the file is rewritten here rather
+      // than waiting for close().
+      await _flushLocked();
+    });
+  }
+
+  @override
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now}) async {
+    if (!_initialized) await init();
+    return _mutex.synchronized(() async {
+      final candidates = sessionEntryCandidates(_entries.values);
+      final victims = selectPruneIds(
+        candidates: candidates,
+        policy: policy,
+        now: now,
+      );
+      if (victims.isEmpty) return PruneResult.empty;
+
+      final bytesById = {for (final c in candidates) c.id: c.bytes};
+      final victimSet = Set<String>.of(victims);
+      for (final id in victimSet) {
+        _entries.remove(id);
+      }
+      if (_activeLeafId.isNotEmpty && victimSet.contains(_activeLeafId)) {
+        _activeLeafId = '';
+      }
+      await _flushLocked();
+      return PruneResult(
+        removedCount: victims.length,
+        removedBytes: prunedBytes(victims, bytesById),
+      );
+    });
+  }
+
+  @override
   Future<void> close() {
     return _mutex.synchronized(() async {
       if (!_dirty) {
@@ -238,17 +312,28 @@ class JsonlSessionStorage implements SessionStorage {
         return;
       }
       await _flushLocked();
+      // N-generation backup on close (issue #135, optional AC): the
+      // just-persisted state becomes generation 1 and older generations
+      // shift. No-op unless [backupGenerations] > 0.
+      final generations = backupGenerations;
+      if (generations > 0) {
+        await SessionBackupFile.rotateGenerations(path, generations);
+      }
       if (_initialized) await _lock.release();
     });
   }
 
   /// Caller must hold [_mutex]. Pre-114 body of [close].
+  ///
+  /// Issue #135: the rewrite is now ATOMIC (temp + rename). The pre-135
+  /// in-place rewrite truncated the file before writing — a crash mid-close
+  /// destroyed the durable copy, which is exactly the window the issue
+  /// cites ("a crash between delete and close loses data"). The schema
+  /// header is PRESERVED (spec 114): a headerless rewrite forced a legacy
+  /// migration on every post-close open.
   Future<void> _flushLocked() async {
-    // Rewrite file with current state (after deletions or leaf changes).
-    // The schema header is PRESERVED (spec 114): a headerless rewrite
-    // forced a legacy migration on every post-close open.
-    final file = File(path);
-    final sink = file.openWrite();
+    final tmp = File('$path.rewriting');
+    final sink = tmp.openWrite();
 
     sink.writeln(_headerLine());
     sink.writeln(jsonEncode({'_meta': true, 'activeLeafId': _activeLeafId}));
@@ -259,6 +344,7 @@ class JsonlSessionStorage implements SessionStorage {
 
     await sink.flush();
     await sink.close();
+    await tmp.rename(path);
     _dirty = false;
   }
 }

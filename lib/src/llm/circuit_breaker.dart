@@ -5,6 +5,7 @@
 //
 
 import '../domain/entities/client_health/client_health.dart';
+import '../observability/metrics.dart';
 import 'llm_clock.dart';
 
 /// Breaker states (spec 008 US2): closed -> open -> half-open -> closed.
@@ -22,7 +23,15 @@ class CircuitBreaker {
     this.maxConsecutiveFailures = 3,
     this.cooldownWindowMs = 60000,
     required this.clock,
+    this.metrics,
   });
+
+  /// Optional metrics seam (issue #133, O-2). When supplied, every state
+  /// transition publishes the
+  /// `agent_circuit_breaker_state{provider=<id>}` gauge
+  /// (closed=0, half-open=1, open=2). The initial state is not published —
+  /// gauges appear with the first transition.
+  final Metrics? metrics;
 
   CircuitState _state = CircuitState.closed;
   int _consecutiveFailures = 0;
@@ -47,6 +56,7 @@ class CircuitBreaker {
   void recordSuccess() {
     _state = CircuitState.closed;
     _consecutiveFailures = 0;
+    _publishState();
   }
 
   void recordFailure() {
@@ -55,12 +65,31 @@ class CircuitBreaker {
       // A failed probe re-opens immediately with a fresh count.
       _consecutiveFailures = 1;
       _state = CircuitState.open;
+      _publishState();
       return;
     }
     _consecutiveFailures += 1;
     if (_consecutiveFailures >= maxConsecutiveFailures) {
       _state = CircuitState.open;
     }
+    _publishState();
+  }
+
+  /// Publishes the current state to the injected [metrics]. No-op without
+  /// an injection.
+  void _publishState() {
+    final m = metrics;
+    if (m == null) return;
+    final ordinal = switch (state) {
+      CircuitState.closed => 0,
+      CircuitState.halfOpen => 1,
+      CircuitState.open => 2,
+    };
+    m.gauge(
+      'agent_circuit_breaker_state',
+      ordinal,
+      labels: {'provider': providerId},
+    );
   }
 
   /// Whether a call may be attempted right now: closed always allows;

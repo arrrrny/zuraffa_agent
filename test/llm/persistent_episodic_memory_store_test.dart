@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/src/domain/entities/episodic_memory/episodic_memory.dart';
 import 'package:zuraffa_agent/src/llm/persistent_episodic_memory_store.dart';
+import 'package:zuraffa_agent/src/retention_policy.dart';
 import 'package:zuraffa_agent/src/session_storage.dart';
 import 'package:zuraffa_agent/src/types.dart';
 
@@ -50,6 +51,16 @@ class InMemorySessionStorage implements SessionStorage {
   @override
   Future<void> deleteEntries(Set<String> entryIds) async =>
       storedEntries.removeWhere((e) => entryIds.contains(e.id));
+
+  @override
+  Future<void> backup(String dest) async => throw UnimplementedError();
+
+  @override
+  Future<void> restore(String src) async => throw UnimplementedError();
+
+  @override
+  Future<PruneResult> prune(RetentionPolicy policy, {DateTime? now}) async =>
+      PruneResult.empty;
 
   @override
   Future<void> close() async {}
