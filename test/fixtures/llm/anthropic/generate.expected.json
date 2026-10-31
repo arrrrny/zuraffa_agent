@@ -1,0 +1,12 @@
+{
+  "content": "Hello, world.",
+  "thinking": null,
+  "toolCalls": [],
+  "usage": {
+    "inputTokens": 25,
+    "outputTokens": 42,
+    "cachedTokens": 8,
+    "thoughtTokens": 0
+  },
+  "finishReason": "stop"
+}

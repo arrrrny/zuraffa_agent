@@ -1,0 +1,119 @@
+name: nightly-verification
+
+# Issue #128 — mutation, load/benchmark, and fixture-drift verification.
+#
+# NON-BLOCKING by design: every gate step carries `continue-on-error: true`
+# so a red nightly never blocks a PR or a merge (the nightly cannot gate
+# pull_requests anyway — it runs on a schedule). Each job still surfaces a
+# red X on the failing step and publishes its numbers as artifacts under
+# `if: always()` so a regression is visible and diffable, not silent.
+#
+# PR-gate equivalents: the snapshot/property suites run in the normal
+# pipeline (`dart test -j 2`); the curated mutant registry doubles as an
+# on-demand check via `dart run tool/mutation_rubric.dart --filter <id>`.
+
+on:
+  schedule:
+    # 02:30 UTC daily — off-peak for the mostly-US/EU commit history.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  # One nightly run at a time; a scheduled run supersedes a still-running one.
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned to the SDK the tree is formatted/analyzed with (matches the
+  # format gate in pipeline.yml).
+  DART_SDK: '3.13.7'
+
+jobs:
+  mutation:
+    # AC-1: dmuti nightly over the pure-function wire/state zone with the
+    # >= 80% mutant-kill-rate gate (mutation/dmuti_targets.xml
+    # <threshold failure="80">), PLUS the formalized manual mutant rubric
+    # (tool/mutation_rubric.dart) anchoring the historically-surviving
+    # mutant classes from specs/ROLLUP_VERIFICATION.md.
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Pub get
+        run: dart pub get
+      - name: dmuti mutation run (>= 80% kill-rate gate)
+        continue-on-error: true
+        run: |
+          dart run mutation_test --rules mutation/dmuti_rules.xml \
+            mutation/dmuti_targets.xml -o mutation-test-report
+      - name: Formalized manual mutant rubric (>= 80% kill-rate gate)
+        continue-on-error: true
+        run: dart run tool/mutation_rubric.dart --report mutation-rubric-report.json
+      - name: Upload mutation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-reports
+          path: |
+            mutation-test-report/
+            mutation-rubric-report.json
+          if-no-files-found: ignore
+
+  load:
+    # AC-4: load benchmarks — JSONL session append at 1k/10k/100k,
+    # MissionRunner 50-tool-call wall-clock, FallbackChainClient failover
+    # latency. Numbers publish as JSON artifacts for cross-run comparison.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.DART_SDK }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ env.DART_SDK }}-
+      - name: Pub get
+        run: dart pub get
+      - name: Run load benchmarks
+        continue-on-error: true
+        run: dart run benchmark/benchmark_runner.dart --json benchmark-results.json
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+          if-no-files-found: ignore
+
+  fixture-drift:
+    # AC-3 (second half): re-fetch the providers' machine-readable API
+    # references and detect wire-format drift against the pinned keys —
+    # before the contract tests start failing obscurely.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Pub get
+        run: dart pub get
+      - name: Check LLM fixture drift against provider docs
+        continue-on-error: true
+        run: |
+          dart run tool/check_llm_fixture_drift.dart --report fixture-drift-report.json
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixture-drift-report
+          path: fixture-drift-report.json
+          if-no-files-found: ignore

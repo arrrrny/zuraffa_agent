@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  dmuti (mutation_test) targets + gate — issue #128 AC-1, option A.
+
+  Scope: the four pure-function wire/state files the issue names as ideal
+  mutation targets (PassAtK, UiTreePayload, both CircuitBreakers). Each
+  mutant runs the SCOPED fast slice below (not the whole suite); the curated
+  full-registry gate lives in tool/mutation_rubric.dart (option B), which
+  anchors the historically-surviving mutant classes from
+  specs/ROLLUP_VERIFICATION.md.
+
+  Run (nightly, non-blocking — see .github/workflows/nightly.yml):
+    dart run mutation_test --rules mutation/dmuti_rules.xml mutation/dmuti_targets.xml \
+        -o mutation-test-report
+
+  The <threshold failure="80"> element is the issue's >= 80% mutant-kill-rate
+  gate; dmuti exits non-zero below it.
+-->
+<mutations version="1.2">
+  <files>
+    <file>lib/src/domain/entities/pass_at_k/pass_at_k.dart</file>
+    <file>lib/src/domain/entities/ui_tree_payload/ui_tree_payload.dart</file>
+    <file>lib/src/domain/entities/circuit_breaker/circuit_breaker.dart</file>
+    <file>lib/src/llm/circuit_breaker.dart</file>
+  </files>
+  <commands>
+    <!-- Scoped fast slice: the property suites + the entity/provider tests
+         for the four targets. -j 2 is the fleet concurrency cap. -->
+    <command group="test" expected-return="0" working-directory="." timeout="300">dart test test/property test/domain/entities/pass_at_k test/domain/entities/ui_tree_payload test/domain/entities/circuit_breaker test/llm/circuit_breaker_test.dart test/data/providers/engine_loop test/domain/entities/stop_policy -j 2 --reporter compact</command>
+  </commands>
+  <!-- Mutation blacklist: doc comments must never be mutated — a comment
+       "mutant" always survives and would poison the kill-rate gate with
+       vacuous survivors. NOTE: string-literal token exclusions are
+       deliberately omitted — dmuti's token exclusion spans from the FIRST
+       begin to the LAST end, so paired quote tokens blank out the whole
+       file (verified: 0 mutations found). Our rules simply do not match
+       inside the string constants these files carry. -->
+  <exclude>
+    <token begin="//" end="&#10;"/>
+    <regex pattern="/[*].*?[*]/" dotAll="true"/>
+  </exclude>
+  <!-- Issue #128 AC-1 gate: the nightly run fails below an 80% kill rate. -->
+  <threshold failure="80">
+    <rating over="95" name="A"/>
+    <rating over="80" name="B"/>
+    <rating over="60" name="C"/>
+    <rating over="40" name="D"/>
+    <rating over="20" name="E"/>
+    <rating over="0" name="F"/>
+  </threshold>
+</mutations>
