@@ -10,6 +10,12 @@
 //   MissionStarted -> per turn [SteeringInjected* -> TurnStarted ->
 //   ToolCallStarted/ToolCallCompleted* -> TurnCompleted] -> MissionCompleted
 //
+// runStream (issue #123) drives the same loop over the executor's STREAMING
+// turn (runTurnStream): each turn's LlmResponseChunk deltas surface to the
+// event sink as ThinkingDelta / ContentDelta while the turn is still in
+// flight, and the assembled completion then feeds planner / dispatch /
+// stop policy exactly as run()'s non-streaming completion does.
+//
 // Composition (all injected, no ambient dependencies):
 //   - LLM turns ........ EngineLoopExecutor (spec 045; enforces loop.maxTurns)
 //   - tool dispatch .... ToolDispatcher interface (spec 003/047; no production
@@ -46,6 +52,7 @@ import '../domain/entities/stop_policy/stop_policy.dart';
 import '../domain/entities/steering_message/steering_message.dart';
 import '../domain/entities/steering_queue/steering_queue.dart';
 import '../llm/context_compressor.dart';
+import '../llm/llm_client.dart';
 import '../llm/token_estimator.dart';
 import '../logging/agent_log.dart';
 import '../observability/crash_reporter.dart';
@@ -322,6 +329,74 @@ class MissionRunner {
     ToolCallPlanner? planner,
     Goal? goal,
     GoalEvaluator? goalEvaluator,
+  }) {
+    return _run(
+      missionId: missionId,
+      messages: messages,
+      planner: planner,
+      goal: goal,
+      goalEvaluator: goalEvaluator,
+      streamChunks: false,
+    );
+  }
+
+  /// Runs [run]'s mission loop over the executor's STREAMING turn
+  /// (`EngineLoopExecutor.runTurnStream`, issue #123).
+  ///
+  /// Identical loop semantics — same lifecycle events, planner, tool
+  /// dispatch, stop policies, steering drain, and terminal
+  /// [MissionCompleted] — with one addition: while a turn is in flight,
+  /// every provider delta surfaces to the event sink as
+  /// [ThinkingDelta] (thinking text) or [ContentDelta] (assistant text)
+  /// BEFORE the turn completes, so a UI can render the response as it
+  /// arrives instead of after it.
+  ///
+  /// ## Streaming contract
+  ///
+  /// * **Incremental propagation.** Deltas are emitted as they arrive off
+  ///   the provider stream, not batched at turn end. Only non-empty deltas
+  ///   emit; the terminal usage/isComplete chunk emits nothing.
+  /// * **Assembled currency.** The loop logic (planner, transcript,
+  ///   `MissionResult.summary`, token metrics) sees the ASSEMBLED
+  ///   `ChatCompletion` — content and thinking joined in arrival order —
+  ///   exactly as [run] sees the non-streaming completion.
+  /// * **Backpressure.** The chunk stream between the provider and this
+  ///   event sink is bounded (executor `streamBufferCapacity`, default
+  ///   64). This runner consumes chunk-by-chunk and emits synchronously,
+  ///   so a consumer that cannot keep up pauses the PRODUCER rather than
+  ///   growing memory — a consumer pausing `runTurnStream`'s stream
+  ///   (directly or through this loop) stops the provider socket read;
+  ///   no chunk is lost or reordered across the pause. See
+  ///   `bounded_stream_buffer.dart` for the full watermark contract.
+  /// * **Failure.** A provider error mid-stream maps to the same
+  ///   provider-failed contract as [run]: [ProviderError], status
+  ///   [MissionStatus.providerFailed], and exactly one terminal
+  ///   [MissionCompleted]. No partial assistant message joins the
+  ///   transcript.
+  Future<MissionResult> runStream({
+    required String missionId,
+    required List<ChatMessage> messages,
+    ToolCallPlanner? planner,
+    Goal? goal,
+    GoalEvaluator? goalEvaluator,
+  }) {
+    return _run(
+      missionId: missionId,
+      messages: messages,
+      planner: planner,
+      goal: goal,
+      goalEvaluator: goalEvaluator,
+      streamChunks: true,
+    );
+  }
+
+  Future<MissionResult> _run({
+    required String missionId,
+    required List<ChatMessage> messages,
+    ToolCallPlanner? planner,
+    Goal? goal,
+    GoalEvaluator? goalEvaluator,
+    required bool streamChunks,
   }) async {
     final config = _config;
     if (config != null) {
@@ -373,6 +448,7 @@ class MissionRunner {
           metrics: metrics,
           missionSpan: span,
           missionStart: missionStart,
+          streamChunks: streamChunks,
         ),
       );
       result = outcome;
@@ -456,6 +532,7 @@ class MissionRunner {
     required Metrics metrics,
     required Span missionSpan,
     required DateTime missionStart,
+    required bool streamChunks,
   }) async {
     final deadline =
         (_stopPolicy.enabled && _stopPolicy.wallClockTimeout != Duration.zero)
@@ -587,7 +664,9 @@ class MissionRunner {
         // mission.run: it runs after runTurn returns, outside this scope.
         completion = await Spans.withScope(
           turnSpan,
-          () => _executor.runTurn(transcript, turnNumber: turnsUsed),
+          () => streamChunks
+              ? _runStreamingTurn(transcript, turnsUsed)
+              : _executor.runTurn(transcript, turnNumber: turnsUsed),
         );
       } catch (e) {
         // The turn never finished: no assistant message, no TurnCompleted.
@@ -745,6 +824,54 @@ class MissionRunner {
       summary: summary,
       goal: goal,
       goalAchieved: status == MissionStatus.goalAchieved,
+    );
+  }
+
+  /// One streaming turn (issue #123): consumes the executor's chunk stream,
+  /// emits [ThinkingDelta] / [ContentDelta] per non-empty delta, and
+  /// assembles the [ChatCompletion] the loop logic needs (planner,
+  /// transcript, stop policy, metrics). The assembled completion is
+  /// equivalent to what the provider's non-streaming `complete()` would
+  /// have returned for the same turn. Chunk tool-call payloads are not
+  /// folded in — `ChatCompletion` carries no tool-call field (spec 051);
+  /// which tools to dispatch stays the [ToolCallPlanner]'s decision, exactly
+  /// as on the non-streaming path.
+  Future<ChatCompletion> _runStreamingTurn(
+    List<ChatMessage> transcript,
+    int turnNumber,
+  ) async {
+    final content = StringBuffer();
+    final thinking = StringBuffer();
+    LlmUsage? usage;
+    var finishReason = 'stop';
+
+    await for (final chunk in _executor.runTurnStream(
+      transcript,
+      turnNumber: turnNumber,
+    )) {
+      final deltaThinking = chunk.thinking;
+      if (deltaThinking != null && deltaThinking.isNotEmpty) {
+        thinking.write(deltaThinking);
+        _onEvent(ThinkingDelta(emittedAt: _clock(), delta: deltaThinking));
+      }
+      final deltaContent = chunk.content;
+      if (deltaContent != null && deltaContent.isNotEmpty) {
+        content.write(deltaContent);
+        _onEvent(ContentDelta(emittedAt: _clock(), delta: deltaContent));
+      }
+      if (chunk.usage != null) usage = chunk.usage;
+      if (chunk.finishReason != null) finishReason = chunk.finishReason!;
+    }
+
+    return ChatCompletion(
+      content: content.toString(),
+      reasoning: thinking.isEmpty ? null : thinking.toString(),
+      finishReason: finishReason,
+      usage: TokenUsage(
+        promptTokens: usage?.inputTokens ?? 0,
+        completionTokens: usage?.outputTokens ?? 0,
+        totalTokens: (usage?.inputTokens ?? 0) + (usage?.outputTokens ?? 0),
+      ),
     );
   }
 }
