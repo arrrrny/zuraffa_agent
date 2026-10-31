@@ -72,6 +72,66 @@ void main() {
       },
     );
   });
+
+  group('IoLlmTransport egress wiring (issue #124)', () {
+    test(
+      'applies connectionTimeout and installs a findProxy resolver for proxyUrl',
+      () {
+        final client = _RecordingHttpClient();
+        final transport = IoLlmTransport(
+          provider: 'kilo',
+          client: client,
+          connectionTimeout: const Duration(milliseconds: 30000),
+          proxyUrl: 'http://localhost:8890',
+        );
+
+        expect(client.connectionTimeout, const Duration(milliseconds: 30000));
+        expect(client.findProxyAssigned, isTrue);
+        expect(client.findProxyDirective, 'PROXY localhost:8890');
+        transport.close();
+      },
+    );
+
+    test('direct egress by default: no timeout, no proxy resolver', () {
+      final client = _RecordingHttpClient();
+      final transport = IoLlmTransport(provider: 'kilo', client: client);
+
+      expect(client.connectionTimeout, isNull);
+      expect(client.findProxyAssigned, isFalse);
+      transport.close();
+    });
+  });
+}
+
+/// Recording HttpClient double: captures the egress configuration without any
+/// network. openUrl throws so an accidental request fails loudly.
+class _RecordingHttpClient implements HttpClient {
+  Duration? _connectionTimeout;
+  bool findProxyAssigned = false;
+  String? findProxyDirective;
+
+  @override
+  set findProxy(String Function(Uri)? f) {
+    findProxyAssigned = true;
+    findProxyDirective = f?.call(
+      Uri.parse('http://example.test/v1/chat/completions'),
+    );
+  }
+
+  @override
+  Duration? get connectionTimeout => _connectionTimeout;
+
+  @override
+  set connectionTimeout(Duration? timeout) {
+    _connectionTimeout = timeout;
+  }
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
 }
 
 class _RecordedRequest {

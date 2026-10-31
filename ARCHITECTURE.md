@@ -97,3 +97,32 @@ void main() {
 (`lib/src/logging/memory_log_sink.dart`) is an in-memory collector for
 tests and buffered forwarding. Before `install`, emission is silent,
 never throws, and costs an `isLoggable` check (spec 112 FR-004).
+
+## LLM provider transport seam (spec 007/008, issue #124)
+
+All provider traffic flows through one seam, `LlmTransport`
+(`lib/src/llm/llm_transport.dart`), implemented by `IoLlmTransport`
+(`lib/src/llm/io_llm_transport.dart`, the CI-allowlisted `dart:io` adapter —
+HTTP CONNECT proxy egress and the connection timeout live there). The
+spec-007 clients (`OpenAiCompatibleClient`, `AnthropicClient`,
+`GeminiClient`) talk to that seam and carry the retry policy
+(`RetryConfig`); circuit breakers and failover are built on the
+`LlmClient` interface by `FallbackChainClient`.
+
+`LlmClientProvider` (`lib/src/data/providers/llm_client/llm_client_provider.dart`)
+is on that canonical path since issue #124: `complete()` routes through an
+injected `LlmClient` (`client:`) or seam transport (`transport:`) and by
+default builds `OpenAiCompatibleClient` over `IoLlmTransport`, so retry,
+breakers and fallback chains apply to the engine's production path too.
+The former parallel path — `LlmHttpTransport.complete()` called directly —
+is retired: the file remains only for its pure request-build /
+response-parse helpers and their unit tests, and is no longer on any
+runtime path.
+
+Layer note: `LlmClientProvider` still exposes the data-layer contract
+(`LlmClientService` over `ChatMessage`/`ChatCompletion`). The seam boundary
+is a one-way mapping — a leading `system` message rides
+`LlmRequest.systemPrompt`, gateway `reasoning` surfaces as
+`ChatCompletion.reasoning` (persisted as assistant thinking, spec 002
+FR-002), and `tool` transcripts (which carry no tool-call identity in
+`ChatMessage`) map to `ToolResultMessage` with empty ids.

@@ -22,8 +22,28 @@ class IoLlmTransport implements LlmTransport {
   final String provider;
   final HttpClient _client;
 
-  IoLlmTransport({this.provider = 'io', HttpClient? client})
-    : _client = client ?? HttpClient();
+  /// [connectionTimeout] is applied to the underlying [HttpClient]
+  /// (LlmClientProvider forwards ProviderConfig.timeoutMs here).
+  ///
+  /// [proxyUrl] routes egress through an HTTP proxy via `findProxy`
+  /// (HTTP CONNECT) — parity with the legacy LlmHttpTransport behavior so the
+  /// LlmClientProvider reroute (issue #124) keeps its documented proxy egress
+  /// (http://localhost:8890). The `scheme://` prefix is stripped:
+  /// `http://localhost:8890` -> `PROXY localhost:8890`.
+  IoLlmTransport({
+    this.provider = 'io',
+    HttpClient? client,
+    Duration? connectionTimeout,
+    String? proxyUrl,
+  }) : _client = client ?? HttpClient() {
+    if (connectionTimeout != null) {
+      _client.connectionTimeout = connectionTimeout;
+    }
+    if (proxyUrl != null && proxyUrl.isNotEmpty) {
+      final hostPort = _stripScheme(proxyUrl);
+      _client.findProxy = (uri) => 'PROXY $hostPort';
+    }
+  }
 
   @override
   Future<LlmHttpResponse> send(LlmHttpRequest request) async {
@@ -62,6 +82,13 @@ class IoLlmTransport implements LlmTransport {
     } on HttpException catch (e) {
       throw LlmNetworkException(provider: provider, cause: e);
     }
+  }
+
+  /// Strips a `scheme://` prefix so the value can be used in an HttpClient
+  /// `findProxy` directive (issue #124 proxy-egress parity).
+  static String _stripScheme(String url) {
+    final idx = url.indexOf('://');
+    return idx < 0 ? url : url.substring(idx + 3);
   }
 
   static Map<String, String> _headerMap(HttpClientResponse response) {

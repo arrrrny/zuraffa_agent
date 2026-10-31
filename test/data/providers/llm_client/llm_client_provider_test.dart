@@ -1,20 +1,27 @@
 // HAND-CURATED regression tests for the LlmClient value object +
 // LlmClientProvider. Pattern mirrors spec 033.
 
-import 'package:mocktail/mocktail.dart';
+import 'dart:convert';
+
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/llm_client.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/services/llm_client_service.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
-import 'package:zuraffa_agent/src/data/providers/llm_client/llm_http_transport.dart';
 
-// Mock of the concrete platform-I/O transport so we can assert exactly which
-// arguments LlmClientProvider forwards into the completion call (U11).
-class MockLlmHttpTransport extends Mock implements LlmHttpTransport {}
+import '../../../llm/fake_llm_transport.dart';
+
+String _completionBody(String content) => jsonEncode({
+  'choices': [
+    {
+      'finish_reason': 'stop',
+      'message': {'role': 'assistant', 'content': content},
+    },
+  ],
+  'usage': {'prompt_tokens': 3, 'completion_tokens': 2, 'total_tokens': 5},
+});
 
 void main() {
   group('arrarrny/zuraffa_agent#5 - LlmClient value equality', () {
@@ -92,18 +99,19 @@ void main() {
     );
   });
 
-  group('arrarrny/zuraffa_agent#5 - timeout forwarding (U11)', () {
-    late MockLlmHttpTransport transport;
+  group('arrarrny/zuraffa_agent#5 - config forwarding over the seam (U11)', () {
+    // Issue #124 rewired the provider onto the spec-007 seam, so the
+    // forwarding contract is asserted against a scripted LlmTransport
+    // (the seam type) instead of the retired direct LlmHttpTransport call.
+    late FakeLlmTransport transport;
     late LlmClientProvider provider;
 
-    setUpAll(() {
-      registerFallbackValue(<ChatMessage>[
-        const ChatMessage(role: 'user', content: 'x'),
-      ]);
-    });
-
     setUp(() {
-      transport = MockLlmHttpTransport();
+      transport = FakeLlmTransport(
+        script: [
+          ScriptedResponse(statusCode: 200, body: _completionBody('ok')),
+        ],
+      );
       provider = LlmClientProvider(
         config: const ProviderConfig(
           id: 'kilo',
@@ -118,43 +126,34 @@ void main() {
     });
 
     test(
-      'forwards ProviderConfig.timeoutMs to the transport completion timeout',
+      'forwards baseUrl, apiKey, model and messages over the LlmTransport seam',
       () async {
-        when(
-          () => transport.complete(
-            baseUrl: any(named: 'baseUrl'),
-            apiKey: any(named: 'apiKey'),
-            proxyUrl: any(named: 'proxyUrl'),
-            model: any(named: 'model'),
-            messages: any(named: 'messages'),
-            timeout: any(named: 'timeout'),
-          ),
-        ).thenAnswer(
-          (_) async => const ChatCompletion(
-            content: 'ok',
-            finishReason: 'stop',
-            usage: TokenUsage(
-              promptTokens: 1,
-              completionTokens: 1,
-              totalTokens: 2,
-            ),
-          ),
-        );
-
-        await provider.complete([
-          const ChatMessage(role: 'user', content: 'hi'),
+        final completion = await provider.complete(const [
+          ChatMessage(role: 'user', content: 'hi'),
         ]);
 
-        verify(
-          () => transport.complete(
-            baseUrl: any(named: 'baseUrl'),
-            apiKey: any(named: 'apiKey'),
-            proxyUrl: any(named: 'proxyUrl'),
-            model: any(named: 'model'),
-            messages: any(named: 'messages'),
-            timeout: const Duration(milliseconds: 30000),
-          ),
-        ).called(1);
+        expect(completion.content, 'ok');
+        expect(transport.requests, hasLength(1));
+        final request = transport.requests.single;
+        expect(
+          request.uri.toString(),
+          'https://example.invalid/v1/chat/completions',
+        );
+        expect(request.headers['authorization'], 'Bearer test-key');
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(body['model'], 'tencent/hy3:free');
+        expect(body['messages'], [
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': 'hi'},
+            ],
+          },
+        ]);
+        // ProviderConfig.timeoutMs configures the default IoLlmTransport's
+        // HttpClient connectionTimeout (pinned in
+        // test/llm/io_llm_transport_test.dart); a caller-injected seam
+        // transport owns its own egress configuration.
       },
     );
   });
