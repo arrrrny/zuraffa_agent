@@ -14,12 +14,21 @@
 
 ## Scripts
 
-- `.github/workflows/publish.yml` (issue #126) automates the flow: every PR
-  runs `dart pub publish --dry-run` as a packaging gate, and pushing a
-  `v<version>` tag publishes the five packages below in dependency order
-  using the `PUB_DEV_PAT` credential secret. That secret holds the contents
-  of `~/.pub-cache/credentials.json` from one local publish (pub.dev uses
-  OAuth credentials, not a GitHub PAT).
+- `.github/workflows/publish.yml` (issue #126) automates the flow:
+  - every PR runs a `pub publish --dry-run` matrix over all **five** packages
+    and fails on any packaging warning (not merely on a non-zero exit);
+  - pushing a `v<version>` tag validates the whole fleet first, then publishes
+    the five packages in dependency order, waiting for each new version to
+    propagate on pub.dev before the packages that depend on it;
+  - a partially published fleet is resumed with `gh workflow run publish.yml
+    -f resume_from=<package>` instead of re-attempting the already-immutable
+    packages;
+  - the publish job runs in the `pub-dev` GitHub environment (required
+    reviewers), so a tag push alone cannot release.
+- The credential lives in the `PUB_CREDENTIALS_JSON` secret: the contents of
+  `~/.pub-cache/credentials.json` from one local publish (pub.dev uses OAuth
+  credentials, not a GitHub PAT). The legacy `PUB_DEV_PAT` secret name is
+  still read as a fallback while installations migrate.
 - The manual steps below remain the fallback (and the way the credential is
   minted once, locally).
 
@@ -28,15 +37,17 @@
 1. Bump `version` in the root `pubspec.yaml` (+ CHANGELOG entry; the
    federated packages get their own `CHANGELOG.md`).
 2. `git checkout -b publish-<version>`
-3. Convert federated path deps to versioned constraints
-   (`zuraffa_agent: ^<version>`, `zuraffa_agent_platform_interface: ^0.1.0`)
-   and drop any `publish_to: none`.
+3. Check the members declare the release versions (`zuraffa_agent: ^<version>`,
+   `zuraffa_agent_platform_interface: ^<version>`); local development rides on
+   `dependency_overrides`, which pub strips at publish time. Confirm no
+   `publish_to: none` is left anywhere in the fleet.
 4. Commit (pub requires a clean, committed tree), push.
 5. Publish in the order above (`flutter pub publish --force`), waiting for
    each new version to propagate on pub.dev before dependents resolve.
 6. Tag `v<version>` on the publish branch, push the tag.
-7. Merge the publish branch into `master`, then restore the dev setup:
-   federated path deps (`path: ../..`) as a follow-up commit.
+7. Merge the publish branch into `master`. The `dependency_overrides` are
+   already in the tree and stay there — pub strips them from the archive, so
+   there is no dev setup to restore.
 
 ## Notes
 

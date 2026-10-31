@@ -5,12 +5,20 @@ name: publish
 # flow lived only in PUBLISH.md as a manual, skill-driven dance. This workflow
 # makes the intent executable:
 #
-#   * pull_request  -> `dart pub publish --dry-run` gates every PR, so the
-#     tree can never drift away from publishable packaging (the 47 MB test
-#     dill that PUBLISH.md warns about is exactly this class of drift).
-#   * push of a `v<version>` tag -> publishes the five-package fleet in the
-#     dependency order PUBLISH.md documents (root -> platform interface ->
-#     android/ios/macos) using the PUB_DEV_PAT credential secret.
+#   * pull_request  -> a matrix `pub publish --dry-run` over ALL FIVE packages
+#     gates every PR, so the fleet's packaging cannot drift — the members are
+#     where packaging actually breaks (native plugin layouts, per-package
+#     LICENSE/CHANGELOG), and the tag job must not be the first to find out.
+#     The gate asserts `Package has 0 warnings`, not merely a zero exit code
+#     (`--dry-run` exits 0 while reporting warnings).
+#   * push of a `v<version>` tag -> validates the whole fleet first, then
+#     publishes it in the dependency order PUBLISH.md documents (root ->
+#     platform interface -> android/ios/macos) with a pub.dev propagation
+#     wait after each package the next one depends on.
+#   * workflow_dispatch(`resume_from`) -> resumes a partially published fleet
+#     at the named package instead of re-attempting 1/5 (an immutable version
+#     pub.dev rejects), which used to hand the operator back to the manual
+#     dance at the worst possible moment.
 #
 # The tag job needs a Flutter SDK: the four federated member packages declare
 # `flutter: {sdk: flutter}` and `dart pub publish` refuses Flutter-SDK
@@ -24,124 +32,268 @@ on:
     branches: [main, master]
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      resume_from:
+        description: "Package to resume at (empty = full fleet)"
+        required: false
+        default: ""
 
 concurrency:
-  # One run per ref (PR branch or tag): superseded runs are cancelled
-  # instead of piling up — same convention as pipeline.yml.
   group: publish-${{ github.ref }}
-  cancel-in-progress: true
+  # PRs: cancel superseded runs instead of piling up — same convention as
+  # pipeline.yml.
+  # Tag runs: NEVER cancelled. The only run that can cancel one is another run
+  # of the same ref, and stopping between two uploads leaves a half-released
+  # fleet: published versions are immutable and unretractable.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
   dry-run:
-    # Issue #126 AC: every PR proves the package stays publishable.
+    # Issue #126 AC: every PR proves the FLEET stays publishable.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      # Every package reports its own verdict: one broken member must not hide
+      # the state of the other four.
+      fail-fast: false
+      matrix:
+        include:
+          # The root is pure Dart, so it keeps the literal `dart pub publish`.
+          - package: .
+            publisher: dart
+          - package: packages/zuraffa_agent_platform_interface
+            publisher: flutter
+          - package: packages/zuraffa_agent_android
+            publisher: flutter
+          - package: packages/zuraffa_agent_ios
+            publisher: flutter
+          - package: packages/zuraffa_agent_macos
+            publisher: flutter
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      # One Flutter action replaces `setup-dart`: the members need `flutter
+      # pub`, and the root's `dart pub` is the Flutter-bundled one.
+      # Pinned to the SDK the tree actually RESOLVES with, not the members'
+      # `flutter: ">=3.44.0"` floor: `dependency_overrides: xml: 7.1.0` (and
+      # analyzer 14.7.0) require Dart ^3.13.0, while 3.44.0 ships Dart 3.12.0
+      # and fails `pub get`. 3.47.9 bundles Dart 3.13.7.
+      - uses: subosito/flutter-action@v2
         with:
-          # Pinned for the same reason as the format gate (pipeline.yml):
-          # the dry-run must be reproducible instead of drifting with the
-          # `stable` channel's validator.
-          sdk: 3.13.7
+          flutter-version: "3.47.9"
+          channel: stable
+          cache: true
       - name: Pub get
-        run: dart pub get
+        working-directory: ${{ matrix.package }}
+        run: ${{ matrix.publisher }} pub get
       - name: Publish dry-run (packaging gate)
-        # Validation errors abort here; `build/`, `.dart_tool/` and
-        # gitignored paths never reach the archive (verified: the tracked
-        # build/test_cache dills are excluded by the publisher itself).
-        run: dart pub publish --dry-run
+        # `build/`, `.dart_tool/` and gitignored paths never reach the archive
+        # (verified: the tracked build/test_cache dills are excluded by the
+        # publisher itself, archive is ~635 KB).
+        # `--dry-run` exits 0 while reporting warnings, so assert the sentence
+        # this gate actually means: zero warnings. Hints are tolerated — they
+        # include the `Non-dev dependencies are overridden in pubspec.yaml`
+        # notice every member prints.
+        working-directory: ${{ matrix.package }}
+        run: |
+          out="$(${{ matrix.publisher }} pub publish --dry-run 2>&1)"
+          printf '%s\n' "$out"
+          grep -q "Package has 0 warnings" <<<"$out" \
+            || { echo "::error::pub publish reported warnings for ${{ matrix.package }} — see above"; exit 1; }
 
   publish:
-    # Issue #126 AC: tag push -> real publish, in PUBLISH.md's order.
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # Issue #126 AC: tag push -> real publish, in PUBLISH.md's order. A
+    # workflow_dispatch run resumes a partial release (see `resume_from`).
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    # Protect the pub.dev credential: a human approves the release before any
+    # package is uploaded. Configure Settings -> Environments -> `pub-dev`
+    # with required reviewers (and a tag/branch policy restricting which refs
+    # may release), so a tag push alone cannot publish arbitrary code.
+    environment: pub-dev
     env:
       TAG_VERSION: ${{ github.ref_name }}
+      RESUME_FROM: ${{ inputs.resume_from }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          # Lower bound of the member pubspecs' `flutter: ">=3.44.0"`.
-          # Pinned like the format gate's Dart SDK: a moving `stable` must
-          # not change what a release publishes.
-          flutter-version: "3.44.0"
+          # Same pin as the PR gate, and for the same reason: the tag job must
+          # resolve the tree it is about to publish. See the dry-run job.
+          flutter-version: "3.47.9"
           channel: stable
           cache: true
-      - name: Verify the tag matches the pubspec version
-        # Fleet mono-version policy (PUBLISH.md): one version number across
-        # the five packages. A tag that disagrees with the pubspec is a
-        # release-engineering mistake — stop before anything is uploaded.
+      - name: Toolchain versions
+        # Surface the resolved SDKs: a Flutter/Dart pair that cannot resolve
+        # the tree fails at 1/5, and the log should say which pair ran.
         run: |
-          want="${TAG_VERSION#v}"
-          have="$(awk '/^version:/{print $2; exit}' pubspec.yaml)"
-          if [ "$want" != "$have" ]; then
-            echo "::error::tag v$want does not match pubspec.yaml version $have"
-            exit 1
+          dart --version
+          flutter --version
+      - name: Resolve the resume point
+        id: resume
+        # A partial release is recoverable: re-running the tag workflow
+        # re-attempts 1/5, which pub.dev rejects because the root version is
+        # already published. Ranks match the publish order below.
+        run: |
+          order=(zuraffa_agent zuraffa_agent_platform_interface \
+                 zuraffa_agent_android zuraffa_agent_ios zuraffa_agent_macos)
+          start=1
+          if [ -n "$RESUME_FROM" ]; then
+            start=0
+            for i in "${!order[@]}"; do
+              if [ "${order[$i]}" = "$RESUME_FROM" ]; then start=$((i + 1)); fi
+            done
+            if [ "$start" -eq 0 ]; then
+              echo "::error::resume_from '$RESUME_FROM' is not one of: ${order[*]}"
+              exit 1
+            fi
           fi
-          echo "Tag v$want matches pubspec version $have."
-      - name: Restore pub.dev publish credentials (PUB_DEV_PAT)
+          echo "start=$start" >> "$GITHUB_OUTPUT"
+          echo "PUBLISH_START=$start" >> "$GITHUB_ENV"
+          echo "Publish starts at $start/5${RESUME_FROM:+ (resuming at $RESUME_FROM)}."
+      - name: Verify the fleet mono-version (and the tag, on a tag push)
+        # Fleet mono-version policy (PUBLISH.md): one version number across the
+        # five packages. Every pubspec is checked — a member left behind either
+        # publishes a stale version under the new tag, or fails on its own
+        # `zuraffa_agent: ^<version>` constraint AFTER the root is already
+        # uploaded and immutable.
+        run: |
+          want=""
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            want="${TAG_VERSION#v}"
+          fi
+          bad=0
+          for f in pubspec.yaml packages/*/pubspec.yaml; do
+            have="$(awk '/^version:/{print $2; exit}' "$f")"
+            # No tag to compare against (resume run): the root pubspec is the
+            # release version and the remaining four must agree with it.
+            if [ -z "$want" ]; then
+              want="$have"
+            fi
+            if [ "$want" != "$have" ]; then
+              echo "::error::$f declares $have, the release is $want"
+              bad=1
+            fi
+          done
+          [ "$bad" -eq 0 ] || exit 1
+          echo "RELEASE_VERSION=$want" >> "$GITHUB_ENV"
+          echo "Fleet release version $want — all five pubspecs agree."
+      - name: Restore pub.dev publish credentials
         env:
-          PUB_DEV_PAT: ${{ secrets.PUB_DEV_PAT }}
+          # The secret holds `~/.pub-cache/credentials.json` — pub.dev's OAuth
+          # refresh token, NOT a GitHub PAT. `PUB_DEV_PAT` is the legacy name,
+          # kept as a fallback so an existing installation keeps publishing
+          # while the secret is re-created under the clearer name.
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS_JSON || secrets.PUB_DEV_PAT }}
         run: |
           # pub.dev authenticates publishers with the OAuth credential file
-          # pub writes to $PUB_CACHE/credentials.json on a manual publish —
-          # not a GitHub PAT. Mint the secret once: run `flutter pub publish`
-          # locally, complete the browser flow, and store the *contents* of
-          # `~/.pub-cache/credentials.json` as the PUB_DEV_PAT secret.
-          if [ -z "$PUB_DEV_PAT" ]; then
-            echo "::error::PUB_DEV_PAT secret is not set. Mint it once: run 'flutter pub publish' locally, complete the browser OAuth flow, then copy ~/.pub-cache/credentials.json into the PUB_DEV_PAT secret."
+          # pub writes to $PUB_CACHE/credentials.json on a manual publish.
+          # Mint the secret once: run `flutter pub publish` locally, complete
+          # the browser flow, and store the *contents* of
+          # `~/.pub-cache/credentials.json` as the PUB_CREDENTIALS_JSON secret.
+          if [ -z "$PUB_CREDENTIALS" ]; then
+            echo "::error::No pub.dev credential secret is set. Mint it once: run 'flutter pub publish' locally, complete the browser OAuth flow, then copy ~/.pub-cache/credentials.json into the PUB_CREDENTIALS_JSON secret (legacy name: PUB_DEV_PAT)."
             exit 1
           fi
           mkdir -p "${PUB_CACHE:-$HOME/.pub-cache}"
-          printf '%s' "$PUB_DEV_PAT" > "${PUB_CACHE:-$HOME/.pub-cache}/credentials.json"
+          printf '%s' "$PUB_CREDENTIALS" > "${PUB_CACHE:-$HOME/.pub-cache}/credentials.json"
+          chmod 600 "${PUB_CACHE:-$HOME/.pub-cache}/credentials.json"
+      - name: Pre-flight — validate every package still to be published
+        # Published versions are immutable and the root goes first, so any
+        # member-side validation error — missing LICENSE/CHANGELOG, a stray
+        # `path:` dep, a native-asset layout break — would abort the run AFTER
+        # the root is already live and unretractable: a half-released fleet
+        # whose root entry advertises platform packages that will never serve.
+        # Nothing uploads unless every remaining package validates.
+        run: |
+          set -euo pipefail
+          validate() {
+            dir="$1"; cmd="$2"; out=""
+            echo "::group::validating $dir"
+            ( cd "$dir" && "$cmd" pub get )
+            out="$( cd "$dir" && "$cmd" pub publish --dry-run 2>&1 )"
+            printf '%s\n' "$out"
+            echo "::endgroup::"
+            grep -q "Package has 0 warnings" <<<"$out" \
+              || { echo "::error::$dir reports packaging warnings — see above"; return 1; }
+          }
+          if [ "$PUBLISH_START" -le 1 ]; then validate . dart; fi
+          if [ "$PUBLISH_START" -le 2 ]; then validate packages/zuraffa_agent_platform_interface flutter; fi
+          if [ "$PUBLISH_START" -le 3 ]; then validate packages/zuraffa_agent_android flutter; fi
+          if [ "$PUBLISH_START" -le 4 ]; then validate packages/zuraffa_agent_ios flutter; fi
+          if [ "$PUBLISH_START" -le 5 ]; then validate packages/zuraffa_agent_macos flutter; fi
+          echo "Every package still to be published validated."
       - name: "1/5 Publish zuraffa_agent (root, pure Dart)"
+        if: fromJSON(steps.resume.outputs.start) <= 1
         run: |
           dart pub get
           dart pub publish --dry-run
           dart pub publish --force
       - name: Wait for pub.dev to serve the new root version
-        # PUBLISH.md step 5: wait for each new version to propagate on
-        # pub.dev before dependents publish — the four members all declare
+        if: fromJSON(steps.resume.outputs.start) <= 2
+        # PUBLISH.md step 5: wait for each new version to propagate on pub.dev
+        # before dependents publish — every member declares
         # `zuraffa_agent: ^<version>`, and the server validates dependency
         # constraints against the live index at publish time.
+        # `/versions/<v>` answers 2xx only once that version is resolvable;
+        # polling the package document and grepping `"version":"<v>"` is a
+        # substring match that can silently stop matching.
         run: |
-          want="${TAG_VERSION#v}"
-          for i in $(seq 1 30); do
-            if curl -fsSL "https://pub.dev/api/packages/zuraffa_agent" \
-                | grep -q "\"version\":\"$want\""; then
-              echo "pub.dev serves zuraffa_agent $want."
+          for i in $(seq 1 60); do
+            if curl -fsSL "https://pub.dev/api/packages/zuraffa_agent/versions/$RELEASE_VERSION" >/dev/null; then
+              echo "pub.dev serves zuraffa_agent $RELEASE_VERSION."
               exit 0
             fi
-            echo "waiting for zuraffa_agent $want on pub.dev ($i/30)…"
+            echo "waiting for zuraffa_agent $RELEASE_VERSION on pub.dev ($i/60)…"
             sleep 10
           done
-          echo "::error::pub.dev does not serve zuraffa_agent $want after 5 minutes."
+          echo "::error::pub.dev does not serve zuraffa_agent $RELEASE_VERSION after 10 minutes."
           exit 1
       - name: "2/5 Publish zuraffa_agent_platform_interface"
+        if: fromJSON(steps.resume.outputs.start) <= 2
         working-directory: packages/zuraffa_agent_platform_interface
         run: |
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force
+      - name: Wait for pub.dev to serve zuraffa_agent_platform_interface
+        if: fromJSON(steps.resume.outputs.start) <= 3
+        # android/ios/macos all declare
+        # `zuraffa_agent_platform_interface: ^<version>`, published right here.
+        # Without this wait a fast run hits "… does not match any of the
+        # packages" with two versions already immutable.
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsSL "https://pub.dev/api/packages/zuraffa_agent_platform_interface/versions/$RELEASE_VERSION" >/dev/null; then
+              echo "pub.dev serves zuraffa_agent_platform_interface $RELEASE_VERSION."
+              exit 0
+            fi
+            echo "waiting for zuraffa_agent_platform_interface $RELEASE_VERSION on pub.dev ($i/60)…"
+            sleep 10
+          done
+          echo "::error::pub.dev does not serve zuraffa_agent_platform_interface $RELEASE_VERSION after 10 minutes."
+          exit 1
       - name: "3/5 Publish zuraffa_agent_android"
+        if: fromJSON(steps.resume.outputs.start) <= 3
         working-directory: packages/zuraffa_agent_android
         run: |
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force
       - name: "4/5 Publish zuraffa_agent_ios"
+        if: fromJSON(steps.resume.outputs.start) <= 4
         working-directory: packages/zuraffa_agent_ios
         run: |
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force
       - name: "5/5 Publish zuraffa_agent_macos"
+        if: fromJSON(steps.resume.outputs.start) <= 5
         working-directory: packages/zuraffa_agent_macos
         run: |
           flutter pub get
