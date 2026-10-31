@@ -3,8 +3,9 @@
 // arrrrny/zuraffa_agent#28 (implements_non_class).
 //
 // Root cause: `zfa make <Entity> ... datasource` in value-object mode emits
-// the mock datasource (`stop_policy_mock_datasource.dart`) that imports this file
-// and `implements StopPolicyDatasource`, but value-object mode SKIPS emitting
+// the mock datasource (`stop_policy_mock_datasource.dart`) that imports
+// this file and `implements StopPolicyDatasource`, but value-object mode
+// SKIPS emitting
 // the datasource file itself — the mock references a file zfa itself decided
 // not to emit. The fix surface: ship a hand-curated datasource interface so
 // the mock_datasource's import + implements clause resolve.

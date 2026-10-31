@@ -10,19 +10,18 @@
 // timestamp is deterministic.
 
 import 'package:test/test.dart';
-
-import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
-import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
-import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
-import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
-import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
+import 'package:zuraffa_agent/src/domain/entities/playbook/playbook.dart';
 import 'package:zuraffa_agent/src/domain/entities/playbook/playbook_loader.dart';
+import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
+import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
+import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
+import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/events/engine_event.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/playbook_runtime.dart';
@@ -718,12 +717,12 @@ void main() {
         final run = await runUnderPlaybook(
           _deYaml,
           plannedCalls: [
-            ToolCall(
+            const ToolCall(
               toolName: 'shell',
               arguments: {'cmd': 'ls'},
               executionMode: 'sequential',
             ),
-            ToolCall(
+            const ToolCall(
               toolName: 'search',
               arguments: {'q': 'markets'},
               executionMode: 'sequential',
@@ -785,65 +784,58 @@ void main() {
       expect(atLimit.constrainedResponse, 'x' * 120);
     });
 
-    test(
-      'A6: three documents, one code path — behavior follows the document (R5#4)',
-      () async {
-        const planned = <ToolCall>[
-          ToolCall(
-            toolName: 'shell',
-            arguments: {'cmd': 'ls'},
-            executionMode: 'sequential',
-          ),
-          ToolCall(
-            toolName: 'search',
-            arguments: {'q': 'markets'},
-            executionMode: 'sequential',
-          ),
-        ];
-        // The SAME composition, three different documents.
-        final de = await runUnderPlaybook(_deYaml, plannedCalls: planned);
-        final jp = await runUnderPlaybook(_jpYaml, plannedCalls: planned);
-        final fr = await runUnderPlaybook(_frYaml, plannedCalls: planned);
+    test('A6: three documents, one code path — behavior follows the document '
+        '(R5#4)', () async {
+      const planned = <ToolCall>[
+        ToolCall(
+          toolName: 'shell',
+          arguments: {'cmd': 'ls'},
+          executionMode: 'sequential',
+        ),
+        ToolCall(
+          toolName: 'search',
+          arguments: {'q': 'markets'},
+          executionMode: 'sequential',
+        ),
+      ];
+      // The SAME composition, three different documents.
+      final de = await runUnderPlaybook(_deYaml, plannedCalls: planned);
+      final jp = await runUnderPlaybook(_jpYaml, plannedCalls: planned);
+      final fr = await runUnderPlaybook(_frYaml, plannedCalls: planned);
 
-        // Germany: allowlist [search, fetch] — search dispatched, shell
-        // refused; 2 entries + de directive injected; capped at 120.
-        expect(de.dispatcher.calls.map((c) => c.toolName), ['search']);
-        expect(de.steeringEvents, hasLength(3));
-        expect(
-          de.constrainedResponse,
-          'x' * 120 +
-              '[playbook:pb-de-001] response truncated at 120 characters',
-        );
+      // Germany: allowlist [search, fetch] — search dispatched, shell
+      // refused; 2 entries + de directive injected; capped at 120.
+      expect(de.dispatcher.calls.map((c) => c.toolName), ['search']);
+      expect(de.steeringEvents, hasLength(3));
+      expect(
+        de.constrainedResponse,
+        'x' * 120 + '[playbook:pb-de-001] response truncated at 120 characters',
+      );
 
-        // Japan: blocklist [search] — search REFUSED (the opposite of
-        // Germany on the same code), shell dispatched; 1 entry + jp
-        // directive; capped at 80.
-        expect(jp.dispatcher.calls.map((c) => c.toolName), ['shell']);
-        expect(jp.steeringEvents, hasLength(2));
-        expect(
-          jp.constrainedResponse,
-          'x' * 80 + '[playbook:pb-jp-001] response truncated at 80 characters',
-        );
+      // Japan: blocklist [search] — search REFUSED (the opposite of
+      // Germany on the same code), shell dispatched; 1 entry + jp
+      // directive; capped at 80.
+      expect(jp.dispatcher.calls.map((c) => c.toolName), ['shell']);
+      expect(jp.steeringEvents, hasLength(2));
+      expect(
+        jp.constrainedResponse,
+        'x' * 80 + '[playbook:pb-jp-001] response truncated at 80 characters',
+      );
 
-        // France (novel document): allowlist [translate] — both planned
-        // tools refused; no language directive (none declared); capped at 200.
-        expect(fr.dispatcher.calls, isEmpty);
-        expect(fr.steeringEvents, hasLength(1));
-        expect(
-          fr.constrainedResponse,
-          'x' * 200 +
-              '[playbook:pb-fr-001] response truncated at 200 characters',
-        );
+      // France (novel document): allowlist [translate] — both planned
+      // tools refused; no language directive (none declared); capped at 200.
+      expect(fr.dispatcher.calls, isEmpty);
+      expect(fr.steeringEvents, hasLength(1));
+      expect(
+        fr.constrainedResponse,
+        'x' * 200 + '[playbook:pb-fr-001] response truncated at 200 characters',
+      );
 
-        // The observable behavior differs per document on every surface —
-        // steering, gating, and response constraints — through one code path.
-        expect(de.steeringEvents.first.content, 'Greet in German.');
-        expect(jp.steeringEvents.first.content, 'Greet in Japanese.');
-        expect(
-          fr.steeringEvents.first.content,
-          'Answer in French market idiom.',
-        );
-      },
-    );
+      // The observable behavior differs per document on every surface —
+      // steering, gating, and response constraints — through one code path.
+      expect(de.steeringEvents.first.content, 'Greet in German.');
+      expect(jp.steeringEvents.first.content, 'Greet in Japanese.');
+      expect(fr.steeringEvents.first.content, 'Answer in French market idiom.');
+    });
   });
 }

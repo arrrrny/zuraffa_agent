@@ -16,12 +16,12 @@
 import 'dart:io';
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/llm/llm_client.dart';
-import 'package:zuraffa_agent/src/llm/retry.dart';
-import 'package:zuraffa_agent/src/types.dart';
 import 'package:zuraffa_agent/src/llm/anthropic_client.dart';
 import 'package:zuraffa_agent/src/llm/gemini_client.dart';
+import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/src/llm/openai_compatible_client.dart';
+import 'package:zuraffa_agent/src/llm/retry.dart';
+import 'package:zuraffa_agent/src/types.dart';
 
 import 'fake_llm_clock.dart';
 import 'fake_llm_transport.dart';
@@ -91,42 +91,40 @@ void runLlmClientContractSuite({
       },
     );
 
-    test(
-      'stream emits the canonical text deltas, assembled tool call, and completing usage chunk',
-      () async {
-        final transport = FakeLlmTransport(
-          provider: label,
-          script: [
-            ScriptedResponse(statusCode: 200, lines: fixtures.streamLines),
-          ],
-        );
-        final client = makeClient(transport);
+    test('stream emits the canonical text deltas, assembled tool call, and '
+        'completing usage chunk', () async {
+      final transport = FakeLlmTransport(
+        provider: label,
+        script: [
+          ScriptedResponse(statusCode: 200, lines: fixtures.streamLines),
+        ],
+      );
+      final client = makeClient(transport);
 
-        final chunks = await client
-            .stream(LlmRequest(messages: [UserMessage.text('hi')]))
-            .toList();
+      final chunks = await client
+          .stream(LlmRequest(messages: [UserMessage.text('hi')]))
+          .toList();
 
-        // Identical text delta sequence across providers.
-        expect(
-          chunks.where((c) => c.content != null).map((c) => c.content).toList(),
-          ['Hello', ', ', 'world.'],
-        );
+      // Identical text delta sequence across providers.
+      expect(
+        chunks.where((c) => c.content != null).map((c) => c.content).toList(),
+        ['Hello', ', ', 'world.'],
+      );
 
-        // Identical assembled tool-call buffering.
-        final toolChunks = chunks.where((c) => c.toolCalls.isNotEmpty).toList();
-        expect(toolChunks, hasLength(1));
-        expect(toolChunks.single.toolCalls.single.name, 'get_weather');
-        expect(toolChunks.single.toolCalls.single.arguments, {'city': 'Paris'});
+      // Identical assembled tool-call buffering.
+      final toolChunks = chunks.where((c) => c.toolCalls.isNotEmpty).toList();
+      expect(toolChunks, hasLength(1));
+      expect(toolChunks.single.toolCalls.single.name, 'get_weather');
+      expect(toolChunks.single.toolCalls.single.arguments, {'city': 'Paris'});
 
-        // Identical completing final chunk with usage fields.
-        final last = chunks.last;
-        expect(last.isComplete, isTrue);
-        expect(last.usage!.inputTokens, 25);
-        expect(last.usage!.outputTokens, 42);
-        expect(last.usage!.cachedTokens, 8);
-        expect(last.finishReason, fixtures.expectedStreamFinishReason);
-      },
-    );
+      // Identical completing final chunk with usage fields.
+      final last = chunks.last;
+      expect(last.isComplete, isTrue);
+      expect(last.usage!.inputTokens, 25);
+      expect(last.usage!.outputTokens, 42);
+      expect(last.usage!.cachedTokens, 8);
+      expect(last.finishReason, fixtures.expectedStreamFinishReason);
+    });
 
     test(
       'a non-2xx response raises LlmHttpException with status and body',

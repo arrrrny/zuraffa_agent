@@ -43,8 +43,13 @@
 ///   mission's policy. The engine refuses to dispatch admin tools
 ///   when no admin grant is present.
 enum RiskTier {
+  /// The safe value.
   safe,
+
+  /// The confirm value.
   confirm,
+
+  /// The admin value.
   admin;
 
   /// Numeric severity ordering: 0 (safe) < 1 (confirm) < 2 (admin).
@@ -88,7 +93,10 @@ enum RiskTier {
 /// - [parallel] — the engine may batch-dispatch this tool alongside other
 ///   parallel tools in the same turn (e.g. web crawl with N fetchers).
 enum ExecutionMode {
+  /// The sequential value.
   sequential,
+
+  /// The parallel value.
   parallel;
 
   /// Parses a mode from its declaration string ('sequential' /
@@ -146,6 +154,7 @@ class AgentTool {
   /// reach the tool implementation.
   final Map<String, dynamic>? paramsSchema;
 
+  /// Creates an agent tool.
   const AgentTool({
     required this.id,
     required this.description,
@@ -338,6 +347,12 @@ class AgentTool {
   }
 
   @override
-  String toString() =>
-      'AgentTool(id: $id, description: ${description.length > 40 ? "${description.substring(0, 40)}…" : description}, riskTier: $riskTier, executionMode: $executionMode, paramsSchema: ${paramsSchema == null ? "null" : "present"})';
+  String toString() {
+    final desc = description.length > 40
+        ? '${description.substring(0, 40)}…'
+        : description;
+    return 'AgentTool(id: $id, description: $desc, riskTier: $riskTier, '
+        'executionMode: $executionMode, '
+        'paramsSchema: ${paramsSchema == null ? 'null' : 'present'})';
+  }
 }

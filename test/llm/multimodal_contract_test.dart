@@ -6,8 +6,14 @@
 // generate_multimodal.json fixture as the response, and asserts the
 // recorded request body carries the base64 payload in the provider-specific
 // wire shape:
-//   openai    → {"type":"image_url","image_url":{"url":"data:<mime>;base64,<data>"}}
-//   anthropic → {"type":"image","source":{"type":"base64","media_type":<mime>,"data":<data>}}
+// openai → {"type":"image_url","image_url":{"url":"data:<mime>;base64,<data>"}}
+// anthropic →
+// {"type":"image","source":{"type":"base64","media_type":<mime>,"data":<data>}}
+// gemini → {"inlineData":{"mimeType":<mime>,"data":<data>}} gemini →
+// {"inlineData":{"mimeType":<mime>,"data":<data>}}
+// anthropic →
+// {"type":"image","source":{"type":"base64","media_type":<mime>,"data":<data>}}
+// gemini → {"inlineData":{"mimeType":<mime>,"data":<data>}}
 //   gemini    → {"inlineData":{"mimeType":<mime>,"data":<data>}}
 //
 // The arrange (transport → client → generate → recorded body) and the
@@ -31,7 +37,8 @@ import 'fake_llm_transport.dart';
 
 /// Canonical 1x1 transparent PNG, base64-encoded.
 const pngBase64 =
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA'
+    '60e6kgAAAABJRU5ErkJggg==';
 
 const imagePrompt = 'Describe this image.';
 const multimodalReply = 'It looks like a tiny red square.';
@@ -95,7 +102,8 @@ final multimodalCases = [
     },
     expectImagePart: (part) {
       expect(part['type'], 'image_url');
-      expect(part['image_url']['url'], 'data:image/png;base64,$pngBase64');
+      final image = part['image_url'] as Map<String, dynamic>;
+      expect(image['url'], 'data:image/png;base64,$pngBase64');
     },
   ),
   MultimodalCase(
@@ -116,9 +124,10 @@ final multimodalCases = [
     },
     expectImagePart: (part) {
       expect(part['type'], 'image');
-      expect(part['source']['type'], 'base64');
-      expect(part['source']['media_type'], 'image/png');
-      expect(part['source']['data'], pngBase64);
+      final source = part['source'] as Map<String, dynamic>;
+      expect(source['type'], 'base64');
+      expect(source['media_type'], 'image/png');
+      expect(source['data'], pngBase64);
     },
   ),
   MultimodalCase(
@@ -136,8 +145,9 @@ final multimodalCases = [
       return (content['parts'] as List).cast<Map<String, dynamic>>();
     },
     expectImagePart: (part) {
-      expect(part['inlineData']['mimeType'], 'image/png');
-      expect(part['inlineData']['data'], pngBase64);
+      final inline = part['inlineData'] as Map<String, dynamic>;
+      expect(inline['mimeType'], 'image/png');
+      expect(inline['data'], pngBase64);
     },
   ),
 ];

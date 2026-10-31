@@ -13,7 +13,7 @@ void main() {
       () async {
         final hook = _BareHook();
         final request = LlmRequest(messages: [UserMessage.text('hi')]);
-        final toolCall = const LlmToolCall(
+        const toolCall = LlmToolCall(
           id: 'c1',
           name: 'read_file',
           arguments: {'p': 'a'},
@@ -21,7 +21,7 @@ void main() {
 
         expect(
           (await hook.beforeRun(
-            BeforeRunHookContext(runId: 'r', messages: const []),
+            const BeforeRunHookContext(runId: 'r', messages: []),
           )).action,
           HookAction.continue_,
         );
@@ -48,13 +48,13 @@ void main() {
         );
         expect(
           (await hook.beforeToolCall(
-            ToolCallHookContext(toolCall: toolCall),
+            const ToolCallHookContext(toolCall: toolCall),
           )).action,
           HookAction.continue_,
         );
         expect(
           (await hook.afterToolCall(
-            AfterToolCallHookContext(
+            const AfterToolCallHookContext(
               toolCall: toolCall,
               result: 'done',
               isError: false,
@@ -85,8 +85,8 @@ void main() {
 
     test('U2: typed result classes carry actions + payloads', () {
       // modify carries the new value.
-      final modify = ModelCallHookResult.modify(
-        LlmRequest(messages: const [], temperature: 0.9),
+      const modify = ModelCallHookResult.modify(
+        LlmRequest(messages: [], temperature: 0.9),
       );
       expect(modify.action, HookAction.modify);
       expect(modify.request!.temperature, 0.9);

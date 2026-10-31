@@ -31,6 +31,7 @@ class PlanStep {
   /// the write_todos tool creates steps that start queued.
   final StepStatus status;
 
+  /// Creates a plan step.
   const PlanStep({
     required this.id,
     required this.description,

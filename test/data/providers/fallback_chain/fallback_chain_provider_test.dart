@@ -3,9 +3,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/fallback_chain/fallback_chain_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/fallback_chain/fallback_chain.dart';
 import 'package:zuraffa_agent/src/domain/services/fallback_chain_service.dart';
-import 'package:zuraffa_agent/src/data/providers/fallback_chain/fallback_chain_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#5 - FallbackChain value equality', () {
@@ -56,7 +56,7 @@ void main() {
     test(
       'FallbackChainProvider.current returns the active chain snapshot',
       () async {
-        final chain = await FallbackChainProvider().current(NoParams());
+        final chain = await FallbackChainProvider().current(const NoParams());
         expect(chain, isA<FallbackChain>());
         expect(chain.id, 'default');
         expect(chain.providerIds, isNotEmpty);
@@ -71,13 +71,13 @@ void main() {
     test(
       'U5: default chain ids carry no vendor id (spec 106, issue #117)',
       () async {
-        final chain = await FallbackChainProvider().current(NoParams());
+        final chain = await FallbackChainProvider().current(const NoParams());
         expect(chain.providerIds, isNot(contains('kilo')));
       },
     );
 
     test('FallbackChainProvider.count returns 1', () async {
-      expect(await FallbackChainProvider().count(NoParams()), 1);
+      expect(await FallbackChainProvider().count(const NoParams()), 1);
     });
   });
 }

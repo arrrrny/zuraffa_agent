@@ -127,8 +127,10 @@ abstract final class Spans {
 /// well-formed W3C identifiers, so propagation helpers stay correct and
 /// wiring a real exporter later changes nothing but the injection.
 class NoopTracer implements Tracer {
+  /// Creates a noop tracer.
   const NoopTracer();
 
+  /// The instance.
   static const NoopTracer instance = NoopTracer();
 
   @override
@@ -203,6 +205,7 @@ class RecordingTracer implements Tracer {
 /// A span recorded by [RecordingTracer]: captured attributes, errors, and
 /// the standard [Span] identity surface.
 final class RecordingSpan implements Span {
+  /// Creates a recording span.
   RecordingSpan({
     required this.name,
     Map<String, Object?>? attributes,

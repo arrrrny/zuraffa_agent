@@ -9,8 +9,11 @@ part of 'engine_event.dart';
 final class TurnStarted extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The turn identifier.
   final String? turnId;
 
+  /// Creates a turn started.
   const TurnStarted({required this.emittedAt, this.turnId});
 
   @override

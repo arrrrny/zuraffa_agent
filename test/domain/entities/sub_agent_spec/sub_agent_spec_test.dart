@@ -200,7 +200,8 @@ void main() {
             ),
           ),
         );
-        // Duration.zero is the documented "no wall-clock limit" sentinel — valid.
+        // Duration.zero is the documented "no wall-clock limit" sentinel —
+        // valid.
         final zero = SubAgentSpec(
           name: 'x',
           description: 'x',
@@ -297,7 +298,11 @@ void main() {
       test(
         'U12 pin: equality/hashCode with non-const, independently built lists',
         () {
-          // FR-006: two specs equal in all ten fields, lists built separately at
+          // FR-006: two specs equal in all ten fields, lists built separately
+          // at runtime (distinct instances, equal contents) must be == and hash
+          // equally. The pre-existing provider test used const literals, which
+          // canonicalize to identical instances — this pin exercises the
+          // element-wise comparison for real.
           // runtime (distinct instances, equal contents) must be == and hash
           // equally. The pre-existing provider test used const literals, which
           // canonicalize to identical instances — this pin exercises the

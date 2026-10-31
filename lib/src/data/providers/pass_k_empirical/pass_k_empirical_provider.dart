@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/pass_k_empirical/pass_k_empirical.dart';
 import '../../../domain/services/pass_k_empirical_service.dart';
 
+/// The pass k empirical provider.
 class PassKEmpiricalProvider
     with Loggable, FailureHandler
     implements PassKEmpiricalService {
   final PassKEmpirical _active;
 
+  /// Creates a pass k empirical provider.
   PassKEmpiricalProvider([PassKEmpirical? active])
     : _active =
           active ??

@@ -10,9 +10,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/provider_config/provider_config_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
 import 'package:zuraffa_agent/src/domain/services/provider_config_service.dart';
-import 'package:zuraffa_agent/src/data/providers/provider_config/provider_config_provider.dart';
 
 const _explicitConfig = ProviderConfig(
   id: 'explicit',
@@ -25,18 +25,18 @@ const _explicitConfig = ProviderConfig(
 void main() {
   group('arrarrny/zuraffa_agent#5 - ProviderConfig value equality', () {
     test('ProviderConfig equality is value-based across all fields', () {
-      final a = ProviderConfig(
+      const a = ProviderConfig(
         id: 'id-a',
         providerKind: 'openai',
         baseUrl: 'https://api.example.com',
-        models: const ['a', 'b'],
+        models: ['a', 'b'],
         timeoutMs: 10,
       );
-      final b = ProviderConfig(
+      const b = ProviderConfig(
         id: 'id-a',
         providerKind: 'openai',
         baseUrl: 'https://api.example.com',
-        models: const ['a', 'b'],
+        models: ['a', 'b'],
         timeoutMs: 10,
       );
       expect(a, equals(b));
@@ -44,18 +44,18 @@ void main() {
     });
 
     test('ProviderConfig inequality differs when a field changes', () {
-      final a = ProviderConfig(
+      const a = ProviderConfig(
         id: 'id-a',
         providerKind: 'openai',
         baseUrl: 'https://api.example.com',
-        models: const ['a', 'b'],
+        models: ['a', 'b'],
         timeoutMs: 10,
       );
-      final b = ProviderConfig(
+      const b = ProviderConfig(
         id: 'id-b',
         providerKind: 'anthropic',
         baseUrl: 'https://api.anthropic.com',
-        models: const ['a', 'b', 'c'],
+        models: ['a', 'b', 'c'],
         timeoutMs: 20,
       );
       expect(a == b, isFalse);
@@ -84,11 +84,11 @@ void main() {
       () async {
         final provider = ProviderConfigProvider(_explicitConfig);
         expect(provider, isA<ProviderConfigService>());
-        final config = await provider.current(NoParams());
+        final config = await provider.current(const NoParams());
         expect(config, same(_explicitConfig));
         expect(config.baseUrl, 'https://llm.example.internal/api');
         expect(config.models, ['internal/model']);
-        expect(await provider.count(NoParams()), 1);
+        expect(await provider.count(const NoParams()), 1);
       },
     );
 
@@ -97,7 +97,7 @@ void main() {
       () async {
         // Constructing with a configuration must not throw on that path.
         final provider = ProviderConfigProvider(_explicitConfig);
-        final config = await provider.current(NoParams());
+        final config = await provider.current(const NoParams());
         expect(config.id, 'explicit');
       },
     );

@@ -12,6 +12,7 @@ import 'dart:io';
 
 /// Generic durable JSONL store for value objects of type [T].
 class JsonlEntityStorage<T> {
+  /// Creates a jsonl entity storage.
   JsonlEntityStorage({
     required this.path,
     required this.fromJson,
@@ -19,9 +20,16 @@ class JsonlEntityStorage<T> {
     required this.getId,
   });
 
+  /// The path.
   final String path;
+
+  /// Deserializes an entity from a JSON map.
   final T Function(Map<String, dynamic>) fromJson;
+
+  /// Serializes an entity to a JSON map.
   final Map<String, dynamic> Function(T) toJson;
+
+  /// Extracts the entity identifier.
   final String Function(T) getId;
 
   final Map<String, T> _store = {};
@@ -64,16 +72,19 @@ class JsonlEntityStorage<T> {
     await tmp.rename(path);
   }
 
+  /// Returns the identifier.
   Future<T?> get(String id) async {
     await _ensureLoaded();
     return _store[id];
   }
 
+  /// Returns all.
   Future<List<T>> getAll() async {
     await _ensureLoaded();
     return _store.values.toList();
   }
 
+  /// Puts the item.
   Future<T> put(T item) async {
     await _ensureLoaded();
     _store[getId(item)] = item;
@@ -81,6 +92,7 @@ class JsonlEntityStorage<T> {
     return item;
   }
 
+  /// Removes the identifier.
   Future<void> delete(String id) async {
     await _ensureLoaded();
     _store.remove(id);

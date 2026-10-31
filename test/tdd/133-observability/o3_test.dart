@@ -8,13 +8,12 @@
 //   - session-storage free space (injected getter — pure core, no dart:io)
 
 import 'package:test/test.dart';
-
 import 'package:zuraffa_agent/src/domain/entities/mcp_transport/mcp_transport.dart';
 import 'package:zuraffa_agent/src/llm/circuit_breaker.dart';
 import 'package:zuraffa_agent/src/llm/llm_clock.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart';
-import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';
+import 'package:zuraffa_agent/src/mcp/mcp_client.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_tool_descriptor.dart';
 import 'package:zuraffa_agent/src/observability/health_check.dart';
 
@@ -142,7 +141,7 @@ void main() {
     test(
       'session-storage space probe: unknown is ok, low space degrades',
       () async {
-        final unknown = SessionStorageSpaceProbe();
+        const unknown = SessionStorageSpaceProbe();
         expect((await unknown.probe()).status, HealthStatus.ok);
 
         final healthy = SessionStorageSpaceProbe(freeSpaceBytes: () => 1 << 30);

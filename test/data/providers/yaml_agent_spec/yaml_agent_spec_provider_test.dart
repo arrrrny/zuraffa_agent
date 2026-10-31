@@ -3,25 +3,25 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/yaml_agent_spec/yaml_agent_spec_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/yaml_agent_spec/yaml_agent_spec.dart';
 import 'package:zuraffa_agent/src/domain/services/yaml_agent_spec_service.dart';
-import 'package:zuraffa_agent/src/data/providers/yaml_agent_spec/yaml_agent_spec_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#6 - YamlAgentSpec value equality', () {
     test('YamlAgentSpec equality is value-based across all fields', () {
-      final a = YamlAgentSpec(
+      const a = YamlAgentSpec(
         id: 'id-a',
         name: 'research-agent',
         extendsSpecId: null,
-        toolAllowlist: const ['a', 'b'],
+        toolAllowlist: ['a', 'b'],
         systemPrompt: 'You are a helpful assistant.',
       );
-      final b = YamlAgentSpec(
+      const b = YamlAgentSpec(
         id: 'id-a',
         name: 'research-agent',
         extendsSpecId: null,
-        toolAllowlist: const ['a', 'b'],
+        toolAllowlist: ['a', 'b'],
         systemPrompt: 'You are a helpful assistant.',
       );
       expect(a, equals(b));
@@ -51,18 +51,18 @@ void main() {
     });
 
     test('YamlAgentSpec inequality differs when a field changes', () {
-      final a = YamlAgentSpec(
+      const a = YamlAgentSpec(
         id: 'id-a',
         name: 'research-agent',
         extendsSpecId: null,
-        toolAllowlist: const ['a', 'b'],
+        toolAllowlist: ['a', 'b'],
         systemPrompt: 'You are a helpful assistant.',
       );
-      final b = YamlAgentSpec(
+      const b = YamlAgentSpec(
         id: 'id-b',
         name: 'code-agent',
         extendsSpecId: null,
-        toolAllowlist: const ['a', 'b', 'c'],
+        toolAllowlist: ['a', 'b', 'c'],
         systemPrompt: 'You are a helpful assistant.',
       );
       expect(a == b, isFalse);
@@ -90,55 +90,53 @@ void main() {
     test(
       'U4 + A1: a configured provider serves the injected spec verbatim',
       () async {
-        final custom = YamlAgentSpec(
+        const custom = YamlAgentSpec(
           id: 'custom',
           name: 'research',
           extendsSpecId: 'base',
-          toolAllowlist: const ['search'],
+          toolAllowlist: ['search'],
           systemPrompt: 'Research the topic.',
         );
         final provider = YamlAgentSpecProvider(custom);
         expect(provider, isA<YamlAgentSpecService>());
-        final spec = await provider.current(NoParams());
+        final spec = await provider.current(const NoParams());
         expect(spec, same(custom));
         expect(spec.id, 'custom');
         expect(spec.extendsSpecId, 'base');
         expect(spec.toolAllowlist, ['search']);
-        expect(await provider.count(NoParams()), 1);
+        expect(await provider.count(const NoParams()), 1);
       },
     );
   });
 
   group('spec 005 A6 - declarative spec validation diagnostics', () {
-    test(
-      'a spec referencing an unknown tool fails validation with a precise error',
-      () {
-        final spec = YamlAgentSpec(
-          id: 'id-x',
-          name: 'broken',
-          extendsSpecId: null,
-          toolAllowlist: const ['search', 'unknown_tool'],
-          systemPrompt: 'x',
-        );
-        final errors = spec.validate(
-          parentOf: const {},
-          knownTools: {'search', 'read_file'},
-        );
-        expect(errors, hasLength(1));
-        expect(errors.single, contains("unknown tool 'unknown_tool'"));
-        expect(errors.single, contains("spec 'id-x'"));
-      },
-    );
+    test('a spec referencing an unknown tool fails validation with a precise '
+        'error', () {
+      const spec = YamlAgentSpec(
+        id: 'id-x',
+        name: 'broken',
+        extendsSpecId: null,
+        toolAllowlist: ['search', 'unknown_tool'],
+        systemPrompt: 'x',
+      );
+      final errors = spec.validate(
+        parentOf: const {},
+        knownTools: {'search', 'read_file'},
+      );
+      expect(errors, hasLength(1));
+      expect(errors.single, contains("unknown tool 'unknown_tool'"));
+      expect(errors.single, contains("spec 'id-x'"));
+    });
 
     test(
       'a spec with cyclic inheritance fails validation with a precise error',
       () {
         // a -> b -> a
-        final specA = YamlAgentSpec(
+        const specA = YamlAgentSpec(
           id: 'a',
           name: 'A',
           extendsSpecId: 'b',
-          toolAllowlist: const [],
+          toolAllowlist: [],
           systemPrompt: 'x',
         );
         final errors = specA.validate(

@@ -129,7 +129,7 @@ void main() {
     });
 
     test('the digest never echoes the payload (not raw payload)', () {
-      final payload = 'SECRET-API-KEY-MATERIAL';
+      const payload = 'SECRET-API-KEY-MATERIAL';
       final digest = auditHash(payload);
       expect(digest.contains(payload), isFalse);
     });

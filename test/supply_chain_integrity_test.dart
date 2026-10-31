@@ -234,7 +234,8 @@ void main() {
       }
     });
 
-    test('pubspec.lock is committed, not git-ignored, and resolves zuraffa', () {
+    test('pubspec.lock is committed, not git-ignored, and resolves '
+        'zuraffa', () {
       final offenders = _readLines('.gitignore')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty && !line.startsWith('#'))

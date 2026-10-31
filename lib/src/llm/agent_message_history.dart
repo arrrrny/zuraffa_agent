@@ -3,8 +3,8 @@
 // of this package (constitution VIII): re-implemented in-tree per
 // specs/010-episodic-memory/spec.md with this attribution retained.
 
-import '../types.dart';
 import '../domain/entities/episodic_memory/episodic_memory.dart';
+import '../types.dart';
 
 /// The conversation context the engine assembles for the model: the active
 /// [messages] plus the [episodicMemories] created by earlier compressions
@@ -22,6 +22,7 @@ class AgentMessageHistory {
   /// (oldest first).
   final List<EpisodicMemory> episodicMemories;
 
+  /// Creates an agent message history.
   const AgentMessageHistory({
     this.messages = const [],
     this.episodicMemories = const [],
@@ -97,11 +98,13 @@ class AgentMessageHistory {
   // malformed-input variant. Parity with `EpisodicMemory.fromJson`
   // and `SteeringMessage.fromJson`.
   // --------------------------------------------------------------
+  /// Converts this agent message history to JSON.
   Map<String, dynamic> toJson() => <String, dynamic>{
     'messages': [for (final m in messages) m.toJson()],
     'episodicMemories': [for (final em in episodicMemories) em.toJson()],
   };
 
+  /// Creates an agent message history from JSON.
   factory AgentMessageHistory.fromJson(Map<String, dynamic> json) {
     List<dynamic> requireList(String key) {
       final value = json[key];

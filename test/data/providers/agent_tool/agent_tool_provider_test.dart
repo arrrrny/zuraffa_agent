@@ -18,10 +18,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/agent_tool/agent_tool_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart';
 import 'package:zuraffa_agent/src/domain/services/agent_tool_service.dart';
-import 'package:zuraffa_agent/src/data/providers/agent_tool/agent_tool_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#4 — RiskTier enum', () {
@@ -52,7 +51,7 @@ void main() {
     test(
       'AgentTool defaults to safe / sequential when riskTier/executionMode omitted',
       () {
-        final tool = AgentTool(
+        const tool = AgentTool(
           id: 'fs.read',
           description: 'Read a file from local disk.',
         );
@@ -69,7 +68,7 @@ void main() {
     test(
       'AgentTool carries riskTier + executionMode + paramsSchema when provided',
       () {
-        final tool = AgentTool(
+        const tool = AgentTool(
           id: 'fs.write',
           description: 'Write a file to local disk.',
           riskTier: RiskTier.confirm,
@@ -93,7 +92,7 @@ void main() {
     );
 
     test('AgentTool.requiresConfirmation is true for admin', () {
-      final tool = AgentTool(
+      const tool = AgentTool(
         id: 'sys.shutdown',
         description: 'Shut the system down.',
         riskTier: RiskTier.admin,
@@ -128,7 +127,7 @@ void main() {
     });
 
     test('AgentTool inequality differs on paramsSchema deep contents', () {
-      final a = AgentTool(
+      const a = AgentTool(
         id: 'web.fetch',
         description: 'Fetch a URL.',
         paramsSchema: {
@@ -138,7 +137,7 @@ void main() {
           },
         },
       );
-      final b = AgentTool(
+      const b = AgentTool(
         id: 'web.fetch',
         description: 'Fetch a URL.',
         paramsSchema: {
@@ -158,19 +157,17 @@ void main() {
       expect(provider, isA<AgentToolService>());
     });
 
-    test(
-      'AgentToolProvider.current returns a built-in default tool when the registry is empty',
-      () async {
-        final tool = await AgentToolProvider().current(NoParams());
-        expect(tool, isA<AgentTool>());
-        expect(tool.id, isNotEmpty);
-        expect(tool.riskTier, RiskTier.safe);
-        expect(tool.executionMode, ExecutionMode.sequential);
-      },
-    );
+    test('AgentToolProvider.current returns a built-in default tool when the '
+        'registry is empty', () async {
+      final tool = await AgentToolProvider().current(const NoParams());
+      expect(tool, isA<AgentTool>());
+      expect(tool.id, isNotEmpty);
+      expect(tool.riskTier, RiskTier.safe);
+      expect(tool.executionMode, ExecutionMode.sequential);
+    });
 
     test('AgentToolProvider.count returns 0 for an empty registry', () async {
-      expect(await AgentToolProvider().count(NoParams()), 0);
+      expect(await AgentToolProvider().count(const NoParams()), 0);
     });
 
     test(
@@ -178,24 +175,24 @@ void main() {
       () async {
         final provider = AgentToolProvider();
         provider.register(
-          AgentTool(id: 'fs.read', description: 'Read a file.'),
+          const AgentTool(id: 'fs.read', description: 'Read a file.'),
         );
-        final latest = AgentTool(
+        const latest = AgentTool(
           id: 'fs.write',
           description: 'Write a file.',
           riskTier: RiskTier.confirm,
         );
         provider.register(latest);
-        expect(await provider.current(NoParams()), equals(latest));
-        expect(await provider.count(NoParams()), 2);
+        expect(await provider.current(const NoParams()), equals(latest));
+        expect(await provider.count(const NoParams()), 2);
       },
     );
 
     test('AgentToolProvider accepts a seeded registry', () async {
-      final seeded = AgentTool(id: 'web.fetch', description: 'Fetch a URL.');
+      const seeded = AgentTool(id: 'web.fetch', description: 'Fetch a URL.');
       final provider = AgentToolProvider([seeded]);
-      expect(await provider.current(NoParams()), equals(seeded));
-      expect(await provider.count(NoParams()), 1);
+      expect(await provider.current(const NoParams()), equals(seeded));
+      expect(await provider.count(const NoParams()), 1);
     });
   });
 }

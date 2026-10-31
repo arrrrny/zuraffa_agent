@@ -84,6 +84,7 @@ class SubAgentSpec {
   /// Null means inherit from parent spec (or use the engine default).
   final int? contextWindowTokens;
 
+  /// Creates a sub agent spec.
   SubAgentSpec({
     required this.name,
     required this.description,

@@ -42,6 +42,7 @@ enum HealthStatus {
 
 /// One probe's verdict.
 class HealthCheckResult {
+  /// Creates a health check result.
   const HealthCheckResult({
     required this.name,
     required this.status,
@@ -52,6 +53,8 @@ class HealthCheckResult {
   /// Probe name — stable identifier in the report (`circuit_breakers`,
   /// `mcp_clients`, `last_llm_error`, `session_storage_space`).
   final String name;
+
+  /// The status.
   final HealthStatus status;
 
   /// Free-form machine-readable detail (state per provider, byte counts…).
@@ -60,6 +63,7 @@ class HealthCheckResult {
   /// Optional human-readable error text when the probe itself failed.
   final String? error;
 
+  /// Converts this health check result to JSON.
   Map<String, dynamic> toJson() => {
     'name': name,
     'status': status.name,
@@ -70,6 +74,7 @@ class HealthCheckResult {
 
 /// The aggregate verdict, serializable as the `/health` body.
 class HealthReport {
+  /// Creates a health report.
   const HealthReport({
     required this.status,
     required this.results,
@@ -78,9 +83,14 @@ class HealthReport {
 
   /// The worst status across all probe results (unhealthy > degraded > ok).
   final HealthStatus status;
+
+  /// The results.
   final List<HealthCheckResult> results;
+
+  /// The checked at.
   final DateTime checkedAt;
 
+  /// Converts this health report to JSON.
   Map<String, dynamic> toJson() => {
     'status': status.name,
     'checkedAt': checkedAt.toUtc().toIso8601String(),
@@ -91,14 +101,17 @@ class HealthReport {
 /// A single named health check. Implement and inject for anything
 /// deployment-specific; the shipped probes cover the issue's baseline.
 abstract interface class HealthProbe {
+  /// The name.
   String get name;
 
+  /// Runs the check and reports the outcome.
   Future<HealthCheckResult> probe();
 }
 
 /// Aggregates probes into a [HealthReport]. Stateless — call [check] per
 /// scrape; each call re-runs every probe.
 class HealthCheckService {
+  /// Creates a health check service.
   HealthCheckService({
     List<HealthProbe> probes = const [],
     DateTime Function()? clock,
@@ -146,6 +159,7 @@ class HealthCheckService {
 /// `open` are degraded — the fallback chain still serves through other
 /// providers, so this is reduced capability, not an outage.
 class BreakerHealthProbe implements HealthProbe {
+  /// Creates a breaker health probe.
   BreakerHealthProbe(List<CircuitBreaker> breakers)
     : _breakers = List.unmodifiable(breakers);
 
@@ -182,6 +196,7 @@ class BreakerHealthProbe implements HealthProbe {
 /// `reconnecting` and `disconnected` are degraded; `failed` (reconnect
 /// policy exhausted) is unhealthy.
 class McpHealthProbe implements HealthProbe {
+  /// Creates an MCP health probe.
   McpHealthProbe(List<McpClient> clients)
     : _clients = List.unmodifiable(clients);
 
@@ -227,6 +242,7 @@ class McpHealthProbe implements HealthProbe {
 /// success) is ok, a recorded error is degraded — the chain may have
 /// recovered since, and the report carries the error text either way.
 class LastLlmErrorTracker {
+  /// Creates a last LLM error tracker.
   LastLlmErrorTracker({DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
 
@@ -268,6 +284,7 @@ class LastLlmErrorTracker {
 
 /// Exposes the [LastLlmErrorTracker] state as a probe.
 class LastLlmErrorProbe implements HealthProbe {
+  /// Creates a last LLM error probe.
   LastLlmErrorProbe(this._tracker);
 
   final LastLlmErrorTracker _tracker;
@@ -324,12 +341,15 @@ class LastLlmErrorProbe implements HealthProbe {
 /// degraded. Supply the getter from the platform layer — e.g. a statvfs /
 /// `GetDiskFreeSpaceEx` binding over the session store's volume.
 class SessionStorageSpaceProbe implements HealthProbe {
+  /// Creates a session storage space probe.
   const SessionStorageSpaceProbe({
     int? Function()? freeSpaceBytes,
     this.warningThresholdBytes = 64 * 1024 * 1024,
   }) : _freeSpaceBytes = freeSpaceBytes;
 
   final int? Function()? _freeSpaceBytes;
+
+  /// The warning threshold bytes.
   final int warningThresholdBytes;
 
   @override

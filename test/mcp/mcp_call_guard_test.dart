@@ -2,7 +2,6 @@
 // immutable CircuitBreaker (spec 035), with an injectable clock.
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/config/zuraffa_config.dart';
 import 'package:zuraffa_agent/src/domain/entities/circuit_breaker/circuit_breaker.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_guard.dart';
 import 'package:zuraffa_agent/src/mcp/mcp_call_result.dart';

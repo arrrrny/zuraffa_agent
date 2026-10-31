@@ -230,7 +230,7 @@ void main() {
         );
 
         final out = await pipeline.beforeModelCall(
-          ModelCallHookContext(request: LlmRequest(messages: const [])),
+          const ModelCallHookContext(request: LlmRequest(messages: [])),
         );
         expect(seen, [
           'temp=0.7',
@@ -240,7 +240,8 @@ void main() {
     );
 
     test(
-      'U6: an abort throws HookAbortError at the offending hook; later hooks are not called',
+      'U6: an abort throws HookAbortError at the offending hook; later hooks '
+      'are not called',
       () async {
         final pipeline = AgentHookPipeline();
         final called = <String>[];
@@ -312,14 +313,15 @@ void main() {
           ),
         );
         final out = await pipeline.beforeModelCall(
-          ModelCallHookContext(request: LlmRequest(messages: const [])),
+          const ModelCallHookContext(request: LlmRequest(messages: [])),
         );
         expect(out.request.temperature, 0.123);
       },
     );
 
     test(
-      'U8: beforeToolCall deny returns a ToolCallDecision with the synthetic result',
+      'U8: beforeToolCall deny returns a ToolCallDecision with the synthetic '
+      'result',
       () async {
         final pipeline = AgentHookPipeline();
         pipeline.register(
@@ -398,13 +400,14 @@ void main() {
           ),
         );
         final decision = await pipeline.afterModelCall(
-          AfterModelCallHookContext(
-            request: LlmRequest(messages: const []),
-            response: const LlmResponse(content: 'bad'),
+          const AfterModelCallHookContext(
+            request: LlmRequest(messages: []),
+            response: LlmResponse(content: 'bad'),
           ),
         );
         expect(decision.retry, isTrue);
-        // Retry carries the original response context (engine decides what to resend).
+        // Retry carries the original response context (engine decides what to
+        // resend).
         expect(decision.context.response.content, 'bad');
       },
     );
@@ -421,9 +424,9 @@ void main() {
           ),
         );
         final decision = await pipeline.afterModelCall(
-          AfterModelCallHookContext(
-            request: LlmRequest(messages: const []),
-            response: const LlmResponse(content: 'raw'),
+          const AfterModelCallHookContext(
+            request: LlmRequest(messages: []),
+            response: LlmResponse(content: 'raw'),
           ),
         );
         expect(decision.retry, isFalse);
@@ -469,23 +472,21 @@ void main() {
       },
     );
 
-    test(
-      'A2: a modifier hook changes the model call; the driver\'s LlmClient receives it (SC-002)',
-      () async {
-        final modifier = ModifierHook();
-        final client = FakeLlmClient(
-          providerName: 'test',
-          outcomes: [
-            const ScriptedOutcome(response: LlmResponse(content: 'reply')),
-          ],
-        );
-        final mission = _MissionDriver(hooks: [modifier], client: client);
-        await mission.run(toolsToExecute: const []);
+    test('A2: a modifier hook changes the model call; the driver\'s LlmClient '
+        'receives it (SC-002)', () async {
+      final modifier = ModifierHook();
+      final client = FakeLlmClient(
+        providerName: 'test',
+        outcomes: [
+          const ScriptedOutcome(response: LlmResponse(content: 'reply')),
+        ],
+      );
+      final mission = _MissionDriver(hooks: [modifier], client: client);
+      await mission.run(toolsToExecute: const []);
 
-        expect(client.requests, hasLength(1));
-        expect(client.requests.single.temperature, 0.42);
-      },
-    );
+      expect(client.requests, hasLength(1));
+      expect(client.requests.single.temperature, 0.42);
+    });
 
     test(
       'A3: an abort hook stops the run with the typed error (SC-003)',
@@ -526,7 +527,8 @@ void main() {
         final mission = _MissionDriver(hooks: [recorder, modifier]);
         await mission.run(toolsToExecute: const [_missionToolCall]);
 
-        // Both hooks ran at the shared points, recorder (registered first) first.
+        // Both hooks ran at the shared points, recorder (registered first)
+        // first.
         expect(recorder.events, contains('beforeModelCall'));
         expect(modifier.events.first, startsWith('modifier:beforeModelCall'));
         // The modifier's tool-call change reached the executed tool.
@@ -534,30 +536,28 @@ void main() {
       },
     );
 
-    test(
-      'A5: a deny hook prevents tool execution; the synthetic result is returned',
-      () async {
-        final mission = _MissionDriver(
-          hooks: [
-            _CallbackHook(
-              onBeforeToolCall: (ctx) async => const ToolCallHookResult.deny(
-                denyResult: 'tool disabled by policy',
-                denyIsError: true,
-              ),
+    test('A5: a deny hook prevents tool execution; the synthetic result is '
+        'returned', () async {
+      final mission = _MissionDriver(
+        hooks: [
+          _CallbackHook(
+            onBeforeToolCall: (ctx) async => const ToolCallHookResult.deny(
+              denyResult: 'tool disabled by policy',
+              denyIsError: true,
             ),
-          ],
-        );
-        await mission.run(toolsToExecute: const [_missionToolCall]);
+          ),
+        ],
+      );
+      await mission.run(toolsToExecute: const [_missionToolCall]);
 
-        expect(
-          mission.executedToolArguments,
-          isNull,
-          reason: 'tool must NOT execute',
-        );
-        expect(mission.toolResultReturned, 'tool disabled by policy');
-        expect(mission.toolResultIsError, isTrue);
-      },
-    );
+      expect(
+        mission.executedToolArguments,
+        isNull,
+        reason: 'tool must NOT execute',
+      );
+      expect(mission.toolResultReturned, 'tool disabled by policy');
+      expect(mission.toolResultIsError, isTrue);
+    });
   });
 }
 

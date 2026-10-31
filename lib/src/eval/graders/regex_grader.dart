@@ -4,8 +4,10 @@ import 'grader.dart';
 
 /// Pattern-match grader over the mission output.
 class RegexGrader implements Grader {
+  /// The pattern.
   final RegExp pattern;
 
+  /// Creates a regex grader.
   const RegexGrader({required this.pattern});
 
   @override

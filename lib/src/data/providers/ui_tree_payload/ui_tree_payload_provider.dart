@@ -10,6 +10,7 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/ui_tree_payload/ui_tree_payload.dart';
 import '../../../domain/services/ui_tree_payload_service.dart';
 
+/// The UI tree payload provider.
 class UiTreePayloadProvider
     with Loggable, FailureHandler
     implements UiTreePayloadService {
@@ -22,6 +23,7 @@ class UiTreePayloadProvider
 
   final UiTreePayload _active;
 
+  /// Creates a UI tree payload provider.
   UiTreePayloadProvider([UiTreePayload? active])
     : _active =
           active ??

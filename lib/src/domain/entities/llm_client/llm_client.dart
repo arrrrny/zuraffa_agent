@@ -10,12 +10,22 @@
 ///
 /// Provider-agnostic LlmClient interface + typed LlmRequest/LlmResponse value objects (epic #4 §R4.1, issue #5 US1). All OpenAI/Anthropic/Gemini clients implement this; the engine consumes one type.
 class LlmClient {
+  /// The identifier.
   final String id;
+
+  /// The provider name.
   final String providerName;
+
+  /// The model.
   final String model;
+
+  /// Whether streaming.
   final bool supportsStreaming;
+
+  /// Whether thinking.
   final bool supportsThinking;
 
+  /// Creates an LLM client.
   const LlmClient({
     required this.id,
     required this.providerName,

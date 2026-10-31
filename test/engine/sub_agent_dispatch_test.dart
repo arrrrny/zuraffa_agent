@@ -4,15 +4,12 @@
 
 import 'package:test/test.dart';
 
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/agent_tool/agent_tool.dart'
     show RiskTier;
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
-import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
-import 'package:zuraffa_agent/src/domain/entities/sub_agent_context/sub_agent_context.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_instance/sub_agent_instance.dart';
 import 'package:zuraffa_agent/src/domain/entities/sub_agent_spec/sub_agent_spec.dart';
 import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';

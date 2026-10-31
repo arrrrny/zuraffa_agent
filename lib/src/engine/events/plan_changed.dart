@@ -23,6 +23,7 @@ final class PlanChanged extends EngineEvent {
   /// The domain plan-change payload (previous/next `PlanState` snapshots).
   final PlanChangedEvent change;
 
+  /// Creates a plan changed.
   const PlanChanged({required this.emittedAt, required this.change});
 
   @override

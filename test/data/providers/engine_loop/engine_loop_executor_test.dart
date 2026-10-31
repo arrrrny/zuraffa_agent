@@ -2,13 +2,12 @@
 // so no network is touched.
 
 import 'package:test/test.dart';
-
+import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
+import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/provider_config/provider_config.dart';
-import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
-import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 
 class FakeLlmClient extends LlmClientProvider {
   FakeLlmClient()
@@ -39,7 +38,7 @@ class FakeLlmClient extends LlmClientProvider {
 
 void main() {
   group('EngineLoopExecutor', () {
-    final loop = const EngineLoop(
+    const loop = EngineLoop(
       id: 'default',
       sessionId: 's1',
       maxTurns: 3,

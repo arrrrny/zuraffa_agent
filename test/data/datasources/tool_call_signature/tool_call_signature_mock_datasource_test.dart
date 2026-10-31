@@ -42,14 +42,12 @@ void main() {
         },
       );
 
-      test(
-        'A2 + U8: lookup of a never-captured key reports absence (null, no throw)',
-        () async {
-          final ds = ToolCallSignatureMockDatasource();
-          final found = await ds.lookup('never@1:captured');
-          expect(found, isNull);
-        },
-      );
+      test('A2 + U8: lookup of a never-captured key reports absence (null, no '
+          'throw)', () async {
+        final ds = ToolCallSignatureMockDatasource();
+        final found = await ds.lookup('never@1:captured');
+        expect(found, isNull);
+      });
 
       test(
         'U9: empty toolName / argument hash are valid content with well-formed keys',

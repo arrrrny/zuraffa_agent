@@ -39,19 +39,19 @@ const transport = McpTransport(
   authRequired: true,
 );
 
-final stopPolicy = StopPolicy(
+const stopPolicy = StopPolicy(
   id: 'stop-1',
   maxTurns: 16,
   wallClockTimeout: Duration.zero,
   repetitionThreshold: 5,
 );
 
-final compaction = CompactionStrategy(
+const compaction = CompactionStrategy(
   id: 'comp-1',
   sessionId: 's1',
-  retainEntryIds: const [],
-  summarizeEntryIds: const [],
-  artifactRefs: const [],
+  retainEntryIds: [],
+  summarizeEntryIds: [],
+  artifactRefs: [],
   compactedAt: 0,
 );
 
@@ -75,7 +75,7 @@ void main() {
       expect(config.stopPolicy, same(stopPolicy));
       expect(config.compactionStrategy, same(compaction));
 
-      final empty = ZuraffaConfig();
+      const empty = ZuraffaConfig();
       expect(empty.providerConfig, isNull);
       expect(empty.agentSpec, isNull);
       expect(empty.engineLoop, isNull);
@@ -109,8 +109,8 @@ void main() {
           contains('engineLoop.maxTurns'),
         );
 
-        final badTimeout = ZuraffaConfig(
-          providerConfig: const ProviderConfig(
+        final badTimeout = const ZuraffaConfig(
+          providerConfig: ProviderConfig(
             id: 'p1',
             providerKind: 'openai',
             baseUrl: 'https://llm.example.internal/api',
@@ -134,12 +134,12 @@ void main() {
         engineLoop: config.engineLoop!,
         mcpTransport: transport,
         stopPolicy: stopPolicy,
-        compactionStrategy: CompactionStrategy(
+        compactionStrategy: const CompactionStrategy(
           id: 'comp-2',
           sessionId: 'other-session',
-          retainEntryIds: const [],
-          summarizeEntryIds: const [],
-          artifactRefs: const [],
+          retainEntryIds: [],
+          summarizeEntryIds: [],
+          artifactRefs: [],
           compactedAt: 0,
         ),
       );

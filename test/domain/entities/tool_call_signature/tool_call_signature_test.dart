@@ -10,28 +10,27 @@ import 'package:zuraffa_agent/src/domain/entities/tool_call_signature/tool_call_
 
 void main() {
   group('ToolCallSignature value object (A3, A4, U1..U6)', () {
-    test(
-      'A3 + U1: equal content builds equal signatures with equal hashCodes and identical keys',
-      () {
-        const a = ToolCallSignature(
-          toolName: 'webview.browse',
-          argumentHash: 'abc123',
-          version: 1,
-        );
-        const b = ToolCallSignature(
-          toolName: 'webview.browse',
-          argumentHash: 'abc123',
-          version: 1,
-        );
-        expect(a, equals(b));
-        expect(a.hashCode, equals(b.hashCode));
-        expect(a.key, equals(b.key));
-        expect(a.id, equals(b.id));
-      },
-    );
+    test('A3 + U1: equal content builds equal signatures with equal hashCodes '
+        'and identical keys', () {
+      const a = ToolCallSignature(
+        toolName: 'webview.browse',
+        argumentHash: 'abc123',
+        version: 1,
+      );
+      const b = ToolCallSignature(
+        toolName: 'webview.browse',
+        argumentHash: 'abc123',
+        version: 1,
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+      expect(a.key, equals(b.key));
+      expect(a.id, equals(b.id));
+    });
 
     test(
-      'A4 + U2: differing toolName, argumentHash or version makes signatures unequal with different keys',
+      'A4 + U2: differing toolName, argumentHash or version makes signatures '
+      'unequal with different keys',
       () {
         const base = ToolCallSignature(
           toolName: 'webview.browse',

@@ -3,7 +3,6 @@
 // exemplar.
 
 import 'package:test/test.dart';
-import 'package:zuraffa/zuraffa.dart' show NoParams;
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/data/providers/llm_client/llm_client_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';

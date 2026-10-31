@@ -15,7 +15,9 @@ analyzer:
     todo: ignore
     prefer_interpolation_to_compose_strings: ignore
     unnecessary_parenthesis: ignore
-    unused_import: ignore
+    # Re-enabled as `warning` (issue #116) — a dropped import must surface
+    # in `dart analyze` output instead of being silenced outright.
+    unused_import: warning
 
 linter:
   rules:
@@ -25,3 +27,12 @@ linter:
     - prefer_final_locals
     - unawaited_futures
     - unnecessary_parenthesis
+    # Hardened set (issue #116) — stricter than lints/recommended:
+    - avoid_dynamic_calls
+    - require_trailing_commas
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - directives_ordering
+    - sort_pub_dependencies
+    - public_member_api_docs
+    - lines_longer_than_80_chars

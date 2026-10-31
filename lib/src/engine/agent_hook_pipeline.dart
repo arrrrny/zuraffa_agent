@@ -34,6 +34,7 @@ class AgentHookPipeline {
   // beforeRun
   // -------------------------------------------------------------------
 
+  /// Befores run.
   Future<BeforeRunHookContext> beforeRun(BeforeRunHookContext context) async {
     var current = context;
     for (final hook in _hooks) {
@@ -60,6 +61,7 @@ class AgentHookPipeline {
   // beforeModelCall
   // -------------------------------------------------------------------
 
+  /// Befores model call.
   Future<ModelCallHookContext> beforeModelCall(
     ModelCallHookContext context,
   ) async {
@@ -87,6 +89,7 @@ class AgentHookPipeline {
   // onModelChunk (streaming observation)
   // -------------------------------------------------------------------
 
+  /// Handles the model chunk case.
   Future<ModelChunkHookContext> onModelChunk(
     ModelChunkHookContext context,
   ) async {
@@ -109,6 +112,7 @@ class AgentHookPipeline {
   // afterModelCall — may modify the response or request a retry
   // -------------------------------------------------------------------
 
+  /// Afters model call.
   Future<ModelCallDecision> afterModelCall(
     AfterModelCallHookContext context,
   ) async {
@@ -139,6 +143,7 @@ class AgentHookPipeline {
   // beforeToolCall — may modify the call or deny it (synthetic result)
   // -------------------------------------------------------------------
 
+  /// Befores tool call.
   Future<ToolCallDecision> beforeToolCall(ToolCallHookContext context) async {
     var current = context;
     for (final hook in _hooks) {
@@ -169,6 +174,7 @@ class AgentHookPipeline {
   // afterToolCall — may modify the result content / error flag
   // -------------------------------------------------------------------
 
+  /// Afters tool call.
   Future<AfterToolCallHookContext> afterToolCall(
     AfterToolCallHookContext context,
   ) async {
@@ -198,6 +204,7 @@ class AgentHookPipeline {
   // onTurnCompletion
   // -------------------------------------------------------------------
 
+  /// Handles the turn completion case.
   Future<TurnCompletionHookContext> onTurnCompletion(
     TurnCompletionHookContext context,
   ) async {
@@ -220,6 +227,7 @@ class AgentHookPipeline {
   // beforePersistState
   // -------------------------------------------------------------------
 
+  /// Befores persist state.
   Future<PersistStateHookContext> beforePersistState(
     PersistStateHookContext context,
   ) async {
@@ -247,6 +255,7 @@ class AgentHookPipeline {
   // afterRun — terminal observation (continue only)
   // -------------------------------------------------------------------
 
+  /// Afters run.
   Future<AfterRunHookContext> afterRun(AfterRunHookContext context) async {
     final current = context;
     for (final hook in _hooks) {

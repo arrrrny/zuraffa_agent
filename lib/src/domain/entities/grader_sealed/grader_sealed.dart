@@ -8,13 +8,22 @@
 
 /// Grader sealed (exact/schema/model-judge) value object.
 ///
-/// Sealed grader — ExactGrader, SchemaGrader, ModelJudgeGrader (recorded) (epic #6 §R6.3, issue #7 US3). One grade(output, expected) method per subtype.
+/// Sealed grader — ExactGrader, SchemaGrader, ModelJudgeGrader (recorded) (epic
+/// #6 §R6.3, issue #7 US3). One grade(output, expected) method per subtype.
 class GraderSealed {
+  /// The identifier.
   final String id;
+
+  /// The grader type.
   final String graderType;
+
+  /// The expected hash.
   final String? expectedHash;
+
+  /// The schema identifier.
   final String? schemaId;
 
+  /// Creates a grader sealed.
   const GraderSealed({
     required this.id,
     required this.graderType,
@@ -37,5 +46,6 @@ class GraderSealed {
 
   @override
   String toString() =>
-      'GraderSealed(id: $id, graderType: $graderType, expectedHash: $expectedHash)';
+      'GraderSealed(id: $id, graderType: $graderType, expectedHash: '
+      '$expectedHash)';
 }

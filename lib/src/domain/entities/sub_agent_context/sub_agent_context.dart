@@ -1,21 +1,36 @@
 // HAND-CURATED - DO NOT REGENERATE VIA zfa.
 // See issue arrrrny/zuraffa_agent#6 (R5 - sub-agents & declarative).
 //
-// SubAgentContext (isolated context) value object - spec-exact from epic #1 §R5 (issue #6).
+// SubAgentContext (isolated context) value object - spec-exact from epic #1 §R5
+// (issue #6). Pattern mirrors the SteeringMessage / SteeringQueue value objects
+// (PR for spec 033): plain Dart, value equality across all fields, no @Zorphy
+// codegen, compiles without build_runner.
 // Pattern mirrors the SteeringMessage / SteeringQueue value objects
 // (PR for spec 033): plain Dart, value equality across all fields,
 // no @Zorphy codegen, compiles without build_runner.
 
 /// SubAgentContext (isolated context) value object.
 ///
-/// Isolated sub-agent execution context — own session, own tool allowlist, own budget; the parent receives result summaries only, never raw context (epic #5 §R5.1, issue #6 US1).
+/// Isolated sub-agent execution context — own session, own tool allowlist, own
+/// budget; the parent receives result summaries only, never raw context (epic
+/// #5 §R5.1, issue #6 US1).
 class SubAgentContext {
+  /// The identifier.
   final String id;
+
+  /// The sub agent spec identifier.
   final String subAgentSpecId;
+
+  /// The session identifier.
   final String sessionId;
+
+  /// The tool allowlist.
   final List<String> toolAllowlist;
+
+  /// The budget turns.
   final int budgetTurns;
 
+  /// Creates a sub agent context.
   const SubAgentContext({
     required this.id,
     required this.subAgentSpecId,
@@ -41,5 +56,6 @@ class SubAgentContext {
 
   @override
   String toString() =>
-      'SubAgentContext(id: $id, subAgentSpecId: $subAgentSpecId, sessionId: $sessionId)';
+      'SubAgentContext(id: $id, subAgentSpecId: $subAgentSpecId, sessionId: '
+      '$sessionId)';
 }

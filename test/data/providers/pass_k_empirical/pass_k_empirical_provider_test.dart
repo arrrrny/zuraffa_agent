@@ -3,21 +3,21 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/pass_k_empirical/pass_k_empirical_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/pass_k_empirical/pass_k_empirical.dart';
 import 'package:zuraffa_agent/src/domain/services/pass_k_empirical_service.dart';
-import 'package:zuraffa_agent/src/data/providers/pass_k_empirical/pass_k_empirical_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#7 - PassKEmpirical value equality', () {
     test('PassKEmpirical equality is value-based across all fields', () {
-      final a = PassKEmpirical(
+      const a = PassKEmpirical(
         id: 'id-a',
         taskId: 'ref-1',
         k: 10,
         successCount: 10,
         empiricalRate: 0.5,
       );
-      final b = PassKEmpirical(
+      const b = PassKEmpirical(
         id: 'id-a',
         taskId: 'ref-1',
         k: 10,
@@ -29,14 +29,14 @@ void main() {
     });
 
     test('PassKEmpirical inequality differs when a field changes', () {
-      final a = PassKEmpirical(
+      const a = PassKEmpirical(
         id: 'id-a',
         taskId: 'ref-1',
         k: 10,
         successCount: 10,
         empiricalRate: 0.5,
       );
-      final b = PassKEmpirical(
+      const b = PassKEmpirical(
         id: 'id-b',
         taskId: 'ref-2',
         k: 20,
@@ -56,7 +56,7 @@ void main() {
     test(
       'PassKEmpiricalProvider.current returns the active pass^k snapshot',
       () async {
-        final result = await PassKEmpiricalProvider().current(NoParams());
+        final result = await PassKEmpiricalProvider().current(const NoParams());
         expect(result, isA<PassKEmpirical>());
         expect(result.id, 'default');
         expect(result.taskId, 'mission-1');
@@ -67,7 +67,7 @@ void main() {
     test(
       'PassKEmpiricalProvider.current honors an injected snapshot',
       () async {
-        final injected = const PassKEmpirical(
+        const injected = PassKEmpirical(
           id: 'p-1',
           taskId: 'ref-9',
           k: 5,
@@ -76,13 +76,13 @@ void main() {
         );
         final result = await PassKEmpiricalProvider(
           injected,
-        ).current(NoParams());
+        ).current(const NoParams());
         expect(result, same(injected));
       },
     );
 
     test('PassKEmpiricalProvider.count returns 1', () async {
-      expect(await PassKEmpiricalProvider().count(NoParams()), 1);
+      expect(await PassKEmpiricalProvider().count(const NoParams()), 1);
     });
   });
 }

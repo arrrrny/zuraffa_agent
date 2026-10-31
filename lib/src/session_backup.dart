@@ -22,6 +22,7 @@ import 'types.dart';
 /// (still un-migrated / un-deserialized — [SessionBackupCodec.parse] does
 /// no entry work).
 final class SessionBackup {
+  /// Creates a session backup.
   const SessionBackup({
     required this.schemaVersion,
     this.createdAt,
@@ -48,6 +49,8 @@ final class SessionBackupCodec {
 
   /// Marker + format id of the provenance line (second line of the envelope).
   static const String backupKey = '_backup';
+
+  /// The format identifier.
   static const String formatId = 'zuraffa/session-backup';
 
   /// The full envelope: `_schema` header, `_backup` provenance, `_meta`

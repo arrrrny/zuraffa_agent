@@ -14,11 +14,10 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/steering_queue/steering_queue_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_message/steering_message.dart';
 import 'package:zuraffa_agent/src/domain/entities/steering_queue/steering_queue.dart';
 import 'package:zuraffa_agent/src/domain/services/steering_queue_service.dart';
-import 'package:zuraffa_agent/src/data/providers/steering_queue/steering_queue_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#2 — SteeringMessage value object', () {
@@ -111,7 +110,7 @@ void main() {
     });
 
     test('SteeringQueueProvider.current returns the active queue', () async {
-      final q = await SteeringQueueProvider().current(NoParams());
+      final q = await SteeringQueueProvider().current(const NoParams());
       expect(q, isA<SteeringQueue>());
       expect(q.id, 'queue-default');
       expect(q.isEmpty, isTrue);
@@ -130,14 +129,17 @@ void main() {
           processedCount: 2,
           lastInjectedAt: ts,
         );
-        expect(await SteeringQueueProvider(active).current(NoParams()), active);
+        expect(
+          await SteeringQueueProvider(active).current(const NoParams()),
+          active,
+        );
       },
     );
 
     test(
       'SteeringQueueProvider.count returns the tracked queue count',
       () async {
-        expect(await SteeringQueueProvider().count(NoParams()), 1);
+        expect(await SteeringQueueProvider().count(const NoParams()), 1);
       },
     );
   });

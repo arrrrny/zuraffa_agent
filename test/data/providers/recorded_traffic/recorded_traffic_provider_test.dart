@@ -3,21 +3,21 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
+import 'package:zuraffa_agent/src/data/providers/recorded_traffic/recorded_traffic_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/recorded_traffic/recorded_traffic.dart';
 import 'package:zuraffa_agent/src/domain/services/recorded_traffic_service.dart';
-import 'package:zuraffa_agent/src/data/providers/recorded_traffic/recorded_traffic_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#7 - RecordedTraffic value equality', () {
     test('RecordedTraffic equality is value-based across all fields', () {
-      final a = RecordedTraffic(
+      const a = RecordedTraffic(
         id: 'id-a',
         missionId: 'ref-1',
         llmCallCount: 10,
         toolCallCount: 10,
         recordedAt: 10,
       );
-      final b = RecordedTraffic(
+      const b = RecordedTraffic(
         id: 'id-a',
         missionId: 'ref-1',
         llmCallCount: 10,
@@ -29,14 +29,14 @@ void main() {
     });
 
     test('RecordedTraffic inequality differs when a field changes', () {
-      final a = RecordedTraffic(
+      const a = RecordedTraffic(
         id: 'id-a',
         missionId: 'ref-1',
         llmCallCount: 10,
         toolCallCount: 10,
         recordedAt: 10,
       );
-      final b = RecordedTraffic(
+      const b = RecordedTraffic(
         id: 'id-b',
         missionId: 'ref-2',
         llmCallCount: 20,
@@ -56,7 +56,9 @@ void main() {
     test(
       'RecordedTrafficProvider.current returns the active traffic snapshot',
       () async {
-        final traffic = await RecordedTrafficProvider().current(NoParams());
+        final traffic = await RecordedTrafficProvider().current(
+          const NoParams(),
+        );
         expect(traffic, isA<RecordedTraffic>());
         expect(traffic.id, 'default');
         expect(traffic.missionId, 'mission-1');
@@ -68,7 +70,7 @@ void main() {
     test(
       'RecordedTrafficProvider.current honors an injected snapshot',
       () async {
-        final injected = const RecordedTraffic(
+        const injected = RecordedTraffic(
           id: 'rt-1',
           missionId: 'ref-7',
           llmCallCount: 12,
@@ -77,13 +79,13 @@ void main() {
         );
         final traffic = await RecordedTrafficProvider(
           injected,
-        ).current(NoParams());
+        ).current(const NoParams());
         expect(traffic, same(injected));
       },
     );
 
     test('RecordedTrafficProvider.count returns 1', () async {
-      expect(await RecordedTrafficProvider().count(NoParams()), 1);
+      expect(await RecordedTrafficProvider().count(const NoParams()), 1);
     });
   });
 }

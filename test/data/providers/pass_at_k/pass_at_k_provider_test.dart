@@ -20,10 +20,9 @@
 
 import 'package:test/test.dart';
 import 'package:zuraffa/zuraffa.dart' show NoParams;
-
+import 'package:zuraffa_agent/src/data/providers/pass_at_k/pass_at_k_provider.dart';
 import 'package:zuraffa_agent/src/domain/entities/pass_at_k/pass_at_k.dart';
 import 'package:zuraffa_agent/src/domain/services/pass_at_k_service.dart';
-import 'package:zuraffa_agent/src/data/providers/pass_at_k/pass_at_k_provider.dart';
 
 void main() {
   group('arrarrny/zuraffa_agent#7 — PassAtK unbiased estimator', () {
@@ -127,7 +126,7 @@ void main() {
           n: 5,
           c: 1,
           k: 2,
-        ).current(NoParams());
+        ).current(const NoParams());
         expect(result, isA<PassAtK>());
         // 1 - C(4,2)/C(5,2) = 1 - 6/10 = 0.4
         expect(result.value, closeTo(0.4, 1e-9));
@@ -141,26 +140,24 @@ void main() {
           n: 10,
           c: 0,
           k: 1,
-        ).current(NoParams());
+        ).current(const NoParams());
         expect(result.value, 0.0);
       },
     );
 
-    test(
-      'PassAtKProvider.current returns 1 when every k-subset hits a correct sample',
-      () async {
-        // n=5, c=4, k=2 → n-c=1 < 2 → 1.0
-        final result = await PassAtKProvider(
-          n: 5,
-          c: 4,
-          k: 2,
-        ).current(NoParams());
-        expect(result.value, 1.0);
-      },
-    );
+    test('PassAtKProvider.current returns 1 when every k-subset hits a correct '
+        'sample', () async {
+      // n=5, c=4, k=2 → n-c=1 < 2 → 1.0
+      final result = await PassAtKProvider(
+        n: 5,
+        c: 4,
+        k: 2,
+      ).current(const NoParams());
+      expect(result.value, 1.0);
+    });
 
     test('PassAtKProvider.count returns 1', () async {
-      expect(await PassAtKProvider().count(NoParams()), 1);
+      expect(await PassAtKProvider().count(const NoParams()), 1);
     });
   });
 }

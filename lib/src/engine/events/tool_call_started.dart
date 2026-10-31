@@ -6,9 +6,14 @@ part of 'engine_event.dart';
 final class ToolCallStarted extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The tool name.
   final String toolName;
+
+  /// The call identifier.
   final String callId;
 
+  /// Creates a tool call started.
   const ToolCallStarted({
     required this.emittedAt,
     required this.toolName,
@@ -29,5 +34,6 @@ final class ToolCallStarted extends EngineEvent {
 
   @override
   String toString() =>
-      'ToolCallStarted(emittedAt: $emittedAt, toolName: $toolName, callId: $callId)';
+      'ToolCallStarted(emittedAt: $emittedAt, toolName: $toolName, callId: '
+      '$callId)';
 }

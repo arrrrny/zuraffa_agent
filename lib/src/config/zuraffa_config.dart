@@ -27,16 +27,19 @@ sealed class ConfigIssue {
 
 /// A section is absent but required by another configured section.
 final class ConfigIssueMissing extends ConfigIssue {
+  /// The section.
   final String section;
 
   /// The configured section(s) that require [section].
   final List<String> requiredBy;
 
+  /// Creates a config issue missing.
   const ConfigIssueMissing({required this.section, required this.requiredBy});
 
   @override
   String get message =>
-      'missing configuration: [$section] is required by ${requiredBy.join(', ')}';
+      'missing configuration: [$section] is required by '
+      '${requiredBy.join(', ')}';
 
   @override
   bool operator ==(Object other) =>
@@ -54,13 +57,19 @@ final class ConfigIssueMissing extends ConfigIssue {
 
 /// A configured value is outside its legal bounds.
 final class ConfigIssueOutOfRange extends ConfigIssue {
+  /// The section.
   final String section;
+
+  /// The field.
   final String field;
 
   /// The offending value.
   final Object? value;
+
+  /// The bound description.
   final String boundDescription;
 
+  /// Creates a config issue out of range.
   const ConfigIssueOutOfRange({
     required this.section,
     required this.field,
@@ -90,10 +99,16 @@ final class ConfigIssueOutOfRange extends ConfigIssue {
 
 /// Two configured sections contradict each other.
 final class ConfigIssueIncompatible extends ConfigIssue {
+  /// The section a.
   final String sectionA;
+
+  /// The section b.
   final String sectionB;
+
+  /// The reason.
   final String reason;
 
+  /// Creates a config issue incompatible.
   const ConfigIssueIncompatible({
     required this.sectionA,
     required this.sectionB,
@@ -138,13 +153,25 @@ const _listEquality = _ListEquality();
 /// The runtime configuration aggregate (issue #121): six optional sections;
 /// [validate] decides runnability.
 class ZuraffaConfig {
+  /// The provider config.
   final ProviderConfig? providerConfig;
+
+  /// The agent spec.
   final YamlAgentSpec? agentSpec;
+
+  /// The engine loop.
   final EngineLoop? engineLoop;
+
+  /// The MCP transport.
   final McpTransport? mcpTransport;
+
+  /// The stop policy.
   final StopPolicy? stopPolicy;
+
+  /// The compaction strategy.
   final CompactionStrategy? compactionStrategy;
 
+  /// Creates a zuraffa config.
   const ZuraffaConfig({
     this.providerConfig,
     this.agentSpec,
@@ -197,9 +224,9 @@ class ZuraffaConfig {
     // ---- missing ----------------------------------------------------
     if (loop != null && provider == null) {
       issues.add(
-        ConfigIssueMissing(
+        const ConfigIssueMissing(
           section: 'providerConfig',
-          requiredBy: const ['engineLoop'],
+          requiredBy: ['engineLoop'],
         ),
       );
     }
@@ -247,6 +274,7 @@ class ZuraffaConfig {
   String toString() =>
       'ZuraffaConfig(provider: ${providerConfig != null}, '
       'agentSpec: ${agentSpec != null}, engineLoop: ${engineLoop != null}, '
-      'mcpTransport: ${mcpTransport != null}, stopPolicy: ${stopPolicy != null}, '
+      'mcpTransport: ${mcpTransport != null}, stopPolicy: '
+      '${stopPolicy != null}, '
       'compaction: ${compactionStrategy != null})';
 }

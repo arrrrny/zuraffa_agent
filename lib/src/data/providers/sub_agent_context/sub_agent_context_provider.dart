@@ -12,11 +12,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/sub_agent_context/sub_agent_context.dart';
 import '../../../domain/services/sub_agent_context_service.dart';
 
+/// The sub agent context provider.
 class SubAgentContextProvider
     with Loggable, FailureHandler
     implements SubAgentContextService {
   final List<SubAgentContext> _contexts;
 
+  /// Creates a sub agent context provider.
   SubAgentContextProvider([SubAgentContext? active])
     : _contexts = [
         active ??

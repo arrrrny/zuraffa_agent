@@ -10,9 +10,9 @@
 // spans anyway. The MCP decorator is consumer-side: wrap your client
 // before handing it to the tool adapter (see [TracedMcpClient]).
 
-import '../engine/tool_dispatcher.dart';
 import '../domain/entities/mcp_transport/mcp_transport.dart';
 import '../domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
+import '../engine/tool_dispatcher.dart';
 import '../mcp/mcp_call_guard.dart';
 import '../mcp/mcp_call_result.dart';
 import '../mcp/mcp_client.dart';
@@ -26,6 +26,7 @@ import 'tracing.dart';
 /// incremented for every unsuccessful result — including dispatches that
 /// threw and failed results inside a batch.
 class TracedToolDispatcher implements ToolDispatcher {
+  /// Creates a traced tool dispatcher.
   TracedToolDispatcher(this._inner, this._tracer, {Metrics? metrics})
     : _metrics = metrics ?? NoopMetrics.instance;
 
@@ -114,6 +115,7 @@ class TracedToolDispatcher implements ToolDispatcher {
 /// the error code attached on [McpCallError] outcomes. Wrap the client
 /// before handing it to [McpToolAdapter] / the tool registry.
 class TracedMcpClient implements McpClient {
+  /// Creates a traced MCP client.
   TracedMcpClient(this._inner, this._tracer);
 
   final McpClient _inner;

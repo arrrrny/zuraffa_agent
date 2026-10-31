@@ -8,8 +8,11 @@ part of 'engine_event.dart';
 final class TurnCompleted extends EngineEvent {
   @override
   final DateTime emittedAt;
+
+  /// The reason.
   final String? reason;
 
+  /// Creates a turn completed.
   const TurnCompleted({required this.emittedAt, this.reason});
 
   @override

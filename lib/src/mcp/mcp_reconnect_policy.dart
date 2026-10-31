@@ -46,6 +46,7 @@ class McpReconnectPolicyConfig {
   /// jitter; `0.5` is the classic "decorrelated jitter" amplitude.
   final double jitter;
 
+  /// Creates an MCP reconnect policy config.
   const McpReconnectPolicyConfig({
     required this.initial,
     required this.factor,
@@ -78,12 +79,14 @@ class McpReconnectPolicyConfig {
 /// RNG seed, computes the next backoff delay and tells the caller
 /// whether to retry or give up.
 class McpReconnectPolicy {
+  /// The config.
   final McpReconnectPolicyConfig config;
   final McpDelay _delay;
   final math.Random _rng;
 
   int _attempt = 0;
 
+  /// Creates an MCP reconnect policy.
   McpReconnectPolicy({
     required this.config,
     required McpDelay delay,
@@ -137,6 +140,9 @@ class McpReconnectPolicy {
 /// A recorded sequence of delays applied by a [McpReconnectPolicy]
 /// when the [McpDelay] is the recording fake from test/mcp.
 class RecordedDelays {
+  /// The delays.
   final List<Duration> delays;
+
+  /// Creates a recorded delays.
   RecordedDelays(this.delays);
 }

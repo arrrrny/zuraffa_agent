@@ -28,8 +28,10 @@ class UiGradeResult {
   /// failure reasons (one per failing check).
   final String detail;
 
+  /// Creates a UI grade result (passed variant).
   const UiGradeResult.passed() : passed = true, detail = 'PASS';
 
+  /// Creates a UI grade result (failed variant).
   const UiGradeResult.failed(this.detail) : passed = false;
 
   @override
@@ -68,8 +70,10 @@ abstract class UiGrader {
 /// [UiVocabularyPinError.reason]s otherwise. The pin covers vocabulary
 /// match, allowedComponents, and caps (depth/nodes).
 class UiSchemaGrader implements UiGrader {
+  /// The pinned.
   final UiSpec pinned;
 
+  /// Creates a UI schema grader.
   const UiSchemaGrader(this.pinned);
 
   @override
@@ -119,7 +123,7 @@ class UiSnapshotGrader implements UiGrader {
     if (actualCanonical == _expectedCanonical) {
       return const UiGradeResult.passed();
     }
-    return UiGradeResult.failed(
+    return const UiGradeResult.failed(
       'snapshot mismatch: canonical JSON differs from pinned expected',
     );
   }

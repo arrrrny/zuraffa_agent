@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/engine_loop/engine_loop.dart';
 import '../../../domain/services/engine_loop_service.dart';
 
+/// The engine loop provider.
 class EngineLoopProvider
     with Loggable, FailureHandler
     implements EngineLoopService {
   final EngineLoop _active;
 
+  /// Creates an engine loop provider.
   EngineLoopProvider([EngineLoop? active])
     : _active =
           active ??

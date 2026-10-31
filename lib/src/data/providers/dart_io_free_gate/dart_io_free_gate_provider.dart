@@ -10,11 +10,13 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/dart_io_free_gate/dart_io_free_gate.dart';
 import '../../../domain/services/dart_io_free_gate_service.dart';
 
+/// The dart I/O free gate provider.
 class DartIoFreeGateProvider
     with Loggable, FailureHandler
     implements DartIoFreeGateService {
   final DartIoFreeGate _active;
 
+  /// Creates a dart I/O free gate provider.
   DartIoFreeGateProvider([DartIoFreeGate? active])
     : _active =
           active ??

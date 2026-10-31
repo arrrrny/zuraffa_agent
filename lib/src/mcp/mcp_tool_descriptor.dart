@@ -22,14 +22,20 @@
 /// - [paramsSchema]: optional JSON Schema for typed-params validation
 ///   at dispatch. Null when the tool takes no params.
 class McpToolDescriptor {
+  /// The name.
   final String name;
+
+  /// The description.
   final String description;
+
+  /// The params schema.
   final Map<String, dynamic>? paramsSchema;
 
   /// True when the tool is safe to repeat (idempotent) — opts calls into
   /// transient-failure retry (spec 108, issue #120). Defaults to false.
   final bool readOnly;
 
+  /// Creates an MCP tool descriptor.
   const McpToolDescriptor({
     required this.name,
     required this.description,
@@ -76,6 +82,11 @@ class McpToolDescriptor {
   int get hashCode => Object.hash(name, description, paramsSchema);
 
   @override
-  String toString() =>
-      'McpToolDescriptor(name: $name, description: ${description.length > 40 ? "${description.substring(0, 40)}…" : description}, paramsSchema: ${paramsSchema == null ? "null" : "present"})';
+  String toString() {
+    final desc = description.length > 40
+        ? '${description.substring(0, 40)}…'
+        : description;
+    return 'McpToolDescriptor(name: $name, description: $desc, '
+        'paramsSchema: ${paramsSchema == null ? 'null' : 'present'})';
+  }
 }

@@ -37,8 +37,13 @@ import 'tool_listing_cache.dart';
 ///   // the consumer wants to force a re-sync.
 ///   ```
 class McpToolAdapter {
+  /// The client.
   final McpClient client;
+
+  /// The registry.
   final ToolRegistry registry;
+
+  /// The server identifier.
   final String serverId;
 
   /// Cache that wraps [McpClient.listTools] with TTL invalidation.
@@ -51,6 +56,7 @@ class McpToolAdapter {
   StreamSubscription<void>? _sub;
   bool _disposed = false;
 
+  /// Creates an MCP tool adapter.
   McpToolAdapter({
     required this.client,
     required this.registry,

@@ -24,22 +24,42 @@ import '../client_health/client_health.dart';
 class FallbackChain {
   static int _idSequence = 0;
 
+  /// The identifier.
   final String id;
 
   // --- spec-053 legacy field set (provider metadata view) ---
+  /// The provider identifiers.
   final List<String> providerIds;
+
+  /// The current provider index.
   final int currentProviderIndex;
+
+  /// The advances.
   final int advances;
+
+  /// The last error class.
   final String? lastErrorClass;
 
   // --- spec-008 chain configuration field set ---
+  /// The provider order.
   final List<String> providerOrder;
+
+  /// The max consecutive failures.
   final int maxConsecutiveFailures;
+
+  /// The cooldown ms.
   final int cooldownMs;
+
+  /// The policy mode.
   final String policyMode;
+
+  /// The breaker states.
   final List<ClientHealth> breakerStates;
+
+  /// The last provider index.
   final int lastProviderIndex;
 
+  /// Creates a fallback chain.
   FallbackChain({
     String? id,
     this.providerIds = const [],
@@ -59,6 +79,7 @@ class FallbackChain {
     return 'chain_${DateTime.now().microsecondsSinceEpoch}_$_idSequence';
   }
 
+  /// Returns a copy of this fallback chain with the given fields replaced.
   FallbackChain copyWith({
     String? id,
     List<String>? providerIds,
@@ -86,6 +107,7 @@ class FallbackChain {
     lastProviderIndex: lastProviderIndex ?? this.lastProviderIndex,
   );
 
+  /// Converts this fallback chain to JSON.
   Map<String, dynamic> toJson() => {
     'id': id,
     'providerIds': providerIds,
@@ -100,6 +122,7 @@ class FallbackChain {
     'lastProviderIndex': lastProviderIndex,
   };
 
+  /// Creates a fallback chain from JSON.
   factory FallbackChain.fromJson(Map<String, dynamic> json) => FallbackChain(
     id: json['id'] as String?,
     providerIds:

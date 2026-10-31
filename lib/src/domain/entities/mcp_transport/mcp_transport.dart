@@ -8,13 +8,23 @@
 
 /// McpTransport sealed (in-proc/SSE/stdio) value object.
 ///
-/// Sealed transport — in-proc (same-isolate), SSE+Bearer (reconnect, auth callback), stdio (subprocess pipe). One client interface, three transports (epic #3 §R3.3, issue #4 US3).
+/// Sealed transport — in-proc (same-isolate), SSE+Bearer (reconnect, auth
+/// callback), stdio (subprocess pipe). One client interface, three transports
+/// (epic #3 §R3.3, issue #4 US3).
 class McpTransport {
+  /// The identifier.
   final String id;
+
+  /// The transport type.
   final String transportType;
+
+  /// The endpoint.
   final String endpoint;
+
+  /// Whether auth required.
   final bool authRequired;
 
+  /// Creates an MCP transport.
   const McpTransport({
     required this.id,
     required this.transportType,
@@ -37,5 +47,6 @@ class McpTransport {
 
   @override
   String toString() =>
-      'McpTransport(id: $id, transportType: $transportType, endpoint: $endpoint)';
+      'McpTransport(id: $id, transportType: $transportType, endpoint: '
+      '$endpoint)';
 }

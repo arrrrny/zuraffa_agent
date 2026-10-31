@@ -51,6 +51,7 @@ class _Registration {
 /// In-memory implementation of [ToolRegistry]: DDA + generated + remote MCP
 /// tools in one namespace, collisions rejected at registration.
 class InMemoryToolRegistry implements ToolRegistry {
+  /// Creates an in memory tool registry.
   InMemoryToolRegistry();
 
   final Map<String, _Registration> _tools = <String, _Registration>{};

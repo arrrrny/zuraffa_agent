@@ -37,6 +37,7 @@ class StopPolicy {
   /// fire, mission runs to natural completion or external cancel).
   final bool enabled;
 
+  /// Creates a stop policy.
   const StopPolicy({
     required this.id,
     required this.maxTurns,
@@ -73,6 +74,7 @@ class StopPolicy {
 
   @override
   String toString() =>
-      'StopPolicy(id: $id, maxTurns: $maxTurns, wallClockTimeout: $wallClockTimeout, '
+      'StopPolicy(id: $id, maxTurns: $maxTurns, wallClockTimeout: '
+      '$wallClockTimeout, '
       'repetitionThreshold: $repetitionThreshold, enabled: $enabled)';
 }

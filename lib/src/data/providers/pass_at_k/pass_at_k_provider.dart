@@ -11,9 +11,11 @@ import 'package:zuraffa/zuraffa.dart' hide CompactionStrategy;
 import '../../../domain/entities/pass_at_k/pass_at_k.dart';
 import '../../../domain/services/pass_at_k_service.dart';
 
+/// The pass at k provider.
 class PassAtKProvider with Loggable, FailureHandler implements PassAtKService {
   final PassAtK _snapshot;
 
+  /// Creates a pass at k provider.
   PassAtKProvider({int n = 10, int c = 1, int k = 1})
     : _snapshot = PassAtK.compute(n: n, c: c, k: k);
 

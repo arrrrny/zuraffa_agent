@@ -22,23 +22,37 @@ import 'mcp_tool_descriptor.dart';
 
 /// State machine for an [McpClient].
 ///
-/// - [disconnected] — initial state; never connected or after [McpClient.disconnect].
+/// - [disconnected] — initial state; never connected or after
+/// [McpClient.disconnect]. - [connecting] — [McpClient.connect] in flight. -
+/// [connected] — connected and operational. - [reconnecting] — transport
+/// dropped; reconnect backoff in progress. - [failed] — reconnect policy
+/// exhausted; manual intervention required.
 /// - [connecting] — [McpClient.connect] in flight.
 /// - [connected] — connected and operational.
 /// - [reconnecting] — transport dropped; reconnect backoff in progress.
 /// - [failed] — reconnect policy exhausted; manual intervention required.
 enum McpClientState {
+  /// The disconnected value.
   disconnected,
+
+  /// The connecting value.
   connecting,
+
+  /// The connected value.
   connected,
+
+  /// The reconnecting value.
   reconnecting,
+
+  /// The failed value.
   failed,
 }
 
 /// The MCP client surface the engine consumes.
 ///
 /// Lifecycle:
-///   1. `connect()` — opens the transport; transitions to [McpClientState.connected]
+///   1. `connect()` — opens the transport; transitions to
+///      [McpClientState.connected]
 ///      on success or [McpClientState.failed] on terminal failure.
 ///   2. `listTools()` — returns the server's advertised tool descriptors.
 ///      May be cached by a [ToolListingCache] wrapper.

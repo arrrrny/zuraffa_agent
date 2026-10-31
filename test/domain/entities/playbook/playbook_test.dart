@@ -18,17 +18,17 @@ Playbook _referencePlaybook() => Playbook(
   domain: 'country',
   country: 'DE',
   steering: [
-    PlaybookSteering(id: 's1', content: 'Greet in German.'),
-    PlaybookSteering(content: 'Cite GDPR for personal data.'),
+    const PlaybookSteering(id: 's1', content: 'Greet in German.'),
+    const PlaybookSteering(content: 'Cite GDPR for personal data.'),
     // Deliberate duplicate: steering is an ordered narrative, not a set.
-    PlaybookSteering(content: 'Greet in German.'),
+    const PlaybookSteering(content: 'Greet in German.'),
   ],
-  toolGate: PlaybookToolGate(
+  toolGate: const PlaybookToolGate(
     mode: PlaybookGateMode.allowlist,
     allowed: ['search', 'fetch'],
     blocked: [],
   ),
-  response: PlaybookResponse(language: 'de', maxChars: 2000),
+  response: const PlaybookResponse(language: 'de', maxChars: 2000),
 );
 
 void main() {
@@ -150,7 +150,7 @@ void main() {
             country: p.country,
             steering: p.steering,
             toolGate: p.toolGate,
-            response: PlaybookResponse(language: 'jp', maxChars: 2000),
+            response: const PlaybookResponse(language: 'jp', maxChars: 2000),
           ),
         ),
         isNot(equals(b)),
@@ -239,7 +239,7 @@ void main() {
           id: 'pb-1',
           name: 'germany',
           description: 'desc',
-          steering: [PlaybookSteering(content: '')],
+          steering: [const PlaybookSteering(content: '')],
           toolGate: _gate,
           response: _response,
         ),

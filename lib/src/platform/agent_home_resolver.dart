@@ -12,6 +12,7 @@ final class AgentHomeLayout {
   /// Run artifacts (recordings, exports) live here.
   final String artifacts;
 
+  /// Creates an agent home layout.
   const AgentHomeLayout({
     required this.sessions,
     required this.memory,
@@ -40,7 +41,11 @@ final class AgentHomeLayout {
 abstract final class AgentHomeResolver {
   /// The canonical subdirectory names, pinned (spec 115 FR-002).
   static const String sessionsDir = 'sessions';
+
+  /// The memory dir.
   static const String memoryDir = 'memory';
+
+  /// The artifacts dir.
   static const String artifactsDir = 'artifacts';
 
   /// Composes the layout under [home]. Throws [StateError] when [home]

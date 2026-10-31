@@ -12,7 +12,7 @@ const awsKey =
     'AKIA'
     'IOSFODNN7EXAMPLE';
 final ghPat = 'ghp_' + 'a' * 36;
-final jwt =
+const jwt =
     'eyJhbGciOiJIUzI1NiJ9'
     '.eyJzdWIiOiIxMjM0NTY3ODkwIn0'
     '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('U3: JWT redacted', () {
-      final secret = jwt;
+      const secret = jwt;
       final r = RegexToolResultSanitizer().sanitize(
         'authorization: Bearer $secret',
       );
@@ -90,7 +90,7 @@ void main() {
       const secret = awsKey;
       // Disabled rule: secret passes through untouched.
       final disabled = RegexToolResultSanitizer(
-        config: SanitizerConfig(disabledRules: {'aws-access-key-id'}),
+        config: const SanitizerConfig(disabledRules: {'aws-access-key-id'}),
       ).sanitize('key: $secret');
       expect(disabled.content, contains(secret));
       expect(disabled.matchedRules, isEmpty);
@@ -106,7 +106,7 @@ void main() {
 
       // Custom marker template honored.
       final markered = RegexToolResultSanitizer(
-        config: SanitizerConfig(markerTemplate: '<REMOVED:{rule}>'),
+        config: const SanitizerConfig(markerTemplate: '<REMOVED:{rule}>'),
       ).sanitize('key: $awsKey');
       expect(markered.content, contains('<REMOVED:aws-access-key-id>'));
     });

@@ -87,7 +87,8 @@ class SteeringQueue {
 
   /// Enqueues [message]: returns a NEW snapshot with the message
   /// appended to the pending list (FIFO — it becomes the new tail) and
-  /// [lastInjectedAt] stamped with the message's own [SteeringMessage.injectedAt]
+  /// [lastInjectedAt] stamped with the message's own
+  /// [SteeringMessage.injectedAt]
   /// (the queue records when the newest message was injected).
   /// `id` and `processedCount` are unchanged; `this` is never mutated.
   SteeringQueue enqueue(SteeringMessage message) => SteeringQueue._(
@@ -186,7 +187,8 @@ class SteeringQueue {
         throw ArgumentError.value(
           lastRaw,
           'lastInjectedAt',
-          'SteeringQueue.lastInjectedAt must be an ISO-8601 string when present',
+          'SteeringQueue.lastInjectedAt must be an ISO-8601 string when '
+              'present',
         );
       }
       lastInjectedAt = DateTime.tryParse(lastRaw);
@@ -231,5 +233,6 @@ class SteeringQueue {
 
   @override
   String toString() =>
-      'SteeringQueue(id: $id, pending: ${pending.length}, processedCount: $processedCount, lastInjectedAt: $lastInjectedAt)';
+      'SteeringQueue(id: $id, pending: ${pending.length}, processedCount: '
+      '$processedCount, lastInjectedAt: $lastInjectedAt)';
 }

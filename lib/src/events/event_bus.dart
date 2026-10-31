@@ -1,21 +1,35 @@
 // Event types for the agent pub/sub bus (spec 013).
+/// The LLM chunk event.
 class LLMChunkEvent {
+  /// The chunk.
   final String chunk;
+
+  /// Creates an LLM chunk event.
   LLMChunkEvent(this.chunk);
 }
 
 /// Request emitted before a tool call; a handler may return a modified response
 /// (FR-002).
 class BeforeToolCallRequest {
+  /// The tool name.
   final String toolName;
+
+  /// The args.
   final Map<String, Object> args;
+
+  /// Creates a before tool call request.
   BeforeToolCallRequest(this.toolName, this.args);
 }
 
 /// Response a [BeforeToolCallRequest] handler returns to the emitter (FR-002).
 class BeforeToolCallResponse {
+  /// The args.
   final Map<String, Object> args;
+
+  /// Whether approved.
   final bool approved;
+
+  /// Creates a before tool call response.
   BeforeToolCallResponse(this.args, {this.approved = true});
 }
 
@@ -45,13 +59,15 @@ class EventBus {
   // Request/response (FR-002).
   final Map<Type, List<Future<Object> Function(Object)>> _handlers = {};
 
-  /// Register [handler] for requests of type [T], returning a response of type [R].
+  /// Register [handler] for requests of type [T], returning a response of type
+  /// [R].
   void registerHandler<T, R>(Future<R> Function(T) handler) {
     (_handlers[T] ??= []).add((e) async => (await handler(e as T)) as Object);
   }
 
   /// Dispatch [event] to the most recently registered handler for its type and
-  /// return its typed response. Throws [StateError] if no handler is registered.
+  /// return its typed response. Throws [StateError] if no handler is
+  /// registered.
   Future<R> request<R>(Object event) async {
     final handlers = _handlers[event.runtimeType];
     if (handlers == null || handlers.isEmpty) {
@@ -68,6 +84,8 @@ class EventBus {
 /// bus and must be reachable through a default-constructed controller.
 class AgentController {
   final EventBus _bus;
+
+  /// Creates an agent controller.
   AgentController([EventBus? bus]) : _bus = bus ?? EventBus();
 
   /// The wrapped bus — the handler-registration surface for

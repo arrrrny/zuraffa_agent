@@ -30,12 +30,14 @@ import '../domain/entities/llm_client/chat_message.dart';
 /// same split as SubAgentSpec's declarative surface vs. the dispatch
 /// runtime, specs 036/070).
 class Goal {
+  /// The identifier.
   final String id;
 
   /// Human-readable statement of the goal (what the evaluator judges
   /// against; also what an LLM-as-judge prompt would be built from).
   final String description;
 
+  /// Creates a goal.
   const Goal({required this.id, required this.description});
 
   @override
@@ -60,5 +62,6 @@ class Goal {
 /// same seam. The [transcript] handed to [isAchieved] is an unmodifiable
 /// view — evaluators must not mutate the mission's working transcript.
 abstract interface class GoalEvaluator {
+  /// Ises achieved.
   bool isAchieved(Goal goal, List<ChatMessage> transcript);
 }
