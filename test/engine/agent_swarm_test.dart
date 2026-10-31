@@ -53,11 +53,27 @@ class ScriptedDispatchService extends SubAgentDispatchService {
   CancellationToken? tokenOf(String id) => seenTokens[id];
 
   /// Resolves once member [id]'s dispatch has actually returned — including
-  /// detached members the swarm already stopped awaiting.
-  Future<void> memberDone(String id) async {
-    while (!finishedIds.contains(id)) {
-      await Future<void>.delayed(const Duration(milliseconds: 5));
+  /// detached members the swarm already stopped awaiting. Bounded: a member
+  /// that never finishes fails the test after [timeout] instead of hanging
+  /// the whole suite (same fallback pattern the cooperative branch uses
+  /// with its 5s `.timeout(...)`). Test-only helper — the 5ms poll delay
+  /// exists for this suite, never for production loops.
+  Future<void> memberDone(
+    String id, {
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    Future<void> poll() async {
+      while (!finishedIds.contains(id)) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
     }
+
+    return poll().timeout(
+      timeout,
+      onTimeout: () {
+        fail('member $id never finished within ${timeout.inMilliseconds}ms');
+      },
+    );
   }
 
   @override
