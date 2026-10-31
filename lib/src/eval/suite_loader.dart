@@ -15,8 +15,10 @@ import '../domain/entities/suite/suite.dart';
 
 /// Exception thrown when a suite definition cannot be parsed or validated.
 class SuiteLoadException implements Exception {
+  /// What made the definition unparseable or invalid.
   final String message;
 
+  /// Builds the exception with its explanatory message.
   const SuiteLoadException(this.message);
 
   @override
@@ -32,8 +34,10 @@ class SuiteLoadError {
   /// The source label the caller keyed the content by (usually the path).
   final String source;
 
+  /// The underlying parse or validation failure.
   final Object error;
 
+  /// Builds the load error from its source label and cause.
   const SuiteLoadError(this.source, this.error);
 
   @override
@@ -43,10 +47,13 @@ class SuiteLoadError {
 /// The result of loading a catalog of suite files: every suite that parsed
 /// and validated, plus every file that failed.
 class SuiteCatalog {
+  /// Suites that parsed and validated, keyed by suite id.
   final Map<String, Suite> suites;
 
+  /// One entry per suite file that failed to load.
   final List<SuiteLoadError> failures;
 
+  /// Builds the catalog from its suites and failures.
   const SuiteCatalog(this.suites, this.failures);
 }
 
@@ -64,6 +71,7 @@ class SuiteCatalog {
 /// gate_threshold: 0.8
 /// ```
 class SuiteLoader {
+  /// Creates the stateless loader.
   const SuiteLoader();
 
   /// Parses every entry of [yamlBySource] (source label → YAML text) and

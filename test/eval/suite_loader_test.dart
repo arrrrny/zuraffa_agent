@@ -16,7 +16,7 @@ tasks:
   - GM-2
   - GM-3
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
       final suite = loader.loadFromString(yaml);
 
       expect(suite.id, 'test-suite');
@@ -31,7 +31,7 @@ tasks:
 id: test-suite
 name: Test Suite
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
 
       expect(
         () => loader.loadFromString(yaml),
@@ -48,7 +48,7 @@ gate_threshold: 0.8
 tasks:
   - GM-1
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
 
       expect(
         () => loader.loadFromString(yaml),
@@ -65,7 +65,7 @@ gate_threshold: not_a_number
 tasks:
   - GM-1
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
 
       expect(
         () => loader.loadFromString(yaml),
@@ -80,7 +80,7 @@ name: Test Suite
 k: 2
 gate_threshold: 0.8
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
 
       expect(
         () => loader.loadFromString(yaml),
@@ -97,7 +97,7 @@ gate_threshold: 0
 tasks:
   - GM-1
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
       final suite = loader.loadFromString(yaml);
 
       expect(suite.gateThreshold, 0.0);
@@ -111,7 +111,7 @@ k: 2
 gate_threshold: 0.8
 tasks: []
 ''';
-      final loader = SuiteLoader();
+      const loader = SuiteLoader();
       final suite = loader.loadFromString(yaml);
 
       expect(suite.tasks, isEmpty);

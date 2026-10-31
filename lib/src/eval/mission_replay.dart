@@ -11,11 +11,11 @@
 
 import 'package:zuraffa_agent/src/data/providers/engine_loop/engine_loop_executor.dart';
 import 'package:zuraffa_agent/src/domain/entities/engine_loop/engine_loop.dart';
+import 'package:zuraffa_agent/src/domain/entities/golden_mission/golden_mission.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_completion.dart';
 import 'package:zuraffa_agent/src/domain/entities/llm_client/chat_message.dart';
-import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
-import 'package:zuraffa_agent/src/domain/entities/golden_mission/golden_mission.dart';
 import 'package:zuraffa_agent/src/domain/entities/stop_policy/stop_policy.dart';
+import 'package:zuraffa_agent/src/domain/entities/tool_dispatch_result/tool_dispatch_result.dart';
 import 'package:zuraffa_agent/src/engine/mission_runner.dart';
 import 'package:zuraffa_agent/src/engine/tool_dispatcher.dart';
 import 'package:zuraffa_agent/src/eval/cassette_replay_llm_client.dart';
@@ -25,11 +25,13 @@ import 'package:zuraffa_agent/src/eval/suite_loader.dart'
 /// A cassette parsed for replay: the golden mission plus the recorded
 /// completion sequence.
 class MissionReplay {
+  /// The golden mission the cassette records.
   final GoldenMission mission;
 
   /// The recorded completions, consumed in order by the replay client.
   final List<Map<String, dynamic>> completions;
 
+  /// Builds a replay from an already-parsed mission and completion list.
   const MissionReplay({required this.mission, required this.completions});
 
   /// Parses a decoded cassette document (the JSON of `eval/cassettes/<id>.json`).
@@ -86,6 +88,7 @@ class MissionReplay {
 /// shapes, not tool payloads, so the dispatcher echoes a fixed success and
 /// the recorded completions drive the loop shape.
 class ReplayToolDispatcher implements ToolDispatcher {
+  /// Creates the canned-success dispatcher.
   ReplayToolDispatcher();
 
   @override
@@ -146,6 +149,8 @@ class ReplayToolDispatcher implements ToolDispatcher {
 /// without steering. The final recording stops the mission naturally, so
 /// its content comes back as the summary exactly as recorded.
 class ReplayToolPlanner implements ToolCallPlanner {
+  /// Creates the pacing planner for a cassette with [turnsToServe]
+  /// recorded completions.
   const ReplayToolPlanner({required this.turnsToServe});
 
   /// How many completions the cassette carries; the mission must not stop
@@ -183,6 +188,7 @@ class ReplayToolPlanner implements ToolCallPlanner {
 
 /// The outcome of one replayed mission run.
 class ReplayRunResult {
+  /// The replayed mission's id.
   final String missionId;
 
   /// The mission's summary — the final assistant content on natural stop.
@@ -191,6 +197,7 @@ class ReplayRunResult {
   /// True when the mission finished `completed` (natural stop within budget).
   final bool completed;
 
+  /// Builds a run outcome.
   const ReplayRunResult({
     required this.missionId,
     required this.summary,
@@ -219,7 +226,7 @@ class MissionReplayRunner {
       wallClockTimeoutMs: 600000,
       repetitionThreshold: _maxTurns,
     );
-    final policy = StopPolicy(
+    const policy = StopPolicy(
       id: 'eval-replay',
       maxTurns: _maxTurns,
       wallClockTimeout: Duration.zero,

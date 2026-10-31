@@ -12,6 +12,7 @@ import 'suite_gate.dart';
 
 /// Result of running a single mission k times.
 class MissionRunResult {
+  /// Builds the result from its outcomes and metrics.
   const MissionRunResult({
     required this.missionId,
     required this.k,
@@ -60,6 +61,7 @@ class MissionRunResult {
 
 /// Result of running an entire suite.
 class SuiteRunResult {
+  /// Builds the result from its mission results and gate decision.
   const SuiteRunResult({
     required this.suite,
     required this.missionResults,
@@ -100,6 +102,7 @@ class SuiteRunResult {
 
 /// Configuration for running a suite.
 class SuiteRunnerConfig {
+  /// Builds the config; every field has a default.
   const SuiteRunnerConfig({
     this.k = 2,
     this.maxTurns = 10,
@@ -127,6 +130,7 @@ class SuiteRunnerConfig {
 /// caller-supplied grader — every k sample is an independent replay of the
 /// recorded corpus, so pass@k / pass^k see k real (deterministic) samples.
 class SuiteRunner {
+  /// Creates the stateless runner.
   const SuiteRunner();
 
   /// Runs [mission] k times, each run a fresh cassette replay, and returns

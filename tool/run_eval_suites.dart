@@ -17,9 +17,8 @@
 //
 // Exit codes: 0 gate passed, 1 gate failed, 2 setup error.
 
-import 'dart:io';
-
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:zuraffa_agent/src/domain/entities/suite/suite.dart';
 import 'package:zuraffa_agent/src/eval/graders/exact_match_grader.dart';
