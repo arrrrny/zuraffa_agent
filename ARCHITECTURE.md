@@ -192,5 +192,6 @@ away from the abandoned `minio`'s xml 6.x). Out-of-repo `path:`
 overrides are local development hygiene and must never land on
 `master` (see 81d6d55). The federated `packages/*` subpackages resolve
 under the Flutter SDK in their own contexts and are excluded from the
-root lockfile; committing their lockfiles is a follow-up once they get
-a CI lane.
+root lockfile; their lockfiles are committed alongside the root's since
+`publish.yml` became their CI lane, so their `pub get` steps can run
+with `--enforce-lockfile` too.
