@@ -282,20 +282,24 @@ String packageBlock(LockedPackage package, {String? licenseText}) {
     buffer.writeln('Source:   $packageUrl');
     if (licenseText != null && licenseText.isNotEmpty) {
       buffer.writeln(
-        'License:  ${licenseLabel(licenseText)} — verbatim text from the package archive:',
+        'License:  ${licenseLabel(licenseText)} — verbatim text from '
+        'the package archive:',
       );
     } else {
       buffer.writeln(
-        'License:  UNKNOWN — no license file resolved from the published archive.',
+        'License:  UNKNOWN — no license file resolved from the '
+        'published archive.',
       );
       buffer.writeln('          Resolve manually: $packageUrl/license');
     }
   } else {
     buffer.writeln(
-      'Source:   ${package.source} dependency (see pubspec.lock; archive not fetched)',
+      'Source:   ${package.source} dependency '
+      '(see pubspec.lock; archive not fetched)',
     );
     buffer.writeln(
-      'License:  UNKNOWN — non-hosted dependency; resolve from its source repository.',
+      'License:  UNKNOWN — non-hosted dependency; resolve from its '
+      'source repository.',
     );
   }
   buffer.writeln(separator);
@@ -356,7 +360,8 @@ Future<void> main() async {
   final lockFile = File('$root/pubspec.lock');
   if (!lockFile.existsSync()) {
     stderr.writeln(
-      'generate_third_party_notices: pubspec.lock not found under ${Directory.current.path} — run from the package root.',
+      'generate_third_party_notices: pubspec.lock not found under '
+      '${Directory.current.path} — run from the package root.',
     );
     exitCode = 1;
     return;
@@ -371,7 +376,8 @@ Future<void> main() async {
   }
 
   stdout.writeln(
-    'generate_third_party_notices: fetching licenses for ${packages.length} locked packages...',
+    'generate_third_party_notices: fetching licenses for '
+    '${packages.length} locked packages...',
   );
   final licenses = <String, String?>{};
   final failures = <String, String>{};
@@ -410,12 +416,15 @@ Future<void> main() async {
   final target = File('$root/THIRD_PARTY_NOTICES.txt');
   target.writeAsStringSync(renderDocument(notices));
   stdout.writeln(
-    'generate_third_party_notices: wrote ${target.path} — ${notices.length} packages '
-    '(${notices.length - unknown.length} with license text, ${unknown.length} UNKNOWN).',
+    'generate_third_party_notices: wrote ${target.path} — '
+    '${notices.length} packages '
+    '(${notices.length - unknown.length} with license text, '
+    '${unknown.length} UNKNOWN).',
   );
   for (final notice in unknown) {
     stdout.writeln(
-      '  UNKNOWN license: ${notice.package.name} ${notice.package.version} — resolve manually.',
+      '  UNKNOWN license: ${notice.package.name} ${notice.package.version} '
+      '— resolve manually.',
     );
   }
 }

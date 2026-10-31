@@ -64,10 +64,10 @@ import '../observability/tracing.dart';
 import '../retention.dart';
 import '../security/tool_result_sanitizer.dart';
 import '../types.dart';
+import 'cancellation_token.dart';
 import 'events/engine_event.dart';
 import 'goal_mode.dart';
 import 'tool_dispatcher.dart';
-import 'cancellation_token.dart';
 
 /// Terminal status of a mission run.
 enum MissionStatus {

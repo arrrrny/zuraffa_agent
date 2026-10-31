@@ -233,7 +233,7 @@ void main() {
 
   group('extractLicenseFiles', () {
     test('extracts LICENSE from a real tar.gz archive', () async {
-      final tarBinary = '/usr/bin/tar';
+      const tarBinary = '/usr/bin/tar';
       if (!File(tarBinary).existsSync()) {
         markTestSkipped('system tar not available');
       }
@@ -263,7 +263,7 @@ void main() {
     });
 
     test('ignores non-license files inside the archive', () async {
-      final tarBinary = '/usr/bin/tar';
+      const tarBinary = '/usr/bin/tar';
       if (!File(tarBinary).existsSync()) {
         markTestSkipped('system tar not available');
       }
