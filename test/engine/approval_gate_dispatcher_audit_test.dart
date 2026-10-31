@@ -205,6 +205,9 @@ void main() {
         auditLog: audit,
       );
 
+      // A5 (issue #4): admin tools run only on internal missions — the
+      // internal mission is the admin grant — so this batch dispatches on
+      // an internal mission to exercise the admin approval path.
       await g.dispatchBatch(
         calls: [
           const ToolCall(
@@ -218,7 +221,7 @@ void main() {
             executionMode: 'sequential',
           ),
         ],
-        isInternalMission: false,
+        isInternalMission: true,
       );
 
       expect(
