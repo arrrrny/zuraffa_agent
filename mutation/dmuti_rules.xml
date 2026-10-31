@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  dmuti (mutation_test) rules — issue #128 AC-1, option A.
+
+  This file holds ONLY the mutation rules; it is passed via `--rules` (which
+  disables dmuti's builtin rules — the builtin if-negation and argument-swap
+  rules multiply the mutant count into hours and produce many non-compiling
+  "killed" noise rows). Targets, test commands, exclusions and the quality
+  gate live in mutation/dmuti_targets.xml:
+
+    dart run mutation_test --rules mutation/dmuti_rules.xml mutation/dmuti_targets.xml
+-->
+<mutations version="1.2">
+  <rules>
+    <!-- Comparison operators. Bare > and < are deliberately ABSENT: they
+         also match generic type arguments (List<...>). Spaced >= / <= match
+         only real binary comparisons in formatted code. -->
+    <literal text="==" id="dart.eq">
+      <mutation text="!="/>
+    </literal>
+    <literal text="!=" id="dart.neq">
+      <mutation text="=="/>
+    </literal>
+    <literal text=" &gt;= " id="dart.geq">
+      <mutation text=" &gt; "/>
+      <mutation text=" &lt; "/>
+    </literal>
+    <literal text=" &lt;= " id="dart.leq">
+      <mutation text=" &lt; "/>
+      <mutation text=" &gt; "/>
+    </literal>
+    <!-- Boolean operators -->
+    <literal text="&amp;&amp;" id="dart.and">
+      <mutation text="||"/>
+    </literal>
+    <literal text="||" id="dart.or">
+      <mutation text="&amp;&amp;"/>
+    </literal>
+    <!-- Boolean literals -->
+    <literal text="return true;" id="dart.ret_true">
+      <mutation text="return false;"/>
+    </literal>
+    <literal text="return false;" id="dart.ret_false">
+      <mutation text="return true;"/>
+    </literal>
+    <!-- Arithmetic (estimator/binomial products). - and + are ABSENT: the
+         doc comments contain far more occurrences than the code, which
+         would flood the run with vacuous survivors. -->
+    <literal text=" * " id="dart.mul">
+      <mutation text=" ~/ "/>
+    </literal>
+    <literal text=" ~/ " id="dart.idiv">
+      <mutation text=" * "/>
+    </literal>
+  </rules>
+</mutations>

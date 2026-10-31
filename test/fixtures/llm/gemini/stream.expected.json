@@ -1,0 +1,55 @@
+[
+  {
+    "content": "Hello",
+    "thinking": null,
+    "toolCalls": [],
+    "usage": null,
+    "isComplete": false,
+    "finishReason": null
+  },
+  {
+    "content": ", ",
+    "thinking": null,
+    "toolCalls": [],
+    "usage": null,
+    "isComplete": false,
+    "finishReason": null
+  },
+  {
+    "content": "world.",
+    "thinking": null,
+    "toolCalls": [],
+    "usage": null,
+    "isComplete": false,
+    "finishReason": null
+  },
+  {
+    "content": null,
+    "thinking": null,
+    "toolCalls": [
+      {
+        "id": "call_0",
+        "name": "get_weather",
+        "arguments": {
+          "city": "Paris"
+        }
+      }
+    ],
+    "usage": null,
+    "isComplete": false,
+    "finishReason": null
+  },
+  {
+    "content": null,
+    "thinking": null,
+    "toolCalls": [],
+    "usage": {
+      "inputTokens": 25,
+      "outputTokens": 42,
+      "cachedTokens": 8,
+      "thoughtTokens": 7
+    },
+    "isComplete": true,
+    "finishReason": "stop"
+  }
+]

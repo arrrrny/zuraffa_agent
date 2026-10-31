@@ -69,6 +69,20 @@ void main() {
       );
     });
 
+    test(
+      'runTurn allows turnNumber == maxTurns (the cap is inclusive)',
+      // Issue #128 mutation rubric ENG-1: a `>` -> `>=` mutant at the cap
+      // survived the suite (ROLLUP_VERIFICATION.md U7 class) because only
+      // turn 1 and turn maxTurns+1 were pinned. This pins the boundary
+      // itself: the final turn must run, not throw.
+      () async {
+        final completion = await executor.runTurn(const [
+          ChatMessage(role: 'user', content: 'hi'),
+        ], turnNumber: 3); // == loop.maxTurns
+        expect(completion.content, 'turn-1');
+      },
+    );
+
     test('runTurn throws for non-positive turnNumber', () async {
       expect(
         () => executor.runTurn(const [
