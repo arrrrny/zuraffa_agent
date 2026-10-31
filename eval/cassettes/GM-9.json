@@ -1,0 +1,24 @@
+{
+  "id": "GM-9",
+  "name": "UI Tree Emission - Dynamic Components",
+  "taskDefinition": "Emit a UI tree with dynamic components that respond to user interactions",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will create a UI tree with dynamic components including a counter and toggle switch",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 40, "completion_tokens": 18, "total_tokens": 58}
+      },
+      {
+        "content": "UI tree emitted with StatefulCounter and ToggleSwitch components",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 58, "completion_tokens": 15, "total_tokens": 73}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}

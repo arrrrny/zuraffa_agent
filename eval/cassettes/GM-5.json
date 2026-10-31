@@ -1,0 +1,25 @@
+{
+  "id": "GM-5",
+  "name": "Steering Injection - Context Preservation",
+  "taskDefinition": "Maintain context across multiple steering injections while answering questions about Dart packages",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "Understood. I'll remember we're discussing Dart packages.",
+        "reasoning": "The user has injected steering context about Dart packages.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 28, "completion_tokens": 14, "total_tokens": 42}
+      },
+      {
+        "content": "The http package is commonly used for making HTTP requests in Dart.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 42, "completion_tokens": 18, "total_tokens": 60}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "TurnCompleted",
+      "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}

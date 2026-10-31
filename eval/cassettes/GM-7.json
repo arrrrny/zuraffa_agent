@@ -1,0 +1,30 @@
+{
+  "id": "GM-7",
+  "name": "Tool Use - Multiple Tools Chaining",
+  "taskDefinition": "Chain multiple tool calls to gather comprehensive data about Flutter performance optimization",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will start by searching for Flutter performance best practices",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 30, "completion_tokens": 15, "total_tokens": 45}
+      },
+      {
+        "content": "Now I will search for specific Flutter performance profiling tools",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 45, "completion_tokens": 14, "total_tokens": 59}
+      },
+      {
+        "content": "Flutter performance optimization involves using the DevTools profiler and minimizing widget rebuilds.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 59, "completion_tokens": 16, "total_tokens": 75}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}
