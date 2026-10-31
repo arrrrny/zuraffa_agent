@@ -22,6 +22,7 @@ import 'dart:io';
 
 import 'io_stdio_mcp_transport.dart' show McpWireClosedException;
 import 'mcp_wire.dart';
+import 'mcp_wire_validation.dart';
 
 /// Typed failure for a failed stream open: names the HTTP status, or null
 /// when the connection itself failed.
@@ -38,13 +39,25 @@ class IoSseMcpTransport implements McpWire {
   final String endpoint;
   final String? bearerToken;
 
+  /// Wire-boundary validation (issue #131). Every POST reply is validated
+  /// against the JSON-RPC 2.0 envelope, the size cap and the content policy
+  /// before it becomes an [McpWireResponse]; violations come back as typed
+  /// `McpWireResponseError`s, never as unvalidated payloads.
+  final McpWireValidator _validator;
+
   HttpClient? _client;
   bool _isOpen = false;
   int _nextId = 0;
   final StreamController<McpWireNotification> _notifications =
       StreamController<McpWireNotification>.broadcast();
 
-  IoSseMcpTransport({required this.endpoint, this.bearerToken}) {
+  IoSseMcpTransport({
+    required this.endpoint,
+    this.bearerToken,
+    int? maxResponseBytes,
+  }) : _validator = McpWireValidator(
+         maxResponseBytes: maxResponseBytes ?? defaultMcpWireMaxResponseBytes,
+       ) {
     final uri = Uri.tryParse(endpoint);
     if (uri == null ||
         !uri.hasScheme ||
@@ -201,33 +214,120 @@ class IoSseMcpTransport implements McpWire {
         'IoSseMcpTransport: the connection dropped during send',
       );
     }
-    final body = await utf8.decoder.bind(response).join();
-    if (response.statusCode < 200 || response.statusCode > 299) {
+    final statusOk = response.statusCode >= 200 && response.statusCode <= 299;
+    // Issue #131: a 2xx reply that already declares more bytes than the cap
+    // is rejected before the body is buffered at all. The connection is
+    // drained so it stays reusable. Non-2xx replies keep the contract's
+    // typed-throw path below.
+    if (statusOk && response.contentLength > _validator.maxResponseBytes) {
+      await response.drain<void>().catchError((Object _) {});
+      return McpWireResponseError(
+        code: 'response-too-large',
+        message:
+            'IoSseMcpTransport: ${envelope['method']} response declares '
+            '${response.contentLength} bytes, over the '
+            '${_validator.maxResponseBytes}-byte wire cap',
+      );
+    }
+    if (!statusOk) {
+      // The error body is drained, never buffered (and the status is
+      // checked before any body read): a hostile peer answering non-2xx
+      // with an unbounded body must not be able to grow this transport's
+      // memory (issue #131 follow-up).
+      await response.drain<void>().catchError((Object _) {});
       throw McpWireClosedException(
         'IoSseMcpTransport: the endpoint answered HTTP '
         '${response.statusCode} for ${envelope['method']}',
       );
     }
-    final Map<String, dynamic> decoded;
+    // 2xx: the body is read under a byte budget — the read ABORTS past the
+    // cap as chunks arrive, so a hostile peer answering 2xx with an
+    // unbounded chunked stream can never be fully buffered before the
+    // typed rejection fires (issue #131 follow-up). An aborted read cannot
+    // keep the connection reusable — unlike the drained declared-length
+    // path above, dart:io destroys the connection on the cancelled
+    // subscription. The event-stream connection is a separate socket, so
+    // the session survives.
+    final String body;
     try {
-      decoded = jsonDecode(body) as Map<String, dynamic>;
+      body = await _readBoundedBody(response);
+    } on _McpWireBodyOverBudget {
+      return McpWireResponseError(
+        code: 'response-too-large',
+        message:
+            'IoSseMcpTransport: ${envelope['method']} response stream '
+            'exceeded the ${_validator.maxResponseBytes}-byte wire cap',
+      );
+    }
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(body);
     } on FormatException {
+      // Dialect §3: undecodable 2xx → transport drop. A body truncated by
+      // a dropped connection is indistinguishable from garbage at this
+      // layer — that is the honest reason the throw stays here, while the
+      // decodable-but-non-object case below is the typed
+      // protocol-violation. Do not "unify" the two paths.
       throw McpWireClosedException(
         'IoSseMcpTransport: undecodable response body for '
         '${envelope['method']}',
       );
     }
-    final error = decoded['error'];
-    if (error is Map) {
-      return McpWireResponseError(
-        code: error['code']?.toString() ?? '',
-        message: error['message']?.toString() ?? '',
+    if (decoded is! Map<String, dynamic>) {
+      // Issue #131: a decodable non-object body is a wire violation, not a
+      // transport drop — reject it typed instead of crashing the send.
+      return const McpWireResponseError(
+        code: 'protocol-violation',
+        message:
+            'IoSseMcpTransport: response body is not a JSON-RPC 2.0 '
+            'object',
       );
     }
-    final result =
-        (decoded['result'] as Map?)?.cast<String, dynamic>() ??
-        const <String, dynamic>{};
-    return McpWireResponseOk(result);
+    return _validator.validateResponse(
+      rawBody: body,
+      message: decoded,
+      expectedId: id,
+    );
+  }
+
+  /// Reads a 2xx body under the wire cap (issue #131 follow-up): bytes are
+  /// counted as they arrive and the read is ABORTED past
+  /// [_validator.maxResponseBytes], so an unbounded chunked / unknown-length
+  /// reply can never be fully buffered before the rejection fires. Throws
+  /// [_McpWireBodyOverBudget] on the cap; transport-level errors and
+  /// undecodable UTF-8 propagate as before.
+  Future<String> _readBoundedBody(HttpClientResponse response) async {
+    final completer = Completer<String>();
+    final bytes = <int>[];
+    var counted = 0;
+    late final StreamSubscription<List<int>> subscription;
+    subscription = response.listen(
+      (List<int> chunk) {
+        if (completer.isCompleted) return;
+        counted += chunk.length;
+        if (counted > _validator.maxResponseBytes) {
+          // Abort the read: the connection cannot be returned to the pool
+          // (dart:io destroys it on the cancelled subscription), but the
+          // typed rejection carries the verdict and the session survives.
+          subscription.cancel();
+          completer.completeError(_McpWireBodyOverBudget());
+          return;
+        }
+        bytes.addAll(chunk);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!completer.isCompleted) {
+          completer.completeError(error, stackTrace);
+        }
+      },
+      onDone: () {
+        if (!completer.isCompleted) {
+          completer.complete(utf8.decode(bytes));
+        }
+      },
+      cancelOnError: true,
+    );
+    return completer.future;
   }
 
   @override
@@ -236,3 +336,7 @@ class IoSseMcpTransport implements McpWire {
   @override
   bool get isOpen => _isOpen;
 }
+
+/// Internal marker for a 2xx body aborted by the byte budget. Not part of
+/// the wire contract — never escapes [IoSseMcpTransport].
+class _McpWireBodyOverBudget {}

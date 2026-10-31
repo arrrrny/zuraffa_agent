@@ -2,8 +2,8 @@
 // dialect of specs/105-production-mcp-transports/contracts/mcp-wire-dialect.md.
 // Run as a subprocess by the IoStdioMcpTransport integration tests:
 //   dart test/mcp/_mock_stdio_mcp_server.dart <mode>
-// Modes: echo | garbage | notify | crash | slow (see
-// io_stdio_mcp_transport_test.dart).
+// Modes: echo | garbage | notify | crash | slow | badwire (see
+// io_stdio_mcp_transport_test.dart and mcp_131_wire_boundary_test.dart).
 import 'dart:convert';
 import 'dart:io';
 
@@ -32,7 +32,7 @@ void answerToolsList(Object? id) {
   });
 }
 
-void answerCall(Object? id, Map<String, dynamic> params) {
+void answerCall(Object? id, Map<String, dynamic> params, String mode) {
   final name = params['name'] as String?;
   final arguments = (params['arguments'] as Map?) ?? const {};
   if (name == 'boom') {
@@ -42,6 +42,48 @@ void answerCall(Object? id, Map<String, dynamic> params) {
       'error': {'code': -32601, 'message': 'tool exploded'},
     });
     return;
+  }
+  if (mode == 'badwire') {
+    // Issue #131 fixture: each tool name answers with a specific wire-boundary
+    // violation so the transport's rejection paths are exercised against a
+    // real subprocess. 'echo' falls through to the well-formed answer.
+    switch (name) {
+      case 'bad-jsonrpc':
+        emit({
+          'jsonrpc': '1.0', // deliberately not "2.0"
+          'id': id,
+          'result': {'echo': arguments},
+        });
+        return;
+      case 'ctrl-char':
+        emit({
+          'jsonrpc': '2.0',
+          'id': id,
+          'result': {
+            'echo': {'text': 'a\u0000b'},
+          },
+        });
+        return;
+      case 'lone-surrogate':
+        // Hand-written line so the raw \ud800 escape reaches the wire
+        // (dart:convert round-trips unpaired-surrogate escapes, so the
+        // transport sees a string with an unmatched surrogate pair).
+        stdout.writeln(
+          '{"jsonrpc":"2.0","id":$id,'
+          '"result":{"echo":{"text":"x\\ud800y"}}}',
+        );
+        stdout.flush();
+        return;
+      case 'big':
+        emit({
+          'jsonrpc': '2.0',
+          'id': id,
+          'result': {
+            'echo': {'pad': 'x' * (1024 * 1024 + 64)},
+          },
+        });
+        return;
+    }
   }
   emit({
     'jsonrpc': '2.0',
@@ -99,7 +141,7 @@ void main(List<String> args) {
         // Long enough for the test to close the transport mid-flight.
         await Future<void>.delayed(const Duration(milliseconds: 300));
       }
-      answerCall(id, params);
+      answerCall(id, params, mode);
     }
   });
 }
