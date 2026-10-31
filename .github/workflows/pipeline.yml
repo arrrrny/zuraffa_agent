@@ -149,6 +149,64 @@ jobs:
             echo "::warning::No attribution markers found — verify no unattributed ports landed"
           fi
 
+  coverage:
+    # Issue #113: measure lib/ line coverage on every PR, publish lcov.info
+    # as an artifact, and gate on a minimum threshold. Runs as its own job
+    # (not inside the verify matrix) so the expensive coverage tracing runs
+    # once on the pinned SDK instead of once per matrix leg.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Pinned like the format gate: the coverage package's VM coverage
+          # output is SDK-sensitive, so the measured number should not drift
+          # with the stable channel.
+          sdk: 3.13.7
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-3.13.7-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-3.13.7-
+      - name: Pub get
+        run: dart pub get
+      - name: Test with coverage (issue #113)
+        run: dart test -j 2 --coverage=coverage
+      - name: Format lcov (issue #113)
+        run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+      - name: Coverage gate — min 80% over hand-written lib/ (issue #113)
+        # Baseline measured with the pinned 3.13.7 SDK when the gate landed
+        # (issue #113 "after baseline measurement"):
+        #   hand-written lib/  86.32%  (7400/8573)  <- gated, floor 80
+        #   generated          18.55%  ( 598/3224)  <- reported, not gated
+        #   total lib/         67.80%  (7998/11797)
+        # Generated = committed build_runner output (*.g.dart, *.zorphy.dart);
+        # it is never hand-edited in this repo, so the 80% gate applies to
+        # hand-written lines and the tool prints the other two numbers for
+        # visibility.
+        run: dart run tool/check_coverage.dart coverage/lcov.info 80
+      - name: Upload lcov.info artifact (issue #113)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+      - name: Codecov upload (advisory, issue #113 optional AC)
+        # Optional by the issue ("optional Codecov/coveralls"): the org has
+        # no CODECOV_TOKEN yet, so this is non-blocking and the empty-token
+        # upload is allowed to fail silently.
+        if: always()
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
   pana:
     # Issue #114 AC-2: pana on pull requests as a NON-BLOCKING advisory —
     # surfaces the pub.dev score (scoring parity) in the PR checks
