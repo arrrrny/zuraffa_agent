@@ -87,6 +87,22 @@ approval callback at dispatch. Please report vulnerabilities through
 [GitHub Security Advisories](https://github.com/arrrrny/zuraffa_agent/security/advisories/new)
 — not the issue tracker.
 
+## Privacy
+
+zuraffa_agent is an engine you embed — your application is the data
+controller, and your UI is where its data flows must be disclosed.
+[PRIVACY.md](PRIVACY.md) documents exactly what leaves the machine (per
+LLM vendor and per MCP server), what the engine persists on local disk
+(sessions, memory, artifacts, audit log) and for how long, and the
+disclosure and consent duties you take on as a consumer.
+[docs/DATA_RESIDENCY.md](docs/DATA_RESIDENCY.md) maps where each class of
+data is processed and how to keep it inside your jurisdiction (vendor
+regions, DPAs, self-hosted gateways). Third-party package licenses for
+this repository are bundled in
+[THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) — generated from
+`pubspec.lock` by `tool/generate_third_party_notices.dart`; do not edit
+it by hand.
+
 ## Supported LLM providers
 
 The `llm` slice speaks three wire protocols out of the box. Every client
