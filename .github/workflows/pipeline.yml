@@ -33,7 +33,7 @@ jobs:
       # language version (tall style); without `pub get` it falls back to
       # a lower default and disagrees with the committed formatting.
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Enforce dart format
         # Scope mirrors the tree-wide reformat wherever it can resolve on
         # this pure-Dart runner. packages/** is deliberately excluded: the
@@ -63,8 +63,11 @@ jobs:
           key: pub-${{ runner.os }}-${{ matrix.sdk }}-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
             pub-${{ runner.os }}-${{ matrix.sdk }}-
+      # --enforce-lockfile (issue #109): fail the build when
+      # pubspec.yaml and the committed pubspec.lock drift apart instead
+      # of silently re-resolving — the resolved graph stays auditable.
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
@@ -179,6 +182,71 @@ jobs:
           fi
           echo "THIRD_PARTY_NOTICES.txt is in sync with pubspec.lock."
 
+  coverage:
+    # Issue #113: measure lib/ line coverage on every PR, publish lcov.info
+    # as an artifact, and gate on a minimum threshold. Runs as its own job
+    # (not inside the verify matrix) so the expensive coverage tracing runs
+    # once on the pinned SDK instead of once per matrix leg.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Pinned like the format gate: the coverage package's VM coverage
+          # output is SDK-sensitive, so the measured number should not drift
+          # with the stable channel.
+          sdk: 3.13.7
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-3.13.7-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-3.13.7-
+      - name: Pub get
+        run: dart pub get --enforce-lockfile
+      - name: Test with coverage (issue #113)
+        # `dart test --coverage=DIR` APPENDS to an existing DIR and
+        # `format_coverage --in=DIR` collects it recursively, so isolate
+        # JSONs left by an earlier run would be merged into the number the
+        # gate checks (and can only ever raise it). Fresh runners hide this;
+        # a self-hosted runner, `act`, or a developer following the same
+        # commands does not.
+        run: |
+          rm -rf coverage
+          dart test -j 2 --coverage=coverage
+      - name: Format lcov (issue #113)
+        run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+      - name: Coverage gate — min 80% over hand-written lib/ (issue #113)
+        # The measured-at-landing baseline (hand-written / generated / total)
+        # and the gating policy are documented in the header of
+        # `tool/check_coverage.dart` — the one place they are maintained.
+        # The tool prints the live numbers on every run; the previous run's
+        # numbers are in the `coverage-lcov` artifact of the last green
+        # pipeline. Do not restate the baseline here: a stale copy is worse
+        # than none, because it is what the next reviewer quotes when
+        # deciding whether the floor is still right.
+        run: dart run tool/check_coverage.dart coverage/lcov.info 80
+      - name: Upload lcov.info artifact (issue #113)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+      - name: Codecov upload (advisory, issue #113 optional AC)
+        # Optional by the issue ("optional Codecov/coveralls"): the org has
+        # no CODECOV_TOKEN yet, so this is non-blocking and the empty-token
+        # upload is allowed to fail silently.
+        if: always()
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
   pana:
     # Issue #114 AC-2: pana on pull requests as a NON-BLOCKING advisory —
     # surfaces the pub.dev score (scoring parity) in the PR checks
@@ -196,7 +264,7 @@ jobs:
         with:
           sdk: stable
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Pana — pub.dev scoring parity (advisory, non-blocking)
         run: |
           dart pub global activate pana 0.23.19 # bump deliberately; advisory only (misfire #165: activate takes the version as a separate arg — pana:0.23.19 is not a valid package name)
@@ -235,7 +303,7 @@ jobs:
         with:
           sdk: stable
       - name: Pub get
-        run: dart pub get
+        run: dart pub get --enforce-lockfile
       - name: Run spec pipeline
         env:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}

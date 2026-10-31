@@ -5,11 +5,23 @@ MCP orchestration, an eval harness, and event-driven observability for
 building type-safe AI agents with [Zuraffa](https://pub.dev/packages/zuraffa)
 clean-architecture conventions.
 
+## Documentation
+
+The dartdoc API reference for tagged releases is published at
+[arrrrny.github.io/zuraffa_agent](https://arrrrny.github.io/zuraffa_agent/)
+— rebuilt and redeployed automatically on every `v*` tag push by the
+`docs` workflow (issue #127). ⚠️ The site goes live with the first `v*`
+tag after GitHub Pages is enabled for this repository
+(Settings → Pages → Build and deployment → Source: "GitHub Actions");
+until both have happened the URL returns 404. Pull requests gate on
+`dart doc --dry-run`, so the exported API always renders. Locally,
+`dart doc` writes the same reference into `doc/api`.
+
 ## Getting started
 
 ```yaml
 dependencies:
-  zuraffa_agent: ^0.1.0
+  zuraffa_agent: ^7.3.2
 ```
 
 ```dart
@@ -38,6 +50,31 @@ dart run build_runner build --delete-conflicting-outputs
 dart test
 dart analyze
 ```
+
+## Publishing
+
+Packages ship to [pub.dev](https://pub.dev/packages/zuraffa_agent). The fleet
+publishes under one version number: this root package together with the
+federated platform packages (`zuraffa_agent_platform_interface`,
+`zuraffa_agent_android`, `zuraffa_agent_ios`, `zuraffa_agent_macos`) — see
+[PUBLISH.md](PUBLISH.md).
+
+The `.github/workflows/publish.yml` workflow automates the flow (issue #126):
+
+- **Every pull request** runs `pub publish --dry-run` over all five packages
+  (root + the four platform packages) and fails on any packaging warning, so
+  the fleet cannot drift away from publishable packaging.
+- **Pushing a `v<version>` tag** validates the whole fleet first, then
+  publishes the five packages in dependency order — root first, then the
+  platform packages, waiting for each new version to propagate on pub.dev —
+  using the `PUB_CREDENTIALS_JSON` secret. The release is gated by the
+  `pub-dev` GitHub environment, so a tag push alone cannot publish.
+- **A partial release** is resumed with
+  `gh workflow run publish.yml -f resume_from=<package>`.
+
+The manual flow in [PUBLISH.md](PUBLISH.md) stays as the fallback and is how
+the `PUB_CREDENTIALS_JSON` credential (`~/.pub-cache/credentials.json` from one
+local publish) is minted.
 
 ## Security
 

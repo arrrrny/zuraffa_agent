@@ -5,7 +5,7 @@ library;
 
 /// subject_u4: declared contract `structure(packages) -> StructureReport`.
 ///
-/// [packages]: name -> {'deps': [...], 'pluginPlatforms': [...]}.
+/// [packages]: `name -> {'deps': [...], 'pluginPlatforms': [...]}`.
 /// Returns the names that fail the structure contract.
 Map<String, String> subject_u4(Map<String, dynamic> packages) {
   final failures = <String, String>{};

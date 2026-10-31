@@ -8,7 +8,7 @@
 ///
 /// The engine's runtime paths never import `dart:io` (constitution VII); every
 /// provider client talks to this interface instead. The concrete adapter is
-/// [IoLlmTransport] (the single CI-allowlisted `dart:io` file); tests replay
+/// `IoLlmTransport` (the single CI-allowlisted `dart:io` file); tests replay
 /// recorded fixtures through a fake implementation.
 class LlmHttpRequest {
   final Uri uri;
@@ -59,7 +59,7 @@ class LlmStreamResponse {
 abstract interface class LlmTransport {
   /// Sends a request and awaits the complete response.
   ///
-  /// Throws [LlmNetworkException] on connection-level failure (no HTTP status
+  /// Throws `LlmNetworkException` on connection-level failure (no HTTP status
   /// arrived). HTTP error statuses are RETURNED, not thrown — retry policy
   /// needs to inspect them.
   Future<LlmHttpResponse> send(LlmHttpRequest request);

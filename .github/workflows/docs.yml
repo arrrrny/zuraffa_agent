@@ -1,0 +1,120 @@
+# docs — issue #127: published dartdoc API reference + `dart doc` CI step.
+#
+# Two gates:
+#   * docs-dry-run (pull_request): the public API must keep rendering. A
+#     dartdoc breakage anywhere in the exported surface (unresolved doc
+#     references, broken [symbol] links, invalid templates) fails the PR.
+#   * publish-docs (v* tags): build the real reference into api/ and
+#     publish it to GitHub Pages. One-time repo prerequisite, NOT yet
+#     done (issue #127 stays open until it is): an admin has to set
+#     Settings → Pages → Build and deployment → Source: "GitHub
+#     Actions" — until then this job fails at `configure-pages`.
+#     `configure-pages` is additionally asked to self-provision the site
+#     (`enablement: true`), so the first v* tag can go green without that
+#     manual step wherever the workflow token is allowed to enable it.
+name: docs
+
+# Least privilege for the whole workflow: a job that declares its own
+# `permissions:` replaces this block, so publish-docs keeps its
+# pages/id-token grants while docs-dry-run — which checks out PR content
+# and runs `dart pub get` — can never inherit a repo-level read/write
+# default.
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  docs-dry-run:
+    # AC-1: PR gate — `dart doc --output=/tmp/doc --dry-run` renders the
+    # full documentation in memory without writing output and fails on
+    # dartdoc errors, so public-API doc breakage cannot merge silently.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: docs-dry-run-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # Pinned to the SDK the tree is documented with (3.13.7): dartdoc
+          # ships inside the SDK, so riding a moving channel could flip this
+          # gate on zero-code changes (same rationale as the format job in
+          # pipeline.yml).
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get --enforce-lockfile
+      - name: dart doc dry-run (public API must render, zero warnings)
+        # `dart doc` only exits non-zero on errors; unresolved doc
+        # references are warnings. Broken public-API doc links are
+        # breakage too, so the gate fails on ANY warning.
+        run: |
+          set -o pipefail
+          dart doc --output=/tmp/doc --dry-run 2>&1 | tee /tmp/dartdoc.log
+          # Match the per-line diagnostics AND the summary line: the summary
+          # ("Found N warnings and M errors.") is the stable contract, the
+          # per-line prefix is presentation — anchoring on the prefix alone
+          # would go silently green if dartdoc ever reworded it.
+          if grep -qE '^[[:space:]]*(warning|error):' /tmp/dartdoc.log ||
+             grep -qE 'Found [1-9][0-9]* warnings?' /tmp/dartdoc.log; then
+            echo "::error::dartdoc emitted warnings — unresolved doc references in the public API are documentation breakage. Fix the [bracket] refs (link only in-scope targets, backtick cross-library names)."
+            exit 1
+          fi
+
+  publish-docs:
+    # AC-2: on tag pushes, generate the reference into api/ and publish it
+    # to GitHub Pages (also runnable manually via workflow_dispatch).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: docs-publish-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7
+      - name: Pub get
+        run: dart pub get --enforce-lockfile
+      - name: Build API reference
+        # The same predicate the PR gate applies: a `v*` tag pushed straight
+        # at master (or a manual dispatch from any branch) never passed
+        # docs-dry-run, so refusing to publish a reference with warnings is
+        # what keeps a broken public API from reaching the hosted docs.
+        run: |
+          set -o pipefail
+          dart doc --output=api/ 2>&1 | tee /tmp/dartdoc-publish.log
+          if grep -qE '^[[:space:]]*(warning|error):' /tmp/dartdoc-publish.log ||
+             grep -qE 'Found [1-9][0-9]* warnings?' /tmp/dartdoc-publish.log; then
+            echo "::error::dartdoc emitted warnings — refusing to publish a broken reference."
+            exit 1
+          fi
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Self-provision the Pages site (Source: "GitHub Actions") instead
+          # of failing until an admin flips the setting by hand.
+          enablement: true
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: api/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
