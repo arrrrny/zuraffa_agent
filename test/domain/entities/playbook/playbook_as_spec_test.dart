@@ -142,167 +142,134 @@ void main() {
   group(
     'spec 005 US3 scenario 7 (R5.3) — country playbook loaded AS A SPEC, issue #6',
     () {
-      test(
-        'A7: the Germany document resolves to a SubAgentSpec instance — '
-        'steering as the system prompt, allowlist as the tools',
-        () {
-          final spec = loader.loadYaml(_deYaml).toSubAgentSpec();
+      test('A7: the Germany document resolves to a SubAgentSpec instance — '
+          'steering as the system prompt, allowlist as the tools', () {
+        final spec = loader.loadYaml(_deYaml).toSubAgentSpec();
 
-          expect(spec, isA<SubAgentSpec>());
-          // The steering text IS the behavior directive the spec-driven
-          // agent runs under, in document order, plus the pinned language
-          // directive (parity with the runtime's injected steering, U5).
-          expect(
-            spec.systemPrompt,
-            "Greet in German.\nCite GDPR for personal data.\n"
-            "[playbook:pb-de-001] Respond in language 'de'.",
-          );
-          // The gate's allowlist IS the spec's tool allowlist.
-          expect(spec.tools, ['search', 'fetch']);
-        },
-      );
+        expect(spec, isA<SubAgentSpec>());
+        // The steering text IS the behavior directive the spec-driven
+        // agent runs under, in document order, plus the pinned language
+        // directive (parity with the runtime's injected steering, U5).
+        expect(
+          spec.systemPrompt,
+          "Greet in German.\nCite GDPR for personal data.\n"
+          "[playbook:pb-de-001] Respond in language 'de'.",
+        );
+        // The gate's allowlist IS the spec's tool allowlist.
+        expect(spec.tools, ['search', 'fetch']);
+      });
 
-      test(
-        'A8: the resolved spec drives the EXISTING dispatch boundary — '
-        'behavior follows the document with zero code change',
-        () async {
-          final de = loader.loadYaml(_deYaml).toSubAgentSpec();
-          final fr = loader.loadYaml(_frYaml).toSubAgentSpec();
+      test('A8: the resolved spec drives the EXISTING dispatch boundary — '
+          'behavior follows the document with zero code change', () async {
+        final de = loader.loadYaml(_deYaml).toSubAgentSpec();
+        final fr = loader.loadYaml(_frYaml).toSubAgentSpec();
 
-          // The SAME boundary code, wired ONLY from each resolved spec.
-          final deInner = RecordingToolDispatcher();
-          final deBoundary = AllowlistToolDispatcher(
-            inner: deInner,
-            allowlist: de.tools.toSet(),
-          );
-          final frInner = RecordingToolDispatcher();
-          final frBoundary = AllowlistToolDispatcher(
-            inner: frInner,
-            allowlist: fr.tools.toSet(),
-          );
+        // The SAME boundary code, wired ONLY from each resolved spec.
+        final deInner = RecordingToolDispatcher();
+        final deBoundary = AllowlistToolDispatcher(
+          inner: deInner,
+          allowlist: de.tools.toSet(),
+        );
+        final frInner = RecordingToolDispatcher();
+        final frBoundary = AllowlistToolDispatcher(
+          inner: frInner,
+          allowlist: fr.tools.toSet(),
+        );
 
-          // Germany admits search and refuses shell…
-          final deSearch = await deBoundary.dispatch(
-            toolName: 'search',
-            arguments: const {'q': 'markets'},
-            isInternalMission: false,
-          );
-          expect(deSearch.success, isTrue);
-          expect(deInner.calls, ['search']);
-          final deShell = await deBoundary.dispatch(
-            toolName: 'shell',
-            arguments: const {'cmd': 'ls'},
-            isInternalMission: false,
-          );
-          expect(deShell.success, isFalse);
-          expect(deShell.error, 'tool not allowed: shell');
-          expect(deInner.calls, ['search']);
+        // Germany admits search and refuses shell…
+        final deSearch = await deBoundary.dispatch(
+          toolName: 'search',
+          arguments: const {'q': 'markets'},
+          isInternalMission: false,
+        );
+        expect(deSearch.success, isTrue);
+        expect(deInner.calls, ['search']);
+        final deShell = await deBoundary.dispatch(
+          toolName: 'shell',
+          arguments: const {'cmd': 'ls'},
+          isInternalMission: false,
+        );
+        expect(deShell.success, isFalse);
+        expect(deShell.error, 'tool not allowed: shell');
+        expect(deInner.calls, ['search']);
 
-          // …while France — a NOVEL document, not one line of code changed —
-          // admits translate and refuses BOTH shell and search.
-          final frTranslate = await frBoundary.dispatch(
-            toolName: 'translate',
-            arguments: const {'q': 'marchés'},
-            isInternalMission: false,
-          );
-          expect(frTranslate.success, isTrue);
-          final frShell = await frBoundary.dispatch(
-            toolName: 'shell',
-            arguments: const {'cmd': 'ls'},
-            isInternalMission: false,
-          );
-          expect(frShell.success, isFalse);
-          final frSearch = await frBoundary.dispatch(
-            toolName: 'search',
-            arguments: const {'q': 'markets'},
-            isInternalMission: false,
-          );
-          expect(frSearch.success, isFalse);
-          expect(frInner.calls, ['translate']);
-        },
-      );
+        // …while France — a NOVEL document, not one line of code changed —
+        // admits translate and refuses BOTH shell and search.
+        final frTranslate = await frBoundary.dispatch(
+          toolName: 'translate',
+          arguments: const {'q': 'marchés'},
+          isInternalMission: false,
+        );
+        expect(frTranslate.success, isTrue);
+        final frShell = await frBoundary.dispatch(
+          toolName: 'shell',
+          arguments: const {'cmd': 'ls'},
+          isInternalMission: false,
+        );
+        expect(frShell.success, isFalse);
+        final frSearch = await frBoundary.dispatch(
+          toolName: 'search',
+          arguments: const {'q': 'markets'},
+          isInternalMission: false,
+        );
+        expect(frSearch.success, isFalse);
+        expect(frInner.calls, ['translate']);
+      });
 
-      test(
-        'U5: one document, two uses — the spec system prompt carries the '
-        'same directives the runtime injects as steering',
-        () {
-          final playbook = loader.loadYaml(_deYaml);
-          final spec = playbook.toSubAgentSpec();
-          final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
+      test('U5: one document, two uses — the spec system prompt carries the '
+          'same directives the runtime injects as steering', () {
+        final playbook = loader.loadYaml(_deYaml);
+        final spec = playbook.toSubAgentSpec();
+        final runtime = PlaybookRuntime(playbook: playbook, clock: fakeClock);
 
-          final injected = [
-            for (final message in runtime.steeringMessages()) message.content,
-          ];
-          expect(injected, hasLength(3));
-          for (final directive in injected) {
-            expect(spec.systemPrompt, contains(directive));
-          }
-        },
-      );
+        final injected = [
+          for (final message in runtime.steeringMessages()) message.content,
+        ];
+        expect(injected, hasLength(3));
+        for (final directive in injected) {
+          expect(spec.systemPrompt, contains(directive));
+        }
+      });
 
-      test(
-        'U1: identity mapping — the document id is the spec name, the '
-        'description carries, risk tier defaults safe, budgets inherit',
-        () {
-          final spec = loader.loadYaml(_deYaml).toSubAgentSpec();
+      test('U1: identity mapping — the document id is the spec name, the '
+          'description carries, risk tier defaults safe, budgets inherit', () {
+        final spec = loader.loadYaml(_deYaml).toSubAgentSpec();
 
-          expect(spec.name, 'pb-de-001');
-          expect(spec.description, 'Country playbook for Germany market missions');
-          expect(spec.riskTier, RiskTier.safe);
-          // The playbook schema carries no budgets (spec 104) — the resolved
-          // instance inherits, per spec 036's null-means-inherit contract.
-          expect(spec.maxTurns, isNull);
-          expect(spec.wallClockTimeout, isNull);
-          expect(spec.contextWindowTokens, isNull);
-          expect(spec.isRoot, isTrue);
-          expect(spec.isLeaf, isTrue);
-        },
-      );
+        expect(spec.name, 'pb-de-001');
+        expect(
+          spec.description,
+          'Country playbook for Germany market missions',
+        );
+        expect(spec.riskTier, RiskTier.safe);
+        // The playbook schema carries no budgets (spec 104) — the resolved
+        // instance inherits, per spec 036's null-means-inherit contract.
+        expect(spec.maxTurns, isNull);
+        expect(spec.wallClockTimeout, isNull);
+        expect(spec.contextWindowTokens, isNull);
+        expect(spec.isRoot, isTrue);
+        expect(spec.isLeaf, isTrue);
+      });
 
-      test(
-        'U2: a playbook with no gating section resolves to an EMPTY tool '
-        'allowlist — specs are allowlist-native, a no-gate playbook grants '
-        'no tools',
-        () {
-          const yaml = '''
+      test('U2: a playbook with no gating section resolves to an EMPTY tool '
+          'allowlist — specs are allowlist-native, a no-gate playbook grants '
+          'no tools', () {
+        const yaml = '''
 id: pb-es-001
 name: spain
 description: Country playbook with no gating section
 steering:
   - content: Answer in Spanish.
 ''';
-          final spec = loader.loadYaml(yaml).toSubAgentSpec();
+        final spec = loader.loadYaml(yaml).toSubAgentSpec();
 
-          expect(spec.tools, isEmpty);
-          expect(spec.systemPrompt, 'Answer in Spanish.');
-        },
-      );
-
-      test('U3: a blocklist gate is rejected with an actionable diagnostic', () {
-        final playbook = loader.loadYaml(_jpYaml);
-
-        expect(
-          () => playbook.toSubAgentSpec(),
-          throwsA(
-            isA<ArgumentError>().having(
-              (error) => error.message,
-              'message',
-              contains('restate the gate as an allowlist'),
-            ),
-          ),
-        );
+        expect(spec.tools, isEmpty);
+        expect(spec.systemPrompt, 'Answer in Spanish.');
       });
 
       test(
-        'U4: a steering-less playbook is rejected — nothing resolves into '
-        'a system prompt',
+        'U3: a blocklist gate is rejected with an actionable diagnostic',
         () {
-          const yaml = '''
-id: pb-it-001
-name: italy
-description: Country playbook with no steering entries
-''';
-          final playbook = loader.loadYaml(yaml);
+          final playbook = loader.loadYaml(_jpYaml);
 
           expect(
             () => playbook.toSubAgentSpec(),
@@ -310,12 +277,33 @@ description: Country playbook with no steering entries
               isA<ArgumentError>().having(
                 (error) => error.message,
                 'message',
-                contains('no steering'),
+                contains('restate the gate as an allowlist'),
               ),
             ),
           );
         },
       );
+
+      test('U4: a steering-less playbook is rejected — nothing resolves into '
+          'a system prompt', () {
+        const yaml = '''
+id: pb-it-001
+name: italy
+description: Country playbook with no steering entries
+''';
+        final playbook = loader.loadYaml(yaml);
+
+        expect(
+          () => playbook.toSubAgentSpec(),
+          throwsA(
+            isA<ArgumentError>().having(
+              (error) => error.message,
+              'message',
+              contains('no steering'),
+            ),
+          ),
+        );
+      });
     },
   );
 }
