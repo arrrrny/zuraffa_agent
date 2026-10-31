@@ -64,7 +64,9 @@ void main() {
         final client = FakeLlmClient(
           providerName: 'compressor',
           outcomes: const [
-            ScriptedOutcome(response: LlmResponse(content: fiveSectionSnapshot)),
+            ScriptedOutcome(
+              response: LlmResponse(content: fiveSectionSnapshot),
+            ),
           ],
         );
         final compressor = makeCompressor(client);

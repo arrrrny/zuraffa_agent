@@ -445,10 +445,7 @@ void main() {
 
       // Providers reject tool results detached from their call, so the
       // orphaned leaders never reach the wire: snapshot + preserved user.
-      expect(
-        llm.requests.single.map((m) => m.role).toList(),
-        ['user', 'user'],
-      );
+      expect(llm.requests.single.map((m) => m.role).toList(), ['user', 'user']);
       expect(llm.requests.single.last.content, 'recent');
     },
   );
@@ -491,19 +488,18 @@ void main() {
         messages: [const ChatMessage(role: 'user', content: 'go')],
       );
 
-      expect(
-        llm.requests.single.map((m) => m.role).toList(),
-        ['user', 'assistant', 'tool', 'user'],
-      );
+      expect(llm.requests.single.map((m) => m.role).toList(), [
+        'user',
+        'assistant',
+        'tool',
+        'user',
+      ]);
     },
   );
 
   test('preflightThreshold must be in (0, 1] (asserted)', () {
     MissionRunner runnerWith({required double threshold}) => MissionRunner(
-      executor: EngineLoopExecutor(
-        loop10,
-        RecordingLlmClient(completions: []),
-      ),
+      executor: EngineLoopExecutor(loop10, RecordingLlmClient(completions: [])),
       toolDispatcher: FakeToolDispatcher(),
       stopPolicy: const StopPolicy(
         id: 'test',
@@ -517,14 +513,8 @@ void main() {
     );
 
     expect(() => runnerWith(threshold: 0), throwsA(isA<AssertionError>()));
-    expect(
-      () => runnerWith(threshold: -0.5),
-      throwsA(isA<AssertionError>()),
-    );
-    expect(
-      () => runnerWith(threshold: 1.5),
-      throwsA(isA<AssertionError>()),
-    );
+    expect(() => runnerWith(threshold: -0.5), throwsA(isA<AssertionError>()));
+    expect(() => runnerWith(threshold: 1.5), throwsA(isA<AssertionError>()));
     expect(() => runnerWith(threshold: 1), returnsNormally);
   });
 }
