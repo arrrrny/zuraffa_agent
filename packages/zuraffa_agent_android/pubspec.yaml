@@ -24,11 +24,7 @@ dependencies:
   zuraffa_agent_platform_interface: ^7.3.2
 
 dependency_overrides:
-  # Local development only — resolve the siblings to this checkout; pub
-  # strips these at publish time.
-  zuraffa_agent:
-    path: ../..
-  zuraffa_agent_platform_interface:
-    path: ../zuraffa_agent_platform_interface
-
+  # Fleet-wide xml policy: pin the override to the latest xml so graphs
+  # that still transitively pull the abandoned minio (xml 6.x) resolve
+  # cleanly.
   xml: 7.1.0
