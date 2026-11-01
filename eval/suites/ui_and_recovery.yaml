@@ -1,0 +1,10 @@
+# UI and Recovery Suite - issue #115
+id: ui-and-recovery
+name: UI and Recovery Suite
+k: 3
+gate_threshold: 0.8
+tasks:
+  - GM-4
+  - GM-6
+  - GM-9
+  - GM-10

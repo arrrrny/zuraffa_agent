@@ -1,0 +1,39 @@
+{
+  "id": "GM-1",
+  "name": "Tool Use - Basic Search",
+  "taskDefinition": "Use the search tool to find information about Dart programming and return a summary",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I need to search for Dart programming information",
+        "reasoning": "The user wants information about Dart. I should use the search tool to find relevant information.",
+        "finishReason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 25,
+          "completion_tokens": 15,
+          "total_tokens": 40
+        }
+      },
+      {
+        "content": "Dart is a client-optimized programming language for fast apps on any platform. It offers productive development, fast execution, and cross-platform support.",
+        "finishReason": "stop",
+        "usage": {
+          "prompt_tokens": 45,
+          "completion_tokens": 25,
+          "total_tokens": 70
+        }
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted",
+      "TurnStarted",
+      "ToolCallStarted",
+      "ToolCallCompleted",
+      "TurnCompleted",
+      "TurnStarted",
+      "TurnCompleted",
+      "MissionCompleted"
+    ]
+  }
+}

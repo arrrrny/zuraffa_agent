@@ -1,0 +1,18 @@
+# Golden Missions Suite - issue #115
+id: golden-missions
+name: Golden Missions Suite
+k: 2
+gate_threshold: 0.8
+tasks:
+  - GM-1
+  - GM-2
+  - GM-3
+  - GM-4
+  - GM-5
+  - GM-6
+  - GM-7
+  - GM-8
+  - GM-9
+  - GM-10
+  - GM-11
+  - GM-12

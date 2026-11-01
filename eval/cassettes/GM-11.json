@@ -1,0 +1,30 @@
+{
+  "id": "GM-11",
+  "name": "Steering Injection - Priority Override",
+  "taskDefinition": "Handle priority steering injection that overrides current task context",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I am currently analyzing Flutter widgets",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 22, "completion_tokens": 12, "total_tokens": 34}
+      },
+      {
+        "content": "Priority override received: Switch to security vulnerability analysis immediately",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 34, "completion_tokens": 18, "total_tokens": 52}
+      },
+      {
+        "content": "Security analysis: No critical vulnerabilities detected in the current codebase.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 52, "completion_tokens": 20, "total_tokens": 72}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "TurnCompleted",
+      "TurnStarted", "TurnCompleted", "TurnStarted", "TurnCompleted",
+      "MissionCompleted"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "GM-6",
+  "name": "Error Recovery - Tool Failure",
+  "taskDefinition": "Demonstrate error recovery when a tool call fails by retrying with fallback approach",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will use the search tool to find information",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 25, "completion_tokens": 12, "total_tokens": 37}
+      },
+      {
+        "content": "The search tool failed. I will try a different approach using the knowledge base tool.",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 37, "completion_tokens": 18, "total_tokens": 55}
+      },
+      {
+        "content": "Based on the knowledge base: Dart is a programming language developed by Google.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 55, "completion_tokens": 15, "total_tokens": 70}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallFailed",
+      "TurnCompleted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}

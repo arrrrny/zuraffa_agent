@@ -1,0 +1,31 @@
+{
+  "id": "GM-10",
+  "name": "Error Recovery - Network Retry with Backoff",
+  "taskDefinition": "Implement error recovery with exponential backoff when network tool calls fail",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will attempt to fetch data from the API",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 28, "completion_tokens": 12, "total_tokens": 40}
+      },
+      {
+        "content": "Network error occurred. I will wait 1 second and retry.",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 40, "completion_tokens": 15, "total_tokens": 55}
+      },
+      {
+        "content": "Successfully retrieved data from fallback endpoint: 42 records found",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 55, "completion_tokens": 14, "total_tokens": 69}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallFailed",
+      "TurnCompleted", "TurnStarted", "ToolCallStarted", "ToolCallFailed",
+      "TurnCompleted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}

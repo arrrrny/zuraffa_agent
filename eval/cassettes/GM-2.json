@@ -1,0 +1,49 @@
+{
+  "id": "GM-2",
+  "name": "Multi-turn Conversation",
+  "taskDefinition": "Engage in a multi-turn conversation about Flutter widgets, asking clarifying questions and providing detailed answers",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "What type of Flutter widget are you interested in? There are many categories like layout widgets, text widgets, and input widgets.",
+        "reasoning": "I should ask for clarification to understand what specific widget information the user needs.",
+        "finishReason": "stop",
+        "usage": {
+          "prompt_tokens": 30,
+          "completion_tokens": 20,
+          "total_tokens": 50
+        }
+      },
+      {
+        "content": "Could you be more specific? Are you looking for information about layout widgets like Column, Row, or Container?",
+        "reasoning": "The user hasn't specified which widget type. I need to narrow down the category.",
+        "finishReason": "stop",
+        "usage": {
+          "prompt_tokens": 50,
+          "completion_tokens": 18,
+          "total_tokens": 68
+        }
+      },
+      {
+        "content": "Column is a layout widget that arranges its children vertically. It's one of the most commonly used widgets for building user interfaces in Flutter.",
+        "finishReason": "stop",
+        "usage": {
+          "prompt_tokens": 68,
+          "completion_tokens": 22,
+          "total_tokens": 90
+        }
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted",
+      "TurnStarted",
+      "TurnCompleted",
+      "TurnStarted",
+      "TurnCompleted",
+      "TurnStarted",
+      "TurnCompleted",
+      "MissionCompleted"
+    ]
+  }
+}

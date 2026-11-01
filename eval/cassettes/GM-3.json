@@ -1,0 +1,52 @@
+{
+  "id": "GM-3",
+  "name": "Sub-Agent Dispatch - Delegate Research",
+  "taskDefinition": "Dispatch a sub-agent to research Python vs Dart comparison and return a structured analysis",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will dispatch a sub-agent to research the comparison between Python and Dart",
+        "reasoning": "This task requires specialized research. I should create a sub-agent with the specific mission of comparing Python and Dart.",
+        "finishReason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 35,
+          "completion_tokens": 18,
+          "total_tokens": 53
+        }
+      },
+      {
+        "content": "Sub-agent dispatched with mission: Research and compare Python vs Dart programming languages",
+        "finishReason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 53,
+          "completion_tokens": 20,
+          "total_tokens": 73
+        }
+      },
+      {
+        "content": "Based on the sub-agent's research: Python is a general-purpose language with extensive libraries, while Dart is optimized for client-side development with strong typing and reactive programming support.",
+        "finishReason": "stop",
+        "usage": {
+          "prompt_tokens": 73,
+          "completion_tokens": 28,
+          "total_tokens": 101
+        }
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted",
+      "TurnStarted",
+      "ToolCallStarted",
+      "ToolCallCompleted",
+      "TurnCompleted",
+      "TurnStarted",
+      "ToolCallStarted",
+      "ToolCallCompleted",
+      "TurnCompleted",
+      "TurnStarted",
+      "TurnCompleted",
+      "MissionCompleted"
+    ]
+  }
+}

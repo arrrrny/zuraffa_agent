@@ -1,0 +1,11 @@
+# Core Capabilities Suite - issue #115
+id: core-capabilities
+name: Core Capabilities Suite
+k: 2
+gate_threshold: 0.85
+tasks:
+  - GM-1
+  - GM-2
+  - GM-3
+  - GM-5
+  - GM-6

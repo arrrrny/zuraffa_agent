@@ -1,0 +1,30 @@
+{
+  "id": "GM-12",
+  "name": "Multi-turn with State Accumulation",
+  "taskDefinition": "Maintain and accumulate state across multiple turns while building a knowledge graph",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "Starting knowledge graph. First, tell me about your first programming language.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 30, "completion_tokens": 15, "total_tokens": 45}
+      },
+      {
+        "content": "Thank you. Now, what was the second programming language you learned?",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 45, "completion_tokens": 14, "total_tokens": 59}
+      },
+      {
+        "content": "Knowledge graph complete: Python -> Dart. User perspective: Python for data science, Dart for mobile.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 59, "completion_tokens": 20, "total_tokens": 79}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "TurnCompleted",
+      "TurnStarted", "TurnCompleted", "TurnStarted", "TurnCompleted",
+      "MissionCompleted"
+    ]
+  }
+}

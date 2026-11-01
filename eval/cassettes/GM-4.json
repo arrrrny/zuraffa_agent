@@ -1,0 +1,25 @@
+{
+  "id": "GM-4",
+  "name": "UI Tree Emission - Complex Layout",
+  "taskDefinition": "Emit a UI tree structure for a dashboard with multiple components including navigation, content area, and sidebar",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will create a comprehensive UI tree for a dashboard layout",
+        "reasoning": "The user wants a UI tree for a dashboard. I need to structure this with proper hierarchy.",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 40, "completion_tokens": 16, "total_tokens": 56}
+      },
+      {
+        "content": "UI tree emitted successfully with dashboard structure",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 56, "completion_tokens": 12, "total_tokens": 68}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}

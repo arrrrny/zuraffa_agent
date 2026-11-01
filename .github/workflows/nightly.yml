@@ -170,3 +170,43 @@ jobs:
           name: integration-tests-log
           path: integration-tests.log
           if-no-files-found: ignore
+
+  eval:
+    # Issue #115: nightly eval suite run.
+    # Runs golden mission suites against real models and gates on pass@k >= threshold.
+    # Runs on schedule and manual dispatch. Skips cleanly without LLM_API_KEY.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK }}
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.DART_SDK }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ env.DART_SDK }}-
+      - name: Pub get
+        run: dart pub get --enforce-lockfile
+      - name: Run eval suites (gated on LLM_API_KEY)
+        continue-on-error: true
+        shell: bash
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "LLM_API_KEY not in the environment - skipping eval suite run"
+          else
+            set -o pipefail
+            dart run tool/run_eval_suites.dart 2>&1 | tee eval-suite-results.log
+          fi
+      - name: Upload eval results log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-suite-results-log
+          path: eval-suite-results.log
+          if-no-files-found: ignore

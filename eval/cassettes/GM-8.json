@@ -1,0 +1,30 @@
+{
+  "id": "GM-8",
+  "name": "Sub-Agent Dispatch - Parallel Execution",
+  "taskDefinition": "Dispatch multiple sub-agents in parallel to research different aspects of AI agent architecture",
+  "graderBindings": ["exact"],
+  "cassette": {
+    "completions": [
+      {
+        "content": "I will dispatch three sub-agents to research different aspects",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 35, "completion_tokens": 20, "total_tokens": 55}
+      },
+      {
+        "content": "Sub-agents dispatched: Agent-1 for planning, Agent-2 for execution, Agent-3 for evaluation",
+        "finishReason": "tool_calls",
+        "usage": {"prompt_tokens": 55, "completion_tokens": 25, "total_tokens": 80}
+      },
+      {
+        "content": "All sub-agents completed. Summary: Planning uses hierarchical task decomposition, execution employs reactive state machines.",
+        "finishReason": "stop",
+        "usage": {"prompt_tokens": 80, "completion_tokens": 22, "total_tokens": 102}
+      }
+    ],
+    "eventOrder": [
+      "MissionStarted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "ToolCallStarted", "ToolCallCompleted",
+      "TurnCompleted", "TurnStarted", "TurnCompleted", "MissionCompleted"
+    ]
+  }
+}
