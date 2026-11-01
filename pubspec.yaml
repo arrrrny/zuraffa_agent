@@ -41,3 +41,8 @@ dev_dependencies:
   mocktail: ^1.0.5
   mutation_test: ^1.8.0
   test: ^1.25.0
+
+# Fleet-wide xml policy: pin the override to the latest xml so graphs that
+# still transitively pull the abandoned minio (xml 6.x) resolve cleanly.
+dependency_overrides:
+  xml: 7.1.0
