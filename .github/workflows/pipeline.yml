@@ -215,7 +215,12 @@ jobs:
         # commands does not.
         run: |
           rm -rf coverage
-          dart test -j 2 --coverage=coverage
+          # Integration-tagged tests are skipped in the default unit lane
+          # (dart_test.yaml), but a skipped test still emits an EMPTY
+          # .vm.json that format_coverage cannot parse (FormatException:
+          # Unrecognized coverage JSON). Exclude the tier here — the
+          # measured surface is lib/ under unit-lane tests only.
+          dart test -j 2 --exclude-tags=integration --coverage=coverage
       - name: Format lcov (issue #113)
         run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
       - name: Coverage gate — min 80% over hand-written lib/ (issue #113)
