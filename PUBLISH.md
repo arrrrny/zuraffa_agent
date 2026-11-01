@@ -39,15 +39,17 @@
 2. `git checkout -b publish-<version>`
 3. Check the members declare the release versions (`zuraffa_agent: ^<version>`,
    `zuraffa_agent_platform_interface: ^<version>`); local development rides on
-   `dependency_overrides`, which pub strips at publish time. Confirm no
+   `dependency_overrides` (dev-only — never commit them: pub does not strip
+   overrides from the archive, it only ignores them in hosted packages, so a
+   committed path override ships as polluted metadata). Confirm no
    `publish_to: none` is left anywhere in the fleet.
 4. Commit (pub requires a clean, committed tree), push.
 5. Publish in the order above (`flutter pub publish --force`), waiting for
    each new version to propagate on pub.dev before dependents resolve.
 6. Tag `v<version>` on the publish branch, push the tag.
-7. Merge the publish branch into `master`. The `dependency_overrides` are
-   already in the tree and stay there — pub strips them from the archive, so
-   there is no dev setup to restore.
+7. Merge the publish branch into `master`. The `dependency_overrides` must
+   NOT be in the tree — they stay out of the archive entirely (pub does not
+   strip them), so there is no dev setup to restore.
 
 ## Notes
 
