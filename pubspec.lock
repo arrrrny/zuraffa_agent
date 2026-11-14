@@ -581,10 +581,10 @@ packages:
     dependency: "direct main"
     description:
       name: synchronized
-      sha256: b3d516dbd3757ff2a458735e4f6cbac9ff261f576f6e87bcb17feabb39e657c5
+      sha256: a77637ebe1460f3b48cac89a790d2eb634f0a8593cab0d3f340c6db174ba9b94
       url: "https://pub.dev"
     source: hosted
-    version: "3.5.0"
+    version: "3.6.1+1"
   term_glyph:
     dependency: transitive
     description:
@@ -725,9 +725,9 @@ packages:
     dependency: "direct main"
     description:
       name: zuraffa
-      sha256: a846536d31a4d7f3e932ebb4f2a50913285e02490b15583c0a396e2f4e4e0a9f
+      sha256: "8aef4bccb63682b344a1c60f70c76473f931f89c158671c154fecb345b8c0b79"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.1"
+    version: "7.4.2"
 sdks:
   dart: ">=3.13.0 <4.0.0"
