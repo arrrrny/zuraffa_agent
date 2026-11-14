@@ -3779,7 +3779,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------------------------------------------------------------------------------
-Package:  zuraffa 7.3.2
+Package:  zuraffa 7.4.2
 Source:   https://pub.dev/packages/zuraffa
 License:  MIT — verbatim text from the package archive:
 --------------------------------------------------------------------------------
