@@ -709,10 +709,10 @@ packages:
     dependency: transitive
     description:
       name: zorphy
-      sha256: "7ab5d3d421f3cee013d4e03c003d26ac71210002f5bc36056a68f1bbec1ac222"
+      sha256: "97b354e51352851f2b8e88a2b02d81408bdf2c661481f7ba9e09611b2efd2c06"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
+    version: "2.4.5"
   zorphy_annotation:
     dependency: "direct main"
     description:
