@@ -1,3 +1,7 @@
+## 7.4.2 - 2026-11-13
+
+Mono-version fleet alignment to 7.4.2: the whole family ships at one version.
+
 ## 7.3.2 - 2026-10-31
 
 Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_intents (shareText/shareFiles behind ShareIntentService); the whole family ships at one version.
