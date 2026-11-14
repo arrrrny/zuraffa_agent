@@ -1444,7 +1444,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
-Package:  hive_ce 2.22.0
+Package:  hive_ce 2.23.3
 Source:   https://pub.dev/packages/hive_ce
 License:  Apache-2.0 — verbatim text from the package archive:
 --------------------------------------------------------------------------------
@@ -1828,7 +1828,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
-Package:  isolate_channel 0.6.1
+Package:  isolate_channel 0.6.2
 Source:   https://pub.dev/packages/isolate_channel
 License:  BSD-3-Clause — verbatim text from the package archive:
 --------------------------------------------------------------------------------
