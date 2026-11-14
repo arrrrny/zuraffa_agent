@@ -269,10 +269,10 @@ packages:
     dependency: "direct main"
     description:
       name: hive_ce
-      sha256: "8b6eea82b06a7e2bb298a6a279139c45838b82491a66f3972bf609d48681392a"
+      sha256: c2692c07b780d5eaec78c4f9317e9bfbb952700ef60bfdbca9e52c496300b967
       url: "https://pub.dev"
     source: hosted
-    version: "2.22.0"
+    version: "2.23.3"
   html:
     dependency: transitive
     description:
@@ -317,10 +317,10 @@ packages:
     dependency: transitive
     description:
       name: isolate_channel
-      sha256: a9d3d620695bc984244dafae00b95e4319d6974b2d77f4b9e1eb4f2efe099094
+      sha256: bd56e1bb2787bed914158c2696943dc7254732bfea2c207aafca6bc930580fd4
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.1"
+    version: "0.6.2"
   json_annotation:
     dependency: "direct main"
     description:
@@ -725,9 +725,9 @@ packages:
     dependency: "direct main"
     description:
       name: zuraffa
-      sha256: a846536d31a4d7f3e932ebb4f2a50913285e02490b15583c0a396e2f4e4e0a9f
+      sha256: "8aef4bccb63682b344a1c60f70c76473f931f89c158671c154fecb345b8c0b79"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.1"
+    version: "7.4.2"
 sdks:
   dart: ">=3.13.0 <4.0.0"
