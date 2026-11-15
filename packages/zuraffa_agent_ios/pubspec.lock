@@ -463,26 +463,26 @@ packages:
     dependency: transitive
     description:
       name: zuraffa
-      sha256: a846536d31a4d7f3e932ebb4f2a50913285e02490b15583c0a396e2f4e4e0a9f
+      sha256: "8aef4bccb63682b344a1c60f70c76473f931f89c158671c154fecb345b8c0b79"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.1"
+    version: "7.4.2"
   zuraffa_agent:
     dependency: "direct main"
     description:
       name: zuraffa_agent
-      sha256: "95581c14f4b5585e6a121f93225b04e99c25ab28f3633736d1eef95e73628f7b"
+      sha256: "0a8b0150ade4b4f82c65614c73ac782b69afa21c6cdcb195ae205dac2b189891"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.1"
+    version: "7.4.2"
   zuraffa_agent_platform_interface:
     dependency: "direct main"
     description:
       name: zuraffa_agent_platform_interface
-      sha256: "89e3f9f7a7ca50f15d5e4192d89ae719ba960ac22d3944a5284d52ec9173719b"
+      sha256: "21bf60c0da7a937bc8de48525e4c6b975d4644a96e2e1198a426577f55401389"
       url: "https://pub.dev"
     source: hosted
-    version: "7.4.1"
+    version: "7.4.2"
 sdks:
   dart: ">=3.13.0 <4.0.0"
   flutter: ">=3.44.0"

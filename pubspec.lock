@@ -269,10 +269,10 @@ packages:
     dependency: "direct main"
     description:
       name: hive_ce
-      sha256: "8b6eea82b06a7e2bb298a6a279139c45838b82491a66f3972bf609d48681392a"
+      sha256: c2692c07b780d5eaec78c4f9317e9bfbb952700ef60bfdbca9e52c496300b967
       url: "https://pub.dev"
     source: hosted
-    version: "2.22.0"
+    version: "2.23.3"
   html:
     dependency: transitive
     description:
@@ -317,10 +317,10 @@ packages:
     dependency: transitive
     description:
       name: isolate_channel
-      sha256: a9d3d620695bc984244dafae00b95e4319d6974b2d77f4b9e1eb4f2efe099094
+      sha256: bd56e1bb2787bed914158c2696943dc7254732bfea2c207aafca6bc930580fd4
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.1"
+    version: "0.6.2"
   json_annotation:
     dependency: "direct main"
     description:
@@ -709,18 +709,18 @@ packages:
     dependency: transitive
     description:
       name: zorphy
-      sha256: "7ab5d3d421f3cee013d4e03c003d26ac71210002f5bc36056a68f1bbec1ac222"
+      sha256: "97b354e51352851f2b8e88a2b02d81408bdf2c661481f7ba9e09611b2efd2c06"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
+    version: "2.4.5"
   zorphy_annotation:
     dependency: "direct main"
     description:
       name: zorphy_annotation
-      sha256: efaacbd84d2a41efb7b06e2081c0f8149169d10b23aeaf930ff7fff4396801dd
+      sha256: "03167d93dc2248acaba1b63b46e6e4ac788a9ff46afb3ecde60daf5e662f042d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
+    version: "2.4.5"
   zuraffa:
     dependency: "direct main"
     description:
