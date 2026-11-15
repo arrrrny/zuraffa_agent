@@ -21,10 +21,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: "0d58d1fa1fddf6588251ccf2819f3fb3b6d0452c1b2813ac7413a05592bfbefe"
+      sha256: "2fda90592c0afd219c5e285618a98da835cd10df38372666093d25dfe457a2d0"
       url: "https://pub.dev"
     source: hosted
-    version: "4.5.2"
+    version: "4.7.1"
   args:
     dependency: transitive
     description:
@@ -709,18 +709,18 @@ packages:
     dependency: transitive
     description:
       name: zorphy
-      sha256: "97b354e51352851f2b8e88a2b02d81408bdf2c661481f7ba9e09611b2efd2c06"
+      sha256: "29a3e10383b40286cedd8a4a82342f032c19d0993fa0e3518911d823e04b86fe"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.5"
+    version: "2.4.6"
   zorphy_annotation:
     dependency: "direct main"
     description:
       name: zorphy_annotation
-      sha256: "03167d93dc2248acaba1b63b46e6e4ac788a9ff46afb3ecde60daf5e662f042d"
+      sha256: "402d08a0f9a02de6a832bc6ac714b9f85c5b4e10a889e6d159644cd8faa11b35"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.5"
+    version: "2.4.6"
   zuraffa:
     dependency: "direct main"
     description:
