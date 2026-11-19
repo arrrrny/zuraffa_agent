@@ -15,6 +15,7 @@ export 'src/jsonl_session_storage.dart';
 // LLM provider seam (spec 007): client contract, request/response and tool
 // types (LlmClient, LlmToolCall, LlmResponse, ...).
 export 'src/llm/llm_client.dart';
+export 'src/llm/llm_tool_loop.dart';
 export 'src/llm/llm_transport.dart';
 // Structured logging (spec 112, issue #119).
 export 'src/logging/agent_log.dart';
@@ -47,6 +48,7 @@ export 'src/platform/agent_platform.dart';
 export 'src/platform/secure_store.dart';
 export 'src/providers.dart';
 export 'src/retention.dart';
+export 'src/run_usage.dart';
 // Security audit trail (issue #132): AuditLog interface, hashing helpers,
 // and the append-only JSONL sink with retention-by-rotation.
 export 'src/security/audit_hashing.dart';

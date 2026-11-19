@@ -1,3 +1,7 @@
+## 7.5.0 - 2026-11-19
+
+Mono-version fleet alignment to 7.5.0: the whole family ships at one version.
+
 ## 7.4.2 - 2026-11-13
 
 Mono-version fleet alignment to 7.4.2: the whole family ships at one version.
