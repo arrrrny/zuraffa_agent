@@ -44,6 +44,7 @@ export 'src/platform/agent_platform.dart';
 export 'src/platform/secure_store.dart';
 export 'src/providers.dart';
 export 'src/retention.dart';
+export 'src/run_usage.dart';
 // Security audit trail (issue #132): AuditLog interface, hashing helpers,
 // and the append-only JSONL sink with retention-by-rotation.
 export 'src/security/audit_hashing.dart';
