@@ -53,6 +53,41 @@ void main() {
       expect(run.length, 0);
     });
 
+    test('a default (all-zero) usage still counts as a turn', () {
+      final run = RunUsage()..add(_response());
+      expect(run.length, 1);
+      expect(run.totalPromptTokens, 0);
+      expect(run.totalCompletionTokens, 0);
+      expect(run.totalTokens, 0);
+
+      final entries = run.toUsageEntries(model: 'glm-5.3');
+      expect(entries, hasLength(1));
+      expect(entries.single.record.turnNumber, 1);
+    });
+
+    test('two runs folded into one ledger keep distinct ids', () {
+      final first = RunUsage()
+        ..add(_response(inputTokens: 100, outputTokens: 50));
+      final second = RunUsage()
+        ..add(_response(inputTokens: 200, outputTokens: 75));
+
+      final ledger = UsageLedger([
+        ...first.toUsageEntries(model: 'glm-5.3'),
+        ...second.toUsageEntries(model: 'glm-5.3'),
+      ]);
+
+      // Distinct entry ids: pruning to one survivor must not drop both.
+      expect(ledger.entries.map((e) => e.id).toSet(), hasLength(2));
+      final pruned = ledger.prune(const RetentionPolicy(maxCount: 1));
+      expect(pruned.length, 1);
+    });
+
+    test('toUsageEntries leaves model null when no provider is supplied', () {
+      final run = RunUsage()..add(_response(inputTokens: 10, outputTokens: 5));
+      final entries = run.toUsageEntries(model: 'glm-5.3');
+      expect(entries.single.model, isNull);
+    });
+
     test('toUsageEntries builds UsageLedger-loadable rows', () {
       final run = RunUsage()
         ..add(_response(inputTokens: 100, outputTokens: 50, cachedTokens: 7))
@@ -62,7 +97,9 @@ void main() {
       final entries = run.toUsageEntries(
         model: 'mimo-v2.6-flash',
         provider: 'raptor-ai',
+        contextWindow: 128000,
         at: at,
+        idPrefix: 'run',
       );
 
       expect(entries, hasLength(2));
@@ -77,6 +114,7 @@ void main() {
       expect(first.timestamp, at);
       expect(first.model?.modelId, 'mimo-v2.6-flash');
       expect(first.model?.provider, 'raptor-ai');
+      expect(first.model?.contextWindow, 128000);
 
       final second = entries[1];
       expect(second.record.callId, 'run-2');

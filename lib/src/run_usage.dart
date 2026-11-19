@@ -78,29 +78,45 @@ class RunUsage {
   /// Builds one [UsageEntry] per folded response, ready to wrap in a
   /// [UsageLedger] (or append via `Session.appendUsage`).
   ///
-  /// [model] and [provider] attribute every entry; [at] is the entry
-  /// timestamp. Ids are derived from the ordinal (`run-<n>`), the parent id
-  /// is left null — the sink owns tree linkage.
+  /// [provider] and [model] attribute every entry; a null [provider] leaves
+  /// [UsageEntry.model] null rather than synthesizing a nameless, 0-window
+  /// model — a fabricated `contextWindow: 0` would drive the session's
+  /// pre-flight threshold to 0 and attribute usage to an empty provider.
+  /// Pass [contextWindow] (the model's real window) when [provider] is set so
+  /// downstream consumers get a usable attribution. [at] is the entry
+  /// timestamp.
+  ///
+  /// Ids are globally unique by default (`generateEntryId`) so two runs folded
+  /// into one ledger never collide on [UsageLedger.prune]'s id-keyed victim
+  /// set or [SessionStorage]'s entry keys. Pass [idPrefix] for a deterministic
+  /// `<idPrefix>-<n>` / `<idPrefix>-<n>-usage` form (tests). The parent id is
+  /// left null — the sink owns tree linkage.
   List<UsageEntry> toUsageEntries({
     required String model,
     DateTime? at,
     String? provider,
+    int? contextWindow,
+    String? idPrefix,
   }) {
     final timestamp = at ?? DateTime.now().toUtc();
-    final modelRef = Model(
-      provider: provider ?? '',
-      modelId: model,
-      contextWindow: 0,
-    );
+    final modelRef = provider == null
+        ? null
+        : Model(
+            provider: provider,
+            modelId: model,
+            contextWindow: contextWindow ?? 0,
+          );
     return [
       for (var i = 0; i < _turns.length; i++)
         UsageEntry(
-          id: 'run-${i + 1}',
+          id: idPrefix == null ? generateEntryId() : '$idPrefix-${i + 1}',
           timestamp: timestamp,
           record: UsageLedgerEntry(
-            id: 'run-${i + 1}-usage',
+            id: idPrefix == null
+                ? generateEntryId()
+                : '$idPrefix-${i + 1}-usage',
             timestamp: timestamp,
-            callId: 'run-${i + 1}',
+            callId: idPrefix == null ? generateEntryId() : '$idPrefix-${i + 1}',
             turnNumber: i + 1,
             inputTokens: _turns[i].promptTokens,
             outputTokens: _turns[i].completionTokens,
