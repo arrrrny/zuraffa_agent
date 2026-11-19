@@ -725,7 +725,7 @@ packages:
     dependency: "direct main"
     description:
       name: zuraffa
-      sha256: da5ae4ae9bb3e206435393ce9309ca31901b3c178d52fa14d5d6860096c59c33
+      sha256: "da5ae4ae9bb3e206435393ce9309ca31901b3c178d52fa14d5d6860096c59c33"
       url: "https://pub.dev"
     source: hosted
     version: "7.5.0"
