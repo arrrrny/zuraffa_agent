@@ -12,6 +12,7 @@ export 'src/engine/events/engine_event_log.dart';
 export 'src/hive_adapters.dart';
 export 'src/hive_session_store.dart';
 export 'src/jsonl_session_storage.dart';
+export 'src/llm/llm_client.dart';
 export 'src/llm/llm_transport.dart';
 // Structured logging (spec 112, issue #119).
 export 'src/logging/agent_log.dart';
