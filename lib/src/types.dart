@@ -411,9 +411,10 @@ class AssistantMessage extends AgentMessage {
   ///
   /// The [toolCalls] are the typed [LlmToolCall]s a provider returned in an
   /// [LlmResponse.toolCalls]; they become [ToolCallBlock]s so the assistant
-  /// turn replays into `toLlmMessages()` (or the transport's request builder)
-  /// exactly as the provider sent it. A non-empty [text] is prepended as a
-  /// [TextBlock] so the spoken part of the turn survives the echo.
+  /// turn replays into the provider client's request builder (`_messageToJson`
+  /// / `_messageToContent`) exactly as the provider sent it. A non-empty
+  /// [text] is prepended as a [TextBlock] so the spoken part of the turn
+  /// survives the echo.
   factory AssistantMessage.fromToolCalls({
     required List<LlmToolCall> toolCalls,
     String? text,
@@ -490,19 +491,23 @@ class ToolResultMessage extends AgentMessage {
   /// Creates a tool result message keyed to the call it answers (issue #189).
   ///
   /// [content] is the tool's outcome: a [String] is stored verbatim, any other
-  /// value is `jsonEncode`d so a structured result round-trips through
-  /// `toLlmMessages()` (or the transport's request builder) without losing
-  /// shape. [isError] marks a failed invocation.
+  /// value is `jsonEncode`d so a structured result replays into the provider
+  /// client's request builder (`_messageToJson` / `_messageToContent`) without
+  /// losing shape. [isError] marks a failed invocation.
   factory ToolResultMessage.forCall({
     required String toolCallId,
     required String toolName,
     required Object content,
     bool isError = false,
+    List<ArtifactRef> artifactRefs = const [],
+    DateTime? timestamp,
   }) => ToolResultMessage(
     toolCallId: toolCallId,
     toolName: toolName,
     content: content is String ? content : jsonEncode(content),
     isError: isError,
+    artifactRefs: artifactRefs,
+    timestamp: timestamp,
   );
 
   @override

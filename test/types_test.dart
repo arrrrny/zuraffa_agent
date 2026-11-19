@@ -5,7 +5,6 @@
 // through the hand-written sealed class wrappers in types.dart.
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 void main() {
