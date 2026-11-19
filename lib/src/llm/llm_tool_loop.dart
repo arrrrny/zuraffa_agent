@@ -39,6 +39,11 @@ typedef ToolExecutor = Future<ToolResultMessage> Function(LlmToolCall call);
 /// transcript (spec 117 middleware seam). Return the message to store —
 /// mutate [result] or return a new one. The first production consumer is a
 /// PII scrubber over the result content.
+///
+/// A transform that throws is contained the same way a throwing executor is:
+/// the result degrades to an error tool result and the run continues, so a
+/// broken scrubber can neither crash the mission nor drop the `tool_result`
+/// its `tool_use` block needs.
 typedef ToolResultMiddleware =
     ToolResultMessage Function(ToolResultMessage result);
 
@@ -298,7 +303,8 @@ class LlmToolLoop {
       final hasToolCalls = response.toolCalls.isNotEmpty;
 
       // Append the assistant's turn to the transcript exactly as the model
-      // produced it: text + any tool-call blocks.
+      // produced it: text + any tool-call blocks. The index is kept so a
+      // mid-batch budget stop can trim the blocks it cannot answer (§ below).
       final assistantBlocks = <ContentBlock>[
         if (response.content.isNotEmpty) TextBlock(response.content),
         if (response.thinking != null && response.thinking!.isNotEmpty)
@@ -310,6 +316,7 @@ class LlmToolLoop {
             arguments: call.arguments,
           ),
       ];
+      final assistantIndex = messages.length;
       messages.add(AssistantMessage(content: assistantBlocks));
 
       // A natural stop is `finishReason == 'stop'` with no outstanding tool
@@ -331,9 +338,19 @@ class LlmToolLoop {
         continue;
       }
 
+      final batchStart = executed.length;
       for (final call in response.toolCalls) {
         if (_config.maxToolCalls != null &&
             executed.length >= _config.maxToolCalls!) {
+          // The budget stopped us partway through this batch. The assistant
+          // message was appended with a `tool_use` block for EVERY call the
+          // model asked for, so trim it to the calls that actually got a
+          // `tool_result` — a dangling `tool_use` makes the transcript
+          // unreplayable for a strict provider.
+          messages[assistantIndex] = _trimToolCallBlocks(
+            messages[assistantIndex] as AssistantMessage,
+            answered: executed.length - batchStart,
+          );
           return ToolLoopResult(
             finished: false,
             failure: ToolLoopBudgetExceeded(
@@ -353,6 +370,27 @@ class LlmToolLoop {
     }
   }
 
+  /// Rebuilds [message] keeping only the first [answered] tool-call blocks.
+  ///
+  /// Text and thinking blocks always survive; only the `tool_use` blocks past
+  /// the answered prefix are dropped, because those are the ones with no
+  /// matching tool result in the transcript.
+  static AssistantMessage _trimToolCallBlocks(
+    AssistantMessage message, {
+    required int answered,
+  }) {
+    final blocks = <ContentBlock>[];
+    var kept = 0;
+    for (final block in message.content) {
+      if (block is ToolCallBlock) {
+        if (kept >= answered) continue;
+        kept++;
+      }
+      blocks.add(block);
+    }
+    return AssistantMessage(content: blocks, timestamp: message.timestamp);
+  }
+
   /// Runs one tool call, converting a thrown error into an error result so a
   /// failing tool never crashes the mission.
   Future<ToolResultMessage> _runTool(LlmToolCall call) async {
@@ -368,10 +406,28 @@ class LlmToolLoop {
     }
   }
 
+  /// Runs the middleware chain over [result].
+  ///
+  /// A transform that throws is contained exactly like a throwing executor:
+  /// the chain degrades to an error tool result carrying the original ids, so
+  /// the run neither crashes nor leaves a `tool_use` without its `tool_result`.
+  /// The content is dropped rather than passed through unscrubbed — a scrubber
+  /// that fails must fail closed, not leak what it was asked to redact.
   ToolResultMessage _applyMiddleware(ToolResultMessage result) {
     var current = result;
     for (final transform in _middleware) {
-      current = transform(current);
+      final ToolResultMessage next;
+      try {
+        next = transform(current);
+      } on Object catch (error) {
+        return ToolResultMessage(
+          toolCallId: result.toolCallId,
+          toolName: result.toolName,
+          content: 'middleware failed: $error',
+          isError: true,
+        );
+      }
+      current = next;
     }
     return current;
   }

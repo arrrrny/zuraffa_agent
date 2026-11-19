@@ -50,7 +50,6 @@ void main() {
           ],
         );
 
-        final executed = <LlmToolCall>[];
         final loop = LlmToolLoop(
           client,
           (call) async => ToolResultMessage(
@@ -63,7 +62,9 @@ void main() {
         final result = await loop.run([UserMessage.text('hi')]);
 
         expect(result.finished, isTrue);
-        expect(executed, isEmpty); // executor captured below
+        // The loop records every call it dispatched; the executor above runs
+        // inline, so the result is the only place the executed call shows up.
+        expect(result.toolCalls.map((c) => c.id), ['c1']);
         expect(client.generateCalls, 2);
         // Two messages were appended to the request on the second turn:
         // the assistant tool-call turn + the tool result.
@@ -146,6 +147,103 @@ void main() {
       expect(failure.executed, 3);
       expect(failure.limit, 3);
     });
+
+    test(
+      'a budget stop mid-batch leaves no dangling tool_use blocks',
+      () async {
+        // The model asks for three calls at once and the budget allows two:
+        // the third call never runs, so its `tool_use` block must not stay in
+        // the transcript without a matching `tool_result`.
+        final client = FakeLlmClient(
+          providerName: 'fake',
+          outcomes: const [
+            ScriptedOutcome(
+              response: LlmResponse(
+                toolCalls: [
+                  LlmToolCall(id: 'c1', name: 't', arguments: {}),
+                  LlmToolCall(id: 'c2', name: 't', arguments: {}),
+                  LlmToolCall(id: 'c3', name: 't', arguments: {}),
+                ],
+                finishReason: 'tool_calls',
+              ),
+            ),
+          ],
+        );
+        final loop = LlmToolLoop(
+          client,
+          (call) async => ToolResultMessage(
+            toolCallId: call.id,
+            toolName: call.name,
+            content: 'r',
+          ),
+          maxToolCalls: 2,
+        );
+
+        final result = await loop.run([UserMessage.text('go')]);
+
+        expect(result.finished, isFalse);
+        expect(result.failure, isA<ToolLoopBudgetExceeded>());
+        expect(result.toolCalls.map((c) => c.id), ['c1', 'c2']);
+
+        final transcript = result.failure!.messages;
+        final assistant = transcript.whereType<AssistantMessage>().single;
+        final toolCallIds = assistant.content
+            .whereType<ToolCallBlock>()
+            .map((b) => b.id)
+            .toList();
+        final toolResultIds = transcript
+            .whereType<ToolResultMessage>()
+            .map((m) => m.toolCallId)
+            .toList();
+        expect(toolCallIds, ['c1', 'c2']);
+        // Every `tool_use` in the transcript has its `tool_result`.
+        expect(toolResultIds, toolCallIds);
+      },
+    );
+
+    test(
+      'a middleware that throws becomes an error result, not a crash',
+      () async {
+        // The PII scrubber is consumer #1; a transform that throws must be
+        // contained the way a throwing executor is, or it escapes run() as a
+        // raw exception and the tool_use block loses its result.
+        final client = FakeLlmClient(
+          providerName: 'fake',
+          outcomes: [
+            const ScriptedOutcome(
+              response: LlmResponse(
+                toolCalls: [
+                  LlmToolCall(id: 'c1', name: 'lookup', arguments: {}),
+                ],
+                finishReason: 'tool_calls',
+              ),
+            ),
+            const ScriptedOutcome(
+              response: LlmResponse(content: 'done', finishReason: 'stop'),
+            ),
+          ],
+        );
+        final loop = LlmToolLoop(
+          client,
+          (call) async => ToolResultMessage(
+            toolCallId: call.id,
+            toolName: call.name,
+            content: 'SSN 123-45-6789',
+          ),
+          middleware: [(result) => throw StateError('scrubber exploded')],
+        );
+
+        final result = await loop.run([UserMessage.text('go')]);
+
+        expect(result.finished, isTrue);
+        final toolMsg = client.requests[1].messages[2] as ToolResultMessage;
+        expect(toolMsg.isError, isTrue);
+        expect(toolMsg.content, contains('scrubber exploded'));
+        expect(toolMsg.toolCallId, 'c1');
+        // The scrubber's output is dropped, not passed through unscrubbed.
+        expect(toolMsg.content, isNot(contains('123-45-6789')));
+      },
+    );
 
     test('turn budget fails honestly', () async {
       final client = FakeLlmClient(
