@@ -3,8 +3,6 @@
 // package (spec 007 FR-007, constitution VIII): the behavior is re-implemented
 // in-tree per specs/007-llm-provider-clients/spec.md with this attribution
 // retained.
-//
-// STUB replaced by implementation in the U1 green step.
 
 import '../types.dart';
 
