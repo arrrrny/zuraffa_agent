@@ -83,7 +83,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
-Package:  archive 4.5.2
+Package:  archive 4.7.1
 Source:   https://pub.dev/packages/archive
 License:  MIT — verbatim text from the package archive:
 --------------------------------------------------------------------------------
@@ -3725,7 +3725,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------------------------------------------------------------------------------
-Package:  zorphy 2.4.5
+Package:  zorphy 2.4.6
 Source:   https://pub.dev/packages/zorphy
 License:  MIT — verbatim text from the package archive:
 --------------------------------------------------------------------------------
@@ -3752,7 +3752,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------------------------------------------------------------------------------
-Package:  zorphy_annotation 2.4.5
+Package:  zorphy_annotation 2.4.6
 Source:   https://pub.dev/packages/zorphy_annotation
 License:  MIT — verbatim text from the package archive:
 --------------------------------------------------------------------------------
@@ -3779,7 +3779,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------------------------------------------------------------------------------
-Package:  zuraffa 7.4.2
+Package:  zuraffa 7.5.0
 Source:   https://pub.dev/packages/zuraffa
 License:  MIT — verbatim text from the package archive:
 --------------------------------------------------------------------------------
