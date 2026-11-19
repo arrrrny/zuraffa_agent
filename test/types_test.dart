@@ -800,4 +800,146 @@ void main() {
       expect(a, equals(b));
     });
   });
+
+  // ─── T009: AssistantMessage.fromToolCalls (issue #189) ────────────────
+  group('AssistantMessage.fromToolCalls', () {
+    test('builds an AssistantMessage whose content is one ToolCallBlock '
+        'per LlmToolCall', () {
+      final msg = AssistantMessage.fromToolCalls(
+        toolCalls: const [
+          LlmToolCall(
+            id: 'call_a',
+            name: 'get_weather',
+            arguments: {'city': 'Istanbul'},
+          ),
+          LlmToolCall(id: 'call_b', name: 'get_time', arguments: {}),
+        ],
+      );
+      expect(msg, isA<AssistantMessage>());
+      expect(msg.content, hasLength(2));
+      final first = msg.content[0] as ToolCallBlock;
+      expect(first.id, 'call_a');
+      expect(first.name, 'get_weather');
+      expect(first.arguments, {'city': 'Istanbul'});
+      final second = msg.content[1] as ToolCallBlock;
+      expect(second.id, 'call_b');
+      expect(second.name, 'get_time');
+      expect(second.arguments, isEmpty);
+    });
+
+    test('prepends a TextBlock when text is non-null', () {
+      final msg = AssistantMessage.fromToolCalls(
+        text: 'Let me check the weather.',
+        toolCalls: const [
+          LlmToolCall(id: 'call_a', name: 'get_weather', arguments: {}),
+        ],
+      );
+      expect(msg.content, hasLength(2));
+      expect(msg.content[0], isA<TextBlock>());
+      expect((msg.content[0] as TextBlock).text, 'Let me check the weather.');
+      expect(msg.content[1], isA<ToolCallBlock>());
+    });
+
+    test('omits the TextBlock when text is null or empty', () {
+      final withNull = AssistantMessage.fromToolCalls(
+        toolCalls: const [
+          LlmToolCall(id: 'call_a', name: 'get_weather', arguments: {}),
+        ],
+      );
+      expect(withNull.content, hasLength(1));
+      expect(withNull.content[0], isA<ToolCallBlock>());
+
+      final withEmpty = AssistantMessage.fromToolCalls(
+        text: '',
+        toolCalls: const [
+          LlmToolCall(id: 'call_a', name: 'get_weather', arguments: {}),
+        ],
+      );
+      expect(withEmpty.content, hasLength(1));
+      expect(withEmpty.content[0], isA<ToolCallBlock>());
+    });
+
+    test('round-trips through toJson/fromJson byte-stably', () {
+      final original = AssistantMessage.fromToolCalls(
+        text: 'Checking.',
+        toolCalls: const [
+          LlmToolCall(
+            id: 'call_a',
+            name: 'get_weather',
+            arguments: {'city': 'Istanbul', 'days': 3},
+          ),
+        ],
+      );
+      final json = original.toJson();
+      final restored = AgentMessage.fromJson(json) as AssistantMessage;
+      expect(restored.content, hasLength(2));
+      expect(restored.content[0], isA<TextBlock>());
+      expect((restored.content[0] as TextBlock).text, 'Checking.');
+      final block = restored.content[1] as ToolCallBlock;
+      expect(block.id, 'call_a');
+      expect(block.name, 'get_weather');
+      expect(block.arguments, {'city': 'Istanbul', 'days': 3});
+      expect(restored.toJson(), equals(json));
+    });
+  });
+
+  // ─── T010: ToolResultMessage.forCall (issue #189) ─────────────────────
+  group('ToolResultMessage.forCall', () {
+    test('builds a ToolResultMessage keyed to the call id and tool name', () {
+      final msg = ToolResultMessage.forCall(
+        toolCallId: 'call_a',
+        toolName: 'get_weather',
+        content: {'temp': 22, 'unit': 'C'},
+      );
+      expect(msg, isA<ToolResultMessage>());
+      expect(msg.toolCallId, 'call_a');
+      expect(msg.toolName, 'get_weather');
+      // Structured content is JSON-encoded into the string field.
+      expect(msg.content, '{"temp":22,"unit":"C"}');
+      expect(msg.isError, isFalse);
+    });
+
+    test('passes a string content through verbatim', () {
+      final msg = ToolResultMessage.forCall(
+        toolCallId: 'call_a',
+        toolName: 'get_weather',
+        content: 'sunny',
+      );
+      expect(msg.content, 'sunny');
+    });
+
+    test('carries isError when true', () {
+      final msg = ToolResultMessage.forCall(
+        toolCallId: 'call_b',
+        toolName: 'get_time',
+        content: 'boom',
+        isError: true,
+      );
+      expect(msg.toolCallId, 'call_b');
+      expect(msg.toolName, 'get_time');
+      expect(msg.content, 'boom');
+      expect(msg.isError, isTrue);
+    });
+
+    test('round-trips through toJson/fromJson byte-stably', () {
+      final original = ToolResultMessage.forCall(
+        toolCallId: 'call_a',
+        toolName: 'get_weather',
+        content: {'temp': 22},
+        isError: false,
+      );
+      final json = original.toJson();
+      expect(json['role'], 'toolResult');
+      expect(json['toolCallId'], 'call_a');
+      expect(json['toolName'], 'get_weather');
+      expect(json['content'], '{"temp":22}');
+      expect(json['isError'], false);
+      final restored = AgentMessage.fromJson(json) as ToolResultMessage;
+      expect(restored.toolCallId, 'call_a');
+      expect(restored.toolName, 'get_weather');
+      expect(restored.content, '{"temp":22}');
+      expect(restored.isError, isFalse);
+      expect(restored.toJson(), equals(json));
+    });
+  });
 }

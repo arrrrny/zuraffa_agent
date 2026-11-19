@@ -12,6 +12,8 @@ export 'src/engine/events/engine_event_log.dart';
 export 'src/hive_adapters.dart';
 export 'src/hive_session_store.dart';
 export 'src/jsonl_session_storage.dart';
+// LLM provider seam (spec 007): client contract, request/response and tool
+// types (LlmClient, LlmToolCall, LlmResponse, ...).
 export 'src/llm/llm_client.dart';
 export 'src/llm/llm_tool_loop.dart';
 export 'src/llm/llm_transport.dart';
