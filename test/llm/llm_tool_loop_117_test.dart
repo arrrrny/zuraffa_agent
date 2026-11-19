@@ -10,7 +10,6 @@
 //   exports alone.
 
 import 'package:test/test.dart';
-import 'package:zuraffa_agent/src/llm/llm_client.dart';
 import 'package:zuraffa_agent/zuraffa_agent.dart';
 
 import 'fake_llm_client.dart';
