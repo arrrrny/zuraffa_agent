@@ -14,6 +14,7 @@ import 'domain/entities/thinking_level_change_entry/thinking_level_change_entry.
 import 'domain/entities/tool_invocation_record/tool_invocation_record.dart';
 import 'domain/entities/turn_record/turn_record.dart';
 import 'domain/entities/usage_ledger_entry/usage_ledger_entry.dart';
+import 'llm/llm_client.dart';
 
 export 'domain/entities/artifact_ref/artifact_ref.dart';
 export 'domain/entities/branch_summary_entry/branch_summary_entry.dart';
@@ -405,6 +406,25 @@ class AssistantMessage extends AgentMessage {
   factory AssistantMessage.text(String text) =>
       AssistantMessage(content: [TextBlock(text)]);
 
+  /// Creates an assistant message echoing a provider response's tool calls
+  /// back into the transcript (issue #189).
+  ///
+  /// The [toolCalls] are the typed [LlmToolCall]s a provider returned in an
+  /// [LlmResponse.toolCalls]; they become [ToolCallBlock]s so the assistant
+  /// turn replays into `toLlmMessages()` (or the transport's request builder)
+  /// exactly as the provider sent it. A non-empty [text] is prepended as a
+  /// [TextBlock] so the spoken part of the turn survives the echo.
+  factory AssistantMessage.fromToolCalls({
+    required List<LlmToolCall> toolCalls,
+    String? text,
+  }) => AssistantMessage(
+    content: [
+      if (text != null && text.isNotEmpty) TextBlock(text),
+      for (final call in toolCalls)
+        ToolCallBlock(id: call.id, name: call.name, arguments: call.arguments),
+    ],
+  );
+
   @override
   Map<String, dynamic> toJson() => {
     'role': 'assistant',
@@ -466,6 +486,24 @@ class ToolResultMessage extends AgentMessage {
     this.artifactRefs = const [],
     super.timestamp,
   });
+
+  /// Creates a tool result message keyed to the call it answers (issue #189).
+  ///
+  /// [content] is the tool's outcome: a [String] is stored verbatim, any other
+  /// value is `jsonEncode`d so a structured result round-trips through
+  /// `toLlmMessages()` (or the transport's request builder) without losing
+  /// shape. [isError] marks a failed invocation.
+  factory ToolResultMessage.forCall({
+    required String toolCallId,
+    required String toolName,
+    required Object content,
+    bool isError = false,
+  }) => ToolResultMessage(
+    toolCallId: toolCallId,
+    toolName: toolName,
+    content: content is String ? content : jsonEncode(content),
+    isError: isError,
+  );
 
   @override
   Map<String, dynamic> toJson() => {
