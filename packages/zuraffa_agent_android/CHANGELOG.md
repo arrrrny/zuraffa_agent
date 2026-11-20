@@ -1,3 +1,7 @@
+## 7.6.1 - 2026-11-20
+
+- Fleet alignment to 7.6.1 and pub.dev 160/160 pana compliance.
+
 ## 7.5.0 - 2026-11-19
 
 Mono-version fleet alignment to 7.5.0: the whole family ships at one version.

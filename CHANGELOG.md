@@ -39,7 +39,7 @@ Mono-version fleet alignment to 7.3.2: outbound send port lands in zuraffa_inten
   `dart test -P integration` is the serial integration lane (concurrency 1, the
   nightly live-LLM tier).
 - **No default proxy** (issue #140): the hardcoded `LLM_PROXY_URL` →
-  `http://localhost:8890` default in the live integration test is stripped — proxy
+  `https://localhost:8890` default in the live integration test is stripped — proxy
   URLs are operator-supplied (explicit or env-loaded); unset means direct egress.
 - **Housekeeping** (issue #140): `.github/CODEOWNERS` added, the required
   status-check list documented in `CONTRIBUTING.md`, and the stale STUB header
