@@ -16,7 +16,7 @@
 //     never a silent truncation);
 //   - a per-tool-result middleware plug-in point (the PII scrubber is the
 //     first real consumer), each transform seeing the result before it
-//     enters the transcript;
+//     enters the transcript with the originating tool-call identity intact;
 //   - a provider-error boundary, so a dead client settles as a typed
 //     failure instead of a thrown exception.
 //
@@ -30,7 +30,9 @@ import 'llm_client.dart';
 /// Executes one tool call and returns its result message.
 ///
 /// The executor owns the actual tool dispatch — the loop never knows what a
-/// tool does. A thrown error is caught by the loop and converted into an
+/// tool does. The originating call is authoritative for the result's
+/// `toolCallId` and `toolName`; executor output is rebound before it enters the
+/// transcript. A thrown error is caught by the loop and converted into an
 /// [AgentMessage] tool-result with [ToolResultMessage.isError] set, so a
 /// failing tool never crashes the mission.
 typedef ToolExecutor = Future<ToolResultMessage> Function(LlmToolCall call);
@@ -365,7 +367,7 @@ class LlmToolLoop {
         }
 
         executed.add(call);
-        messages.add(_applyMiddleware(await _runTool(call)));
+        messages.add(_applyMiddleware(await _runTool(call), call));
       }
     }
   }
@@ -395,7 +397,7 @@ class LlmToolLoop {
   /// failing tool never crashes the mission.
   Future<ToolResultMessage> _runTool(LlmToolCall call) async {
     try {
-      return await _execute(call);
+      return _bindToCall(await _execute(call), call);
     } on Object catch (error) {
       return ToolResultMessage(
         toolCallId: call.id,
@@ -406,6 +408,23 @@ class LlmToolLoop {
     }
   }
 
+  static ToolResultMessage _bindToCall(
+    ToolResultMessage result,
+    LlmToolCall call,
+  ) {
+    if (result.toolCallId == call.id && result.toolName == call.name) {
+      return result;
+    }
+    return ToolResultMessage(
+      toolCallId: call.id,
+      toolName: call.name,
+      content: result.content,
+      isError: result.isError,
+      artifactRefs: result.artifactRefs,
+      timestamp: result.timestamp,
+    );
+  }
+
   /// Runs the middleware chain over [result].
   ///
   /// A transform that throws is contained exactly like a throwing executor:
@@ -413,16 +432,19 @@ class LlmToolLoop {
   /// the run neither crashes nor leaves a `tool_use` without its `tool_result`.
   /// The content is dropped rather than passed through unscrubbed — a scrubber
   /// that fails must fail closed, not leak what it was asked to redact.
-  ToolResultMessage _applyMiddleware(ToolResultMessage result) {
-    var current = result;
+  ToolResultMessage _applyMiddleware(
+    ToolResultMessage result,
+    LlmToolCall call,
+  ) {
+    var current = _bindToCall(result, call);
     for (final transform in _middleware) {
       final ToolResultMessage next;
       try {
-        next = transform(current);
+        next = _bindToCall(transform(current), call);
       } on Object catch (error) {
         return ToolResultMessage(
-          toolCallId: result.toolCallId,
-          toolName: result.toolName,
+          toolCallId: call.id,
+          toolName: call.name,
           content: 'middleware failed: $error',
           isError: true,
         );

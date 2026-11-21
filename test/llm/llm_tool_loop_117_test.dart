@@ -112,6 +112,50 @@ void main() {
       expect(result.toolCalls.map((c) => c.id), ['a', 'b']);
     });
 
+    test('executor results retain originating identity and metadata', () async {
+      final client = FakeLlmClient(
+        providerName: 'fake',
+        outcomes: const [
+          ScriptedOutcome(
+            response: LlmResponse(
+              toolCalls: [LlmToolCall(id: 'c1', name: 'lookup', arguments: {})],
+              finishReason: 'tool_calls',
+            ),
+          ),
+          ScriptedOutcome(
+            response: LlmResponse(content: 'done', finishReason: 'stop'),
+          ),
+        ],
+      );
+      final timestamp = DateTime.utc(2026, 11, 21, 9);
+      final artifact = ArtifactRef(
+        kind: 'page',
+        id: 'orders',
+        uri: 'file://orders',
+      );
+      final loop = LlmToolLoop(
+        client,
+        (call) async => ToolResultMessage(
+          toolCallId: 'wrong-call',
+          toolName: 'wrong-tool',
+          content: 'payload',
+          isError: true,
+          artifactRefs: [artifact],
+          timestamp: timestamp,
+        ),
+      );
+
+      await loop.run([UserMessage.text('go')]);
+
+      final toolMsg = client.requests[1].messages[2] as ToolResultMessage;
+      expect(toolMsg.toolCallId, 'c1');
+      expect(toolMsg.toolName, 'lookup');
+      expect(toolMsg.content, 'payload');
+      expect(toolMsg.isError, isTrue);
+      expect(toolMsg.artifactRefs, [artifact]);
+      expect(toolMsg.timestamp, timestamp);
+    });
+
     test('maxToolCalls budget fails honestly (no silent truncation)', () async {
       // The model never stops asking for tools — an infinite script would
       // hang; the budget is what stops it.
@@ -301,6 +345,58 @@ void main() {
         (result.failure! as ToolLoopProviderError).cause,
         isA<LlmNetworkException>(),
       );
+    });
+
+    test('middleware cannot alter tool-result identity', () async {
+      final client = FakeLlmClient(
+        providerName: 'fake',
+        outcomes: const [
+          ScriptedOutcome(
+            response: LlmResponse(
+              toolCalls: [LlmToolCall(id: 'c1', name: 'lookup', arguments: {})],
+              finishReason: 'tool_calls',
+            ),
+          ),
+          ScriptedOutcome(
+            response: LlmResponse(content: 'done', finishReason: 'stop'),
+          ),
+        ],
+      );
+      final seen = <String>[];
+      final loop = LlmToolLoop(
+        client,
+        (call) async => ToolResultMessage(
+          toolCallId: call.id,
+          toolName: call.name,
+          content: 'raw',
+        ),
+        middleware: [
+          (result) {
+            seen.add('${result.toolCallId}:${result.toolName}');
+            return ToolResultMessage(
+              toolCallId: '',
+              toolName: '',
+              content: '${result.content}-first',
+            );
+          },
+          (result) {
+            seen.add('${result.toolCallId}:${result.toolName}');
+            return ToolResultMessage(
+              toolCallId: 'wrong-call',
+              toolName: 'wrong-tool',
+              content: '${result.content}-second',
+            );
+          },
+        ],
+      );
+
+      await loop.run([UserMessage.text('go')]);
+
+      expect(seen, ['c1:lookup', 'c1:lookup']);
+      final toolMsg = client.requests[1].messages[2] as ToolResultMessage;
+      expect(toolMsg.toolCallId, 'c1');
+      expect(toolMsg.toolName, 'lookup');
+      expect(toolMsg.content, 'raw-first-second');
     });
 
     test(
