@@ -275,14 +275,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
-  listen:
-    dependency: transitive
-    description:
-      name: listen
-      sha256: "47501a08016a43fcad79252439d723f50f14f88fa7bfd8a177e0a417e5c9e1f2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   logging:
     dependency: transitive
     description:
@@ -428,10 +420,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "0a10344e901e5b2e63819567951cb6a06673ed6b84f40462188ff5a0c41f371f"
+      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.14"
+    version: "0.7.12"
   time:
     dependency: transitive
     description:
@@ -524,18 +516,18 @@ packages:
     dependency: transitive
     description:
       name: zuraffa
-      sha256: ef610afd23f6a4c86ce1ad904db869265b9f8050bec145f907c8b6c8a6d488f6
+      sha256: "227fbffd7eca3b4ba96e646a204ef28da4be6559c75a14707488eabbfb5a195d"
       url: "https://pub.dev"
     source: hosted
-    version: "7.6.0"
+    version: "7.6.1"
   zuraffa_agent:
     dependency: "direct main"
     description:
       name: zuraffa_agent
-      sha256: "4ba51d0f3a7f1ccb19c557cec567251cd1629dee2e6f68398a966902f63361d4"
+      sha256: cbb44b1b9f5f5f0994d28dfcaa8649556f629a9637c44b776f9c4b7c1e546e32
       url: "https://pub.dev"
     source: hosted
-    version: "7.6.0"
+    version: "7.6.1"
 sdks:
   dart: ">=3.13.0 <4.0.0"
   flutter: ">=3.44.0"
