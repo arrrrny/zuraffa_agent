@@ -4,9 +4,10 @@
 
 All model-layer types (entities, enums, value objects) are Zorphy-generated
 (constitution IX). This document records the logical fields and relationships;
-the generated code lives under `lib/src/domain/entities/`. Nothing here
-duplicates a pi type (FR-003): pi messages/tasks/submissions/sessions are
-consumed, never re-modeled.
+the generated code lives wherever `zfa entity create` writes it — the standard
+`lib/src/domain/entities/` path. Nothing here duplicates a pi type (FR-003):
+pi messages/tasks/submissions/sessions are consumed, never re-modeled, and no
+wrapper-owned stand-in exists for a pi#12 type.
 
 ## Entities
 
@@ -16,9 +17,11 @@ Configuration the host injects to open a runtime.
 - `modelId`: String — model identifier passed to pi `Model`.
 - `systemPrompt`: String? — optional system prompt.
 - `thinkingLevel`: String? — optional pi `ThinkingLevel` name.
-- `toolNames`: List<String> — host-contributed pi tool names to register.
-- Validation: `modelProvider` and `modelId` non-empty; unknown tool names are
-  a typed configuration outcome (FR-003).
+- `toolNames`: List<String> — host-contributed tool names to register.
+- Validation: `modelProvider` and `modelId` non-empty. Tool names are NOT
+  validated against a known set: pi is the registry of tools, the wrapper has
+  no tool catalog, and a name that resolves to no tool is pi's diagnostic to
+  raise.
 
 ### AgentPortRegistry (value object)
 The bundle of host-injected ports (FR-006).
@@ -29,57 +32,48 @@ The bundle of host-injected ports (FR-006).
 - `artifacts`: AgentArtifactPort
 - `approvals`: AgentApprovalPort
 - `lifecycle`: AgentLifecyclePort
-- Validation: all ports non-null; a missing port is a typed
-  `AgentConfigurationOutcome.missingPort(portName)` (SC-001 scenario 2).
 
-### GovernancePolicy (entity, zfa-generated)
-Product-neutral governance consumed by pi hooks (FR-009).
-- `id`: String (uuid)
-- `toolAllowList`: List<String> — tool names permitted to execute.
-- `toolDenyList`: List<String> — tool names rejected before execution.
-- `riskTiers`: Map<String, RiskTier> — tool name → tier.
-- `redactionRules`: List<RedactionRule> — PII scrubbing rules.
-- `requireApprovalForTiers`: List<RiskTier> — tiers gated by approval.
-- Validation: allow ∩ deny = ∅; every risk tier is a known `RiskTier`.
+All seven are **required, non-nullable** constructor arguments. A missing port
+is therefore a compile error at the composition root, not a runtime outcome —
+which is what FR-006's "no global `GetIt.instance` fallback" means in practice.
+There is no `AgentConfigurationOutcome.missingPort`: the type system already
+proves it unreachable, so the contract does not advertise a check it cannot
+perform.
 
-### RiskTier (enum, zfa-generated)
-- `low`, `medium`, `high`, `critical`
-- Consumed by `beforeTool` hooks for allow/deny/approval decisions.
+### ZuraffaExtension (value object)
+The composition unit the extension seam installs (FR-009). It carries hook
+bodies, never policy:
+- `id`: String — stable extension identifier for diagnostics.
+- `beforeToolCall`: `Future<BeforeToolCallResult?> Function(BeforeToolCallContext, {bool Function()? isAborted})?`
+- `afterToolCall`: `Future<AfterToolCallResult?> Function(AfterToolCallContext, {bool Function()? isAborted})?`
+- `transformContext`: `Future<List<AgentMessage>> Function(List<AgentMessage>, {bool Function()? isAborted})?`
+- `convertToLlm`: `Future<List<Map<String, dynamic>>> Function(List<AgentMessage>)?`
 
-### RedactionRule (value object)
-- `pattern`: String — regex or named PII pattern (e.g. `email`, `phone`).
-- `replacement`: String — redaction token.
-- Validation: `pattern` compiles; a failed sanitizer fails closed (FR-009).
+Every field is nullable: an extension contributes the hooks it needs, and the
+bootstrap composes the non-null ones into the opened runtime's `AgentOptions`.
+These are pi's own typedefs — the wrapper aliases nothing.
 
-### AgentAuditRecord (entity, zfa-generated)
-- `id`: String (uuid)
-- `at`: DateTime (UTC)
-- `phase`: String — commit/submission/tool-call/provider event (plan §7.4).
-- `outcome`: String — typed outcome name.
-- `redacted`: bool — whether content was redacted before recording.
-- Validation: no secrets by default (plan §7.4 audit row).
-
-### AgentArtifactDescriptor (entity, zfa-generated)
-- `id`: String (uuid)
-- `kind`: String — e.g. `screenshot`, `pdf`, `oversized-result`.
-- `reference`: String — opaque artifact reference (never inline bytes).
-- `createdAt`: DateTime (UTC).
+### Governance entities — NOT in this feature
+`GovernancePolicy`, `RiskTier`, `RedactionRule` and the audit records they
+imply are issue #205's data model. They arrive as one `ZuraffaExtension`
+installed through the seam above; this package defines none of them, and
+`data-model.md` no longer lists them (spec §Out of scope, FR-009).
 
 ## Relationships
 
 - `AgentRuntimeConfig` + `AgentPortRegistry` → consumed by
   `AgentRuntimeFactory` to open a pi runtime.
-- `GovernancePolicy` → installed by `PiExtensionBootstrap` as pi
-  `beforeTool`/`afterTool` hooks.
-- `AgentAuditRecord` / `AgentArtifactDescriptor` → produced by governance and
-  telemetry adapters; persisted via injected ports, not by the wrapper.
-- No entity references a pi type; the mapping to pi types lives only in
-  `src/pi/` adapters (FR-005).
+- `ZuraffaExtension`s → composed by `ExtensionBootstrap` into the pi
+  `AgentOptions` handed to `PiRuntimeAdapter.open(...)`.
+- `AgentArtifactDescriptor` → returned by `AgentArtifactPort.store`, so the
+  host persists it; the wrapper stores nothing. Audit records are #205's
+  model, not this feature's.
 
 ## State transitions
 
 - Runtime lifecycle (via `AgentLifecyclePort`): `unopened → opening → open →
-  closing → closed`; a failed open yields `closed` with a typed outcome.
-- Approval gate (durable, pi#12): `requested → granted | denied | expired`.
-  Before pi#12 lands this is represented by the wrapper-owned
-  `AgentApprovalPort` interface only; no durable gate is claimed.
+  closing → closed`; a failed open yields `closed` with the pi error surfaced
+  (no wrapper-authored outcome type).
+- Durable work (submissions, watches, tasks, approvals) has no wrapper-side
+  transition table: those states belong to pi#12 and this document does not
+  restate them (FR-010).

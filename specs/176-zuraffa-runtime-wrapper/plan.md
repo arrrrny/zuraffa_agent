@@ -9,49 +9,55 @@
 Rebuild `zuraffa_agent` as a thin, zfa-native generic wrapper around pi
 (issue #204; architecture plan §7). The package keeps its repository and
 history but gets a clean next-major API: a runtime factory/facade that opens a
-pi runtime from injected configuration, installs generic Zuraffa extensions
-over pi's registry/hooks, and returns pi conversations, submissions, watches,
-tasks, and outcomes. All agent loops, provider calls, transcript/session
-format, compaction, and durable execution stay in pi — the wrapper contains
-none of them and imports no browser package or host application. Host
-injection follows `zuraffa_permissions`/`zuraffa_notifications`: ports +
-pure-Dart in-memory adapters + zfa-generated entities/use cases + explicit DI.
-The feature is born locked on `arrrrny/pi#12`; unstable pre-#12 pi surface is
-isolated behind wrapper-owned interfaces.
+pi runtime from injected configuration, installs extensions through one seam
+composed into pi's real `AgentOptions` hooks, and returns pi conversations,
+submissions, watches, tasks, and outcomes. All agent loops, provider calls,
+transcript/session format, compaction, and durable execution stay in pi — the
+wrapper contains none of them and imports no browser package or host
+application. Host injection follows `zuraffa_permissions`/`zuraffa_notifications`:
+ports + pure-Dart in-memory adapters + zfa-generated entities/use cases +
+explicit DI. The feature is born locked on `arrrrny/pi#12` and implementation
+starts after it lands. Governance policy is issue #205 and installs through
+this feature's extension seam.
 
 ## Technical Context
 
-**Language/Version**: Dart ^3.11 (current `zuraffa_agent` SDK constraint;
-matches `zuraffa_permissions`/`zuraffa_notifications`).
+**Language/Version**: Dart ^3.8.0 (the current `zuraffa_agent` constraint;
+raise together with `zuraffa_permissions`/`zuraffa_notifications` when their
+reference packages move, not before).
 
 **Primary Dependencies**: `pi` (gated on `arrrrny/pi#12`), `zuraffa`
 (framework: GetIt, entities, config, PackageModule), `zorphy_annotation` +
 `zorphy`/`build_runner` (model layer, constitution IX), optional
 `zuraffa_permissions`/`zuraffa_notifications`-style capability ports as needed.
 
-**Storage**: N/A — the wrapper owns no storage; pi `Storage` adapters own
-transcripts/sessions (architecture plan §7.5). The wrapper may define a
+**Storage**: N/A — the wrapper owns no storage; pi `SessionStorage` adapters
+own transcripts/sessions (architecture plan §7.5). The wrapper may define a
 storage port for hosts to inject.
 
-**Testing**: `test` + `mocktail` (pure Dart), `dart test -j 2`. In-memory
-adapters run the same contract suite as production adapters (FR-008).
+**Testing**: `test` + `mocktail` (pure Dart), `dart test -j 2` (fleet
+test-concurrency guard — deliberately overrides this repo's committed
+`dart_test.yaml` `concurrency: 4` on shared hosts that also run the pool).
+In-memory adapters run the same contract suite as production adapters
+(FR-008).
 
 **Target Platform**: Pure Dart (engine purity, constitution VII — no Flutter
 dependency; `dart:io`-free runtime paths).
 
 **Project Type**: Library (zfa package).
 
-**Performance Goals**: Passthrough — the wrapper adds only DI wiring and hook
-installation; no measurable overhead beyond pi's own runtime.
+**Performance Goals**: Pass-through only — the wrapper adds DI wiring and hook
+installation and nothing else. No performance claim is made beyond that
+design constraint; it is measured before any such claim is stated.
 
 **Constraints**: No agent loop/provider/transcript/compaction/durable scheduler
 in this package (FR-004); no browser or host imports (FR-008); no global
 `GetIt.instance` reads in business logic (FR-006); generated output never
-hand-edited (FR-001).
+hand-edited (FR-001); no pi seam invented that pi does not have (FR-005).
 
-**Scale/Scope**: One package; small surface — a factory, ports, extensions,
-DI registration, contracts/tests. Governance/telemetry/MCP/eval adapters are
-product-neutral.
+**Scale/Scope**: One package; small surface — a factory, ports, one extension
+seam, DI registration, contracts/tests. Governance/telemetry/MCP/eval adapters
+are separate capability packages that install through the seam.
 
 ## Constitution Check
 
@@ -92,7 +98,7 @@ specs/176-zuraffa-runtime-wrapper/
 
 ```text
 lib/
-├── zuraffa_agent.dart                      # Barrel export
+├── zuraffa_agent.dart                      # Barrel export (re-exports pi types it hands back)
 └── src/
     ├── runtime/
     │   ├── zuraffa_agent.dart              # ZuraffaAgent facade (factory)
@@ -105,26 +111,30 @@ lib/
     │   ├── agent_artifact_port.dart        # Artifacts / oversized results
     │   ├── agent_approval_port.dart        # Approval presentation / human notify
     │   └── agent_lifecycle_port.dart       # Lifecycle hooks
-    ├── pi/                                 # Wrapper-owned pi adapters
-    │   ├── pi_runtime_adapter.dart         # Isolates unstable pi#12 surface
-    │   └── pi_extension_bootstrap.dart     # Installs extensions into pi registry
-    ├── governance/                         # Zfa-generated policy + pi hooks
-    │   ├── entities/                       # Zorphy entities (policy, risk tier)
-    │   └── hooks/                          # beforeTool/afterTool wiring
+    ├── extensions/                         # The one extension-installation seam
+    │   ├── zuraffa_extension.dart          # Hook bodies composed into AgentOptions
+    │   └── extension_bootstrap.dart        # Composes extensions into pi options
+    ├── pi/                                 # Wrapper-owned pi runtime construction
+    │   └── pi_runtime_adapter.dart         # The only place pi's runtime is built
+    ├── domain/entities/                    # Zfa-generated (Zorphy)
     ├── module/
-    │   └── zuraffa_agent_module.dart       # Optional PackageModule seam
+    │   └── zuraffa_agent_module.dart       # Scaffolded PackageModule seam
     └── di/                                 # Generated DI registration
+        └── zuraffa_agent_package_registrar.dart  # Emitted by `zfa package create`
 test/
 ├── zuraffa_agent_test.dart                 # Factory + facade tests
 ├── ports/                                  # Per-port contract tests
-├── governance/                             # Governance hook tests
+├── extensions/                             # Extension-seam tests
 └── ...
 ```
 
 **Structure Decision**: Single pure-Dart package following the
-`zuraffa_permissions` layout: domain ports + data (in-memory adapters) + DI +
-use cases, with a thin `runtime/` facade over pi. The `pi/` adapter layer is
-the only place that touches pi's unstable pre-#12 surface (FR-005).
+`zuraffa_permissions` layout: domain ports + in-memory adapters + DI + use
+cases, with a thin `runtime/` facade over pi. Generated output (entities and
+the package registrar) lands wherever `zfa` writes it — this tree names the
+CLI's paths, not hand-drawn alternatives. `pi/` is the only place pi's runtime
+is *constructed*; pi types are referenced and re-exported directly everywhere
+else (FR-005).
 
 ## Complexity Tracking
 

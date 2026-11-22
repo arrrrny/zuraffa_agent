@@ -3,8 +3,10 @@
 **Feature**: specs/176-zuraffa-runtime-wrapper | **Date**: 2026-11-22
 
 Validation guide proving the wrapper works end-to-end. Run from the package
-root after implementation. Prerequisites: Dart ^3.11 SDK; `pi` dependency
-resolvable (gated on `arrrrny/pi#12` for durable behavior).
+root after implementation — that is, after `arrrrny/pi#12` lands, since no
+scenario below can run against a pi without the durable surface (FR-010).
+Prerequisites: the repo's Dart SDK constraint (`^3.8.0`) and a `pi` dependency
+that carries pi#12.
 
 ## Setup
 
@@ -12,12 +14,13 @@ resolvable (gated on `arrrrny/pi#12` for durable behavior).
 # from repo root (package is the repo itself)
 dart pub get
 dart analyze            # constitution X: 0 errors, 0 warnings
-dart test -j 2
+dart test -j 2          # fleet guard: overrides dart_test.yaml's concurrency 4
 ```
 
 ## Scenario 1 — Open a runtime and run a scripted conversation (SC-001)
 
-1. Build the runtime config with in-memory host adapters:
+1. Build the runtime config with in-memory host adapters. Every port is
+   required, so this literal must supply all seven or it does not compile:
 
 ```dart
 final config = AgentRuntimeConfig(
@@ -37,65 +40,67 @@ final ports = AgentPortRegistry(
 );
 
 final factory = AgentRuntimeFactory(config: config, ports: ports);
-final runtime = await factory.open();
+final conversation = await factory.open();   // pi Conversation
 ```
 
 2. Submit a prompt and read the pi objects back:
 
 ```dart
-final conversation = runtime.conversation;      // pi Conversation
-final submission = await runtime.submit('hi');   // pi submission/outcome
-final outcome = submission.outcome;              // pi outcome — not a wrapper model
+await conversation.prompt('hi');
+final events = conversation.events;            // pi Stream<AgentEvent>
 ```
 
-**Expected**: `conversation` is a pi `Conversation`; `outcome` is a pi
-outcome type; no wrapper result model appears in the signatures.
+**Expected**: `conversation` is pi's `Conversation`; the submission/outcome
+objects read off it are pi types; no wrapper result model appears in any
+signature.
 
-## Scenario 2 — Missing port fails closed (SC-001)
+## Scenario 2 — A missing port does not compile (FR-006)
 
-```dart
-final ports = AgentPortRegistry(/* all but credentials */);
-final factory = AgentRuntimeFactory(config: config, ports: ports);
-await expectLater(factory.open(), emitsAgentConfigurationError(
-  named: 'credentials',
-));
-```
-
-**Expected**: a typed `AgentConfigurationOutcome` naming `credentials`; no
-`GetIt.instance` fallback.
-
-## Scenario 3 — Governance deny + redaction (SC-005)
-
-1. Register a deny-list policy and a scrubbing policy:
+The guarantee is compile-time, so the "test" is a negative compile:
 
 ```dart
-final policy = GovernancePolicy(
-  toolDenyList: ['dangerous_tool'],
-  redactionRules: [RedactionRule.email()],
-  requireApprovalForTiers: [RiskTier.high],
+// This MUST NOT compile — `credentials` is a required named argument.
+final ports = AgentPortRegistry(
+  storage: InMemoryAgentStoragePort(),
+  egress: InMemoryAgentEgressPort(),
+  telemetry: InMemoryAgentTelemetryPort(),
+  artifacts: InMemoryAgentArtifactPort(),
+  approvals: InMemoryAgentApprovalPort(),
+  lifecycle: InMemoryAgentLifecyclePort(),
 );
-final runtime = await factory.open(governance: policy);
 ```
 
-2. Attempt a denied tool and return PII:
+**Expected**: `error: The named parameter 'credentials' is required but
+wasn't provided.` There is no runtime `missingPort` outcome to assert and no
+`GetIt.instance` fallback to escape through.
+
+## Scenario 3 — Extension seam (SC-005)
+
+1. Install a test extension and confirm its hooks reach the runtime:
 
 ```dart
-final denied = await runtime.submit('call dangerous_tool');
-expect(denied.outcome.phase, AgentPhase.toolDenied);      // denied before execution
+final extension = ZuraffaExtension(
+  id: 'test-extension',
+  beforeToolCall: (ctx, {isAborted}) async {
+    return BeforeToolCallResult.reject('denied by test extension');
+  },
+);
 
-final scrubbed = await runtime.submit('return my email a@b.com');
-expect(scrubbed.outcome.exposedContent.contains('a@b.com'), isFalse); // redacted
+final conversation = await factory.open(extensions: [extension]);
 ```
 
-3. Force a sanitizer failure:
+2. Open with no extension and confirm the wrapper contributed nothing:
 
 ```dart
-final failed = await runtime.submit('trigger sanitizer error');
-expect(failed.outcome.kind, AgentOutcomeKind.failure);     // fail closed
+final bare = await factory.open();
 ```
 
-**Expected**: denial before execution; redaction before the model sees
-content; a failed sanitizer yields a typed failure with no unredacted content.
+**Expected**: with the extension installed, the runtime's `AgentOptions`
+carries the extension's `beforeToolCall` and a denied tool is rejected before
+execution; with none installed, every hook in the opened options is null.
+
+> Governance policy (allowlists, risk tiers, PII scrubbing, audit) is issue
+> #205 and ships as its own `ZuraffaExtension`. It is not asserted here.
 
 ## Scenario 4 — No forbidden imports (SC-003 / SC-004)
 
