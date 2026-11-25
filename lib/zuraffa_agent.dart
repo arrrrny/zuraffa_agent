@@ -1,65 +1,47 @@
-/// zuraffa_agent — the agent engine of the Zuraffa ecosystem.
+/// zuraffa_agent — a thin, zfa-native Zuraffa wrapper around pi (issue #204).
 ///
-/// Provides granular typed state entities, branching session trees,
-/// selective compaction, and ported pi_agent support assets.
+/// The package opens a pi runtime from injected host configuration, installs
+/// Zuraffa capability extensions through one seam composed into pi's real
+/// `AgentOptions` hooks, and returns pi's own conversations (and, once pi#12
+/// lands, submissions, watches, tasks, and outcomes). pi owns every agent loop,
+/// provider call, transcript, compaction, and durable scheduler; this package
+/// carries none of them.
+///
+/// Hosts compose the package through explicit dependency injection
+/// ([AgentPortRegistry] + [AgentRuntimeConfig] -> [ZuraffaAgent] /
+/// [AgentRuntimeFactory]), or register it additively via [ZuraffaAgentPackageModule].
 library;
 
-export 'src/compaction.dart';
-// LLM provider seam (spec 007; used by the example and integrations).
-export 'src/data/providers/llm_client/llm_client_provider.dart';
-export 'src/engine/events/engine_event.dart';
-export 'src/engine/events/engine_event_log.dart';
-export 'src/hive_adapters.dart';
-export 'src/hive_session_store.dart';
-export 'src/jsonl_session_storage.dart';
-// LLM provider seam (spec 007): client contract, request/response and tool
-// types (LlmClient, LlmToolCall, LlmResponse, ...).
-export 'src/llm/llm_client.dart';
-export 'src/llm/llm_tool_loop.dart';
-export 'src/llm/llm_transport.dart';
-// Structured logging (spec 112, issue #119).
-export 'src/logging/agent_log.dart';
-export 'src/logging/memory_log_sink.dart';
-export 'src/mcp/in_proc_mcp_client.dart';
-export 'src/mcp/mcp_call_result.dart';
-// MCP client runtime (spec 015-mcp-client).
-// Pure surface — IO-segregated adapters (io_sse_mcp_transport.dart,
-// io_stdio_mcp_transport.dart) are NOT exported here; downstream
-// consumers inject the appropriate adapter into the client.
-export 'src/mcp/mcp_client.dart';
-export 'src/mcp/mcp_reconnect_policy.dart';
-export 'src/mcp/mcp_tool_adapter.dart';
-export 'src/mcp/mcp_tool_descriptor.dart';
-export 'src/mcp/mcp_wire.dart';
-export 'src/mcp/sse_mcp_client.dart';
-export 'src/mcp/stdio_mcp_client.dart';
-export 'src/mcp/tool_listing_cache.dart';
-export 'src/observability/crash_reporter.dart';
-export 'src/observability/health_check.dart';
-export 'src/observability/metrics.dart';
-export 'src/observability/traced_adapters.dart';
-// Observability (issue #133): tracing, metrics, health, crash boundary.
-// Interfaces + no-op defaults; consumers inject vendor adapters
-// (package:opentelemetry / Prometheus / Sentry / OTLP).
-export 'src/observability/tracing.dart';
-// Host platform seam (spec 115).
-export 'src/platform/agent_home_resolver.dart';
-export 'src/platform/agent_platform.dart';
-export 'src/platform/secure_store.dart';
-export 'src/providers.dart';
-export 'src/retention.dart';
-export 'src/run_usage.dart';
-// Security audit trail (issue #132): AuditLog interface, hashing helpers,
-// and the append-only JSONL sink with retention-by-rotation.
-export 'src/security/audit_hashing.dart';
-export 'src/security/audit_log.dart';
-export 'src/security/jsonl_audit_sink.dart';
-export 'src/session.dart';
-// Session identity: advisory single-writer lock.
-export 'src/session_lock.dart';
-export 'src/session_storage.dart';
-export 'src/session_storage_impl.dart';
-export 'src/skills.dart';
-export 'src/tools.dart';
-export 'src/types.dart';
-export 'src/usage_ledger.dart';
+// Runtime module + DI registrar (the scaffolded PackageModule seam, FR-007).
+export 'src/di/zuraffa_agent_package_registrar.dart';
+export 'src/module/zuraffa_agent_package_module.dart';
+
+// Runtime facade + factory (FR-003).
+export 'src/runtime/agent_runtime_factory.dart';
+export 'src/runtime/zuraffa_agent.dart';
+
+// Configuration + host-injection ports (FR-006).
+export 'src/config/agent_port_registry.dart';
+export 'src/ports/agent_approval_port.dart';
+export 'src/ports/agent_artifact_port.dart';
+export 'src/ports/agent_credential_port.dart';
+export 'src/ports/agent_egress_port.dart';
+export 'src/ports/agent_lifecycle_port.dart';
+export 'src/ports/agent_storage_port.dart';
+export 'src/ports/agent_telemetry_port.dart';
+
+// Extension-installation seam (FR-009).
+export 'src/extensions/agent_extension_hooks.dart';
+export 'src/extensions/extension_bootstrap.dart';
+export 'src/extensions/zuraffa_extension.dart';
+
+// pi construction boundary (FR-005).
+export 'src/pi/pi_runtime_adapter.dart';
+
+// Zorphy-generated data entities (constitution IX).
+export 'src/domain/entities/agent_artifact_descriptor/agent_artifact_descriptor.dart';
+export 'src/domain/entities/agent_runtime_config/agent_runtime_config.dart';
+
+// pi's own types the wrapper hands back — re-exported so hosts need not depend
+// on pi directly (FR-005: the package declares pi and re-exports its types).
+export 'package:pi/pi.dart';
