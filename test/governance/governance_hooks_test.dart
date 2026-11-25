@@ -182,24 +182,21 @@ void main() {
       expect(text, isNot(contains('123456')));
     });
 
-    test(
-      'a stored oversized artifact round-trips to the raw text',
-      () async {
-        final artifacts = InMemoryAgentArtifactPort();
-        final ext = GovernanceExtension.create(
-          _policy(allow: ['t'], threshold: 4),
-          artifacts: artifacts,
-        );
-        const raw = 'the original tool output';
-        final out = await ext.afterToolCall!(
-          _after('t', _result([const TextBlock(raw)])),
-        );
-        final ref = out!.details as AgentArtifactRef;
-        final stored = await artifacts.resolve(ref.id);
-        expect(utf8.decode(stored!), raw);
-        expect(stored, isNot(contains('TextBlock')));
-      },
-    );
+    test('a stored oversized artifact round-trips to the raw text', () async {
+      final artifacts = InMemoryAgentArtifactPort();
+      final ext = GovernanceExtension.create(
+        _policy(allow: ['t'], threshold: 4),
+        artifacts: artifacts,
+      );
+      const raw = 'the original tool output';
+      final out = await ext.afterToolCall!(
+        _after('t', _result([const TextBlock(raw)])),
+      );
+      final ref = out!.details as AgentArtifactRef;
+      final stored = await artifacts.resolve(ref.id);
+      expect(utf8.decode(stored!), raw);
+      expect(stored, isNot(contains('TextBlock')));
+    });
   });
 
   group('provider-request egress sanitization', () {
@@ -255,10 +252,7 @@ void main() {
             .map((e) => e.attributes['outcome'])
             .toList();
         expect(outcomes, ['allow']);
-        expect(
-          telemetry.events.single.attributes['redacted'],
-          isFalse,
-        );
+        expect(telemetry.events.single.attributes['redacted'], isFalse);
       },
     );
 
