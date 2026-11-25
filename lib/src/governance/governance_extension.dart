@@ -161,9 +161,16 @@ class GovernanceExtension {
       bool Function()? isAborted,
     }) async {
       final out = <AgentMessage>[];
+      var changed = false;
       for (final message in messages) {
         try {
-          out.add(_scrubMessage(effectiveScrubber, message));
+          out.add(
+            _scrubMessage(
+              effectiveScrubber,
+              message,
+              onChanged: () => changed = true,
+            ),
+          );
         } on SecretScrubberError {
           audit?.recordOutcome(
             phase: 'provider-request',
@@ -173,7 +180,11 @@ class GovernanceExtension {
           rethrow; // fail closed: no egress request is sent (SC-002).
         }
       }
-      audit?.recordOutcome(phase: 'provider-request', outcome: 'redact');
+      audit?.recordOutcome(
+        phase: 'provider-request',
+        outcome: changed ? 'redact' : 'allow',
+        redacted: changed,
+      );
       return out;
     }
 
@@ -227,13 +238,16 @@ class GovernanceExtension {
 
   static List<ContentBlock> _scrubBlocks(
     SecretScrubber scrubber,
-    List<ContentBlock> blocks,
-  ) {
+    List<ContentBlock> blocks, {
+    void Function()? onChanged,
+  }) {
     final out = <ContentBlock>[];
     for (final block in blocks) {
       switch (block) {
         case TextBlock(:final text):
-          out.add(TextBlock(scrubber.scrub(text)));
+          final scrubbed = scrubber.scrub(text);
+          if (scrubbed != text) onChanged?.call();
+          out.add(TextBlock(scrubbed));
         case ImageBlock():
           out.add(block);
       }
@@ -241,10 +255,16 @@ class GovernanceExtension {
     return out;
   }
 
-  static AgentMessage _scrubMessage(SecretScrubber scrubber, AgentMessage m) {
+  static AgentMessage _scrubMessage(
+    SecretScrubber scrubber,
+    AgentMessage m, {
+    void Function()? onChanged,
+  }) {
     switch (m) {
       case UserMessage(:final content):
-        return UserMessage(content: _scrubBlocks(scrubber, content));
+        return UserMessage(
+          content: _scrubBlocks(scrubber, content, onChanged: onChanged),
+        );
       case ToolResultMessage(
         :final toolCallId,
         :final toolName,
@@ -254,7 +274,7 @@ class GovernanceExtension {
         return ToolResultMessage(
           toolCallId: toolCallId,
           toolName: toolName,
-          content: _scrubBlocks(scrubber, content),
+          content: _scrubBlocks(scrubber, content, onChanged: onChanged),
           isError: isError,
         );
       case AssistantMessage(
@@ -266,7 +286,9 @@ class GovernanceExtension {
         final scrubbed = <dynamic>[];
         for (final block in content) {
           if (block is TextBlock) {
-            scrubbed.add(TextBlock(scrubber.scrub(block.text)));
+            final text = scrubber.scrub(block.text);
+            if (text != block.text) onChanged?.call();
+            scrubbed.add(TextBlock(text));
           } else {
             scrubbed.add(block);
           }
@@ -304,6 +326,16 @@ class GovernanceExtension {
     },
   );
 
-  static List<int> _bytes(List<ContentBlock> blocks) =>
-      utf8.encode(blocks.map((b) => b.toString()).join('\n'));
+  /// The raw bytes a host persists for an oversized result. Mirrors
+  /// [_byteSize]'s block handling: text is its UTF-8 encoding, an image is its
+  /// decoded base64 — never the `TextBlock(...)` debug representation, so a
+  /// resolved artifact round-trips to the original content.
+  static List<int> _bytes(List<ContentBlock> blocks) => blocks
+      .expand<int>(
+        (b) => switch (b) {
+          TextBlock(:final text) => utf8.encode(text),
+          ImageBlock(:final base64Data) => base64.decode(base64Data),
+        },
+      )
+      .toList();
 }

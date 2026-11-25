@@ -71,6 +71,9 @@ class SecretScrubber {
         pattern: r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',
         replacement: '[REDACTED:email]',
       ),
+      // Deliberately broad: a conservative default that also matches benign
+      // long digit runs (order IDs, epoch timestamps). Hosts that need tighter
+      // PII matching should construct SecretScrubber with their own rules.
       RedactionRule(
         name: 'phone',
         pattern: r'\+?\d[\d\s().-]{7,}\d',

@@ -4,6 +4,8 @@
 // Governance rides pi's real hook types: beforeTool denies before execution
 // (default-deny), afterTool redacts PII / fails closed / routes oversized
 // results, and the provider-request seam (transformContext) scrubs egress.
+import 'dart:convert';
+
 import 'package:test/test.dart';
 import 'package:zuraffa_agent/zuraffa_agent.dart';
 
@@ -179,6 +181,25 @@ void main() {
       expect(text, contains('oversized'));
       expect(text, isNot(contains('123456')));
     });
+
+    test(
+      'a stored oversized artifact round-trips to the raw text',
+      () async {
+        final artifacts = InMemoryAgentArtifactPort();
+        final ext = GovernanceExtension.create(
+          _policy(allow: ['t'], threshold: 4),
+          artifacts: artifacts,
+        );
+        const raw = 'the original tool output';
+        final out = await ext.afterToolCall!(
+          _after('t', _result([const TextBlock(raw)])),
+        );
+        final ref = out!.details as AgentArtifactRef;
+        final stored = await artifacts.resolve(ref.id);
+        expect(utf8.decode(stored!), raw);
+        expect(stored, isNot(contains('TextBlock')));
+      },
+    );
   });
 
   group('provider-request egress sanitization', () {
@@ -214,6 +235,50 @@ void main() {
         );
         expect(
           telemetry.events.any((e) => e.attributes['outcome'] == 'failClosed'),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'a transform with no scrubbed message records allow, not redact',
+      () async {
+        final telemetry = InMemoryAgentTelemetryPort();
+        final ext = GovernanceExtension.create(
+          _policy(allow: ['t']),
+          telemetry: telemetry,
+          scrubber: SecretScrubber.defaults(),
+        );
+        await ext.transformContext!([UserMessage.text('ordinary text')]);
+        final outcomes = telemetry.events
+            .where((e) => e.attributes['phase'] == 'provider-request')
+            .map((e) => e.attributes['outcome'])
+            .toList();
+        expect(outcomes, ['allow']);
+        expect(
+          telemetry.events.single.attributes['redacted'],
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'a transform that redacts a message records redact with redacted=true',
+      () async {
+        final telemetry = InMemoryAgentTelemetryPort();
+        final ext = GovernanceExtension.create(
+          _policy(allow: ['t']),
+          telemetry: telemetry,
+          scrubber: SecretScrubber.defaults(),
+        );
+        await ext.transformContext!([UserMessage.text('key $awsKey')]);
+        expect(
+          telemetry.events.any(
+            (e) =>
+                e.attributes['phase'] == 'provider-request' &&
+                e.attributes['outcome'] == 'redact' &&
+                e.attributes['redacted'] == true,
+          ),
           isTrue,
         );
       },
