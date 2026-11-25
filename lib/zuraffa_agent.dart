@@ -42,6 +42,35 @@ export 'src/pi/pi_runtime_adapter.dart';
 export 'src/domain/entities/agent_artifact_descriptor/agent_artifact_descriptor.dart';
 export 'src/domain/entities/agent_runtime_config/agent_runtime_config.dart';
 
+// Governance entities + value objects (issue #205, constitution IX).
+export 'src/governance/entities/agent_audit_record.dart';
+export 'src/governance/entities/agent_evaluation_report.dart';
+export 'src/governance/entities/governance_policy.dart';
+export 'src/governance/entities/redaction_rule.dart';
+export 'src/governance/entities/risk_tier.dart';
+
+// Governance policy resolution (issue #205, FR-001/FR-002).
+export 'src/governance/policy_resolver.dart';
+
+// Governance extension over pi (issue #205, FR-001/FR-002/FR-003).
+export 'src/governance/governance_extension.dart';
+
+// Observability utilities (issue #205, FR-005).
+export 'src/observability/audit_recorder.dart';
+export 'src/observability/secret_scrubber.dart';
+
+// Approval gate (issue #205, FR-004, pi#12-gated).
+export 'src/approvals/approval_gate.dart';
+
+// Artifact routing (issue #205, FR-007).
+export 'src/artifacts/artifact_router.dart';
+
+// MCP delegation to pi-mcp (issue #205, FR-006).
+export 'src/mcp/mcp_adapter.dart';
+
+// Eval/cassette delegation to pi-evals (issue #205, FR-007).
+export 'src/eval/eval_adapter.dart';
+
 // pi's own types the wrapper hands back — re-exported so hosts need not depend
 // on pi directly (FR-005: the package declares pi and re-exports its types).
 export 'package:pi/pi.dart';
