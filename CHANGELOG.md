@@ -1,3 +1,7 @@
+## 8.0.0 - 2026-11-25
+
+8.0.0: clean-break rebuild of zuraffa_agent as a thin Zuraffa wrapper around pi (issue #204, spec `specs/176-zuraffa-runtime-wrapper/`). The package no longer ships its own agent runtime — pi alone owns every agent loop, provider/model call, transcript/session format, compaction and durable scheduler, and zuraffa_agent contributes only the generic Zuraffa integration: 7 host-injection ports with pure-Dart in-memory adapters, the `AgentPortRegistry` (all ports required/non-nullable), one `ZuraffaExtension` seam composed into pi's `AgentOptions` hooks, the `AgentRuntimeFactory` / `ZuraffaAgent` facade returning pi's own `Conversation`, and the `PiRuntimeAdapter` as the only file that constructs pi. The old engine (`lib/src/engine`, `llm`, `mcp`, `eval`, `benchmark`, `example`, and the one-off `tool/` scripts) and its tests are removed.
+
 ## 7.6.1 - 2026-11-20
 
 7.6.1: pub.dev score improvements across the fleet — added a pana-recognized example/README.md to 12 packages (zuraffa_observability, session, storage, graphql, minio, tui, ffi, vendure, flutter, inappwebview, ocr, purchase); cleared all analyzer infos in zuraffa and zuraffa_flutter (deprecated flutter/material.dart -> material_ui, withOpacity -> withValues) for 50/50 static analysis.
