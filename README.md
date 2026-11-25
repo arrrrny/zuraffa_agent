@@ -13,10 +13,25 @@
 
 # zuraffa_agent
 
-The agent engine of the Zuraffa ecosystem: missions, sessions, tool and
-MCP orchestration, an eval harness, and event-driven observability for
-building type-safe AI agents with [Zuraffa](https://pub.dev/packages/zuraffa)
-clean-architecture conventions.
+A thin, zfa-native **Zuraffa wrapper around
+[pi](https://pub.dev/packages/pi)** (issue #204). The package opens a pi
+runtime from injected host configuration, installs Zuraffa capability
+extensions through one seam composed into pi's real `AgentOptions` hooks, and
+returns pi's own conversations (and, once `pi#12` lands, submissions, watches,
+tasks, and outcomes).
+
+pi alone owns every agent loop, provider/model call, transcript/session format,
+compaction, and durable scheduler — this package carries **none** of them. It
+contributes only the generic Zuraffa integration: technology-agnostic
+host-injection ports with pure-Dart in-memory adapters, explicit injectable DI,
+and the optional `PackageModule` registration seam. Governance policy
+(allowlists, risk tiers, PII scrubbing, audit) is a separate capability
+(issue #205) that installs through the extension seam.
+
+> This is a next-major clean break (v8): the previous independent agent engine
+> (`LlmToolLoop`, `MissionRunner`, duplicate session/message models) was removed
+> in favour of pi. Repository and history are preserved; the public API is
+> intentionally not backward-compatible.
 
 ## Documentation
 
